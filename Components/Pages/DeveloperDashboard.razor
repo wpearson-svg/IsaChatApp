@@ -1,0 +1,451 @@
+@page "/dev-dashboard"
+
+@* ============================================================
+   DeveloperDashboard.razor
+
+   Fleshed-out example page (still not wired to a real backend) --
+   linked from the chat widget's header (the ">_" icon). Built from
+   the "Isa Wireframes 2" mock: a dev-facing shell (nav + top bar)
+   whose fully-built tab is Compliance policy -- the confidence
+   threshold, input/output compliance rules, role-by-tier access
+   grid, and a testing console that reads the settings above it (a
+   test run's Output Compliance / Ticketing results respond to the
+   confidence slider and the routed-topics list, and Access Control
+   respects the role-by-tier grid). Everything else (Role access,
+   Models/RAG/access & ticketing, Front end, Health alerts) is a
+   labeled stub -- present in the nav, per the wireframe, but not
+   designed yet.
+
+   Dressed in the same ISACA palette as the rest of the app (see
+   WidgetSettings.IsacaColors): navy for chrome/primary actions,
+   green/orange/purple for the pipeline-stage tags, blue for the
+   slider. Nothing here persists -- "Save changes" and the change log
+   are illustrative only, same as the rest of this demo.
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@inject WidgetSettings Settings
+@rendermode InteractiveServer
+
+<PageTitle>Developer Dashboard</PageTitle>
+
+@if (!Settings.CanAccessDevDashboard)
+{
+    <h1>Access restricted</h1>
+    <p class="text-muted">
+        The Dev Dashboard isn't available to the <strong>@Settings.CurrentRole</strong>
+        role. Only Developer and Executive have access &mdash; switch roles on
+        <a href="/isa-config">/isa-config</a> if this should be visible.
+    </p>
+}
+else
+{
+    <div class="dd">
+        <aside class="dd__nav">
+            <div class="dd__navHeader">
+                <span class="dd__navTitle">Dev Dashboard</span>
+                <span class="dd__badge">ADMIN</span>
+            </div>
+            <nav class="dd__navList">
+                @foreach (var section in Sections)
+                {
+                    <button type="button"
+                            class="dd__navItem @(section.Key == ActiveSection ? "is-active" : "")"
+                            @onclick="@(() => ActiveSection = section.Key)">
+                        @section.Label
+                    </button>
+                }
+            </nav>
+        </aside>
+
+        <section class="dd__main">
+            @if (ActiveSection == "compliance")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Compliance policy</h1>
+                    <div class="dd__topbarActions">
+                        <button type="button" class="dd__btn dd__btn--ghost" @onclick="ToggleChangeLog">
+                            View change log
+                        </button>
+                        <button type="button" class="dd__btn dd__btn--primary" @onclick="SaveChanges">
+                            Save changes
+                        </button>
+                    </div>
+                </div>
+
+                @if (_savedMessageVisible)
+                {
+                    <div class="dd__toast">
+                        Changes saved &mdash; not actually persisted; this resets on restart,
+                        same as the rest of the demo.
+                    </div>
+                }
+
+                @if (_changeLogVisible)
+                {
+                    <div class="dd__changelog">
+                        <strong>Change log</strong>
+                        <ul>
+                            <li>Example entry &mdash; lowered the answer confidence threshold from 70 to 62.</li>
+                            <li>Example entry &mdash; added &ldquo;Tax filings&rdquo; to Always route to a person.</li>
+                            <li>Example entry &mdash; enabled &ldquo;Escalate when sources conflict&rdquo;.</li>
+                        </ul>
+                        <p class="dd__tableHint">Illustrative only &mdash; no real change history is tracked here.</p>
+                    </div>
+                }
+
+                <div class="dd__grid">
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Answer confidence threshold</h3>
+                            <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            Below this level, Isa offers the closest sections plus a human
+                            contact instead of an answer.
+                        </p>
+                        <input type="range" class="dd__slider" min="0" max="100" step="1"
+                               value="@ConfidenceThreshold"
+                               @oninput="OnConfidenceChanged" />
+                        <div class="dd__sliderLabels">
+                            <span>More answers</span>
+                            <span class="dd__sliderValue">@ConfidenceThreshold%</span>
+                            <span>More handoffs</span>
+                        </div>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Always route to a person</h3>
+                            <span class="dd__tag dd__tag--green">INPUT COMPLIANCE</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            Questions on these topics skip the AI and go straight to Ticketing.
+                        </p>
+                        <div class="dd__chips">
+                            @foreach (var topic in RoutedTopics)
+                            {
+                                <span class="dd__chip">
+                                    @topic
+                                    <button type="button" class="dd__chipRemove"
+                                            @onclick="@(() => RemoveTopic(topic))"
+                                            aria-label="Remove @topic">&times;</button>
+                                </span>
+                            }
+                            @if (_addingTopic)
+                            {
+                                <span class="dd__chip dd__chip--editing">
+                                    <input class="dd__chipInput" @bind="_newTopic" @bind:event="oninput"
+                                           placeholder="Topic name"
+                                           @onkeydown="OnNewTopicKeyDown" />
+                                    <button type="button" class="dd__chipConfirm" @onclick="ConfirmAddTopic"
+                                            aria-label="Add topic">&#10003;</button>
+                                    <button type="button" class="dd__chipRemove" @onclick="CancelAddTopic"
+                                            aria-label="Cancel">&times;</button>
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button" class="dd__chip dd__chip--add" @onclick="AddTopicPrompt">
+                                    + Add topic
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Output checks</h3>
+                            <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
+                        </div>
+                        <div class="dd__checklist">
+                            <label class="dd__check">
+                                <input type="checkbox" @bind="BlockUncited" />
+                                Block any answer without a cited source
+                            </label>
+                            <label class="dd__check">
+                                <input type="checkbox" @bind="EscalateConflicts" />
+                                Escalate when sources conflict
+                            </label>
+                            <label class="dd__check">
+                                <input type="checkbox" @bind="EscalateOnFailure" />
+                                Escalate to Complex AI on check failure
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Role access by content tier</h3>
+                            <span class="dd__tag dd__tag--orange">ACCESS CONTROL</span>
+                        </div>
+                        <table class="dd__table">
+                            <thead>
+                                <tr>
+                                    <th>Role</th>
+                                    <th>Tier 1</th>
+                                    <th>Tier 2</th>
+                                    <th>Tier 3</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var role in ContentRoles)
+                                {
+                                    <tr>
+                                        <td>@role.Name</td>
+                                        @for (var t = 1; t <= 3; t++)
+                                        {
+                                            var tier = t;
+                                            <td>
+                                                <input type="checkbox" checked="@role.HasTier(tier)"
+                                                       @onchange="@(e => role.SetTier(tier, (bool)e.Value!))" />
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <p class="dd__tableHint">Example defaults &mdash; adjust to match the real access policy.</p>
+                    </div>
+
+                    <div class="dd__card dd__card--wide">
+                        @TestingConsole
+                    </div>
+                </div>
+            }
+            else if (ActiveSection == "testing")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Testing console</h1>
+                </div>
+                <div class="dd__card">
+                    @TestingConsole
+                </div>
+            }
+            else
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">@CurrentSectionLabel</h1>
+                </div>
+                <div class="dd__stub">
+                    <p>Not built out for this demo &mdash; Compliance policy (and the shared
+                    Testing console) is the only fully-designed tab so far.</p>
+                </div>
+            }
+        </section>
+    </div>
+}
+
+<a href="/" class="dd__back">&larr; Back home</a>
+
+@code {
+    private sealed record SectionInfo(string Key, string Label);
+
+    private static readonly SectionInfo[] Sections =
+    {
+        new("compliance", "Compliance policy"),
+        new("roleaccess", "Role access"),
+        new("models", "Models, RAG, access & ticketing"),
+        new("frontend", "Front end (optional)"),
+        new("testing", "Testing console"),
+        new("health", "Health alerts"),
+    };
+
+    private string ActiveSection = "compliance";
+    private string CurrentSectionLabel =>
+        Sections.First(s => s.Key == ActiveSection).Label;
+
+    // ---- Compliance policy state ---------------------------------
+
+    private int ConfidenceThreshold = 62;
+
+    private void OnConfidenceChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value))
+        {
+            ConfidenceThreshold = value;
+        }
+    }
+
+    private bool BlockUncited = true;
+    private bool EscalateConflicts = true;
+    private bool EscalateOnFailure;
+
+    private readonly List<string> RoutedTopics = new() { "Legal", "Financial", "Personnel", "Tax filings" };
+    private bool _addingTopic;
+    private string _newTopic = "";
+
+    private void AddTopicPrompt()
+    {
+        _addingTopic = true;
+        _newTopic = "";
+    }
+
+    private void ConfirmAddTopic()
+    {
+        var topic = _newTopic.Trim();
+        if (topic.Length > 0 && !RoutedTopics.Contains(topic, StringComparer.OrdinalIgnoreCase))
+        {
+            RoutedTopics.Add(topic);
+        }
+        _addingTopic = false;
+    }
+
+    private void CancelAddTopic() => _addingTopic = false;
+
+    private void OnNewTopicKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") ConfirmAddTopic();
+        else if (e.Key == "Escape") CancelAddTopic();
+    }
+
+    private void RemoveTopic(string topic) => RoutedTopics.Remove(topic);
+
+    private sealed class ContentRole
+    {
+        public string Name { get; }
+        private readonly HashSet<int> _tiers;
+
+        public ContentRole(string name, params int[] tiers)
+        {
+            Name = name;
+            _tiers = new HashSet<int>(tiers);
+        }
+
+        public bool HasTier(int tier) => _tiers.Contains(tier);
+
+        public void SetTier(int tier, bool on)
+        {
+            if (on) _tiers.Add(tier);
+            else _tiers.Remove(tier);
+        }
+    }
+
+    private readonly List<ContentRole> ContentRoles = new()
+    {
+        new ContentRole("Chapter leader", 1),
+        new ContentRole("Chapter president", 1, 2),
+        new ContentRole("ISACA staff", 1, 2, 3),
+    };
+
+    // ---- Save changes / change log (illustrative only) ------------
+
+    private bool _savedMessageVisible;
+    private bool _changeLogVisible;
+
+    private void ToggleChangeLog() => _changeLogVisible = !_changeLogVisible;
+
+    private async Task SaveChanges()
+    {
+        _savedMessageVisible = true;
+        StateHasChanged();
+        await Task.Delay(2500);
+        _savedMessageVisible = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // ---- Testing console --------------------------------------------
+    // Simulated pipeline: not a real model/RAG/ticketing call, but it
+    // does read the policy state above it, so a test run's results
+    // move when you move the confidence slider, edit the routed-topic
+    // list, or change the role-by-tier grid.
+
+    private string TestQuestion = "";
+    private string TestRole = "Chapter leader";
+    private bool _isRunning;
+    private TestRunResult? TestResult;
+
+    private sealed class TestRunResult
+    {
+        public required string Translation { get; init; }
+        public required string AccessControl { get; init; }
+        public required string InputCompliance { get; init; }
+        public required int Confidence { get; init; }
+        public required string OutputCompliance { get; init; }
+        public required string Ticketing { get; init; }
+    }
+
+    private async Task RunTest()
+    {
+        if (string.IsNullOrWhiteSpace(TestQuestion) || _isRunning) return;
+
+        _isRunning = true;
+        TestResult = null;
+        StateHasChanged();
+        await Task.Delay(500);
+
+        var role = ContentRoles.FirstOrDefault(r => r.Name == TestRole) ?? ContentRoles[0];
+        var accessOk = role.HasTier(1);
+        var isRoutedTopic = RoutedTopics.Any(t =>
+            TestQuestion.Contains(t, StringComparison.OrdinalIgnoreCase));
+
+        var seed = TestQuestion.Length * 31 + TestRole.Length;
+        var confidence = isRoutedTopic ? 0 : 35 + new Random(seed).Next(0, 60);
+        var outputPass = !isRoutedTopic && confidence >= ConfidenceThreshold;
+
+        TestResult = new TestRunResult
+        {
+            Translation = "pass",
+            AccessControl = accessOk ? "pass" : "fail",
+            InputCompliance = isRoutedTopic ? "routed" : "pass",
+            Confidence = confidence,
+            OutputCompliance = outputPass ? "pass" : "handoff",
+            Ticketing = isRoutedTopic || !outputPass ? "routed" : "not routed",
+        };
+
+        _isRunning = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private RenderFragment TestingConsole => @<div>
+        <div class="dd__cardHeader">
+            <h3>Testing console</h3>
+            <span class="dd__tag dd__tag--green">ADMIN</span>
+        </div>
+        <div class="dd__testRow">
+            <input type="text" class="dd__testInput"
+                   placeholder="Type a test question and pick a role to run it as..."
+                   @bind="TestQuestion" @bind:event="oninput" />
+            <select class="dd__testRole" @bind="TestRole">
+                @foreach (var role in ContentRoles)
+                {
+                    <option value="@role.Name">@role.Name</option>
+                }
+            </select>
+            <button type="button" class="dd__btn dd__btn--primary" @onclick="RunTest" disabled="@_isRunning">
+                @(_isRunning ? "Running..." : "Run")
+            </button>
+        </div>
+        <p class="dd__testHint">
+            Simulated pipeline &mdash; not wired to a real model, RAG index, or ticketing
+            system, but it does respect the confidence threshold, routed topics, and
+            role-by-tier grid above.
+        </p>
+        <div class="dd__resultsGrid">
+            <div class="dd__resultTile">
+                <span class="dd__tag dd__tag--orange">TRANSLATION</span>
+                <span class="dd__resultValue">@(TestResult?.Translation ?? "—")</span>
+            </div>
+            <div class="dd__resultTile">
+                <span class="dd__tag dd__tag--orange">ACCESS CONTROL</span>
+                <span class="dd__resultValue">@(TestResult?.AccessControl ?? "—")</span>
+            </div>
+            <div class="dd__resultTile">
+                <span class="dd__tag dd__tag--green">INPUT COMPLIANCE</span>
+                <span class="dd__resultValue">@(TestResult?.InputCompliance ?? "—")</span>
+            </div>
+            <div class="dd__resultTile">
+                <span class="dd__tag dd__tag--purple">DATABASE SEARCH</span>
+                <span class="dd__resultValue">@(TestResult is null ? "—" : $"{TestResult.Confidence}%")</span>
+            </div>
+            <div class="dd__resultTile">
+                <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
+                <span class="dd__resultValue">@(TestResult?.OutputCompliance ?? "—")</span>
+            </div>
+            <div class="dd__resultTile">
+                <span class="dd__tag dd__tag--purple">TICKETING</span>
+                <span class="dd__resultValue">@(TestResult?.Ticketing ?? "—")</span>
+            </div>
+        </div>
+    </div>;
+}

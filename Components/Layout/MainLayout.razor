@@ -1,0 +1,46 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+@* A page is "embedded" when it's the Dev Dashboard or Content Health
+   Dashboard loaded in an iframe INSIDE Isa's own panel (see
+   OpenDashboard() in ChatWidget.razor, which appends ?embed=1 to the
+   iframe's src). Without this check, that iframe would load this
+   same MainLayout again and render a second, nested ChatWidget inside
+   itself -- a small Isa bubble stuck inside the dashboard content, on
+   top of the real one. A normal visit to /dev-dashboard in its own
+   tab has no ?embed=1 and is completely unaffected -- Isa still shows
+   there as always. *@
+@if (!IsEmbedded)
+{
+    <ChatWidget @rendermode="InteractiveServer"
+                Hosts="@(new Dictionary<string,string> {
+                    ["remote"] = "http://100.89.6.69:11434",
+                    ["local"]  = "http://localhost:11434"
+                })" />
+}
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool IsEmbedded =>
+        new Uri(Navigation.Uri).Query.Contains("embed=1");
+}

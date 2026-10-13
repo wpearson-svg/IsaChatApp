@@ -1,0 +1,176 @@
+@* ============================================================
+   Throbber.razor
+
+   The ring + "ISA" wordmark icon, as a genuine reusable Blazor
+   component (its own .razor file with real [Parameter]s) — not a
+   RenderFragment glued into ChatWidget, and not copy-pasted markup.
+   This is what "the same component in both places" means concretely:
+   ChatWidget's collapsed bubble and its expanded input-row icon both
+   render <Throbber ... /> with different parameters, rather than
+   each having their own copy of the ring/word markup.
+
+   Parameters:
+     Spinning     — true runs the full spin + colour-cycle animation
+                    (ring rotation, ring stroke cycle, word fill
+                    cycle). false shows it at rest, in RingColor /
+                    WordColor. ChatWidget's input-row icon drives this
+                    from IsSending.
+     SpinOnHover  — true spins on mouse-over, independent of Spinning,
+                    so a component can spin on hover, on Spinning, or
+                    (if both are set) either. ChatWidget's collapsed
+                    bubble uses this; the input-row icon doesn't need
+                    it (hovering there while idle isn't a "loading"
+                    signal the way it is on the bubble).
+
+                    This is driven by C# (@onmouseenter/@onmouseleave
+                    below), not a plain CSS :hover selector, on
+                    purpose: a hover-only CSS animation stops dead the
+                    instant the mouse leaves, snapping back to the
+                    resting frame mid-turn. Here, mouse-leave instead
+                    starts a countdown to the next time the ring
+                    rotation and colour cycle are BOTH back at their
+                    starting frame together (see FullCyclePeriod
+                    below), and only then turns the animation off — so
+                    it always finishes its current lap before
+                    stopping, rather than skipping back.
+     RingColor    — resting ring colour (default matches
+                    isa-throbber.js's default, #6cb33f).
+     WordColor    — resting word colour (default #1d2d5c).
+
+   Usage:
+       <Throbber Spinning="false" SpinOnHover="true" />
+       <Throbber Spinning="@IsSending" />
+   ============================================================ *@
+@implements IDisposable
+
+<span class="throbber @(EffectiveSpinning ? "is-spinning" : "")"
+      style="--throbber-ring-color:@RingColor; --throbber-word-color:@WordColor;"
+      @onmouseenter="OnMouseEnter" @onmouseleave="OnMouseLeave">
+    <svg class="throbber__ring" viewBox="-2 -2 204 204" aria-hidden="true">
+        <mask id="@_maskId" maskUnits="userSpaceOnUse" x="-50" y="-50" width="304" height="304">
+            <rect x="-50" y="-50" width="304" height="304" fill="#fff" />
+            <rect x="110" y="74.75" width="110" height="50.5" fill="#000" />
+        </mask>
+        <circle cx="100" cy="100" r="78.96" mask="url(#@_maskId)" />
+    </svg>
+    <svg class="throbber__word" viewBox="0 0 59.59 29.82" aria-hidden="true">
+        <g class="throbber__letters">
+            <path d="M4.06 27.66V1.79H9.48V27.66Z" />
+            <path d="M32.1 21.86Q32.1 24.74 29.74 26.39Q27.38 28.03 23.21 28.03Q19.12 28.03 16.94 26.74Q14.76 25.44 14.05 22.71L18.58 22.03Q18.97 23.44 19.92 24.03Q20.86 24.62 23.21 24.62Q25.38 24.62 26.37 24.06Q27.36 23.51 27.36 22.34Q27.36 21.38 26.56 20.82Q25.76 20.26 23.85 19.88Q19.48 19.01 17.96 18.27Q16.44 17.53 15.64 16.34Q14.84 15.16 14.84 13.43Q14.84 10.59 17.03 9Q19.23 7.41 23.25 7.41Q26.79 7.41 28.95 8.79Q31.11 10.16 31.64 12.77L27.07 13.25Q26.85 12.04 25.98 11.44Q25.12 10.84 23.25 10.84Q21.41 10.84 20.49 11.31Q19.58 11.78 19.58 12.88Q19.58 13.74 20.28 14.25Q20.99 14.75 22.66 15.08Q24.99 15.56 26.8 16.07Q28.61 16.57 29.7 17.27Q30.8 17.97 31.45 19.06Q32.1 20.15 32.1 21.86Z" />
+            <path d="M41.59 28.03Q38.71 28.03 37.09 26.46Q35.48 24.89 35.48 22.04Q35.48 18.96 37.49 17.34Q39.5 15.73 43.32 15.69L47.6 15.62V14.61Q47.6 12.66 46.92 11.71Q46.24 10.77 44.7 10.77Q43.26 10.77 42.59 11.42Q41.92 12.07 41.76 13.58L36.38 13.32Q36.87 10.42 39.03 8.92Q41.19 7.43 44.92 7.43Q48.68 7.43 50.72 9.28Q52.76 11.14 52.76 14.55V21.79Q52.76 23.46 53.14 24.09Q53.51 24.73 54.39 24.73Q54.98 24.73 55.53 24.62V27.41Q55.07 27.52 54.71 27.61Q54.34 27.7 53.97 27.76Q53.6 27.81 53.19 27.85Q52.78 27.88 52.23 27.88Q50.28 27.88 49.35 26.93Q48.42 25.97 48.24 24.12H48.13Q45.96 28.03 41.59 28.03ZM47.6 18.46 44.95 18.5Q43.15 18.57 42.4 18.89Q41.65 19.22 41.25 19.88Q40.86 20.54 40.86 21.64Q40.86 23.05 41.51 23.74Q42.16 24.43 43.25 24.43Q44.46 24.43 45.46 23.77Q46.46 23.11 47.03 21.94Q47.6 20.78 47.6 19.47Z" />
+        </g>
+    </svg>
+</span>
+
+@code {
+    [Parameter] public bool Spinning { get; set; }
+    [Parameter] public bool SpinOnHover { get; set; }
+    [Parameter] public string RingColor { get; set; } = "#6cb33f";
+    [Parameter] public string WordColor { get; set; } = "#1d2d5c";
+
+    // Unique per instance — more than one <Throbber /> can be on the
+    // page at once (e.g. this component used in two different places
+    // at once, or several instances in a future page), and each needs
+    // its own <mask> id so they don't collide.
+    private readonly string _maskId = "throbberMask-" + Guid.NewGuid().ToString("N");
+
+    // How long it takes for the ring rotation (1.1s per lap, see
+    // Throbber.razor.css) and the colour cycle (2.2s per lap) to both
+    // be back at their starting frame at the same time. 2.2s is a
+    // whole multiple of 1.1s, so that's the point the whole animation
+    // truly "resets" to its resting look. If either duration in the
+    // CSS ever changes, update this to match — it's not read from the
+    // CSS, just kept in step with it by hand.
+    private static readonly TimeSpan FullCyclePeriod = TimeSpan.FromSeconds(2.2);
+
+    private bool _isHovering;
+    private DateTime? _spinStartedAt;
+    private CancellationTokenSource? _finishCts;
+
+    // The class that actually drives the CSS animation. On besides the
+    // Spinning parameter, it also stays on for as long as the mouse is
+    // over the element, AND for the little bit longer after the mouse
+    // leaves while a finishing lap (_finishCts non-null) plays out.
+    private bool EffectiveSpinning => Spinning || _isHovering || _finishCts is not null;
+
+    private void OnMouseEnter()
+    {
+        if (!SpinOnHover)
+        {
+            return;
+        }
+
+        // Was the ring already turning over — either still hovered, or
+        // mid-way through a finishing lap after a previous mouse-leave?
+        // If so its CSS animation never actually stopped on the client
+        // (is-spinning stayed applied the whole time _finishCts was
+        // set), so _spinStartedAt still marks that run's true start.
+        // Resetting it here — even though _isHovering itself was set
+        // false by OnMouseLeave — was the bug: it rebased the clock
+        // the NEXT OnMouseLeave uses to work out how far into the lap
+        // it is, so that countdown would end at an arbitrary point
+        // instead of exactly at rest, which is what caused it to
+        // sometimes stop mid-turn and pop back instead of landing
+        // cleanly. Only a genuinely fresh start — nothing spinning at
+        // all — gets a new start time.
+        var alreadySpinning = _isHovering || _finishCts is not null;
+
+        _finishCts?.Cancel();
+        _finishCts = null;
+        _isHovering = true;
+
+        if (!alreadySpinning)
+        {
+            _spinStartedAt = DateTime.UtcNow;
+        }
+    }
+
+    private async Task OnMouseLeave()
+    {
+        if (!SpinOnHover || !_isHovering)
+        {
+            return;
+        }
+
+        _isHovering = false;
+
+        var startedAt = _spinStartedAt ?? DateTime.UtcNow;
+        var periodMs = FullCyclePeriod.TotalMilliseconds;
+        var elapsedMs = (DateTime.UtcNow - startedAt).TotalMilliseconds % periodMs;
+        var remainingMs = periodMs - elapsedMs;
+        // A near-zero remainder (mouse left right as a lap completed)
+        // would otherwise skip the finishing spin almost entirely —
+        // round it up to a full extra lap instead.
+        if (remainingMs < 16)
+        {
+            remainingMs += periodMs;
+        }
+
+        using var cts = new CancellationTokenSource();
+        _finishCts = cts;
+
+        try
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(remainingMs), cts.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            // OnMouseEnter cancelled us because the mouse came back —
+            // it already cleared _finishCts, nothing left to do here.
+            return;
+        }
+
+        // Only clear/redraw if nothing newer (another mouse-leave)
+        // has replaced this countdown in the meantime.
+        if (ReferenceEquals(_finishCts, cts))
+        {
+            _finishCts = null;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        _finishCts?.Cancel();
+    }
+}

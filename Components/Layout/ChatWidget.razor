@@ -1,0 +1,743 @@
+@* ============================================================
+   ChatWidget.razor
+
+   A self-contained floating chat widget:
+     - Collapsed: <Throbber Spinning="false" SpinOnHover="true" />,
+       resting in its default green with the notch on the right,
+       pinned to the bottom-right corner of the page with a gap from
+       the screen edge (see wireframe "Collapsed"). Not driven by
+       IsSending — there's nothing to send yet while collapsed — but
+       it spins and colour-cycles on mouse-over as a hover affordance,
+       purely in CSS (see Throbber.razor.css's --hoverSpin modifier).
+     - Expanded: a panel pinned to the top-right corner of the
+       viewport (not growing out of the collapsed bubble's
+       bottom-right position), with the rest of the page dimmed
+       behind it (see wireframe "Expanded"). The same <Throbber />
+       component reappears, smaller, inside the input field — this
+       instance is driven by IsSending instead of hover, so it spins
+       only while a request is in flight. Clicking the dimmed
+       backdrop, or the close button, collapses the panel again.
+       Its entrance animation is anchored at the panel's own
+       BOTTOM-LEFT corner (see transform-origin in the .css file) —
+       the panel's fixed screen position is always top-right, but it
+       visually grows up-and-right from its bottom-left corner as it
+       scales in.
+     - The collapsed bubble and the expanded panel are two separate
+       elements, only one of which is ever in the DOM at a time (see
+       the @if below) — this is deliberate, so the panel's entrance
+       animation always plays fresh instead of visually interpolating
+       from the bubble's small box.
+     - Both places use the exact same <Throbber /> component
+       (Throbber.razor) rather than each having their own copy of the
+       ring/word markup — see that file for the icon itself.
+
+   On load (and on demand via the Refresh button), it queries every
+   configured Ollama host's /api/tags endpoint in parallel and
+   builds a flat dropdown of every (host, model) pair available —
+   same behavior as chat-demo-live.html's loadModels(), just in C#.
+   An unreachable host is skipped (shown as "unreachable" in the
+   status line) rather than blocking the others.
+
+   Everything here is C# (Razor markup + a C# @code block) and
+   scoped CSS. No hand-written JavaScript. The only script tag a
+   Blazor app ships is the framework's own bootstrap file
+   (blazor.server.js in a Server-rendered app) — that is Microsoft's
+   runtime, not application code.
+
+   Auto-scroll-to-newest-message is done with a pure-CSS trick
+   (flex-direction: column-reverse in ChatWidget.razor.css) instead
+   of JS interop calling scrollIntoView — see the CSS file for the
+   explanation.
+
+   Requires Server render mode (@rendermode="InteractiveServer"
+   where you place <ChatWidget /> in your layout) so the HTTP calls
+   to Ollama happen on your server, not in the visitor's browser —
+   see README.md for why that matters here.
+
+   Response-time tracking: every successful reply is timed (wall
+   clock, from just before the /api/generate call to just after it
+   returns) and logged to UsageLogService — see UsageLog.Record(...)
+   in Send() below — which is what the Content Health Dashboard reads
+   for its per-model token/response-time stats. Independently of that
+   logging, WidgetSettings.ShowResponseTime (toggled at /isa-config)
+   controls two purely-visual things in THIS component: whether each
+   AI message shows its own elapsed time next to the model name/"Isa"
+   label, and whether the live status message shown while IsSending
+   ticks up its own running elapsed time. The log always happens;
+   the display is what the toggle controls.
+
+   Usage:
+
+       <ChatWidget @rendermode="InteractiveServer"
+                   Hosts="@(new Dictionary<string,string> {
+                       ["remote"] = "http://100.89.6.69:11434",
+                       ["local"]  = "http://localhost:11434"
+                   })" />
+
+   Omit Hosts entirely to use the default remote/local pair below.
+   ============================================================ *@
+
+@using System.Net.Http.Json
+@using System.Text.Json.Serialization
+@using IsaChatApp.Services
+@implements IDisposable
+@inject HttpClient Http
+@inject WidgetSettings Settings
+@inject UsageLogService UsageLog
+
+<div class="isa-widget">
+
+    @* Embedded dashboard, if one has been opened from the header icons
+       below. Deliberately OUTSIDE the @if (!IsExpanded) branch so it
+       survives Collapse() -- placed FIRST among .isa-widget's children
+       so it paints behind the backdrop/panel/bubble (see the note on
+       ActiveDashboardUrl in the @code block). *@
+    @if (ActiveDashboardUrl is not null)
+    {
+        <div class="isa-widget__dashboardHost">
+            <button type="button" class="isa-widget__dashboardClose" @onclick="CloseDashboard" title="Close dashboard" aria-label="Close dashboard">&times;</button>
+            <iframe src="@ActiveDashboardUrl" class="isa-widget__dashboardFrame" title="Dashboard"></iframe>
+        </div>
+    }
+
+    @if (!IsExpanded)
+    {
+        @* Collapsed: the throbber, resting (not driven by IsSending —
+           there's nothing to send yet) but set to spin and colour-cycle
+           on mouse-over via SpinOnHover, purely as a hover affordance.
+           Fixed to the bottom-right corner with a gap from the screen
+           edge (see wireframe "Collapsed"). This is a separate,
+           independently-positioned element from the expanded panel
+           below — it does not grow into the panel; the panel appears
+           on its own, anchored at the top-right corner instead (see
+           wireframe "Expanded" and the note on
+           .isa-widget__panel.is-expanded in the .css file for why). *@
+        <button type="button" class="isa-widget__bubble" @onclick="Expand" aria-label="Open chat">
+            <Throbber Spinning="false" SpinOnHover="true" />
+        </button>
+    }
+    else
+    {
+        @* Dimmed backdrop behind the expanded panel. *@
+        <div class="isa-widget__backdrop" @onclick="Collapse"></div>
+
+        <div class="isa-widget__panel is-expanded">
+
+            <div class="isa-widget__header">
+                @* Header icon links -- all the same grey. Deliberately
+                   still not in NavMenu.razor; these are the discoverable
+                   entry points into settings and the (placeholder)
+                   dashboards, everywhere the widget itself appears. Config,
+                   Dev Dashboard and Content Health Dashboard all load
+                   behind the panel via OpenDashboard() instead of opening
+                   a new tab -- see the @code block. *@
+                <div class="isa-widget__headerLinks">
+                    <button type="button" class="isa-widget__headerLink" @onclick='() => OpenDashboard("/isa-config")' title="Config" aria-label="Isa configuration">
+                        <svg viewBox="0 0 24 24" class="isa-widget__headerIcon" aria-hidden="true">
+                            <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                        </svg>
+                    </button>
+                    @* Only shown when the currently-selected role (set on
+                       /isa-config) has access -- see WidgetSettings.
+                       CanAccessDevDashboard / CanAccessContentHealthDashboard. *@
+                    @if (Settings.CanAccessDevDashboard)
+                    {
+                        <button type="button" class="isa-widget__headerLink" @onclick='() => OpenDashboard("/dev-dashboard")' title="Developer Dashboard" aria-label="Developer Dashboard">
+                            <svg viewBox="0 0 24 24" class="isa-widget__headerIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="5" width="18" height="14" rx="2" />
+                                <polyline points="7,9 10,12 7,15" />
+                                <line x1="12" y1="15" x2="16" y2="15" />
+                            </svg>
+                        </button>
+                    }
+                    @if (Settings.CanAccessContentHealthDashboard)
+                    {
+                        <button type="button" class="isa-widget__headerLink" @onclick='() => OpenDashboard("/content-health-dashboard")' title="Content Health Dashboard" aria-label="Content Health Dashboard">
+                            <svg viewBox="0 0 24 24" class="isa-widget__headerIcon" aria-hidden="true">
+                                <path fill="currentColor" d="M6,2C4.9,2,4.01,2.9,4.01,4L4,20c0,1.1,0.89,2,1.99,2H18c1.1,0,2-0.9,2-2V8l-6-6H6z M13,9V3.5L18.5,9H13z M8,13h8v1.5H8V13z M8,16h8v1.5H8V16z M8,10h5v1.5H8V10z"/>
+                            </svg>
+                        </button>
+                    }
+                </div>
+                <button type="button" class="isa-widget__close" @onclick="Collapse" aria-label="Close chat">&times;</button>
+            </div>
+
+            <div class="isa-widget__modelsPanel">
+                <div class="isa-widget__modelsPanelHeader">
+                    <span class="isa-widget__modelsPanelLabel">Available Models</span>
+                    <span class="isa-widget__modelsPanelSummary">
+                        @if (IsLoadingModels)
+                        {
+                            <text>Loading&hellip;</text>
+                        }
+                        else if (ModelEntries.Count == 0 && HostStatuses.Count == 0)
+                        {
+                            <text>No hosts configured</text>
+                        }
+                        else
+                        {
+                            <text>@ModelEntries.Count model(s) across @Hosts.Count host(s)</text>
+                        }
+                    </span>
+                    <button type="button" class="isa-widget__refreshBtn" @onclick="LoadModels" disabled="@IsLoadingModels">
+                        @(IsLoadingModels ? "Loading..." : "Refresh")
+                    </button>
+                </div>
+                @if (HostStatuses.Count > 0)
+                {
+                    <div class="isa-widget__modelStatus">
+                        @foreach (var status in HostStatuses)
+                        {
+                            <div class="isa-widget__modelStatusRow">@status</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="isa-widget__messages">
+                @* The CSS container uses flex-direction: column-reverse
+                   so the browser keeps the view pinned to the newest
+                   message with zero JS (no scrollIntoView call needed)
+                   — see the .css file for exactly how. That trick only
+                   works if the NEWEST message is the FIRST element in
+                   the DOM (column-reverse places the first child at the
+                   bottom, last child at the top — the opposite of plain
+                   "column"), so this walks Messages newest-to-oldest,
+                   via MessagesNewestFirst below, rather than in the
+                   order they were actually sent. *@
+                @foreach (var msg in MessagesNewestFirst)
+                {
+                    <div class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
+                        <div class="isa-widget__who">
+                            @msg.DisplayName
+                            @if (Settings.ShowResponseTime && msg.ElapsedMs is not null)
+                            {
+                                <span class="isa-widget__responseTime">&middot; @FormatElapsed(msg.ElapsedMs.Value)</span>
+                            }
+                        </div>
+                        <div class="isa-widget__text">@msg.Text</div>
+                    </div>
+                }
+            </div>
+
+            @* Left: placeholder link for the future ticketing-system
+               bridge — @Title ("Direct Support") used to sit large in
+               the header; it now lives here instead, small and
+               left-justified. Not wired up to anything yet; swap the
+               href / add a click handler once the ticketing bridge
+               exists.
+               Right: the model picker, moved up from its own row below
+               the input. No "Model:" label — this is a test demo, the
+               dropdown's contents are self-explanatory here. *@
+            <div class="isa-widget__directSupportRow">
+                <a href="#" class="isa-widget__directSupportLink" @onclick:preventDefault="true">@Title</a>
+                <select class="isa-widget__modelSelect" @bind="SelectedIndexString" disabled="@(IsSending || ModelEntries.Count == 0)">
+                    @if (ModelEntries.Count == 0)
+                    {
+                        <option value="">@(IsLoadingModels ? "Loading..." : "No models available")</option>
+                    }
+                    else
+                    {
+                        @for (int i = 0; i < ModelEntries.Count; i++)
+                        {
+                            var entry = ModelEntries[i];
+                            <option value="@i">@entry.ModelName (@entry.HostName)</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            @* Input row, matching wireframe "Expanded": the ring icon
+               sits inside the left edge of the input pill, a dark
+               arrow button sends, on the right. While IsSending, the
+               field is disabled and shows the current status message
+               (see CurrentStatusText / SetStatus in the @code block)
+               in place of the draft text — it reverts to DraftText
+               (cleared when Send() started, ready for the next
+               message) the moment sending finishes. When
+               WidgetSettings.ShowResponseTime is on, that status text
+               also carries a live-ticking elapsed time (see
+               InputDisplayValue / TickLoop below) so you can watch how
+               long the in-flight request has been running. *@
+            <div class="isa-widget__inputRow">
+                <div class="isa-widget__inputWrap">
+                    <span class="isa-widget__inputIcon"><Throbber Spinning="@IsSending" /></span>
+                    <input class="isa-widget__input"
+                           placeholder="Ask a question..."
+                           value="@InputDisplayValue"
+                           @oninput="OnDraftInput"
+                           @onkeydown="HandleKeyDown"
+                           disabled="@IsSending" />
+                </div>
+                <button type="button" class="isa-widget__send" @onclick="Send" disabled="@(IsSending || SelectedIndex is null || string.IsNullOrWhiteSpace(DraftText))" aria-label="Send">
+                    <svg viewBox="0 0 24 24" class="isa-widget__sendIcon" aria-hidden="true">
+                        <path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    // ---- Configuration -------------------------------------------------
+
+    /// <summary>Header text shown when the widget is expanded.</summary>
+    [Parameter] public string Title { get; set; } = "Direct Support";
+
+    /// <summary>
+    /// Named Ollama hosts to query for available models — mirrors the
+    /// HOSTS object at the top of chat-demo-live.html. Every host here
+    /// is queried in parallel on load (and on Refresh); an unreachable
+    /// one is skipped rather than blocking the others.
+    ///
+    /// NOTE: for anything beyond a local prototype, point these at your
+    /// own ASP.NET Core Minimal API instead of straight at Ollama — the
+    /// API is where auth, AI Use Register logging, and escalation/
+    /// handoff logic belong, per the RFP's governance requirements.
+    /// </summary>
+    [Parameter]
+    public Dictionary<string, string> Hosts { get; set; } = new()
+    {
+        ["remote"] = "http://100.89.6.69:11434",
+        ["local"] = "http://localhost:11434"
+    };
+
+    /// <summary>How long to wait on any single host before treating it as unreachable.</summary>
+    [Parameter] public int HostTimeoutMs { get; set; } = 4000;
+
+    // ---- Status messages ---------------------------------------------
+    //
+    // Ported from isa-status-messages.js's MESSAGES object. This is the
+    // one part of this file meant to be edited casually as more of the
+    // real pipeline gets built out: add a key here, then call
+    // SetStatus("thatKey") from wherever that stage of the process
+    // actually happens.
+    //
+    //     searching: "Searching the database..."
+    //     ^^^^^^^^^                              <- key, used in code
+    //                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ <- text, shown to the user
+    //
+    // The starting set below mirrors the original's search-first
+    // architecture (search, escalate to AI only if needed, then verify
+    // the AI's answer) even though only "aiProcessing" is actually
+    // wired up right now (see Send()) — the others are ready for when
+    // search/escalation/verification exist as real steps, so adding
+    // that logic later is just a SetStatus(...) call at the right spot,
+    // not a new mechanism.
+    private static readonly Dictionary<string, string> StatusMessages = new()
+    {
+        ["searching"] = "Searching the database...",
+        ["escalating"] = "Escalating to AI...",
+        ["aiProcessing"] = "AI processing your request...",
+        ["verifying"] = "Verifying response..."
+        // add more stages here, e.g.:
+        // ["ticketing"] = "Creating a support ticket..."
+    };
+
+    private string StatusKey { get; set; } = "aiProcessing";
+
+    /// <summary>
+    /// The text for the input box to show in place of the draft while
+    /// IsSending — looked up by StatusKey. Falls back to a generic
+    /// label rather than throwing if SetStatus was ever given a key
+    /// that isn't in StatusMessages (mirrors the original's
+    /// console.warn-and-ignore behaviour for an unknown key).
+    /// </summary>
+    private string CurrentStatusText =>
+        StatusMessages.TryGetValue(StatusKey, out var text) ? text : "Working...";
+
+    /// <summary>
+    /// Switches the status message shown in the input box. Doesn't
+    /// restart or otherwise touch the throbber — that keeps spinning
+    /// on IsSending regardless of which stage the message describes.
+    /// A key not present in StatusMessages is ignored, not thrown —
+    /// same reasoning as the JS version's console.warn: a bad key here
+    /// is a bug worth noticing during development, not something that
+    /// should take down an in-progress request for the person waiting
+    /// on it.
+    /// </summary>
+    private void SetStatus(string key)
+    {
+        if (StatusMessages.ContainsKey(key))
+        {
+            StatusKey = key;
+        }
+    }
+
+    // ---- State -----------------------------------------------------------
+
+    private bool IsExpanded { get; set; } = false;
+
+    // Set when the user opens the Dev Dashboard or Content Health
+    // Dashboard from the header icons below. Rendered as an iframe that
+    // stays mounted across Expand()/Collapse() -- see the markup at the
+    // top of this file, where it's placed as the FIRST child of
+    // .isa-widget (and so paints BEHIND the backdrop/panel/bubble,
+    // which have no explicit z-index of their own and simply stack in
+    // DOM order). OpenDashboard() below is what starts it loading while
+    // the panel is still open, then collapses the panel a moment later
+    // so the dashboard is left visible with just the bubble over it.
+    private string? ActiveDashboardUrl { get; set; }
+    private bool IsSending { get; set; } = false;
+    private bool IsLoadingModels { get; set; } = false;
+    private string DraftText { get; set; } = string.Empty;
+    private List<ChatEntry> Messages { get; set; } = new();
+
+    // Messages, in actual chronological order, walked backwards for
+    // display — see the comment on .isa-widget__messages in the markup
+    // above for why the column-reverse auto-scroll trick needs this.
+    // Enumerable.Reverse (not List<T>.Reverse, which mutates the list
+    // in place and returns void) so Messages itself is untouched.
+    private IEnumerable<ChatEntry> MessagesNewestFirst => Enumerable.Reverse(Messages);
+
+    private List<ModelEntry> ModelEntries { get; set; } = new();
+    private List<string> HostStatuses { get; set; } = new();
+    private int? SelectedIndex { get; set; }
+
+    // ---- Live elapsed-time ticker --------------------------------------
+    //
+    // While a request is in flight, TickLoop forces a re-render every
+    // ~100ms purely so InputDisplayValue's elapsed-time text (below)
+    // actually advances on screen — nothing else about sending depends
+    // on this loop running. Started in Send() right before the network
+    // call, cancelled in its `finally`, and also cancelled from
+    // Dispose() in case the component goes away mid-request (a
+    // reconnect, a navigation) — same defensive pattern Throbber.razor
+    // uses for its own hover-countdown CancellationTokenSource.
+    private CancellationTokenSource? _tickCts;
+    private DateTime _sendStartedAt;
+
+    private async Task TickLoop(CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await Task.Delay(100, token);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected the moment Send()'s finally (or Dispose) cancels
+            // the token -- nothing to do.
+        }
+    }
+
+    /// <summary>
+    /// Formats a millisecond duration the way both the live ticker and
+    /// each message's response-time label show it: sub-second as whole
+    /// milliseconds ("620ms"), a second or more as one decimal of
+    /// seconds ("1.4s").
+    /// </summary>
+    private static string FormatElapsed(double ms) =>
+        ms < 1000 ? $"{ms:0}ms" : $"{ms / 1000:0.0}s";
+
+    // What the input box actually displays: the live status message
+    // (with a live-ticking elapsed time appended, when
+    // ShowResponseTime is on) while a request is in flight -- the
+    // field is disabled then, so this is read-only from the user's
+    // point of view -- otherwise whatever they've actually typed.
+    private string InputDisplayValue
+    {
+        get
+        {
+            if (!IsSending) return DraftText;
+            if (!Settings.ShowResponseTime) return CurrentStatusText;
+            var elapsed = FormatElapsed((DateTime.UtcNow - _sendStartedAt).TotalMilliseconds);
+            return $"{CurrentStatusText} ({elapsed})";
+        }
+    }
+
+    private void OnDraftInput(Microsoft.AspNetCore.Components.ChangeEventArgs e) => DraftText = e.Value?.ToString() ?? string.Empty;
+
+    // <select @bind> needs a string-backed property; this just wraps
+    // SelectedIndex so the markup can bind directly to it.
+    private string SelectedIndexString
+    {
+        get => SelectedIndex?.ToString() ?? "";
+        set => SelectedIndex = int.TryParse(value, out var i) ? i : null;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModels();
+    }
+
+    private void Expand() => IsExpanded = true;
+    private void Collapse() => IsExpanded = false;
+
+    // Starts a dashboard loading behind the still-open panel, then
+    // collapses Isa back to her bubble a beat later so the dashboard is
+    // left on screen. ?embed=1 tells MainLayout not to render a second,
+    // nested ChatWidget inside the iframe -- see MainLayout.razor.
+    private async Task OpenDashboard(string path)
+    {
+        ActiveDashboardUrl = $"{path}?embed=1";
+        StateHasChanged();
+        await Task.Delay(500);
+        Collapse();
+    }
+
+    // Fully unloads the embedded dashboard (the small close button on
+    // .isa-widget__dashboardHost). Does nothing to IsExpanded.
+    private void CloseDashboard() => ActiveDashboardUrl = null;
+
+    // Sets --bubble-bg (and a matching --bubble-text) as an inline
+    // custom property directly on the message element, per Role --
+    // picked up by .isa-widget__message--you / --ai in the .css file.
+    // Inline style bypasses Blazor's CSS-isolation scoping entirely,
+    // so this works even though the color is only known at runtime
+    // (from WidgetSettings, set on /isa-config) rather than at build
+    // time. Text color is picked per-bubble via WidgetSettings.
+    // ReadableTextColor rather than hardcoded white, since a 10%/30%
+    // screened tint (e.g. ISACA Light Blue at 10%) is pale enough that
+    // white text would be unreadable on it -- "error" bubbles are
+    // left alone (empty string), keeping their own hardcoded red
+    // styling.
+    private string BubbleStyle(string role) => role switch
+    {
+        "you" => BubbleStyleFor(Settings.UserBubbleColor),
+        "ai" => BubbleStyleFor(Settings.AiBubbleColor),
+        _ => ""
+    };
+
+    private static string BubbleStyleFor(string hex) =>
+        $"--bubble-bg: {hex}; --bubble-text: {WidgetSettings.ReadableTextColor(hex)};";
+
+    private async Task HandleKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !IsSending && SelectedIndex is not null && !string.IsNullOrWhiteSpace(DraftText))
+        {
+            await Send();
+        }
+    }
+
+    /// <summary>
+    /// Queries every configured host's /api/tags in parallel, skipping
+    /// any host that errors or times out, and rebuilds ModelEntries +
+    /// HostStatuses from whatever came back. Mirrors loadModels() in
+    /// chat-demo-live.html.
+    /// </summary>
+    private async Task LoadModels()
+    {
+        IsLoadingModels = true;
+        StateHasChanged();
+
+        var previousSelection = SelectedIndex is not null && SelectedIndex < ModelEntries.Count
+            ? ModelEntries[SelectedIndex.Value]
+            : null;
+
+        var tasks = Hosts.Select(kv => FetchHostModels(kv.Key, kv.Value)).ToList();
+        var results = await Task.WhenAll(tasks);
+
+        var newEntries = new List<ModelEntry>();
+        var newStatuses = new List<string>();
+
+        foreach (var result in results)
+        {
+            if (!result.Reachable)
+            {
+                newStatuses.Add($"{result.HostName} ({StripScheme(result.HostUrl)}) — unreachable");
+                continue;
+            }
+
+            if (result.Models is null || result.Models.Count == 0)
+            {
+                newStatuses.Add($"{result.HostName} — no models pulled yet");
+                continue;
+            }
+
+            foreach (var m in result.Models)
+            {
+                var name = m.Name ?? m.Model ?? "(unnamed)";
+                newEntries.Add(new ModelEntry(result.HostName, result.HostUrl, name, m.Size));
+            }
+        }
+
+        ModelEntries = newEntries;
+        HostStatuses = newStatuses;
+
+        // Try to keep the same (host, model) selected across a refresh;
+        // otherwise default to the first entry, if any.
+        if (previousSelection is not null)
+        {
+            var stillThere = ModelEntries.FindIndex(e =>
+                e.HostName == previousSelection.HostName && e.ModelName == previousSelection.ModelName);
+            SelectedIndex = stillThere >= 0 ? stillThere : (ModelEntries.Count > 0 ? 0 : null);
+        }
+        else
+        {
+            SelectedIndex = ModelEntries.Count > 0 ? 0 : null;
+        }
+
+        IsLoadingModels = false;
+    }
+
+    private async Task<HostResult> FetchHostModels(string hostName, string hostUrl)
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(HostTimeoutMs));
+            var response = await Http.GetFromJsonAsync<TagsResponse>($"{hostUrl}/api/tags", cts.Token);
+            return new HostResult(hostName, hostUrl, response?.Models ?? new List<TagsModel>(), true);
+        }
+        catch
+        {
+            return new HostResult(hostName, hostUrl, null, false);
+        }
+    }
+
+    private static string StripScheme(string url) =>
+        url.Replace("http://", "").Replace("https://", "");
+
+    private async Task Send()
+    {
+        var text = DraftText.Trim();
+        if (string.IsNullOrEmpty(text) || IsSending || SelectedIndex is null) return;
+
+        var entry = ModelEntries[SelectedIndex.Value];
+
+        DraftText = string.Empty;
+        Messages.Add(new ChatEntry("you", "You", text));
+        IsSending = true;
+
+        // This is currently the only stage that's real, so it's the
+        // only SetStatus call here — a direct call straight to Ollama.
+        // When search/escalation/verification become actual steps
+        // instead of just entries in StatusMessages, each one gets its
+        // own SetStatus("thatKey") call at the point it actually
+        // happens, in whatever order the real pipeline runs them.
+        SetStatus("aiProcessing");
+
+        // Marks the start of this call for two things: the live
+        // ticking display in InputDisplayValue (via TickLoop, started
+        // right below) and the response-time figure logged to
+        // UsageLog / shown on the message once it lands. Both read
+        // from this same field, so the number the user watched tick up
+        // is the same number that ends up next to the model name.
+        _sendStartedAt = DateTime.UtcNow;
+        _tickCts = new CancellationTokenSource();
+        _ = TickLoop(_tickCts.Token);
+
+        // Force a render right now, before the network call, and
+        // actually wait for it to go out — InvokeAsync(StateHasChanged)
+        // routes through the renderer's own dispatcher and its Task
+        // only completes once that render has been processed, which is
+        // a stronger guarantee than a bare StateHasChanged() call (that
+        // only schedules a render; it doesn't tell you when — or
+        // whether — it actually went out before the code below moves
+        // on to the network call).
+        await InvokeAsync(StateHasChanged);
+
+        // Belt-and-suspenders against a response that comes back too
+        // fast to actually see spin: keep the throbber up for at least
+        // this long regardless of how quickly Ollama answers, so a
+        // fast local model can't make the animation effectively
+        // invisible. Doesn't affect the logged/displayed response
+        // time below, which is captured before this padding is added.
+        const int MinSpinnerMs = 700;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"{entry.HostUrl}/api/generate", new OllamaRequest
+            {
+                Model = entry.ModelName,
+                Prompt = text,
+                Stream = false
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Model host returned {(int)response.StatusCode}{(string.IsNullOrEmpty(body) ? "" : ": " + body)}");
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<OllamaResponse>();
+
+            // The real response time: from just before the request
+            // above to right here, not including the MinSpinnerMs
+            // padding in `finally` below. This is what gets logged to
+            // UsageLog (for the Content Health Dashboard) and what
+            // shows up next to the model name on this message.
+            var elapsedMs = (DateTime.UtcNow - _sendStartedAt).TotalMilliseconds;
+
+            // prompt_eval_count / eval_count are Ollama's own token
+            // counts for this call (prompt tokens / completion tokens)
+            // -- not every build of Ollama reports them, so both are
+            // nullable and UsageLogService treats a missing one as 0
+            // when summing, rather than failing the whole entry.
+            UsageLog.Record(entry.ModelName, entry.HostName, result?.PromptEvalCount, result?.EvalCount, elapsedMs);
+
+            // Settings.UseIsaLabel (set at /isa-config, not linked in
+            // the nav) swaps the raw model/host string for "Isa" here
+            // -- transcript only; the model picker dropdown above
+            // always shows real model names, since that's a testing
+            // tool for the team, not something a chapter leader sees.
+            var aiDisplayName = Settings.UseIsaLabel ? "Isa" : $"{entry.ModelName} ({entry.HostName})";
+            Messages.Add(new ChatEntry("ai", aiDisplayName, result?.Response ?? "(empty response)", entry.ModelName, elapsedMs));
+        }
+        catch (Exception ex)
+        {
+            Messages.Add(new ChatEntry("error", "Error",
+                $"Could not reach {entry.ModelName} on {entry.HostName} ({entry.HostUrl}). {ex.Message} — check that Ollama is running there and reachable, and that OLLAMA_ORIGINS allows this page's origin."));
+        }
+        finally
+        {
+            _tickCts?.Cancel();
+            _tickCts = null;
+
+            var elapsed = DateTime.UtcNow - _sendStartedAt;
+            var minDelay = TimeSpan.FromMilliseconds(MinSpinnerMs) - elapsed;
+            if (minDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(minDelay);
+            }
+            IsSending = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _tickCts?.Cancel();
+    }
+
+    // Model and ElapsedMs are only ever set on "ai" entries (see
+    // Send() above) -- "you" and "error" entries leave both null,
+    // which is exactly what the markup's `msg.ElapsedMs is not null`
+    // check uses to decide whether a response-time label belongs next
+    // to that message at all.
+    private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null);
+
+    private record ModelEntry(string HostName, string HostUrl, string ModelName, long? Size);
+
+    private record HostResult(string HostName, string HostUrl, List<TagsModel>? Models, bool Reachable);
+
+    private class OllamaRequest
+    {
+        [JsonPropertyName("model")] public string Model { get; set; } = "";
+        [JsonPropertyName("prompt")] public string Prompt { get; set; } = "";
+        [JsonPropertyName("stream")] public bool Stream { get; set; }
+    }
+
+    private class OllamaResponse
+    {
+        [JsonPropertyName("response")] public string? Response { get; set; }
+        [JsonPropertyName("prompt_eval_count")] public int? PromptEvalCount { get; set; }
+        [JsonPropertyName("eval_count")] public int? EvalCount { get; set; }
+    }
+
+    private class TagsResponse
+    {
+        [JsonPropertyName("models")] public List<TagsModel>? Models { get; set; }
+    }
+
+    private class TagsModel
+    {
+        [JsonPropertyName("name")] public string? Name { get; set; }
+        [JsonPropertyName("model")] public string? Model { get; set; }
+        [JsonPropertyName("size")] public long? Size { get; set; }
+    }
+}

@@ -1,0 +1,467 @@
+/* ============================================================
+   DeveloperDashboard.razor.css
+
+   Dressed in the ISACA palette (see WidgetSettings.IsacaColors):
+   navy for chrome/primary actions, green/orange/purple for the
+   pipeline-stage tags (mirrors the wireframe's own three-color tag
+   grouping), blue for the slider accent. Custom properties live on
+   .dd itself rather than :root -- see the note in ChatWidget.razor.css
+   for why that matters under Blazor's CSS isolation.
+   ============================================================ */
+
+.dd {
+    --dd-navy: #1d2d5c;
+    --dd-navy-dark: #131f42;
+    --dd-green: #6cb33f;
+    --dd-orange: #e57524;
+    --dd-purple: #6658b1;
+    --dd-blue: #00a4e4;
+    --dd-border: #e3e6ea;
+    --dd-muted: #6a7078;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.dd__nav {
+    flex: 0 0 220px;
+    width: 220px;
+    background: #fff;
+    border: 1px solid var(--dd-border);
+    border-radius: 10px;
+    padding: 1rem 0;
+    position: sticky;
+    top: 1rem;
+}
+
+.dd__navHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0 1rem 0.9rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid #eee;
+}
+
+.dd__navTitle {
+    font-weight: 700;
+    color: var(--dd-navy);
+}
+
+.dd__badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--dd-green);
+    border: 1px solid var(--dd-green);
+    border-radius: 999px;
+    padding: 0.15rem 0.5rem;
+    background: #f3faf0;
+    white-space: nowrap;
+}
+
+.dd__navList {
+    display: flex;
+    flex-direction: column;
+}
+
+.dd__navItem {
+    text-align: left;
+    background: none;
+    border: none;
+    border-left: 3px solid transparent;
+    padding: 0.6rem 1rem;
+    font-size: 0.88rem;
+    color: #333;
+    cursor: pointer;
+}
+
+    .dd__navItem:hover {
+        background: #f5f6f8;
+    }
+
+    .dd__navItem.is-active {
+        background: var(--dd-navy);
+        color: #fff;
+        border-left-color: var(--dd-green);
+        font-weight: 600;
+    }
+
+.dd__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.dd__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.dd__pageTitle {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--dd-navy);
+}
+
+.dd__topbarActions {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.dd__btn {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.dd__btn--ghost {
+    background: #fff;
+    border-color: #d7dae0;
+    color: var(--dd-navy);
+}
+
+    .dd__btn--ghost:hover {
+        background: #f5f6f8;
+    }
+
+.dd__btn--primary {
+    background: var(--dd-navy);
+    color: #fff;
+}
+
+    .dd__btn--primary:hover {
+        background: var(--dd-navy-dark);
+    }
+
+    .dd__btn--primary:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+
+.dd__toast {
+    background: #eaf5e3;
+    border: 1px solid var(--dd-green);
+    color: #2e5322;
+    padding: 0.6rem 0.9rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+}
+
+.dd__changelog {
+    background: #fff;
+    border: 1px solid var(--dd-border);
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+}
+
+    .dd__changelog ul {
+        margin: 0.5rem 0 0;
+        padding-left: 1.1rem;
+    }
+
+.dd__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.dd__card {
+    background: #fff;
+    border: 1px solid var(--dd-border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+}
+
+.dd__card--wide {
+    grid-column: 1 / -1;
+}
+
+.dd__cardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+    .dd__cardHeader h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--dd-navy);
+    }
+
+.dd__cardHint {
+    color: var(--dd-muted);
+    font-size: 0.82rem;
+    margin: 0.25rem 0 0.9rem;
+}
+
+.dd__tag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-radius: 5px;
+    padding: 0.2rem 0.45rem;
+    white-space: nowrap;
+    border: 1px solid;
+}
+
+.dd__tag--green {
+    color: var(--dd-green);
+    border-color: var(--dd-green);
+    background: #f3faf0;
+}
+
+.dd__tag--orange {
+    color: var(--dd-orange);
+    border-color: var(--dd-orange);
+    background: #fdf3ea;
+}
+
+.dd__tag--purple {
+    color: var(--dd-purple);
+    border-color: var(--dd-purple);
+    background: #f3f1fa;
+}
+
+.dd__slider {
+    width: 100%;
+    accent-color: var(--dd-blue);
+}
+
+.dd__sliderLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--dd-muted);
+    margin-top: 0.3rem;
+}
+
+.dd__sliderValue {
+    font-weight: 700;
+    color: var(--dd-navy);
+}
+
+.dd__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.dd__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: #f0f2f5;
+    border: 1px solid #d7dae0;
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.82rem;
+    color: #333;
+}
+
+.dd__chipRemove {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #8a8f98;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0;
+}
+
+    .dd__chipRemove:hover {
+        color: #c0392b;
+    }
+
+.dd__chip--add {
+    border-style: dashed;
+    color: var(--dd-navy);
+    cursor: pointer;
+    background: #fff;
+}
+
+    .dd__chip--add:hover {
+        background: #f5f6f8;
+    }
+
+.dd__chip--editing {
+    background: #fff;
+}
+
+.dd__chipInput {
+    border: none;
+    outline: none;
+    font-size: 0.82rem;
+    width: 100px;
+}
+
+.dd__chipConfirm {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--dd-green);
+    font-weight: 700;
+    padding: 0;
+}
+
+.dd__checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.dd__check {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.88rem;
+    color: #333;
+    cursor: pointer;
+}
+
+    .dd__check input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--dd-navy);
+    }
+
+.dd__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+    .dd__table th {
+        text-align: left;
+        color: var(--dd-muted);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--dd-border);
+    }
+
+    .dd__table th:not(:first-child),
+    .dd__table td:not(:first-child) {
+        text-align: center;
+    }
+
+    .dd__table td {
+        padding: 0.55rem 0;
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    .dd__table input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--dd-navy);
+    }
+
+.dd__tableHint {
+    font-size: 0.75rem;
+    color: #8a8f98;
+    margin-top: 0.5rem;
+}
+
+.dd__testRow {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.4rem;
+}
+
+.dd__testInput {
+    flex: 1;
+    min-width: 220px;
+    border: 1px solid #d7dae0;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.dd__testRole {
+    border: 1px solid #d7dae0;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    background: #fff;
+}
+
+.dd__testHint {
+    font-size: 0.75rem;
+    color: #8a8f98;
+    margin: 0.2rem 0 1rem;
+}
+
+.dd__resultsGrid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+}
+
+.dd__resultTile {
+    background: #f8f9fa;
+    border: 1px solid #eceef1;
+    border-radius: 8px;
+    padding: 0.7rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-start;
+}
+
+.dd__resultValue {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--dd-navy);
+    text-transform: capitalize;
+}
+
+.dd__stub {
+    background: #fff;
+    border: 1px dashed #d7dae0;
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    color: var(--dd-muted);
+}
+
+.dd__back {
+    display: inline-block;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .dd {
+        flex-direction: column;
+    }
+
+    .dd__nav {
+        width: 100%;
+        flex: none;
+        position: static;
+    }
+
+    .dd__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dd__resultsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

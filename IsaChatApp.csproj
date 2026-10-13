@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Leftover output folder from an earlier publish-based launch attempt.
+         Excluded so MSBuild does not scan it as source content (it was
+         causing BLAZOR106 build errors by picking up a stray copy of
+         ReconnectModal.razor.js as if it were a new source file). Safe to
+         delete this folder entirely; it is not used anymore. -->
+    <Content Remove="publish/**" />
+    <None Remove="publish/**" />
+    <Compile Remove="publish/**" />
+    <Watch Remove="publish/**" />
+  </ItemGroup>
+
+</Project>

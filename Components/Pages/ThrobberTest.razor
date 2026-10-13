@@ -1,0 +1,252 @@
+@* ============================================================
+   ThrobberTest.razor
+
+   A standalone test page for the throbber, with a live control panel
+   covering every setting isaThrobber.mount() originally took — this
+   is a from-scratch C#/Razor port of isa-throbber.js's create()
+   function and its embedded stylesheet, not a reuse of ChatWidget's
+   (deliberately simpler, single-purpose) RingTemplate. No Ollama, no
+   HttpClient, no model dropdown — nothing but the throbber itself, so
+   every knob can be checked in isolation before anything gets carried
+   back into the real widget.
+
+   Settings ported from THROBBER_OPTIONS in isa-throbber.js:
+     placement   "centred" | "below" | "ingap"
+     wordMode    "cycle" | "solid" | "gradient" | "letters"
+     size        overall width, px
+     spin        one full ring rotation, seconds
+     cycle       one full colour cycle, seconds
+     ringDir     "normal" | "reverse"
+     wordDir     "normal" | "reverse"
+     wordDelay   seconds (negative offsets the wordmark's cycle)
+     ringColor   resting ring colour (also used when reduced motion
+                 is on, or when the ring isn't currently spinning)
+     wordColor   resting word colour, same rule
+     label       screen-reader text (role="status" aria-label)
+
+   isaThrobber.mount() always animates once mounted — there's no
+   on/off concept in the original. This page keeps our own addition
+   on top of that (the collapsed bubble sits stationary; only the
+   input-row icon spins while sending) as a separate "Spinning" toggle
+   — turn it on to see the animated settings actually animate, off to
+   see the resting-colour state ChatWidget uses for its idle bubble.
+
+   Route: /throbber-test
+   ============================================================ *@
+@page "/throbber-test"
+@rendermode InteractiveServer
+
+<h1>Throbber test</h1>
+<p>Isolated from ChatWidget — no Ollama connection needed to test this page.</p>
+
+<div class="tt-layout">
+
+    <div class="tt-stage-col">
+        <div class="tt-stage">
+            <div class="isa-throbber isa-throbber--@Placement @WordModeClass"
+                 style="@RootStyle"
+                 role="status" aria-label="@Label">
+
+                <svg class="isa-throbber__ring @(Spinning ? "is-spinning" : "")" viewBox="-2 -2 204 204" aria-hidden="true">
+                    @if (WordMode == "gradient")
+                    {
+                        <defs>
+                            <linearGradient id="ttWordGrad" gradientUnits="userSpaceOnUse" x1="58.10" y1="0" x2="117.69" y2="0">
+                                @for (var s = 0; s <= 5; s++)
+                                {
+                                    <stop class="isa-throbber__grad-stop @(Spinning ? "is-spinning" : "")" offset="@GradOffset(s)" />
+                                }
+                            </linearGradient>
+                        </defs>
+                    }
+                    <mask id="ttRingMask" maskUnits="userSpaceOnUse" x="-50" y="-50" width="304" height="304">
+                        <rect x="-50" y="-50" width="304" height="304" fill="#fff" />
+                        <rect x="110" y="74.75" width="110" height="50.5" fill="#000" />
+                    </mask>
+                    <circle cx="100" cy="100" r="78.96" mask="url(#ttRingMask)" />
+
+                    @* In-gap wordmark: only shown by the "ingap" placement, sitting in the ring's own notch. *@
+                    <g class="isa-throbber__word isa-throbber__word--gap @WordAnimClass(Spinning)"
+                       transform="translate(160.49 90.76) scale(0.62) translate(-58.10 -7.05)"
+                       style="@(WordMode == "gradient" ? "fill:url(#ttWordGrad);" : "")">
+                        <path d="M58.1,8.25c0-.41.37-.79.78-.79h3.81c.41,0,.78.37.78.79v27.41c0,.41-.37.79-.78.79h-3.81c-.41,0-.78-.37-.78-.79V8.25Z" />
+                        <path d="M69.86,32.39l1.48-2.57c.33-.58,1.02-.58,1.39-.29.2.12,3.52,2.57,6.19,2.57,2.13,0,3.73-1.41,3.73-3.19,0-2.11-1.76-3.56-5.21-4.97-3.85-1.57-7.7-4.06-7.7-8.94,0-3.69,2.7-7.95,9.22-7.95,4.18,0,7.38,2.15,8.2,2.77.41.25.53.95.25,1.37l-1.56,2.36c-.33.5-.94.83-1.43.5-.33-.21-3.44-2.28-5.7-2.28s-3.61,1.57-3.61,2.9c0,1.95,1.52,3.27,4.84,4.64,3.98,1.62,8.57,4.02,8.57,9.36,0,4.26-3.65,8.2-9.43,8.2-5.16,0-8.2-2.44-9.02-3.23-.37-.37-.57-.58-.2-1.24Z" />
+                        <path d="M90.42,35.37l12.75-27.86c.12-.25.33-.46.7-.46h.41c.41,0,.57.21.7.46l12.62,27.86c.25.54-.08,1.08-.7,1.08h-3.57c-.61,0-.9-.25-1.19-.83l-2.01-4.47h-12.25l-2.01,4.47c-.16.41-.53.83-1.19.83h-3.57c-.61,0-.94-.54-.7-1.08ZM108.13,26.55l-4.1-9.11h-.12l-4.02,9.11h8.24Z" />
+                    </g>
+                </svg>
+
+                @* Standalone wordmark: shown by "centred" and "below" placements. *@
+                <svg class="isa-throbber__word isa-throbber__word--outer @WordAnimClass(Spinning)" viewBox="0 0 59.59 29.82" aria-hidden="true"
+                     style="@(WordMode == "gradient" ? "fill:url(#ttWordGrad);" : "")">
+                    <g transform="translate(-58.10 -7.05)">
+                        <path d="M58.1,8.25c0-.41.37-.79.78-.79h3.81c.41,0,.78.37.78.79v27.41c0,.41-.37.79-.78.79h-3.81c-.41,0-.78-.37-.78-.79V8.25Z" />
+                        <path d="M69.86,32.39l1.48-2.57c.33-.58,1.02-.58,1.39-.29.2.12,3.52,2.57,6.19,2.57,2.13,0,3.73-1.41,3.73-3.19,0-2.11-1.76-3.56-5.21-4.97-3.85-1.57-7.7-4.06-7.7-8.94,0-3.69,2.7-7.95,9.22-7.95,4.18,0,7.38,2.15,8.2,2.77.41.25.53.95.25,1.37l-1.56,2.36c-.33.5-.94.83-1.43.5-.33-.21-3.44-2.28-5.7-2.28s-3.61,1.57-3.61,2.9c0,1.95,1.52,3.27,4.84,4.64,3.98,1.62,8.57,4.02,8.57,9.36,0,4.26-3.65,8.2-9.43,8.2-5.16,0-8.2-2.44-9.02-3.23-.37-.37-.57-.58-.2-1.24Z" />
+                        <path d="M90.42,35.37l12.75-27.86c.12-.25.33-.46.7-.46h.41c.41,0,.57.21.7.46l12.62,27.86c.25.54-.08,1.08-.7,1.08h-3.57c-.61,0-.9-.25-1.19-.83l-2.01-4.47h-12.25l-2.01,4.47c-.16.41-.53.83-1.19.83h-3.57c-.61,0-.94-.54-.7-1.08ZM108.13,26.55l-4.1-9.11h-.12l-4.02,9.11h8.24Z" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <div class="tt-controls">
+            <button type="button" @onclick="ToggleSpin">
+                @(Spinning ? "Stop spinning" : "Start spinning")
+            </button>
+            <button type="button" @onclick="SimulateSend" disabled="@Simulating">
+                @(Simulating ? "Simulating..." : "Simulate 3s send")
+            </button>
+        </div>
+
+        <p class="tt-state">Spinning: <strong>@Spinning</strong> &nbsp; Simulating: <strong>@Simulating</strong></p>
+    </div>
+
+    <div class="tt-panel">
+        <h2>Settings</h2>
+
+        <label>
+            Placement
+            <select @bind="Placement">
+                <option value="centred">centred</option>
+                <option value="below">below</option>
+                <option value="ingap">ingap</option>
+            </select>
+        </label>
+
+        <label>
+            Word mode
+            <select @bind="WordMode">
+                <option value="cycle">cycle</option>
+                <option value="solid">solid</option>
+                <option value="gradient">gradient</option>
+                <option value="letters">letters</option>
+            </select>
+        </label>
+
+        <label>
+            Size (px)
+            <input type="number" min="40" max="400" step="4" @bind="SizePx" />
+        </label>
+
+        <label>
+            Spin duration (s)
+            <input type="number" min="0.1" max="10" step="0.1" @bind="SpinSeconds" />
+        </label>
+
+        <label>
+            Cycle duration (s)
+            <input type="number" min="0.1" max="10" step="0.1" @bind="CycleSeconds" />
+        </label>
+
+        <label>
+            Ring direction
+            <select @bind="RingDir">
+                <option value="normal">normal</option>
+                <option value="reverse">reverse</option>
+            </select>
+        </label>
+
+        <label>
+            Word direction
+            <select @bind="WordDir">
+                <option value="normal">normal</option>
+                <option value="reverse">reverse</option>
+            </select>
+        </label>
+
+        <label>
+            Word delay (s)
+            <input type="number" min="-10" max="10" step="0.1" @bind="WordDelaySeconds" />
+        </label>
+
+        <label>
+            Ring colour
+            <input type="color" @bind="RingColor" />
+        </label>
+
+        <label>
+            Word colour
+            <input type="color" @bind="WordColor" />
+        </label>
+
+        <label>
+            Label (screen-reader text)
+            <input type="text" @bind="Label" />
+        </label>
+
+        <button type="button" class="tt-reset" @onclick="ResetDefaults">Reset to isa-throbber.js defaults</button>
+    </div>
+
+</div>
+
+@code {
+    // ---- Settings — one field per isaThrobber.mount() option ---------
+
+    private string Placement { get; set; } = "centred";
+    private string WordMode { get; set; } = "cycle";
+    private int SizePx { get; set; } = 160;
+    private double SpinSeconds { get; set; } = 1.1;
+    private double CycleSeconds { get; set; } = 2.2;
+    private string RingDir { get; set; } = "normal";
+    private string WordDir { get; set; } = "normal";
+    private double WordDelaySeconds { get; set; } = 0;
+    private string RingColor { get; set; } = "#6cb33f";
+    private string WordColor { get; set; } = "#1d2d5c";
+    private string Label { get; set; } = "Loading";
+
+    // ---- Our own addition on top of the original: an on/off toggle ---
+
+    private bool Spinning { get; set; }
+    private bool Simulating { get; set; }
+
+    private void ToggleSpin() => Spinning = !Spinning;
+
+    private async Task SimulateSend()
+    {
+        Simulating = true;
+        Spinning = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(3000);
+        Spinning = false;
+        Simulating = false;
+    }
+
+    private void ResetDefaults()
+    {
+        Placement = "centred";
+        WordMode = "cycle";
+        SizePx = 160;
+        SpinSeconds = 1.1;
+        CycleSeconds = 2.2;
+        RingDir = "normal";
+        WordDir = "normal";
+        WordDelaySeconds = 0;
+        RingColor = "#6cb33f";
+        WordColor = "#1d2d5c";
+        Label = "Loading";
+    }
+
+    // ---- Derived values ------------------------------------------------
+
+    private string WordModeClass => WordMode == "cycle" ? "" : $"isa-throbber--word-{WordMode}";
+
+    // Same recipe as isaThrobber.create(): every setting becomes a CSS
+    // custom property on the root element, so the stylesheet's own
+    // defaults apply for anything not worth a control here.
+    private string RootStyle =>
+        $"--isa-size:{SizePx}px;" +
+        $"--isa-spin:{SpinSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}s;" +
+        $"--isa-cycle:{CycleSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}s;" +
+        $"--isa-ring-dir:{RingDir};" +
+        $"--isa-word-dir:{WordDir};" +
+        $"--isa-word-delay:{WordDelaySeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}s;" +
+        $"--isa-ring-color:{RingColor};" +
+        $"--isa-word-color:{WordColor};";
+
+    private static string GradOffset(int stopIndex) =>
+        (stopIndex / 5.0).ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    // Only the "is-spinning" modifier turns the animations on; the base
+    // classes (isa-throbber__word, --gap/--outer) are always present so
+    // placement/word-mode layout rules apply whether or not it's moving.
+    private static string WordAnimClass(bool spinning) => spinning ? "is-spinning" : "";
+
+}

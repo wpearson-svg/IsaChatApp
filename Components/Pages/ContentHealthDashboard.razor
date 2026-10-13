@@ -1,0 +1,339 @@
+@page "/content-health-dashboard"
+
+@* ============================================================
+   ContentHealthDashboard.razor
+
+   Fleshed-out example page (still not wired to a real backend) --
+   linked from the chat widget's header (the log icon). Built from
+   the "Isa Wireframes 3" mock, but repointed at data this app
+   actually HAS: the wireframe's SUPPORT/DATA/TRAINING columns assume
+   real chapter escalation history and a content library this demo
+   doesn't have, so rather than fill those with fake numbers, this
+   keeps the wireframe's three-column, small-caps-header layout and
+   its privacy-note banner, and puts real telemetry underneath --
+   every completed AI reply ChatWidget has logged via UsageLogService
+   (model, host, prompt/completion tokens, response time). See
+   Services/UsageLogService.cs for what gets recorded and where.
+
+   USAGE   -- calls/tokens this week, and the per-model usage log
+              (calls, tokens, avg response time per model).
+   PERFORMANCE -- average response time by model, and tokens per day
+              over the last 7 days -- both real charts over real
+              logged calls, not mockups.
+   LOG     -- the most recent individual calls, newest first.
+
+   Everything here reads UsageLogService.Entries live -- open a couple
+   of chats in the widget, send a few messages to different models,
+   then reload this page. Like the rest of this demo, the log is
+   in-memory only and resets on app restart.
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@inject WidgetSettings Settings
+@inject UsageLogService UsageLog
+@rendermode InteractiveServer
+
+<PageTitle>Content Health Dashboard</PageTitle>
+
+@if (!Settings.CanAccessContentHealthDashboard)
+{
+    <h1>Access restricted</h1>
+    <p class="text-muted">
+        The Content Health Dashboard isn't available to the
+        <strong>@Settings.CurrentRole</strong> role. Only Executive and
+        Manager have access &mdash; switch roles on
+        <a href="/isa-config">/isa-config</a> if this should be visible.
+    </p>
+}
+else
+{
+    <div class="chd">
+        <div class="chd__topbar">
+            <div class="chd__titleBlock">
+                <h1 class="chd__pageTitle">Content Health</h1>
+                <span class="chd__badge">CONTENT HEALTH DASHBOARD</span>
+            </div>
+            <select class="chd__rangeSelect" @bind="RangeKey">
+                <option value="today">Today</option>
+                <option value="week">This week</option>
+                <option value="30d">Last 30 days</option>
+                <option value="all">All time</option>
+            </select>
+        </div>
+
+        <div class="chd__notice">
+            Real telemetry, not mock data &mdash; every row below comes from
+            ChatWidget's own request log (model, tokens, response time).
+            Nothing is persisted to disk; it resets when the app restarts,
+            same as the rest of this demo.
+        </div>
+
+        <div class="chd__statsRow">
+            <div class="chd__statCard">
+                <span class="chd__tag chd__tag--green">USAGE</span>
+                <div class="chd__statValue">@TotalCallsThisWeek</div>
+                <div class="chd__statLabel">Calls this week</div>
+            </div>
+            <div class="chd__statCard">
+                <span class="chd__tag chd__tag--green">USAGE</span>
+                <div class="chd__statValue">@TotalTokensThisWeek.ToString("N0")</div>
+                <div class="chd__statLabel">Tokens this week</div>
+            </div>
+        </div>
+
+        @if (UsageLog.Entries.Count == 0)
+        {
+            <div class="chd__empty">
+                No requests logged yet &mdash; open the chat widget and send a
+                message to a model. This page reads that log live; reload
+                after sending one to see it here.
+            </div>
+        }
+
+        <div class="chd__sectionLabel">USAGE</div>
+        <div class="chd__grid">
+            <div class="chd__card chd__card--wide">
+                <div class="chd__cardHeader">
+                    <h3>Model usage</h3>
+                    <span class="chd__tag chd__tag--green">USAGE</span>
+                </div>
+                <p class="chd__cardHint">
+                    Filtered by the date range above (@RangeLabel).
+                </p>
+                @if (ModelStats.Count == 0)
+                {
+                    <p class="chd__emptyInline">No calls in this range.</p>
+                }
+                else
+                {
+                    <table class="chd__table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Calls</th>
+                                <th>Prompt tokens</th>
+                                <th>Completion tokens</th>
+                                <th>Total tokens</th>
+                                <th>Avg response time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stat in ModelStats)
+                            {
+                                <tr>
+                                    <td>@stat.Model</td>
+                                    <td>@stat.Calls</td>
+                                    <td>@stat.PromptTokens.ToString("N0")</td>
+                                    <td>@stat.CompletionTokens.ToString("N0")</td>
+                                    <td><strong>@((stat.PromptTokens + stat.CompletionTokens).ToString("N0"))</strong></td>
+                                    <td>@FormatElapsed(stat.AvgElapsedMs)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+
+        <div class="chd__sectionLabel">PERFORMANCE</div>
+        <div class="chd__grid">
+            <div class="chd__card">
+                <div class="chd__cardHeader">
+                    <h3>Average response time by model</h3>
+                    <span class="chd__tag chd__tag--orange">PERFORMANCE</span>
+                </div>
+                <p class="chd__cardHint">Filtered by the date range above (@RangeLabel).</p>
+                @if (ModelStats.Count == 0)
+                {
+                    <p class="chd__emptyInline">No calls in this range.</p>
+                }
+                else
+                {
+                    <div class="chd__hbars">
+                        @{ var maxElapsed = ModelStats.Max(s => s.AvgElapsedMs); }
+                        @foreach (var stat in ModelStats)
+                        {
+                            <div class="chd__hbarRow">
+                                <span class="chd__hbarLabel">@stat.Model</span>
+                                <div class="chd__hbarTrack">
+                                    <div class="chd__hbarFill" style="width:@(BarPercent(stat.AvgElapsedMs, maxElapsed))%;"></div>
+                                </div>
+                                <span class="chd__hbarValue">@FormatElapsed(stat.AvgElapsedMs)</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="chd__card">
+                <div class="chd__cardHeader">
+                    <h3>Tokens per day</h3>
+                    <span class="chd__tag chd__tag--orange">PERFORMANCE</span>
+                </div>
+                <p class="chd__cardHint">Last 7 days, regardless of the filter above.</p>
+                @{ var maxDayTokens = TokensByDay.Count == 0 ? 0 : TokensByDay.Max(d => d.Tokens); }
+                <div class="chd__vbars">
+                    @foreach (var day in TokensByDay)
+                    {
+                        <div class="chd__vbarCol">
+                            <div class="chd__vbarTrack">
+                                <div class="chd__vbarFill" style="height:@(BarPercent(day.Tokens, maxDayTokens))%;"
+                                     title='@(day.Tokens.ToString("N0")) tokens'></div>
+                            </div>
+                            <span class="chd__vbarLabel">@day.Label</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="chd__sectionLabel">LOG</div>
+        <div class="chd__grid">
+            <div class="chd__card chd__card--wide">
+                <div class="chd__cardHeader">
+                    <h3>Recent activity</h3>
+                    <div class="chd__cardHeaderActions">
+                        <span class="chd__tag chd__tag--purple">LOG</span>
+                        @if (_confirmingClear)
+                        {
+                            <button type="button" class="chd__btn chd__btn--danger" @onclick="ClearLogConfirm">Confirm clear</button>
+                            <button type="button" class="chd__btn chd__btn--ghost" @onclick="ClearLogCancel">Cancel</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="chd__btn chd__btn--ghost" @onclick="ClearLogPrompt" disabled="@(UsageLog.Entries.Count == 0)">
+                                Clear log
+                            </button>
+                        }
+                    </div>
+                </div>
+                <p class="chd__cardHint">
+                    Newest first, filtered by the date range above (@RangeLabel) &mdash; showing up to 25.
+                </p>
+                @if (RecentLog.Count == 0)
+                {
+                    <p class="chd__emptyInline">No calls in this range.</p>
+                }
+                else
+                {
+                    <table class="chd__table">
+                        <thead>
+                            <tr>
+                                <th>Time (UTC)</th>
+                                <th>Model</th>
+                                <th>Host</th>
+                                <th>Prompt tokens</th>
+                                <th>Completion tokens</th>
+                                <th>Total tokens</th>
+                                <th>Response time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in RecentLog)
+                            {
+                                <tr>
+                                    <td>@row.TimestampUtc.ToString("MMM d, HH:mm:ss")</td>
+                                    <td>@row.Model</td>
+                                    <td>@row.Host</td>
+                                    <td>@(row.PromptTokens?.ToString("N0") ?? "—")</td>
+                                    <td>@(row.CompletionTokens?.ToString("N0") ?? "—")</td>
+                                    <td>@row.TotalTokens.ToString("N0")</td>
+                                    <td>@FormatElapsed(row.ElapsedMs)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<a href="/" class="chd__back">&larr; Back home</a>
+
+@code {
+    private string RangeKey = "week";
+
+    private string RangeLabel => RangeKey switch
+    {
+        "today" => "today",
+        "week" => "last 7 days",
+        "30d" => "last 30 days",
+        _ => "all time",
+    };
+
+    private DateTime RangeCutoffUtc => RangeKey switch
+    {
+        "today" => DateTime.UtcNow.Date,
+        "week" => DateTime.UtcNow.AddDays(-7),
+        "30d" => DateTime.UtcNow.AddDays(-30),
+        _ => DateTime.MinValue,
+    };
+
+    private IReadOnlyList<UsageLogService.UsageEntry> FilteredEntries =>
+        UsageLog.Entries.Where(e => e.TimestampUtc >= RangeCutoffUtc).ToList();
+
+    // "This week" in the top stat tiles is always a rolling 7 days,
+    // independent of the RangeKey dropdown above -- that dropdown
+    // controls the model-usage table, the response-time chart, and
+    // the recent-activity log, but the headline weekly figures always
+    // mean the same thing regardless of what's selected there.
+    private IEnumerable<UsageLogService.UsageEntry> WeekEntries =>
+        UsageLog.Entries.Where(e => e.TimestampUtc >= DateTime.UtcNow.AddDays(-7));
+
+    private int TotalCallsThisWeek => WeekEntries.Count();
+    private long TotalTokensThisWeek => WeekEntries.Sum(e => e.TotalTokens);
+
+    private sealed record ModelStat(string Model, int Calls, long PromptTokens, long CompletionTokens, double AvgElapsedMs);
+
+    private List<ModelStat> ModelStats =>
+        FilteredEntries
+            .GroupBy(e => e.Model)
+            .Select(g => new ModelStat(
+                g.Key,
+                g.Count(),
+                g.Sum(e => (long)(e.PromptTokens ?? 0)),
+                g.Sum(e => (long)(e.CompletionTokens ?? 0)),
+                g.Average(e => e.ElapsedMs)))
+            .OrderByDescending(s => s.Calls)
+            .ToList();
+
+    private List<UsageLogService.UsageEntry> RecentLog =>
+        FilteredEntries.OrderByDescending(e => e.TimestampUtc).Take(25).ToList();
+
+    private List<(string Label, long Tokens)> TokensByDay
+    {
+        get
+        {
+            var today = DateTime.UtcNow.Date;
+            var days = Enumerable.Range(0, 7).Select(i => today.AddDays(-6 + i)).ToList();
+            var byDay = UsageLog.Entries
+                .Where(e => e.TimestampUtc.Date >= days[0])
+                .GroupBy(e => e.TimestampUtc.Date)
+                .ToDictionary(g => g.Key, g => g.Sum(e => e.TotalTokens));
+            return days
+                .Select(d => (d.ToString("ddd"), byDay.TryGetValue(d, out var t) ? t : 0L))
+                .ToList();
+        }
+    }
+
+    private static int BarPercent(double value, double max)
+    {
+        if (max <= 0) return 0;
+        var pct = Math.Round(value / max * 100.0);
+        var min = value > 0 ? 4.0 : 0.0;
+        return (int)Math.Clamp(pct, min, 100.0);
+    }
+
+    private static string FormatElapsed(double ms) =>
+        ms < 1000 ? $"{ms:0}ms" : $"{ms / 1000:0.0}s";
+
+    private bool _confirmingClear;
+    private void ClearLogPrompt() => _confirmingClear = true;
+    private void ClearLogCancel() => _confirmingClear = false;
+    private void ClearLogConfirm()
+    {
+        UsageLog.Clear();
+        _confirmingClear = false;
+    }
+}

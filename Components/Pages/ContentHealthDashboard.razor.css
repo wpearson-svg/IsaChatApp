@@ -1,0 +1,365 @@
+/* ============================================================
+   ContentHealthDashboard.razor.css
+
+   Same design language as DeveloperDashboard.razor.css (navy chrome,
+   green/orange/purple tags, ISACA palette) under a "chd" prefix
+   instead of "dd" -- Blazor's CSS isolation scopes each .razor.css
+   file independently, so identical class names in the two files
+   don't collide; the shared prefix pattern is just for a consistent
+   look across both dashboards, not literal shared styles.
+   ============================================================ */
+
+.chd {
+    --chd-navy: #1d2d5c;
+    --chd-navy-dark: #131f42;
+    --chd-green: #6cb33f;
+    --chd-orange: #e57524;
+    --chd-purple: #6658b1;
+    --chd-border: #e3e6ea;
+    --chd-muted: #6a7078;
+
+    margin-top: 1rem;
+}
+
+.chd__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+}
+
+.chd__titleBlock {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.chd__pageTitle {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--chd-navy);
+}
+
+.chd__badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--chd-green);
+    border: 1px solid var(--chd-green);
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    background: #f3faf0;
+    white-space: nowrap;
+}
+
+.chd__rangeSelect {
+    border: 1px solid #d7dae0;
+    border-radius: 8px;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.85rem;
+    background: #fff;
+    color: var(--chd-navy);
+}
+
+.chd__notice {
+    background: #fff;
+    border: 1px dashed #d7dae0;
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.82rem;
+    color: var(--chd-muted);
+    margin-bottom: 1.1rem;
+}
+
+.chd__statsRow {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.chd__statCard {
+    background: #fff;
+    border: 1px solid var(--chd-border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    min-width: 180px;
+    flex: 1 1 180px;
+}
+
+.chd__statValue {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--chd-navy);
+    margin-top: 0.4rem;
+    line-height: 1;
+}
+
+.chd__statLabel {
+    font-size: 0.8rem;
+    color: var(--chd-muted);
+    margin-top: 0.3rem;
+}
+
+.chd__empty {
+    background: #fdf3ea;
+    border: 1px solid var(--chd-orange);
+    color: #7a4413;
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.85rem;
+    margin: 1rem 0;
+}
+
+.chd__emptyInline {
+    color: var(--chd-muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.chd__sectionLabel {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--chd-muted);
+    text-transform: uppercase;
+    margin: 1.6rem 0 0.6rem;
+}
+
+.chd__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.chd__card {
+    background: #fff;
+    border: 1px solid var(--chd-border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+}
+
+.chd__card--wide {
+    grid-column: 1 / -1;
+}
+
+.chd__cardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.3rem;
+}
+
+    .chd__cardHeader h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--chd-navy);
+    }
+
+.chd__cardHeaderActions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chd__cardHint {
+    color: var(--chd-muted);
+    font-size: 0.8rem;
+    margin: 0.2rem 0 0.9rem;
+}
+
+.chd__tag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-radius: 5px;
+    padding: 0.2rem 0.45rem;
+    white-space: nowrap;
+    border: 1px solid;
+}
+
+.chd__tag--green {
+    color: var(--chd-green);
+    border-color: var(--chd-green);
+    background: #f3faf0;
+}
+
+.chd__tag--orange {
+    color: var(--chd-orange);
+    border-color: var(--chd-orange);
+    background: #fdf3ea;
+}
+
+.chd__tag--purple {
+    color: var(--chd-purple);
+    border-color: var(--chd-purple);
+    background: #f3f1fa;
+}
+
+.chd__btn {
+    border-radius: 8px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.chd__btn--ghost {
+    background: #fff;
+    border-color: #d7dae0;
+    color: var(--chd-navy);
+}
+
+    .chd__btn--ghost:hover {
+        background: #f5f6f8;
+    }
+
+    .chd__btn--ghost:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+.chd__btn--danger {
+    background: #c0392b;
+    color: #fff;
+}
+
+    .chd__btn--danger:hover {
+        background: #a53125;
+    }
+
+.chd__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+}
+
+    .chd__table th {
+        text-align: left;
+        color: var(--chd-muted);
+        font-weight: 600;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--chd-border);
+    }
+
+    .chd__table th:not(:first-child):not(:nth-child(2)):not(:nth-child(3)),
+    .chd__table td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)) {
+        text-align: right;
+    }
+
+    .chd__table td {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f1f3;
+        color: #333;
+    }
+
+/* ---- Horizontal bar chart (avg response time by model) --------------- */
+
+.chd__hbars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.chd__hbarRow {
+    display: grid;
+    grid-template-columns: 110px 1fr 56px;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.chd__hbarLabel {
+    font-size: 0.78rem;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chd__hbarTrack {
+    background: #f0f2f5;
+    border-radius: 5px;
+    height: 12px;
+    overflow: hidden;
+}
+
+.chd__hbarFill {
+    height: 100%;
+    background: var(--chd-orange);
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.chd__hbarValue {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--chd-navy);
+    text-align: right;
+}
+
+/* ---- Vertical bar chart (tokens per day) ------------------------------ */
+
+.chd__vbars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.6rem;
+    height: 140px;
+    padding-top: 0.5rem;
+}
+
+.chd__vbarCol {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 0.4rem;
+}
+
+.chd__vbarTrack {
+    width: 100%;
+    max-width: 28px;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    background: #f8f9fa;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.chd__vbarFill {
+    width: 100%;
+    background: var(--chd-green);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+}
+
+.chd__vbarLabel {
+    font-size: 0.7rem;
+    color: var(--chd-muted);
+}
+
+.chd__back {
+    display: inline-block;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .chd__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chd__hbarRow {
+        grid-template-columns: 90px 1fr 48px;
+    }
+}

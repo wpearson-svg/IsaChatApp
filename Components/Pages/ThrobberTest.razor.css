@@ -1,0 +1,332 @@
+/* ============================================================
+   ThrobberTest.razor.css
+
+   A from-scratch port of isa-throbber.js's own embedded stylesheet
+   (the CSS variable it injects into <head> at runtime) into scoped
+   Razor CSS, plus one addition: everything animation-related is
+   gated behind an ".is-spinning" modifier class that the page's own
+   "Spinning" toggle controls. The original always animates once
+   mounted; ChatWidget's derived design needs a resting/idle state
+   too (the collapsed bubble sits still), so this test page keeps
+   that same on/off concept to match what's actually being validated.
+   ============================================================ */
+
+.tt-layout {
+    display: flex;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.tt-stage-col {
+    flex: 0 0 auto;
+}
+
+.tt-stage {
+    width: 260px;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+    border: 1px dashed #ccc;
+    border-radius: 12px;
+}
+
+.tt-controls {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.tt-controls button {
+    font: inherit;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f7f8fa;
+    cursor: pointer;
+}
+
+.tt-controls button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.tt-state {
+    margin-top: 1rem;
+    color: #555;
+}
+
+.tt-panel {
+    flex: 0 0 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #e0e0e5;
+    border-radius: 10px;
+    background: #fafafc;
+}
+
+.tt-panel h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+}
+
+.tt-panel label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.tt-panel select,
+.tt-panel input[type="number"],
+.tt-panel input[type="text"] {
+    font: inherit;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.tt-panel input[type="color"] {
+    width: 100%;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.tt-reset {
+    margin-top: 0.5rem;
+    font: inherit;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+}
+
+/* ============================================================
+   The throbber itself — ported from isa-throbber.js
+   ============================================================ */
+
+.isa-throbber {
+    --isa-size: 180px;
+    --isa-spin: 1.1s;
+    --isa-cycle: 2.2s;
+    --isa-ring-dir: normal;
+    --isa-word-dir: normal;
+    --isa-word-delay: 0s;
+    --isa-ring-color: #6cb33f;
+    --isa-word-color: #1d2d5c;
+}
+
+.isa-throbber__ring {
+    display: block;
+    width: var(--isa-size);
+    height: var(--isa-size);
+}
+
+.isa-throbber__ring.is-spinning {
+    animation: isa-spin var(--isa-spin) linear infinite;
+    animation-direction: var(--isa-ring-dir);
+}
+
+.isa-throbber__ring circle {
+    fill: none;
+    stroke-width: 43.86;
+    stroke: var(--isa-ring-color);
+}
+
+.isa-throbber__ring.is-spinning circle {
+    animation: isa-stroke-cycle var(--isa-cycle) linear infinite;
+    animation-direction: var(--isa-ring-dir);
+}
+
+.isa-throbber__word {
+    fill: var(--isa-word-color);
+}
+
+.isa-throbber__word.is-spinning {
+    animation: isa-fill-cycle var(--isa-cycle) linear infinite;
+    animation-direction: var(--isa-word-dir);
+    animation-delay: var(--isa-word-delay);
+}
+
+.isa-throbber__word--outer,
+.isa-throbber__word--gap {
+    display: none;
+}
+
+/* ---- word colour modes ---- */
+
+.isa-throbber--word-solid .isa-throbber__word.is-spinning {
+    animation: none;
+}
+
+.isa-throbber--word-gradient .isa-throbber__word.is-spinning {
+    animation: none;
+}
+
+.isa-throbber__grad-stop {
+    stop-color: var(--isa-word-color);
+}
+
+.isa-throbber--word-gradient .isa-throbber__grad-stop.is-spinning {
+    animation: isa-stop-cycle var(--isa-cycle) linear infinite;
+    animation-direction: var(--isa-word-dir);
+}
+
+.isa-throbber--word-gradient .isa-throbber__grad-stop:nth-of-type(1) { animation-delay: calc(var(--isa-word-delay) - var(--isa-cycle) * 0 / 5); }
+.isa-throbber--word-gradient .isa-throbber__grad-stop:nth-of-type(2) { animation-delay: calc(var(--isa-word-delay) - var(--isa-cycle) * 1 / 5); }
+.isa-throbber--word-gradient .isa-throbber__grad-stop:nth-of-type(3) { animation-delay: calc(var(--isa-word-delay) - var(--isa-cycle) * 2 / 5); }
+.isa-throbber--word-gradient .isa-throbber__grad-stop:nth-of-type(4) { animation-delay: calc(var(--isa-word-delay) - var(--isa-cycle) * 3 / 5); }
+.isa-throbber--word-gradient .isa-throbber__grad-stop:nth-of-type(5) { animation-delay: calc(var(--isa-word-delay) - var(--isa-cycle) * 4 / 5); }
+.isa-throbber--word-gradient .isa-throbber__grad-stop:nth-of-type(6) { animation-delay: calc(var(--isa-word-delay) - var(--isa-cycle) * 5 / 5); }
+
+.isa-throbber--word-letters .isa-throbber__word.is-spinning {
+    animation: none;
+}
+
+.isa-throbber--word-letters .isa-throbber__word.is-spinning path {
+    animation-duration: calc(var(--isa-cycle) * 2);
+    animation-timing-function: step-end;
+    animation-iteration-count: infinite;
+    animation-direction: var(--isa-word-dir);
+    animation-delay: var(--isa-word-delay);
+}
+
+.isa-throbber--word-letters .isa-throbber__word path:nth-of-type(1) { animation-name: isa-letter-i; }
+.isa-throbber--word-letters .isa-throbber__word path:nth-of-type(2) { animation-name: isa-letter-s; }
+.isa-throbber--word-letters .isa-throbber__word path:nth-of-type(3) { animation-name: isa-letter-a; }
+
+/* ---- placement modes ---- */
+
+.isa-throbber--centred {
+    position: relative;
+    width: var(--isa-size);
+    height: var(--isa-size);
+}
+
+.isa-throbber--centred .isa-throbber__ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.isa-throbber--centred .isa-throbber__word--outer {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 39%;
+}
+
+.isa-throbber--below {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--isa-size) * 0.09);
+}
+
+.isa-throbber--below .isa-throbber__word--outer {
+    display: block;
+    width: calc(var(--isa-size) * 0.62);
+}
+
+.isa-throbber--ingap .isa-throbber__word--gap {
+    display: block;
+}
+
+/* ---- keyframes ---- */
+
+@keyframes isa-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes isa-stroke-cycle {
+    0%   { stroke: #6cb33f; }
+    20%  { stroke: #36ac91; }
+    40%  { stroke: #00a4e4; }
+    60%  { stroke: #0f69a0; }
+    80%  { stroke: #1d2d5c; }
+    100% { stroke: #6cb33f; }
+}
+
+@keyframes isa-fill-cycle {
+    0%   { fill: #6cb33f; }
+    20%  { fill: #36ac91; }
+    40%  { fill: #00a4e4; }
+    60%  { fill: #0f69a0; }
+    80%  { fill: #1d2d5c; }
+    100% { fill: #6cb33f; }
+}
+
+@keyframes isa-stop-cycle {
+    0%   { stop-color: #6cb33f; }
+    20%  { stop-color: #36ac91; }
+    40%  { stop-color: #00a4e4; }
+    60%  { stop-color: #0f69a0; }
+    80%  { stop-color: #1d2d5c; }
+    100% { stop-color: #6cb33f; }
+}
+
+/* Per-letter sequences for word-letters mode — hand-scrambled so no
+   two letters ever share a colour, and no letter keeps its colour
+   across a switch. Identical to isa-throbber.js. */
+@keyframes isa-letter-i {
+    0%   { fill: #1d2d5c; }
+    10%  { fill: #36ac91; }
+    20%  { fill: #00a4e4; }
+    30%  { fill: #6cb33f; }
+    40%  { fill: #0f69a0; }
+    50%  { fill: #6cb33f; }
+    60%  { fill: #00a4e4; }
+    70%  { fill: #1d2d5c; }
+    80%  { fill: #0f69a0; }
+    90%  { fill: #36ac91; }
+    100% { fill: #1d2d5c; }
+}
+
+@keyframes isa-letter-s {
+    0%   { fill: #6cb33f; }
+    10%  { fill: #0f69a0; }
+    20%  { fill: #1d2d5c; }
+    30%  { fill: #00a4e4; }
+    40%  { fill: #36ac91; }
+    50%  { fill: #1d2d5c; }
+    60%  { fill: #0f69a0; }
+    70%  { fill: #36ac91; }
+    80%  { fill: #6cb33f; }
+    90%  { fill: #00a4e4; }
+    100% { fill: #6cb33f; }
+}
+
+@keyframes isa-letter-a {
+    0%   { fill: #00a4e4; }
+    10%  { fill: #6cb33f; }
+    20%  { fill: #0f69a0; }
+    30%  { fill: #36ac91; }
+    40%  { fill: #1d2d5c; }
+    50%  { fill: #0f69a0; }
+    60%  { fill: #36ac91; }
+    70%  { fill: #6cb33f; }
+    80%  { fill: #00a4e4; }
+    90%  { fill: #1d2d5c; }
+    100% { fill: #00a4e4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-throbber__ring.is-spinning,
+    .isa-throbber__ring.is-spinning circle,
+    .isa-throbber__word.is-spinning,
+    .isa-throbber__word.is-spinning path,
+    .isa-throbber__grad-stop.is-spinning {
+        animation: none !important;
+    }
+}
