@@ -121,7 +121,8 @@ access_control → translation → input_compliance → database_search
 | Stopped | pizza place / ignore rules | status=stopped |
 | Escalated | harassment / cryptocurrency | status=escalated + ticket ref |
 
----
+---<img width="1168" height="784" alt="image" src="https://github.com/user-attachments/assets/2e5dd014-e6ce-41d0-9764-68fef43b0c64" />
+
 
 ## Handoffs
 
