@@ -1,11 +1,6 @@
 # Working Foundation — Backend (Eliyas)
 
 <p align="center">
- <img width="1168" height="784" alt="image" src="https://github.com/user-attachments/assets/a808532a-7288-4ff7-ad72-e58ff25f5089" />
-
-</p>
-
-<p align="center">
 <img width="1168" height="784" alt="image" src="https://github.com/user-attachments/assets/5cbd1df3-13a6-4285-8e4e-d58bc4585b7a" />
 
 </p>
@@ -78,6 +73,11 @@ Follow the comments in that file.
 ```
 
 Set `DevBypass` to **false** for the Friday demo.
+
+<p align="center">
+ <img width="1168" height="784" alt="image" src="https://github.com/user-attachments/assets/a808532a-7288-4ff7-ad72-e58ff25f5089" />
+
+</p>
 
 ### 5. Start Keycloak (T2)
 
