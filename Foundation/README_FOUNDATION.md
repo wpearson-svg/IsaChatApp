@@ -1,8 +1,15 @@
 # Working Foundation — Backend (Eliyas)
 
-Drop these files into **IsaChatApp** and wire them as described below.
+<p align="center">
+  <img src="images/isaca-ai-gear.png" alt="ISACA AI Gear — ISA Support Assistant" width="720"/>
+</p>
 
-**Due: Fri 10/16/2026**
+<p align="center">
+  <img src="images/isa-chatbot.png" alt="ISA Chapter Support Assistant Chatbot" width="720"/>
+</p>
+
+> **Drop these files into IsaChatApp and wire them as described below.**  
+> **Due: Fri 10/16/2026**
 
 ---
 
@@ -10,13 +17,13 @@ Drop these files into **IsaChatApp** and wire them as described below.
 
 | Path | Task | Purpose |
 |------|------|---------|
-| `docker-compose.yml` | T2 | Keycloak (pinned 26.0) + volume |
-| `Services/EventLogService.cs` | T9 | SQLite event log, WAL, write + read-by-trace |
-| `Services/AccessControlAdapter.cs` | T5 | Keycloak token validation + access_control stage |
-| `Services/Orchestrator/StageModels.cs` | T10 | QueryContext, StageResult, IStage |
-| `Services/Orchestrator/Orchestrator.cs` | T10 | Pipeline spine |
-| `Services/Orchestrator/Stages/StubStages.cs` | T11b + placeholders | Database Search, KG, RAG + other stubs |
-| `docs/Program_cs_additions.cs` | T10 | How to register services + `POST /api/ask` |
+| `docker-compose.yml` | **T2** | Keycloak (pinned 26.0) + volume |
+| `Services/EventLogService.cs` | **T9** | SQLite event log, WAL, write + read-by-trace |
+| `Services/AccessControlAdapter.cs` | **T5** | Keycloak token validation + access_control stage |
+| `Services/Orchestrator/StageModels.cs` | **T10** | QueryContext, StageResult, IStage |
+| `Services/Orchestrator/Orchestrator.cs` | **T10** | Pipeline spine |
+| `Services/Orchestrator/Stages/StubStages.cs` | **T11b** + placeholders | Database Search, KG, RAG + other stubs |
+| `docs/Program_cs_additions.cs` | **T10** | How to register services + `POST /api/ask` |
 
 ---
 
@@ -36,6 +43,9 @@ dotnet add package Microsoft.IdentityModel.Tokens
 IsaChatApp/
 ├── docker-compose.yml          ← from this package
 ├── data/                       ← create empty folder (gitkeep)
+├── images/
+│   ├── isaca-ai-gear.png       ← README banner (AI gear + ISACA)
+│   └── isa-chatbot.png         ← README banner (chat bot UI)
 ├── Services/
 │   ├── EventLogService.cs
 │   ├── AccessControlAdapter.cs
@@ -116,26 +126,28 @@ access_control → translation → input_compliance → database_search
 
 | Path | Example | Expected |
 |------|---------|----------|
-| Direct hit | reimbursement deadline | Answer + sources, AI skipped |
-| AI fallback | bought supplies, get money back | Meaning map / RAG stub answer |
-| Stopped | pizza place / ignore rules | status=stopped |
-| Escalated | harassment / cryptocurrency | status=escalated + ticket ref |
+| **Direct hit** | reimbursement deadline | Answer + sources, AI skipped |
+| **AI fallback** | bought supplies, get money back | Meaning map / RAG stub answer |
+| **Stopped** | pizza place / ignore rules | status=stopped |
+| **Escalated** | harassment / cryptocurrency | status=escalated + ticket ref |
 
----<img width="1168" height="784" alt="image" src="https://github.com/user-attachments/assets/2e5dd014-e6ce-41d0-9764-68fef43b0c64" />
-
+---
 
 ## Handoffs
 
 | You finish | Tell | So they can |
 |------------|------|-------------|
-| Keycloak up | Willis | T4 |
-| README + start | A'keyrah | T2b |
-| `/api/ask` working | Willis | T12 |
-| Event log + GET /api/events/{id} | A'keyrah | T13 |
+| Keycloak up | **Willis** | T4 |
+| README + start | **A'keyrah** | T2b |
+| `/api/ask` working | **Willis** | T12 |
+| Event log + GET /api/events/{id} | **A'keyrah** | T13 |
 
 ---
 
 ## Not in Foundation (do not build yet)
 
 Real Ollama calls, vector search, real KG, Salesforce ticketing, dashboards.
- Second Star Collective · I.C.stars Kansas Cycle 7
+
+---
+
+**Eliyas Eshtea** · IS Solution Analyst · Second Star Collective · I.C.stars Kansas Cycle 7
