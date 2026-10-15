@@ -26,9 +26,17 @@ if errorlevel 1 (
 )
 
 echo.
-echo Building and starting -- this can take a little while the first time.
-echo Once it's up:  http://localhost:5067
-echo Logs:  isa-run.log / isa-run.err.log
+echo Building and starting -- the first time can take a minute or two
+echo (it downloads packages and compiles). Waiting for the site to answer...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0wait-isa.ps1"
+set WAITCODE=%errorlevel%
+echo.
+if "%WAITCODE%"=="0" (
+    echo IsaChatApp is up:  http://localhost:5067
+) else (
+    echo IsaChatApp did NOT come up. The last lines of the logs are shown above.
+    echo Send those lines to Willis. Full logs: isa-run.log / isa-run.err.log
+)
 echo PID file: isa.pid  (used by stop-isa.bat)
 echo.
 pause

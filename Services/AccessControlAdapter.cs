@@ -35,13 +35,14 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
         // Dev only: set AccessControl:DevBypass=true in appsettings.Development.json
         // MUST be false in the Friday demo build.
         _devBypass = config.GetValue("AccessControl:DevBypass", false);
+        if (_devBypass)
+            _log.LogWarning("AccessControl DevBypass is ON — do not use in demo build");
     }
 
     public async Task<AccessIdentity?> ValidateAsync(string? bearerToken)
     {
         if (_devBypass)
         {
-            _log.LogWarning("AccessControl DevBypass is ON — do not use in demo build");
             return new AccessIdentity("dev-user", new[] { "chat_user" });
         }
 
