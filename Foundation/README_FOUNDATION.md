@@ -1,6 +1,6 @@
 # Working Foundation — Backend (Eliyas)
 
-Drop these files into **IsaChatApp** and wire them as described below.
+
 
 **Due: Fri 10/16/2026**
 
