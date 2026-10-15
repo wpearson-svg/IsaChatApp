@@ -22,6 +22,8 @@ public record StageResult(
 public class QueryContext
 {
     public string TraceId { get; set; } = "";
+    public string? IncomingToken { get; set; }   // raw Authorization header; never logged
+    public bool AuthFailed { get; set; }
     public string? UserId { get; set; }
     public IReadOnlyList<string> Roles { get; set; } = Array.Empty<string>();
     public string Question { get; set; } = "";

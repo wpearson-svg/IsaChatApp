@@ -25,6 +25,22 @@ public class DatabaseSearchStage : IStage
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
     }
 
+    private static readonly HashSet<string> FtsStopWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "the","how","many","what","does","must","each","year","have","our","and","who","are","for",
+        "when","can","with","that","this","you","is","do","we","to","a","of","in","chapter","hold","policy","period","annual"
+    };
+
+    // Raw question text breaks FTS5 syntax ("?" etc.), so keep letters/digits, drop filler, AND the rest.
+    private static string? BuildFtsQuery(string question)
+    {
+        var terms = System.Text.RegularExpressions.Regex.Matches(question ?? "", "[A-Za-z0-9]+")
+            .Select(m => m.Value)
+            .Where(w => !FtsStopWords.Contains(w))
+            .ToList();
+        return terms.Count == 0 ? null : string.Join(" AND ", terms);
+    }
+
     public async Task<StageResult> RunAsync(QueryContext ctx)
     {
         // Open read-only
@@ -45,10 +61,13 @@ public class DatabaseSearchStage : IStage
             cmd.CommandText = """
                 SELECT document, section, page, text
                 FROM passages
-                WHERE text MATCH $q
+                WHERE passages MATCH $q
+                ORDER BY rank
                 LIMIT 5;
                 """;
-            cmd.Parameters.AddWithValue("$q", ctx.Question);
+            var ftsQuery = BuildFtsQuery(ctx.Question);
+            if (ftsQuery == null) throw new InvalidOperationException("no searchable terms");
+            cmd.Parameters.AddWithValue("$q", ftsQuery);
 
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -198,11 +217,12 @@ public class OutputComplianceStage : IStage
 /// <summary>Stub ticketing — returns fake ticket ref. Willis owns real T11c.</summary>
 public class TicketingStage : IStage
 {
+    private static int _counter;
     public string Name => "ticketing";
 
     public Task<StageResult> RunAsync(QueryContext ctx)
     {
-        var ticket = $"TKT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
+        var ticket = $"TKT-{Interlocked.Increment(ref _counter):0000}";
         ctx.TicketReference = ticket;
         ctx.AnswerText ??= "Your request has been escalated. Use the reference number below.";
         return Task.FromResult(new StageResult(StageOutcome.Pass, null, $"ticket={ticket}"));

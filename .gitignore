@@ -13,3 +13,12 @@ isa.pid
 
 # Visual Studio local settings
 .vs/
+
+# Local databases (rebuilt by content/build_content_db.py / created at runtime)
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Loose stray folders at the repo root
+/IsaChatApp/
+/Web/

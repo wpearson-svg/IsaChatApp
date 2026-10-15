@@ -42,7 +42,7 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
         if (_devBypass)
         {
             _log.LogWarning("AccessControl DevBypass is ON — do not use in demo build");
-            return new AccessIdentity("dev-user", new[] { "chapter_leader" });
+            return new AccessIdentity("dev-user", new[] { "chat_user" });
         }
 
         if (string.IsNullOrWhiteSpace(bearerToken))
@@ -86,13 +86,17 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
 
             // Realm roles often live under realm_access.roles
             var roles = new List<string>();
-            var realmAccess = jwt.Claims.FirstOrDefault(c => c.Type == "realm_access")?.Value;
             foreach (var c in jwt.Claims.Where(c => c.Type == "role" || c.Type == ClaimTypes.Role))
                 roles.Add(c.Value);
 
             // Also check resource_access / realm roles claim arrays if present as JSON
             var roleClaims = jwt.Claims.Where(c => c.Type == "roles").Select(c => c.Value);
             roles.AddRange(roleClaims);
+
+            // Keycloak puts roles inside JSON objects:
+            //   realm_access.roles and resource_access.<client>.roles
+            foreach (var c in jwt.Claims.Where(c => c.Type == "realm_access" || c.Type == "resource_access"))
+                roles.AddRange(ReadRolesFromJson(c.Value));
 
             return new AccessIdentity(userId, roles.Distinct().ToList());
         }
@@ -102,6 +106,29 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
             return null;
         }
     }
+
+    private static IEnumerable<string> ReadRolesFromJson(string json)
+    {
+        var found = new List<string>();
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            void Walk(System.Text.Json.JsonElement el)
+            {
+                if (el.ValueKind != System.Text.Json.JsonValueKind.Object) return;
+                foreach (var prop in el.EnumerateObject())
+                {
+                    if (prop.Name == "roles" && prop.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
+                        foreach (var r in prop.Value.EnumerateArray())
+                        { if (r.ValueKind == System.Text.Json.JsonValueKind.String) found.Add(r.GetString()!); }
+                    else Walk(prop.Value);
+                }
+            }
+            Walk(doc.RootElement);
+        }
+        catch { /* not JSON -> no roles */ }
+        return found;
+    }
 }
 
 /// <summary>Stage wrapper so access_control appears in the pipeline and event log.</summary>
@@ -110,9 +137,6 @@ public class AccessControlStage : Orchestrator.IStage
     public string Name => "access_control";
     private readonly IAccessControlAdapter _adapter;
 
-    // Token is set by the endpoint before the pipeline runs
-    public string? IncomingToken { get; set; }
-
     public AccessControlStage(IAccessControlAdapter adapter)
     {
         _adapter = adapter;
@@ -120,9 +144,10 @@ public class AccessControlStage : Orchestrator.IStage
 
     public async Task<Orchestrator.StageResult> RunAsync(Orchestrator.QueryContext ctx)
     {
-        var identity = await _adapter.ValidateAsync(IncomingToken);
+        var identity = await _adapter.ValidateAsync(ctx.IncomingToken);
         if (identity is null)
         {
+            ctx.AuthFailed = true;
             return new Orchestrator.StageResult(
                 Orchestrator.StageOutcome.Stop,
                 "Not signed in or invalid token",

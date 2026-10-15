@@ -37,6 +37,13 @@ public class Orchestrator
             if (stage.Name == "ticketing" && finalStatus != "escalating")
                 continue;
 
+            // After an Escalate, jump straight to ticketing; log the skipped stages
+            if (finalStatus == "escalating" && stage.Name != "ticketing")
+            {
+                await _eventLog.WriteAsync(ctx.TraceId, stage.Name, "result=skipped; reason=escalated");
+                continue;
+            }
+
             StageResult result;
             try
             {
@@ -45,12 +52,13 @@ public class Orchestrator
             catch (Exception ex)
             {
                 _log.LogError(ex, "Stage {Stage} threw", stage.Name);
-                result = new StageResult(StageOutcome.Stop, $"Stage error: {ex.Message}", "error");
+                result = new StageResult(StageOutcome.Stop, "Something went wrong. Please try again.", $"error={ex.GetType().Name}");
             }
 
+            // Contract format: result=pass; reason=none; <stage data>
             var dataText = result.Skipped
-                ? $"skipped; {result.DataText}"
-                : $"{result.Outcome}; {result.Reason ?? ""}; {result.DataText}";
+                ? $"result=skipped; reason=none; {result.DataText}"
+                : $"result={result.Outcome.ToString().ToLowerInvariant()}; reason={result.Reason ?? "none"}; {result.DataText}";
 
             await _eventLog.WriteAsync(ctx.TraceId, stage.Name, dataText.Trim());
 
