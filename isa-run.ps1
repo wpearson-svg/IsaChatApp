@@ -17,7 +17,7 @@ if (-not (Test-Path $csproj)) {
 # itself.
 try {
     $p = Start-Process -FilePath 'dotnet' `
-        -ArgumentList @('run', '--project', $csproj, '-c', 'Release', '--urls', 'http://localhost:5067') `
+        -ArgumentList @('run', '--project', "`"$csproj`"", '-c', 'Release', '--urls', 'http://localhost:5067') `
         -WorkingDirectory $PSScriptRoot `
         -WindowStyle Hidden `
         -PassThru `
