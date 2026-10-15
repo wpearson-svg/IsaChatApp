@@ -563,3 +563,8 @@
 /* The model picker used to live in its own row below the input; it's
    now part of .isa-widget__directSupportRow above, next to the Direct
    Support link (.isa-widget__modelSelect). */
+
+/* Pipeline answers: keep line breaks from source passages, show sources + trace ID small */
+.isa-widget__text { white-space: pre-line; }
+.isa-widget__sources { margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.85; }
+.isa-widget__trace { margin-top: 0.35rem; font-size: 0.7rem; opacity: 0.7; font-family: ui-monospace, Consolas, monospace; word-break: break-all; }

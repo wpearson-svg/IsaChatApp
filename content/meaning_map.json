@@ -1,0 +1,22 @@
+[
+ {
+  "question": "Who writes down what the board decided?",
+  "document": "Chapter Leader Guidebook",
+  "contains": "documented"
+ },
+ {
+  "question": "Do we have to show members how we spent money?",
+  "document": "Annual Chapter Compliance",
+  "contains": "annual reporting of activities"
+ },
+ {
+  "question": "How often does the board have to get together?",
+  "document": "Chapter Leader Guidebook",
+  "contains": "minimum of four board meetings"
+ },
+ {
+  "question": "When do we send in our yearly paperwork?",
+  "document": "Common Tasks",
+  "contains": "1 November and 31 December"
+ }
+]

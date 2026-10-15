@@ -84,6 +84,7 @@
 @inject HttpClient Http
 @inject WidgetSettings Settings
 @inject UsageLogService UsageLog
+@inject IsaChatApp.Services.Orchestrator.Orchestrator Pipeline
 
 <div class="isa-widget">
 
@@ -216,6 +217,20 @@
                             }
                         </div>
                         <div class="isa-widget__text">@msg.Text</div>
+                        @if (msg.Sources is { Count: > 0 })
+                        {
+                            <div class="isa-widget__sources">
+                                <span>Sources:</span>
+                                @foreach (var src in msg.Sources)
+                                {
+                                    <div>@src</div>
+                                }
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(msg.TraceId))
+                        {
+                            <div class="isa-widget__trace">Trace ID: @msg.TraceId</div>
+                        }
                     </div>
                 }
             </div>
@@ -269,7 +284,7 @@
                            @onkeydown="HandleKeyDown"
                            disabled="@IsSending" />
                 </div>
-                <button type="button" class="isa-widget__send" @onclick="Send" disabled="@(IsSending || SelectedIndex is null || string.IsNullOrWhiteSpace(DraftText))" aria-label="Send">
+                <button type="button" class="isa-widget__send" @onclick="Send" disabled="@(IsSending || !CanSend || string.IsNullOrWhiteSpace(DraftText))" aria-label="Send">
                     <svg viewBox="0 0 24 24" class="isa-widget__sendIcon" aria-hidden="true">
                         <path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
@@ -285,6 +300,15 @@
 
     /// <summary>Header text shown when the widget is expanded.</summary>
     [Parameter] public string Title { get; set; } = "Direct Support";
+
+    /// <summary>
+    /// When true (default), Send() runs the question through the stage
+    /// pipeline (Orchestrator -> /api/ask logic) instead of calling
+    /// Ollama directly. Set false to get the old model-picker behavior.
+    /// </summary>
+    [Parameter] public bool UsePipeline { get; set; } = true;
+
+    private bool CanSend => UsePipeline || SelectedIndex is not null;
 
     /// <summary>
     /// Named Ollama hosts to query for available models — mirrors the
@@ -509,7 +533,7 @@
 
     private async Task HandleKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !IsSending && SelectedIndex is not null && !string.IsNullOrWhiteSpace(DraftText))
+        if (e.Key == "Enter" && !IsSending && CanSend && !string.IsNullOrWhiteSpace(DraftText))
         {
             await Send();
         }
@@ -596,9 +620,9 @@
     private async Task Send()
     {
         var text = DraftText.Trim();
-        if (string.IsNullOrEmpty(text) || IsSending || SelectedIndex is null) return;
+        if (string.IsNullOrEmpty(text) || IsSending || !CanSend) return;
 
-        var entry = ModelEntries[SelectedIndex.Value];
+        var entry = UsePipeline ? null! : ModelEntries[SelectedIndex!.Value];
 
         DraftText = string.Empty;
         Messages.Add(new ChatEntry("you", "You", text));
@@ -642,6 +666,12 @@
 
         try
         {
+            if (UsePipeline)
+            {
+                await RunPipeline(text);
+                return;
+            }
+
             var response = await Http.PostAsJsonAsync($"{entry.HostUrl}/api/generate", new OllamaRequest
             {
                 Model = entry.ModelName,
@@ -679,6 +709,11 @@
             var aiDisplayName = Settings.UseIsaLabel ? "Isa" : $"{entry.ModelName} ({entry.HostName})";
             Messages.Add(new ChatEntry("ai", aiDisplayName, result?.Response ?? "(empty response)", entry.ModelName, elapsedMs));
         }
+        catch (Exception ex) when (UsePipeline)
+        {
+            Messages.Add(new ChatEntry("error", "Error", "Something went wrong. Please try again."));
+            Console.Error.WriteLine($"Pipeline error: {ex}");
+        }
         catch (Exception ex)
         {
             Messages.Add(new ChatEntry("error", "Error",
@@ -699,6 +734,50 @@
         }
     }
 
+    // Runs one question through the stage pipeline and shows the three
+    // outcomes: answered (answer + sources), escalated (message + ticket
+    // reference), stopped (the reason). Every message carries its trace ID.
+    private async Task RunPipeline(string text)
+    {
+        var ctx = new IsaChatApp.Services.Orchestrator.QueryContext
+        {
+            TraceId = Guid.NewGuid().ToString(),
+            Question = text,
+            Language = "en",
+            // No token yet: sign-in (T6) is not wired in. Works while
+            // AccessControl:DevBypass is on; otherwise the user sees the
+            // sign-in message below.
+            IncomingToken = null
+        };
+
+        var result = await Pipeline.RunAsync(ctx);
+        var elapsedMs = (DateTime.UtcNow - _sendStartedAt).TotalMilliseconds;
+        UsageLog.Record("pipeline", "local", null, null, elapsedMs);
+
+        if (ctx.AuthFailed)
+        {
+            Messages.Add(new ChatEntry("error", "Not signed in", "Please sign in to ask a question.", TraceId: result.TraceId));
+            return;
+        }
+
+        var name = Settings.UseIsaLabel ? "Isa" : "pipeline";
+        var sources = result.Sources.Select(x => $"{x.Document} \u2013 {x.Section}" + (x.Page is "" or "n/a" ? "" : $" (p. {x.Page})")).Distinct().ToList();
+
+        switch (result.Status)
+        {
+            case "answered":
+                Messages.Add(new ChatEntry("ai", name, result.Message, "pipeline", elapsedMs, sources, result.TraceId));
+                break;
+            case "escalated":
+                var ticket = string.IsNullOrEmpty(result.TicketReference) ? "" : $" Your reference number is {result.TicketReference}.";
+                Messages.Add(new ChatEntry("ai", $"{name} \u00b7 Escalated", result.Message + ticket, "pipeline", elapsedMs, sources, result.TraceId));
+                break;
+            default: // stopped
+                Messages.Add(new ChatEntry("error", "Unable to answer", result.Message, TraceId: result.TraceId));
+                break;
+        }
+    }
+
     public void Dispose()
     {
         _tickCts?.Cancel();
@@ -709,7 +788,7 @@
     // which is exactly what the markup's `msg.ElapsedMs is not null`
     // check uses to decide whether a response-time label belongs next
     // to that message at all.
-    private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null);
+    private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null, List<string>? Sources = null, string? TraceId = null);
 
     private record ModelEntry(string HostName, string HostUrl, string ModelName, long? Size);
 
