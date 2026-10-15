@@ -1,0 +1,227 @@
+
+# ISA Application — Folder Structure
+
+Drop these folders into **IsaChatApp** (merge with what already exists).
+
+```
+IsaChatApp/
+├── Components/                 ← Blazor UI (already exists)
+│   ├── Layout/                 ChatWidget, MainLayout, NavMenu
+│   ├── Pages/                  Home, Dashboard, Chat, Admin...
+│   └── Shared/                 Throbber, shared controls
+│
+├── Services/                   ← Backend logic (ADD Foundation here)
+│   ├── AccessControlAdapter.cs     T5
+│   ├── EventLogService.cs          T9
+│   ├── Orchestrator/               T10
+│   │   ├── Orchestrator.cs
+│   │   ├── StageModels.cs
+│   │   └── Stages/
+│   │       └── StubStages.cs       T11b
+│   ├── Auth/                       future login services
+│   ├── Chat/                       future chat services
+│   ├── Metrics/                    future KPIs
+│   └── Tickets/                    future support tickets
+│
+├── Controllers/                ← optional API controllers (if not Minimal API)
+├── Models/                     ← DTOs / entities later
+├── data/                       ← SQLite files (events.db, content.db)
+├── docs/                       ← Program.cs example, contracts, notes
+├── wwwroot/                    ← css, js, images
+├── Properties/
+├── docker-compose.yml          ← T2 Keycloak
+├── Program.cs
+├── appsettings.json
+└── IsaChatApp.csproj
+```
+
+## What each folder is for
+
+| Folder | Purpose |
+|--------|---------|
+| **Components** | All Blazor UI (pages, layout, chat widget) |
+| **Services** | Business logic, pipeline, event log, access control |
+| **Services/Orchestrator** | Pipeline spine + stages |
+| **data** | SQLite databases (not committed with real data) |
+| **docs** | Specs, Program.cs merge guide, stage contract |
+| **Controllers** | Optional if you use controller-based API later |
+| **Models** | Shared request/response types later |
+| **wwwroot** | Static files (CSS, JS, images) |
+
+## What to copy now (Foundation)
+
+From this package into IsaChatApp:
+
+1. `docker-compose.yml` → root
+2. `Services/EventLogService.cs` → Services/
+3. `Services/AccessControlAdapter.cs` → Services/
+4. `Services/Orchestrator/` → Services/Orchestrator/
+5. `data/` → data/
+6. Merge settings from `appsettings.Foundation.json`
+7. Merge code from `docs/Program.cs.EXAMPLE` into Program.cs
+
+## Do not delete existing IsaChatApp folders
+
+Keep: Components, wwwroot, Program.cs, existing Services (UsageLogService, WidgetSettings).
+Only **add** the new Services files and folders.
+
+— Eliyas Eshtea · IS Solution Analyst · Second Star Collective · I.C.stars Kansas Cycle 7
+
+// ============================================================
+// FULL EXAMPLE — merge into your existing Program.cs
+// Keep your existing Blazor setup; ADD these lines.
+// ============================================================
+
+using IsaChatApp.Services;
+using IsaChatApp.Services.Orchestrator;
+using IsaChatApp.Services.Orchestrator.Stages;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// --- existing Blazor services stay ---
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+// --- Foundation services (ADD) ---
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<EventLogService>();
+builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapter>();
+builder.Services.AddSingleton<AccessControlStage>();
+
+builder.Services.AddSingleton<IEnumerable<IStage>>(sp => new IStage[]
+{
+    sp.GetRequiredService<AccessControlStage>(),
+    new TranslationStage(),
+    new InputComplianceStage(),
+    new DatabaseSearchStage(sp.GetRequiredService<IConfiguration>()),
+    new KnowledgeGraphStage(),
+    new RagStage(),
+    new ComplexAiStage(),
+    new OutputComplianceStage(),
+    new TicketingStage(),
+});
+
+builder.Services.AddSingleton<Orchestrator>();
+
+var app = builder.Build();
+
+// --- existing middleware stays ---
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseHsts();
+}
+app.UseHttpsRedirection();
+app.UseAntiforgery();
+app.MapStaticAssets();
+app.MapRazorComponents<IsaChatApp.Components.App>()
+    .AddInteractiveServerRenderMode();
+
+// --- Foundation API (ADD) ---
+
+app.MapPost("/api/ask", async (
+    AskRequest req,
+    HttpRequest http,
+    Orchestrator orchestrator,
+    AccessControlStage accessStage) =>
+{
+    var traceId = string.IsNullOrWhiteSpace(req.TraceId)
+        ? Guid.NewGuid().ToString()
+        : req.TraceId!;
+
+    accessStage.IncomingToken = http.Headers.Authorization.FirstOrDefault();
+
+    var ctx = new QueryContext
+    {
+        TraceId = traceId,
+        Question = req.Question ?? "",
+        Language = req.Language ?? "en",
+    };
+
+    var result = await orchestrator.RunAsync(ctx);
+    return Results.Ok(result);
+});
+
+app.MapGet("/api/events/{traceId}", async (string traceId, EventLogService eventLog) =>
+{
+    var rows = await eventLog.GetByTraceIdAsync(traceId);
+    return Results.Ok(rows);
+});
+
+app.Run();
+
+public record AskRequest(string? Question, string? TraceId, string? Language);
+
+# ISA Full Foundation Code
+
+Complete backend code for Working Foundation (Eliyas).  
+Due: **Fri 10/16/2026**
+
+## Files
+
+| File | Task |
+|------|------|
+| `docker-compose.yml` | T2 Keycloak |
+| `Services/EventLogService.cs` | T9 Event log |
+| `Services/AccessControlAdapter.cs` | T5 Token check |
+| `Services/Orchestrator/StageModels.cs` | T10 Models |
+| `Services/Orchestrator/Orchestrator.cs` | T10 Pipeline |
+| `Services/Orchestrator/Stages/StubStages.cs` | T11b + placeholders |
+| `Program.cs.EXAMPLE` | How to wire everything |
+| `appsettings.Foundation.json` | Settings to merge |
+
+## Install
+
+```bash
+dotnet add package Microsoft.Data.Sqlite
+dotnet add package System.IdentityModel.Tokens.Jwt
+dotnet add package Microsoft.IdentityModel.Tokens
+```
+
+## Copy into IsaChatApp
+
+```
+IsaChatApp/
+├── docker-compose.yml
+├── data/
+├── Services/
+│   ├── EventLogService.cs
+│   ├── AccessControlAdapter.cs
+│   └── Orchestrator/
+│       ├── StageModels.cs
+│       ├── Orchestrator.cs
+│       └── Stages/StubStages.cs
+```
+
+## Wire Program.cs
+
+Copy the ADD sections from `Program.cs.EXAMPLE` into your existing `Program.cs`.
+
+## Settings
+
+Merge keys from `appsettings.Foundation.json` into `appsettings.json`.  
+Set `AccessControl:DevBypass` to **false** for Friday demo.
+
+## Run
+
+```bash
+docker compose up -d          # Keycloak :8080
+dotnet run                    # App
+```
+
+## Test
+
+```bash
+curl -X POST http://localhost:5067/api/ask -H "Content-Type: application/json" -d "{\"question\":\"What is the deadline to file a reimbursement request?\",\"traceId\":\"test-001\"}"
+
+curl http://localhost:5067/api/events/test-001
+```
+
+## Handoffs
+
+- Keycloak up → tell **Willis** (T4)
+- README ready → tell **A'keyrah** (T2b)
+- /api/ask works → tell **Willis** (T12)
+- Event log works → tell **A'keyrah** (T13)
+
+— Eliyas Eshtea · IS Solution Analyst · Second Star Collective · I.C.stars Kansas Cycle 7
