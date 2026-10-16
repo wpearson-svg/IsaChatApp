@@ -1,0 +1,165 @@
+@page "/translator"
+@rendermode InteractiveServer
+@inject TranslationService Translator
+@inject IJSRuntime JS
+
+<PageTitle>ISA Translator</PageTitle>
+
+<div class="translator-page">
+    <div class="translator-header">
+        <h1>ISA Translator</h1>
+        <p class="subtitle">Translate any text into any language — powered by your local AI</p>
+    </div>
+
+    <div class="translator-card">
+        <div class="language-row">
+            <div class="lang-box">
+                <label>From</label>
+                <select @bind="sourceLanguage" class="lang-select">
+                    <option value="auto">Auto-detect</option>
+                    @foreach (var lang in Languages)
+                    {
+                        <option value="@lang">@lang</option>
+                    }
+                </select>
+            </div>
+
+            <button class="swap-btn" @onclick="SwapLanguages" title="Swap languages" disabled="@(isBusy || sourceLanguage == "auto")">
+                ⇄
+            </button>
+
+            <div class="lang-box">
+                <label>To</label>
+                <select @bind="targetLanguage" class="lang-select">
+                    @foreach (var lang in Languages)
+                    {
+                        <option value="@lang">@lang</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="text-areas">
+            <div class="text-box">
+                <textarea @bind="sourceText"
+                          @bind:event="oninput"
+                          placeholder="Enter text to translate..."
+                          rows="8"
+                          disabled="@isBusy"></textarea>
+                <div class="char-count">@sourceText.Length characters</div>
+            </div>
+
+            <div class="text-box result-box">
+                @if (isBusy)
+                {
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Translating...</span>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="error-msg">@errorMessage</div>
+                }
+                else
+                {
+                    <textarea @bind="translatedText" readonly rows="8" placeholder="Translation will appear here..."></textarea>
+                    @if (!string.IsNullOrEmpty(translatedText))
+                    {
+                        <button class="copy-btn" @onclick="CopyResult">Copy</button>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-primary" @onclick="Translate" disabled="@(isBusy || string.IsNullOrWhiteSpace(sourceText))">
+                @(isBusy ? "Translating..." : "Translate")
+            </button>
+            <button class="btn-secondary" @onclick="Clear" disabled="@isBusy">Clear</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string sourceText = "";
+    private string translatedText = "";
+    private string sourceLanguage = "auto";
+    private string targetLanguage = "English";
+    private string? errorMessage;
+    private bool isBusy;
+
+    private static readonly string[] Languages =
+    {
+        "English", "Spanish", "French", "German", "Italian", "Portuguese", "Dutch",
+        "Russian", "Chinese (Simplified)", "Chinese (Traditional)", "Japanese", "Korean",
+        "Arabic", "Hindi", "Bengali", "Urdu", "Turkish", "Polish", "Ukrainian",
+        "Vietnamese", "Thai", "Indonesian", "Malay", "Filipino", "Swedish", "Norwegian",
+        "Danish", "Finnish", "Greek", "Czech", "Romanian", "Hungarian", "Hebrew",
+        "Persian", "Swahili", "Afrikaans", "Catalan", "Croatian", "Serbian", "Slovak",
+        "Bulgarian", "Lithuanian", "Latvian", "Estonian", "Slovenian", "Albanian",
+        "Georgian", "Armenian", "Azerbaijani", "Kazakh", "Uzbek", "Mongolian",
+        "Nepali", "Sinhala", "Tamil", "Telugu", "Kannada", "Malayalam", "Marathi",
+        "Gujarati", "Punjabi", "Burmese", "Khmer", "Lao", "Amharic", "Somali",
+        "Yoruba", "Igbo", "Hausa", "Zulu", "Xhosa", "Maori", "Samoan", "Tongan"
+    };
+
+    private async Task Translate()
+    {
+        if (string.IsNullOrWhiteSpace(sourceText)) return;
+
+        isBusy = true;
+        errorMessage = null;
+        translatedText = "";
+        StateHasChanged();
+
+        try
+        {
+            var result = await Translator.TranslateAsync(
+                sourceText.Trim(),
+                targetLanguage,
+                sourceLanguage == "auto" ? null : sourceLanguage);
+
+            if (result.Success)
+            {
+                translatedText = result.TranslatedText ?? "";
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Translation failed.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Unexpected error: " + ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SwapLanguages()
+    {
+        if (sourceLanguage == "auto") return;
+
+        (sourceLanguage, targetLanguage) = (targetLanguage, sourceLanguage);
+        (sourceText, translatedText) = (translatedText, sourceText);
+    }
+
+    private void Clear()
+    {
+        sourceText = "";
+        translatedText = "";
+        errorMessage = null;
+    }
+
+    private async Task CopyResult()
+    {
+        if (!string.IsNullOrEmpty(translatedText))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", translatedText);
+        }
+    }
+}

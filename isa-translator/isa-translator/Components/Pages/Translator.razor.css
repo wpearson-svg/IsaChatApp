@@ -1,0 +1,232 @@
+.translator-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family: 'Roboto', system-ui, sans-serif;
+    color: #1d2d5c;
+}
+
+.translator-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.translator-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.4rem 0;
+    color: #1d2d5c;
+}
+
+.subtitle {
+    color: #52606d;
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.translator-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(29, 45, 92, 0.08);
+    padding: 1.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.language-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.lang-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.lang-box label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #52606d;
+}
+
+.lang-select {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #cbd2d9;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #f6f7f8;
+    color: #1d2d5c;
+}
+
+.swap-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid #cbd2d9;
+    background: #f6f7f8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+}
+
+.swap-btn:hover:not(:disabled) {
+    background: #00a4e4;
+    color: white;
+    border-color: #00a4e4;
+}
+
+.swap-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.text-areas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.text-box {
+    position: relative;
+}
+
+.text-box textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #cbd2d9;
+    border-radius: 12px;
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: vertical;
+    font-family: inherit;
+    color: #1d2d5c;
+    background: #fafbfc;
+}
+
+.text-box textarea:focus {
+    outline: none;
+    border-color: #00a4e4;
+    box-shadow: 0 0 0 3px rgba(0, 164, 228, 0.15);
+}
+
+.char-count {
+    position: absolute;
+    bottom: 10px;
+    right: 14px;
+    font-size: 0.75rem;
+    color: #9aa5b1;
+}
+
+.result-box {
+    background: #f6f7f8;
+    border-radius: 12px;
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 180px;
+    gap: 0.75rem;
+    color: #52606d;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #00a4e4;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-msg {
+    padding: 1.5rem;
+    color: #e31837;
+    font-weight: 500;
+}
+
+.copy-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    background: #1d2d5c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.copy-btn:hover {
+    background: #00a4e4;
+}
+
+.actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.btn-primary {
+    background: #1d2d5c;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.6rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #00a4e4;
+}
+
+.btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #52606d;
+    border: 1px solid #cbd2d9;
+    padding: 0.7rem 1.3rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #f6f7f8;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    .text-areas {
+        grid-template-columns: 1fr;
+    }
+
+    .language-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .swap-btn {
+        align-self: center;
+        transform: rotate(90deg);
+    }
+}
