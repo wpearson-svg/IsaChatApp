@@ -39,3 +39,20 @@ QueryContext.Profile. "Current" role = the assignment whose term covers the day 
 - The token check does not verify signatures yet (Foundation shortcut; Pipeline Built).
 - "Point Dana to her chapter President by name" needs another person's record: use data\directory.db or the Keycloak admin API.
 - The realm import file was written without being able to run Keycloak here; if the import fails, see the log from `docker compose logs keycloak`.
+
+## Sign-in screen (Matt's /sign-in) and this realm
+
+The realm import creates two clients, so nothing needs clicking in the admin console:
+
+| Client | Type | Used by |
+|---|---|---|
+| `isa-web` | public (no secret), direct access grants on | The app's sign-in screen (`Keycloak:ClientId` in appsettings.json) |
+| `isa-chat` | confidential, dev secret | `test-ask.ps1` and other test scripts |
+
+Both put the same claims in the access token: the profile claims, `display_name` (full name in the person's own script), `form_of_address` (the greeting) and `locale` (copied from the account's language). Roles are `chat_user` etc.
+
+Sign in with the **email address** (see `directory/people.csv` for P-0010, and `<username>@example.org` for the staff accounts). Passwords are in `keycloak/dev-passwords.local.csv` (git-ignored).
+
+After changing the generator, rebuild and re-import: `python directory\build_keycloak_realm.py`, then `docker compose down -v` and `docker compose up -d`.
+
+With `AccessControl:DevBypass` on, a valid signed-in token is still used (so roles and profile can be tested); with no token the chat answers as `dev-user`.
