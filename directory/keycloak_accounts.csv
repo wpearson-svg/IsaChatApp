@@ -1,0 +1,6 @@
+username,person_id,first_name,last_name,client_roles
+d.whitfield,P-0010,,,chat_user
+staff.dev,,Dev,Staff,chat_user;dashboard_dev
+staff.content,,Content,Staff,chat_user;dashboard_content_health
+staff.audit,,Audit,Staff,chat_user;auditor
+norole.test,,NoRole,Test,

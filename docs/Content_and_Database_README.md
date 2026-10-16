@@ -4,8 +4,9 @@ Source: the 4 Chapter Leader Processes documents + the President Guidebook PDF (
 Chapter 360 (6 docs) is deferred to Pipeline Built.
 
 ## Files (put in the repo under content/ as shown)
-- content/content.json - 83 passages (document, section, page, text). Word files have no pages, so page = "n/a"; the PDF keeps real page numbers.
+- content/content.json - 81 passages (document, section, page, text). Word files have no pages, so page = "n/a"; the PDF keeps real page numbers.
 - content/meaning_map.json - plain-language questions mapped to the right passage (AI-fallback path).
+- content/rechunk_pdf.py - re-splits the PDF guidebook on sentence boundaries (no mid-sentence starts, no page numbers, no table of contents). Run before build_content_db.py if content.json is ever regenerated from the PDF.
 - content/build_content_db.py - rebuilds data/content.db from empty every run. Python 3 only, no packages.
 
 ## Build

@@ -15,7 +15,7 @@ public interface IAccessControlAdapter
     Task<AccessIdentity?> ValidateAsync(string? bearerToken);
 }
 
-public record AccessIdentity(string UserId, IReadOnlyList<string> Roles);
+public record AccessIdentity(string UserId, IReadOnlyList<string> Roles, IReadOnlyDictionary<string, string>? Profile = null);
 
 public class KeycloakAccessControlAdapter : IAccessControlAdapter
 {
@@ -23,6 +23,13 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
     private readonly ILogger<KeycloakAccessControlAdapter> _log;
     private readonly HttpClient _http;
     private readonly bool _devBypass;
+
+    // Claims the Keycloak mappers add to the token (see directory/build_keycloak_realm.py).
+    private static readonly string[] ProfileClaims =
+    {
+        "person_id", "chapter_id", "chapter_role", "permission", "term_start", "term_end",
+        "years_as_leader", "language", "formality", "form_of_address"
+    };
 
     public KeycloakAccessControlAdapter(
         IConfiguration config,
@@ -99,7 +106,14 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
             foreach (var c in jwt.Claims.Where(c => c.Type == "realm_access" || c.Type == "resource_access"))
                 roles.AddRange(ReadRolesFromJson(c.Value));
 
-            return new AccessIdentity(userId, roles.Distinct().ToList());
+            var profile = new Dictionary<string, string>();
+            foreach (var name in ProfileClaims)
+            {
+                var value = jwt.Claims.FirstOrDefault(c => c.Type == name)?.Value;
+                if (!string.IsNullOrEmpty(value)) profile[name] = value;
+            }
+
+            return new AccessIdentity(userId, roles.Distinct().ToList(), profile);
         }
         catch (Exception ex)
         {
@@ -158,12 +172,26 @@ public class AccessControlStage : Orchestrator.IStage
 
         ctx.UserId = identity.UserId;
         ctx.Roles = identity.Roles;
+        ctx.Profile = identity.Profile ?? new Dictionary<string, string>();
+
+        // Signed in is not enough: the account must hold the chat_user role.
+        if (!identity.Roles.Contains("chat_user"))
+        {
+            ctx.AccessDenied = true;
+            return new Orchestrator.StageResult(
+                Orchestrator.StageOutcome.Stop,
+                "Your account does not have access to this assistant.",
+                $"user={identity.UserId}; roles=[{string.Join(",", identity.Roles)}]; reason=no_chat_user_role"
+            );
+        }
 
         // Never put the token in the log — only user id + roles
         return new Orchestrator.StageResult(
             Orchestrator.StageOutcome.Pass,
             null,
-            $"user={identity.UserId}; roles=[{string.Join(",", identity.Roles)}]"
+            $"user={identity.UserId}; roles=[{string.Join(",", identity.Roles)}]" +
+            (ctx.Profile.TryGetValue("chapter_role", out var cr) ? $"; chapter_role={cr}" : "") +
+            (ctx.Profile.TryGetValue("permission", out var perm) ? $"; permission={perm}" : "")
         );
     }
 }
