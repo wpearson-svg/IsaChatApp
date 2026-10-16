@@ -1,0 +1,173 @@
+@page "/sign-in"
+@layout AuthLayout
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using IsaChatApp.Services
+@inject KeycloakSignInService SignInService
+@inject NavigationManager Navigation
+
+@* ============================================================
+   SignIn.razor -- the Isa sign-in screen.
+
+   Works with the team's Keycloak server (see
+   Services/KeycloakSignInService.cs and docs/sign-in-setup.md).
+
+   Built for chapter leaders in every country:
+     - People sign in with their EMAIL ADDRESS, never their name.
+     - The email box is a plain text box (not type="email") so
+       international email addresses are not rejected by the browser.
+     - Passwords may contain any characters, in any script.
+     - dir="auto" lets right-to-left text (Arabic, Hebrew) type
+       correctly in both boxes.
+     - After sign-in, Isa greets people by their preferred form of
+       address, in their own script (see the landing page top bar).
+
+   This page is a plain (static) server-rendered form, not an
+   interactive one: the browser posts the form, the server checks it
+   with Keycloak, then sets the sign-in cookie and sends the person
+   back to the page they came from.
+
+   All the text people see is in one place (the Text section in the
+   @code block) so it can be translated later.
+
+   Styles: SignIn.razor.css.
+   ============================================================ *@
+
+<PageTitle>Sign in | Isa</PageTitle>
+
+<div class="signin">
+
+    <aside class="signin__brand">
+        <svg class="signin__brandC" viewBox="-25 -25 250 250" aria-hidden="true">
+            <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
+        </svg>
+        <div class="signin__brandInner">
+            <div class="signin__badge" aria-hidden="true">
+                <Throbber Spinning="false" />
+            </div>
+            <p class="signin__brandName">Isa</p>
+            <p class="signin__brandTag">Chapter Support Assistant</p>
+            <p class="signin__brandLine">@Text.BrandLine</p>
+        </div>
+    </aside>
+
+    <main class="signin__panel">
+        <div class="signin__card">
+            <h1 class="signin__title">@Text.Title</h1>
+            <p class="signin__lede">@Text.Lede</p>
+
+            @if (ErrorMessage is not null)
+            {
+                <div class="signin__error" role="alert">@ErrorMessage</div>
+            }
+
+            <EditForm Model="Input" method="post" OnValidSubmit="HandleSignInAsync" FormName="isa-sign-in" class="signin__form">
+                <DataAnnotationsValidator />
+
+                <div class="signin__field">
+                    <label class="signin__label" for="signin-email">@Text.EmailLabel</label>
+                    <InputText id="signin-email"
+                               class="signin__input"
+                               @bind-Value="Input.Email"
+                               type="text"
+                               inputmode="email"
+                               autocomplete="username"
+                               autocapitalize="none"
+                               spellcheck="false"
+                               dir="auto" />
+                    <ValidationMessage For="() => Input.Email" />
+                </div>
+
+                <div class="signin__field">
+                    <label class="signin__label" for="signin-password">@Text.PasswordLabel</label>
+                    <InputText id="signin-password"
+                               class="signin__input"
+                               @bind-Value="Input.Password"
+                               type="password"
+                               autocomplete="current-password"
+                               dir="auto" />
+                    <ValidationMessage For="() => Input.Password" />
+                </div>
+
+                <button type="submit" class="signin__submit">@Text.SubmitButton</button>
+            </EditForm>
+
+            <p class="signin__note">@Text.PrototypeNote</p>
+
+            <a class="signin__back" href="/">&larr; @Text.BackLink</a>
+        </div>
+    </main>
+
+</div>
+
+@code {
+    // ---- Text people see (English for now; translate here later) --------
+    private static class Text
+    {
+        public const string BrandLine = "Answers from ISACA's approved chapter guidance, with the sources to prove it.";
+        public const string Title = "Sign in";
+        public const string Lede = "Use the email address and password for your Isa account.";
+        public const string EmailLabel = "Email address";
+        public const string PasswordLabel = "Password";
+        public const string SubmitButton = "Sign in";
+        public const string PrototypeNote = "Isa is a prototype. Test accounts are set up by the project team.";
+        public const string BackLink = "Back to Isa home";
+
+        public const string EmailRequired = "Enter your email address.";
+        public const string PasswordRequired = "Enter your password.";
+        public const string WrongCredentials = "That email address and password don't match an Isa account. Check them and try again.";
+        public const string ServiceUnavailable = "The sign-in service isn't reachable right now. Please try again in a few minutes.";
+        public const string NotConfigured = "Sign-in isn't set up on this server yet. A developer can find the details in the app log.";
+    }
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm(FormName = "isa-sign-in")]
+    private SignInInput Input { get; set; } = new();
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private async Task HandleSignInAsync()
+    {
+        var result = await SignInService.SignInAsync(Input.Email, Input.Password);
+
+        if (result.Outcome == SignInOutcome.Success && result.Principal is not null)
+        {
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, result.Principal);
+            Navigation.NavigateTo(SafeReturnUrl, forceLoad: true);
+            return;
+        }
+
+        ErrorMessage = result.Outcome switch
+        {
+            SignInOutcome.WrongCredentials => Text.WrongCredentials,
+            SignInOutcome.NotConfigured => Text.NotConfigured,
+            _ => Text.ServiceUnavailable
+        };
+
+        // Never send the password back to the browser in the re-shown form.
+        Input.Password = string.Empty;
+    }
+
+    // Only send people back to a page on this site (never to another
+    // website someone slipped into the link).
+    private string SafeReturnUrl =>
+        !string.IsNullOrEmpty(ReturnUrl)
+        && ReturnUrl.StartsWith('/')
+        && !ReturnUrl.StartsWith("//")
+        && !ReturnUrl.StartsWith("/\\")
+            ? ReturnUrl
+            : "/";
+
+    private sealed class SignInInput
+    {
+        [Required(ErrorMessage = Text.EmailRequired)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = Text.PasswordRequired)]
+        public string Password { get; set; } = string.Empty;
+    }
+}

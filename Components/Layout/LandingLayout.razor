@@ -1,0 +1,27 @@
+@inherits LayoutComponentBase
+
+@* ============================================================
+   LandingLayout.razor
+
+   Full-width layout with no sidebar, used only by the landing page
+   (Components/Pages/Home.razor, via @layout LandingLayout). Every
+   other page still uses MainLayout.razor.
+
+   It places the same ChatWidget, with the same Hosts, as
+   MainLayout.razor. If you change the Hosts in one layout, change
+   them in the other too.
+   ============================================================ *@
+
+<ChatWidget @rendermode="InteractiveServer"
+            Hosts="@(new Dictionary<string,string> {
+                ["remote"] = "http://100.89.6.69:11434",
+                ["local"]  = "http://localhost:11434"
+            })" />
+
+@Body
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">&#x1F5D9;</span>
+</div>
