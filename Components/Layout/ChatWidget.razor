@@ -85,6 +85,7 @@
 @inject WidgetSettings Settings
 @inject UsageLogService UsageLog
 @inject IsaChatApp.Services.Orchestrator.Orchestrator Pipeline
+@inject KeycloakSignInService SignInService
 
 <div class="isa-widget">
 
@@ -744,10 +745,11 @@
             TraceId = Guid.NewGuid().ToString(),
             Question = text,
             Language = "en",
-            // No token yet: sign-in (T6) is not wired in. Works while
-            // AccessControl:DevBypass is on; otherwise the user sees the
-            // sign-in message below.
-            IncomingToken = null
+            // The signed-in person's Keycloak token (from /sign-in), or
+            // null if nobody is signed in. The access_control stage checks
+            // it. While AccessControl:DevBypass is on (Development), the
+            // pipeline answers even without one.
+            IncomingToken = await GetBearerTokenAsync()
         };
 
         var result = await Pipeline.RunAsync(ctx);
@@ -756,7 +758,7 @@
 
         if (ctx.AuthFailed)
         {
-            Messages.Add(new ChatEntry("error", "Not signed in", "Please sign in to ask a question.", TraceId: result.TraceId));
+            Messages.Add(new ChatEntry("error", "Not signed in", "Please sign in to ask a question. Use the Sign in button at the top of the Isa home page.", TraceId: result.TraceId));
             return;
         }
 
@@ -776,6 +778,24 @@
                 Messages.Add(new ChatEntry("error", "Unable to answer", result.Message, TraceId: result.TraceId));
                 break;
         }
+    }
+
+    // ---- Sign-in token -------------------------------------------------
+    //
+    // Who is signed in comes from the sign-in cookie set by /sign-in
+    // (Components/Pages/SignIn.razor). The cookie holds a session ID;
+    // KeycloakSignInService keeps the actual Keycloak token on the
+    // server and refreshes it when it is about to expire.
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private async Task<string?> GetBearerTokenAsync()
+    {
+        if (AuthState is null) return null;
+
+        var user = (await AuthState).User;
+        var sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+        var accessToken = await SignInService.GetAccessTokenAsync(sessionId);
+        return accessToken is null ? null : $"Bearer {accessToken}";
     }
 
     public void Dispose()

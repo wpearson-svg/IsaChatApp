@@ -1,0 +1,401 @@
+/* ============================================================
+   Home.razor.css -- styles for the Isa landing page only
+   (Blazor CSS isolation scopes these to Home.razor).
+
+   Colors and type follow BRAND_GUIDELINES.md:
+     ISACA Dark Blue #1d2d5c, Medium Blue #07649d, Blue #00a4e4,
+     Green #6cb33f, Teal #36ac91, Light Blue #e7f0f5.
+     Headlines: Roboto Slab Light, sentence case.
+     Paragraph titles: Roboto Bold, ALL CAPS.
+     Body: Roboto Light, Dark Blue.
+   Roboto fonts are loaded in Components/App.razor; Arial is the
+   fallback if the computer is offline.
+   ============================================================ */
+
+.landing {
+    --dark-blue: #1d2d5c;
+    --medium-blue: #07649d;
+    --blue: #00a4e4;
+    --green: #6cb33f;
+    --teal: #36ac91;
+    --light-blue: #e7f0f5;
+
+    min-height: 100vh;
+    background: #ffffff;
+    color: var(--dark-blue);
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+}
+
+/* ---- Top bar ---------------------------------------------------- */
+
+.landing__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 2.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e3e8ef;
+}
+
+.landing__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.landing__brandMark {
+    display: block;
+    width: 40px;
+    height: 40px;
+}
+
+.landing__brandText {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.landing__brandName {
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 400;
+    font-size: 1.35rem;
+}
+
+.landing__brandTag {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--medium-blue);
+}
+
+.landing__topbarRight {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.landing__links {
+    display: flex;
+    gap: 1.75rem;
+}
+
+/* ---- Sign in / welcome ------------------------------------------ */
+
+.landing__account {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding-left: 2rem;
+    border-left: 1px solid #e3e8ef;
+}
+
+.landing__signIn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    background: var(--dark-blue);
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.landing__signIn:hover {
+    background: var(--medium-blue);
+    color: #ffffff;
+}
+
+.landing__welcome {
+    font-weight: 400;
+    font-size: 0.9rem;
+}
+
+.landing__signOutForm {
+    margin: 0;
+}
+
+.landing__signOut {
+    padding: 0.4rem 1rem;
+    border: 1px solid #c9d3e0;
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--dark-blue);
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.landing__signOut:hover {
+    border-color: var(--medium-blue);
+    color: var(--medium-blue);
+}
+
+.landing__links a {
+    color: var(--dark-blue);
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.landing__links a:hover {
+    color: var(--medium-blue);
+    text-decoration: underline;
+}
+
+/* ---- Hero ------------------------------------------------------- */
+
+.landing__hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--dark-blue);
+    color: #ffffff;
+    padding: 4.5rem 2.5rem 5rem;
+}
+
+/* The "cropped C" brand graphic: one big C, bleeding off the top and
+   right edges, in a single brand color behind the hero text. */
+.landing__heroC {
+    position: absolute;
+    width: 620px;
+    height: 620px;
+    right: -170px;
+    top: -150px;
+    color: var(--medium-blue);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.landing__heroInner {
+    position: relative;
+    max-width: 1100px;
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+}
+
+.landing__heroText {
+    flex: 1 1 auto;
+    max-width: 640px;
+}
+
+.landing__eyebrow {
+    margin: 0 0 0.75rem;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    color: var(--green);
+}
+
+.landing__headline {
+    margin: 0 0 1.25rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 300;
+    font-size: 3rem;
+    line-height: 1.15;
+}
+
+.landing__lede {
+    margin: 0 0 2rem;
+    font-size: 1.15rem;
+    color: #dce6f2;
+}
+
+.landing__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0.7rem 1.2rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 400;
+}
+
+.landing__ctaDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: landing-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes landing-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(108, 179, 63, 0.7); }
+    50%      { box-shadow: 0 0 0 8px rgba(108, 179, 63, 0); }
+}
+
+/* Big Isa ring in a white circle, the same look as the chat bubble.
+   Spins when you hover over it. */
+.landing__heroBadge {
+    flex: 0 0 auto;
+    width: 200px;
+    height: 200px;
+    padding: 28px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* ---- Sections --------------------------------------------------- */
+
+.landing__section {
+    padding: 4rem 2.5rem;
+}
+
+.landing__section > * {
+    max-width: 1100px;
+}
+
+.landing__section--tint {
+    background: var(--light-blue);
+}
+
+.landing__sectionTitle {
+    margin: 0 0 0.5rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 400;
+    font-size: 1.9rem;
+}
+
+.landing__sectionLede {
+    margin: 0 0 1.75rem;
+    font-size: 1.05rem;
+}
+
+/* How Isa answers: three steps */
+.landing__steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.75rem;
+}
+
+.landing__step {
+    padding: 1.5rem;
+    border: 1px solid #e3e8ef;
+    border-top: 4px solid var(--teal);
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.landing__step:nth-child(2) { border-top-color: var(--blue); }
+.landing__step:nth-child(3) { border-top-color: var(--green); }
+
+.landing__step p {
+    margin: 0;
+}
+
+.landing__stepNum {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0.75rem;
+    border-radius: 50%;
+    background: var(--dark-blue);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.landing__stepTitle {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+}
+
+/* What Isa has read: document list */
+.landing__docs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.landing__docs li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 8px;
+    background: #ffffff;
+    font-weight: 400;
+}
+
+.landing__docs li::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 14px;
+    height: 18px;
+    border: 2px solid var(--medium-blue);
+    border-radius: 2px;
+}
+
+/* Questions to try */
+.landing__questions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.landing__question {
+    padding: 1rem 1.25rem;
+    border-left: 4px solid var(--teal);
+    border-radius: 8px;
+    background: #f5f8fb;
+    font-weight: 400;
+}
+
+.landing__question::before {
+    content: "\201C";
+    margin-right: 0.15rem;
+    color: var(--teal);
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 700;
+}
+
+.landing__question::after {
+    content: "\201D";
+    margin-left: 0.15rem;
+    color: var(--teal);
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 700;
+}
+
+/* ---- Footer ----------------------------------------------------- */
+
+.landing__footer {
+    padding: 2rem 2.5rem 6rem; /* extra bottom room so the Isa bubble doesn't cover the text */
+    background: var(--dark-blue);
+    color: #b9c6d8;
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+/* ---- Smaller screens -------------------------------------------- */
+
+@media (max-width: 900px) {
+    .landing__heroBadge { display: none; }
+    .landing__headline { font-size: 2.3rem; }
+    .landing__steps { grid-template-columns: 1fr; }
+    .landing__questions { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .landing__topbar { padding: 1rem; }
+    .landing__links { display: none; }
+    .landing__account { padding-left: 0; border-left: none; }
+    .landing__welcome { display: none; }
+    .landing__hero, .landing__section { padding-left: 1rem; padding-right: 1rem; }
+    .landing__footer { padding-left: 1rem; padding-right: 1rem; }
+    .landing__headline { font-size: 1.9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing__ctaDot { animation: none; }
+}

@@ -2,6 +2,9 @@ using IsaChatApp.Components;
 using IsaChatApp.Services;
 using IsaChatApp.Services.Orchestrator;
 using IsaChatApp.Services.Orchestrator.Stages;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using OrchestratorService = IsaChatApp.Services.Orchestrator.Orchestrator;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +23,26 @@ builder.Services.AddSingleton<WidgetSettings>();
 // persistence story as WidgetSettings: one for the whole app, gone on
 // restart.
 builder.Services.AddSingleton<UsageLogService>();
+
+// --- Sign-in (Keycloak) ---
+// The sign-in page (/sign-in) checks the email and password with
+// Keycloak through KeycloakSignInService, then this cookie remembers
+// that the person is signed in. Keycloak settings are in
+// appsettings.json under "Keycloak"; what the Keycloak client needs is
+// in docs/sign-in-setup.md.
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "Isa.SignIn";
+        options.LoginPath = "/sign-in";
+        options.AccessDeniedPath = "/sign-in";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddSingleton<KeycloakSignInService>();
 
 // --- Working Foundation: event log, access control, pipeline stages ---
 builder.Services.AddHttpClient("keycloak");
@@ -49,11 +72,27 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+// Sign-in must come before antiforgery.
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// POST /account/sign-out -- used by the "Sign out" button on the landing
+// page. Ends the Keycloak session, clears the sign-in cookie, and goes
+// back to the landing page. [FromForm] makes ASP.NET check the form's
+// antiforgery token, so other websites can't sign people out.
+app.MapPost("/account/sign-out", async (HttpContext http, KeycloakSignInService signIn, [FromForm] string? returnUrl) =>
+{
+    var sessionId = http.User.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+    await signIn.SignOutAsync(sessionId);
+    await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.LocalRedirect("~/");
+});
 
 // POST /api/ask -- the one entry point to the pipeline.
 // 401 when the token is missing/invalid; otherwise 200 with status answered / stopped / escalated.

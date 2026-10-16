@@ -1,0 +1,226 @@
+/* ============================================================
+   SignIn.razor.css -- styles for the sign-in screen only.
+   Same ISACA colors and fonts as the landing page (Home.razor.css).
+   ============================================================ */
+
+.signin {
+    --dark-blue: #1d2d5c;
+    --medium-blue: #07649d;
+    --blue: #00a4e4;
+    --green: #6cb33f;
+    --teal: #36ac91;
+    --light-blue: #e7f0f5;
+
+    display: flex;
+    min-height: 100vh;
+    background: #ffffff;
+    color: var(--dark-blue);
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+}
+
+/* ---- Left: brand panel ------------------------------------------ */
+
+.signin__brand {
+    position: relative;
+    overflow: hidden;
+    flex: 0 0 42%;
+    display: flex;
+    align-items: center;
+    padding: 3rem;
+    background: var(--dark-blue);
+    color: #ffffff;
+}
+
+.signin__brandC {
+    position: absolute;
+    width: 560px;
+    height: 560px;
+    right: -220px;
+    bottom: -200px;
+    color: var(--medium-blue);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.signin__brandInner {
+    position: relative;
+    max-width: 380px;
+}
+
+.signin__badge {
+    width: 112px;
+    height: 112px;
+    margin-bottom: 1.5rem;
+    padding: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.signin__brandName {
+    margin: 0;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 300;
+    font-size: 2.6rem;
+    line-height: 1.1;
+}
+
+.signin__brandTag {
+    margin: 0.25rem 0 1.5rem;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+}
+
+.signin__brandLine {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #dce6f2;
+}
+
+/* ---- Right: the form -------------------------------------------- */
+
+.signin__panel {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    background: #f5f8fb;
+}
+
+.signin__card {
+    width: 100%;
+    max-width: 420px;
+    padding: 2.5rem;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 8px 30px rgba(29, 45, 92, 0.1);
+}
+
+.signin__title {
+    margin: 0 0 0.35rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 300;
+    font-size: 2rem;
+}
+
+.signin__lede {
+    margin: 0 0 1.75rem;
+    color: #4a5878;
+}
+
+.signin__error {
+    margin-bottom: 1.25rem;
+    padding: 0.8rem 1rem;
+    border-left: 4px solid #e31837;
+    border-radius: 6px;
+    background: #fdecee;
+    color: #9b1027;
+    font-weight: 400;
+}
+
+.signin__field {
+    margin-bottom: 1.25rem;
+}
+
+.signin__label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* ::deep reaches the <input> that InputText renders (a child component). */
+.signin__field ::deep .signin__input {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #c9d3e0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--dark-blue);
+    font: inherit;
+    font-weight: 400;
+    font-size: 1rem;
+}
+
+.signin__field ::deep .signin__input:focus {
+    outline: none;
+    border-color: var(--medium-blue);
+    box-shadow: 0 0 0 3px rgba(0, 164, 228, 0.25);
+}
+
+.signin__field ::deep .signin__input.invalid {
+    border-color: #e31837;
+    outline: none;
+}
+
+/* ValidationMessage always renders with class="validation-message". */
+.signin__field ::deep .validation-message {
+    margin-top: 0.35rem;
+    color: #c0142f;
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+.signin__submit {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.85rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--dark-blue);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.signin__submit:hover {
+    background: var(--medium-blue);
+}
+
+.signin__submit:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: 2px;
+}
+
+.signin__note {
+    margin: 1.5rem 0 0;
+    font-size: 0.85rem;
+    color: #5d6a86;
+}
+
+.signin__back {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--medium-blue);
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.signin__back:hover {
+    text-decoration: underline;
+}
+
+/* ---- Smaller screens -------------------------------------------- */
+
+@media (max-width: 860px) {
+    .signin { flex-direction: column; }
+    .signin__brand { flex: 0 0 auto; padding: 2rem 1.5rem; }
+    .signin__brandC { width: 360px; height: 360px; right: -160px; bottom: -170px; }
+    .signin__badge { width: 72px; height: 72px; padding: 10px; margin-bottom: 1rem; }
+    .signin__brandName { font-size: 2rem; }
+    .signin__brandLine { display: none; }
+    .signin__panel { align-items: flex-start; padding: 2rem 1rem; }
+    .signin__card { padding: 1.75rem; }
+}

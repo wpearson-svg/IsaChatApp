@@ -1,7 +1,156 @@
-﻿@page "/"
+@page "/"
+@layout LandingLayout
+@using IsaChatApp.Services
 
-<PageTitle>Home</PageTitle>
+@* ============================================================
+   Home.razor -- the Isa landing page.
 
-<h1>Hello, world!</h1>
+   This is the page that sits behind the chat widget. It introduces
+   Isa: what she is, how she answers, what she has read, and some
+   questions to try. Uses LandingLayout (no sidebar), so the other
+   pages (Config, dashboards, Throbber test) keep MainLayout and are
+   unchanged.
 
-Welcome to your new app.
+   Everything said about Isa here matches what the pipeline really
+   does today (search approved documents, show sources, hand off to a
+   person with a reference number). Update this text when the AI
+   stage or more documents come online.
+
+   Styles: Home.razor.css (scoped to this page).
+   ============================================================ *@
+
+<PageTitle>Isa | Chapter Support Assistant</PageTitle>
+
+<div class="landing">
+
+    <header class="landing__topbar">
+        <div class="landing__brand">
+            <span class="landing__brandMark"><Throbber Spinning="false" /></span>
+            <span class="landing__brandText">
+                <span class="landing__brandName">Isa</span>
+                <span class="landing__brandTag">Chapter Support Assistant</span>
+            </span>
+        </div>
+        <div class="landing__topbarRight">
+            <nav class="landing__links">
+                <a href="#how">How it works</a>
+                <a href="#knows">What Isa knows</a>
+                <a href="#try">Try it</a>
+            </nav>
+
+            @* Sign in / signed-in greeting. The greeting uses the
+               person's preferred form of address from Keycloak (see
+               KeycloakSignInService.GreetingClaim), in their own script.
+               <bdi> keeps a right-to-left name (Arabic, Hebrew) from
+               scrambling the surrounding English. *@
+            <div class="landing__account">
+                <AuthorizeView>
+                    <Authorized>
+                        <span class="landing__welcome">
+                            Welcome, <bdi>@context.User.FindFirst(KeycloakSignInService.GreetingClaim)?.Value</bdi>
+                        </span>
+                        <form method="post" action="account/sign-out" class="landing__signOutForm">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="returnUrl" value="/" />
+                            <button type="submit" class="landing__signOut">Sign out</button>
+                        </form>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a class="landing__signIn" href="sign-in">Sign in</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </header>
+
+    <section class="landing__hero">
+        <svg class="landing__heroC" viewBox="-25 -25 250 250" aria-hidden="true">
+            <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
+        </svg>
+
+        <div class="landing__heroInner">
+            <div class="landing__heroText">
+                <p class="landing__eyebrow">FOR ISACA CHAPTER LEADERS</p>
+                <h1 class="landing__headline">Meet Isa, your chapter support assistant</h1>
+                <p class="landing__lede">
+                    Ask a question about running your chapter and Isa finds the answer in
+                    ISACA's approved chapter guidance. Every answer shows where it came from.
+                    When a question needs a person, Isa hands it off and gives you a
+                    reference number.
+                </p>
+                <p class="landing__cta">
+                    <span class="landing__ctaDot" aria-hidden="true"></span>
+                    Click the Isa button in the bottom-right corner to start.
+                </p>
+            </div>
+
+            @* InteractiveServer so the hover spin actually runs -- this
+               page itself is static, and a static component can't react
+               to the mouse. *@
+            <div class="landing__heroBadge" aria-hidden="true">
+                <Throbber @rendermode="InteractiveServer" Spinning="false" SpinOnHover="true" />
+            </div>
+        </div>
+    </section>
+
+    <section id="how" class="landing__section">
+        <h2 class="landing__sectionTitle">How Isa answers</h2>
+        <div class="landing__steps">
+            <div class="landing__step">
+                <span class="landing__stepNum">1</span>
+                <h3 class="landing__stepTitle">SEARCHES APPROVED CONTENT</h3>
+                <p>
+                    Isa looks only in documents ISACA has approved for chapter leaders,
+                    not the open internet.
+                </p>
+            </div>
+            <div class="landing__step">
+                <span class="landing__stepNum">2</span>
+                <h3 class="landing__stepTitle">SHOWS ITS SOURCES</h3>
+                <p>
+                    Each answer lists the document and section it came from, so you can
+                    check it yourself.
+                </p>
+            </div>
+            <div class="landing__step">
+                <span class="landing__stepNum">3</span>
+                <h3 class="landing__stepTitle">KNOWS WHEN TO HAND OFF</h3>
+                <p>
+                    Sensitive questions, or ones the documents don't cover, go to a person.
+                    You get a reference number to follow up.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section id="knows" class="landing__section landing__section--tint">
+        <h2 class="landing__sectionTitle">What Isa has read so far</h2>
+        <p class="landing__sectionLede">
+            This prototype draws on five chapter leader documents. More are being added.
+        </p>
+        <ul class="landing__docs">
+            <li>Chapter Leader Guidebook: President (August 2026)</li>
+            <li>Annual Chapter Compliance Framework</li>
+            <li>Common Tasks and Navigation Guide</li>
+            <li>Core Chapter Leader Roles and Responsibilities</li>
+            <li>ISACA Chapter Systems Overview</li>
+        </ul>
+    </section>
+
+    <section id="try" class="landing__section">
+        <h2 class="landing__sectionTitle">Questions to try</h2>
+        <p class="landing__sectionLede">Open Isa and type any of these.</p>
+        <div class="landing__questions">
+            <div class="landing__question">How many board meetings must a chapter hold each year?</div>
+            <div class="landing__question">How many educational events must a chapter hold?</div>
+            <div class="landing__question">Who writes down what the board decided?</div>
+            <div class="landing__question">When do we send in our yearly paperwork?</div>
+        </div>
+    </section>
+
+    <footer class="landing__footer">
+        Isa is a prototype built for ISACA by Second Star Collective (i.c.stars Kansas City).
+        This is a demonstration page, not an official ISACA website.
+    </footer>
+
+</div>
