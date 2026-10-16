@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 204 204" width="64" height="64">
+  <title>Isa</title>
+  <mask id="gap" maskUnits="userSpaceOnUse" x="-50" y="-50" width="304" height="304">
+    <rect x="-50" y="-50" width="304" height="304" fill="#fff"/>
+    <rect x="110" y="74.75" width="110" height="50.5" fill="#000"/>
+  </mask>
+  <circle cx="100" cy="100" r="78.96" fill="none" stroke="#6cb33f" stroke-width="43.86" mask="url(#gap)"/>
+</svg>
