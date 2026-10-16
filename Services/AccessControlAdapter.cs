@@ -50,9 +50,15 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
     {
         if (_devBypass)
         {
-            return new AccessIdentity("dev-user", new[] { "chat_user" });
+            // Dev only: a real signed-in token is still used (so roles and profile can be tested);
+            // with no valid token the chat answers as "dev-user".
+            return ValidateToken(bearerToken) ?? new AccessIdentity("dev-user", new[] { "chat_user" });
         }
+        return ValidateToken(bearerToken);
+    }
 
+    private AccessIdentity? ValidateToken(string? bearerToken)
+    {
         if (string.IsNullOrWhiteSpace(bearerToken))
             return null;
 

@@ -29,7 +29,7 @@ accounts = rows(os.path.join(here, "keycloak_accounts.csv"))
 ROLES = ["chat_user", "dashboard_dev", "dashboard_content_health", "auditor"]
 # Attributes that go into the access token as claims (read by KeycloakAccessControlAdapter).
 TOKEN_ATTRS = ["person_id", "chapter_id", "chapter_role", "permission", "term_start", "term_end",
-               "years_as_leader", "language", "formality", "form_of_address"]
+               "years_as_leader", "language", "formality", "form_of_address", "display_name"]
 
 def current_assignment(pid):
     live = [a for a in assignments if a["Person ID"] == pid and a["Term start"] <= today.isoformat() <= a["Term end"]]
@@ -65,6 +65,7 @@ for a in accounts:
         email = p["Email"]
         cur = current_assignment(a["person_id"])
         attrs = {"person_id": p["Person ID"], "language": p["Language"], "formality": p["Formality"],
+                 "display_name": p["Full name as written"],
                  "form_of_address": p["Form of address"], "years_as_leader": p["Years as leader"]}
         if cur:
             attrs.update(chapter_id=cur["Chapter ID"], chapter_role=cur["Role"], permission=cur["Permission"],
@@ -99,12 +100,32 @@ profile = {
     "unmanagedAttributePolicy": "ENABLED",
 }
 
-mapper = lambda attr: {
-    "name": attr, "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper",
+mapper = lambda attr, claim=None: {
+    "name": claim or attr, "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper",
     "consentRequired": False,
-    "config": {"user.attribute": attr, "claim.name": attr, "jsonType.label": "String",
+    "config": {"user.attribute": attr, "claim.name": claim or attr, "jsonType.label": "String",
                "id.token.claim": "true", "access.token.claim": "true",
                "userinfo.token.claim": "true", "introspection.token.claim": "true"}}
+
+# Keycloak's own "locale" claim comes from the user's language (the sign-in screen reads it).
+CLAIM_MAPPERS = [mapper(a) for a in TOKEN_ATTRS] + [mapper("language", "locale")]
+
+# isa-chat: confidential client used by test-ask.ps1 / test scripts (secret is a dev placeholder).
+CHAT_CLIENT = {
+    "clientId": "isa-chat", "name": "Isa chat", "enabled": True, "protocol": "openid-connect",
+    "publicClient": False, "secret": "dev-only-placeholder-secret",
+    "standardFlowEnabled": True,
+    "directAccessGrantsEnabled": True,     # DEV ONLY: lets test scripts get a token with a username + password
+    "fullScopeAllowed": True,              # roles of every client appear in the token
+    "rootUrl": "http://localhost:5067",
+    "redirectUris": ["http://localhost:5067/signin-oidc", "https://localhost:7234/signin-oidc"],
+    "webOrigins": ["http://localhost:5067"],
+    "attributes": {"post.logout.redirect.uris": "http://localhost:5067/signout-callback-oidc##https://localhost:7234/signout-callback-oidc"},
+    "protocolMappers": CLAIM_MAPPERS,
+}
+# isa-web: public client used by the app's own sign-in screen (docs/sign-in-setup.md). No secret.
+WEB_CLIENT = dict(CHAT_CLIENT, clientId="isa-web", name="Isa web sign-in", publicClient=True)
+WEB_CLIENT.pop("secret")
 
 realm = {
     "realm": "isa", "enabled": True, "sslRequired": "external",
@@ -113,17 +134,7 @@ realm = {
     "roles": {"client": {"isa-chat": [{"name": r, "description": d} for r, d in zip(ROLES, [
         "Base role: ordinary chat access (everyone gets it)", "Sees the Developer Dashboard link",
         "Sees the Content Health Dashboard link", "Review role"])]}},
-    "clients": [{
-        "clientId": "isa-chat", "name": "Isa chat", "enabled": True, "protocol": "openid-connect",
-        "publicClient": False, "secret": "dev-only-placeholder-secret",
-        "standardFlowEnabled": True,
-        "directAccessGrantsEnabled": True,     # DEV ONLY: lets test scripts get a token with a username + password
-        "rootUrl": "http://localhost:5067",
-        "redirectUris": ["http://localhost:5067/signin-oidc", "https://localhost:7234/signin-oidc"],
-        "webOrigins": ["http://localhost:5067"],
-        "attributes": {"post.logout.redirect.uris": "http://localhost:5067/signout-callback-oidc##https://localhost:7234/signout-callback-oidc"},
-        "protocolMappers": [mapper(a) for a in TOKEN_ATTRS],
-    }],
+    "clients": [CHAT_CLIENT, WEB_CLIENT],
     "components": {"org.keycloak.userprofile.UserProfileProvider": [{
         "providerId": "declarative-user-profile", "subComponents": {},
         "config": {"kc.user.profile.config": [json.dumps(profile)]}}]},
