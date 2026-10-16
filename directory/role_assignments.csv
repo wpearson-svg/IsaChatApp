@@ -1,0 +1,12 @@
+Assignment ID,Person ID,Chapter ID,Role,Term start,Term end,Permission
+R-0001,P-0001,C-001,President,2026-07-01,2027-06-30,Leadership
+R-0002,P-0002,C-002,Treasurer,2026-01-01,2026-12-31,Leadership
+R-0003,P-0003,C-003,Secretary,2026-09-01,2027-08-31,Leadership
+R-0004,P-0004,C-004,Vice President,2026-07-01,2027-06-30,Leadership
+R-0005,P-0005,C-005,Membership Director,2026-01-01,2027-12-31,Leadership
+R-0006,P-0006,C-006,President,2026-07-01,2027-06-30,Leadership
+R-0007,P-0007,C-007,President,2025-07-01,2026-06-30,Leadership
+R-0008,P-0007,C-007,Immediate Past President,2026-07-01,2027-06-30,Leadership
+R-0009,P-0008,C-008,President,2026-01-01,2026-12-31,Leadership
+R-0010,P-0009,C-009,President,2026-07-01,2027-06-30,Leadership
+R-0011,P-0010,C-009,Member,2026-01-01,2026-12-31,Member

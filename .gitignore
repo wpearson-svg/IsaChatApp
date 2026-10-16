@@ -18,7 +18,13 @@ isa.pid
 data/*.db
 data/*.db-wal
 data/*.db-shm
+data/*.db-journal
+data/stale-*.old
 
 # Loose stray folders at the repo root
 /IsaChatApp/
 /Web/
+
+# Generated Keycloak realm + dev passwords (contain passwords; rebuilt by directory/build_keycloak_realm.py)
+keycloak/import/
+keycloak/dev-passwords.local.csv

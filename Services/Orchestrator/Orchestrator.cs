@@ -25,8 +25,9 @@ public class Orchestrator
     public async Task<AskResponse> RunAsync(QueryContext ctx)
     {
         // front_end event as soon as the question arrives
+        // The question text is never logged. user_id does not exist yet (access_control sets it).
         await _eventLog.WriteAsync(ctx.TraceId, "front_end",
-            $"user={ctx.UserId ?? "unknown"}; time={DateTime.UtcNow:O}");
+            $"result=pass; reason=none; question_chars={ctx.Question.Length}");
 
         string finalStatus = "answered";
         string? message = null;
@@ -40,7 +41,7 @@ public class Orchestrator
             // After an Escalate, jump straight to ticketing; log the skipped stages
             if (finalStatus == "escalating" && stage.Name != "ticketing")
             {
-                await _eventLog.WriteAsync(ctx.TraceId, stage.Name, "result=skipped; reason=escalated");
+                await _eventLog.WriteAsync(ctx.TraceId, stage.Name, "result=pass; reason=none; note=skipped, escalated");
                 continue;
             }
 
@@ -56,8 +57,9 @@ public class Orchestrator
             }
 
             // Contract format: result=pass; reason=none; <stage data>
+            // A stage that does not apply returns Pass with the note "skipped" (contract section 3)
             var dataText = result.Skipped
-                ? $"result=skipped; reason=none; {result.DataText}"
+                ? $"result=pass; reason=none; note=skipped, {result.DataText}"
                 : $"result={result.Outcome.ToString().ToLowerInvariant()}; reason={result.Reason ?? "none"}; {result.DataText}";
 
             await _eventLog.WriteAsync(ctx.TraceId, stage.Name, dataText.Trim());
@@ -66,6 +68,7 @@ public class Orchestrator
             {
                 finalStatus = "stopped";
                 ctx.StopReason = result.Reason;
+                ctx.Sources = new();   // a stopped run shows no sources
                 message = result.Reason ?? "Request could not be completed.";
                 break;
             }
@@ -73,6 +76,8 @@ public class Orchestrator
             if (result.Outcome == StageOutcome.Escalate)
             {
                 finalStatus = "escalating";
+                ctx.EscalatedBy = stage.Name;
+                ctx.EscalationReason = result.Reason;
                 // Continue so ticketing stage can run
                 continue;
             }

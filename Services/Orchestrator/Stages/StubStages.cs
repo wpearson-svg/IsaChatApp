@@ -154,11 +154,8 @@ public class RagStage : IStage
         {
             // On direct hit, AI stages may be skipped
             if (ctx.Passages.Count > 0 && string.IsNullOrEmpty(ctx.AnswerText))
-            {
-                var top = ctx.Passages[0];
-                ctx.AnswerText = top.Text;
-            }
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "skipped direct_hit", Skipped: true));
+                AnswerExtract.Apply(ctx);   // best-matching sentence, its source first
+            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "direct hit", Skipped: true));
         }
 
         if (ctx.Passages.Count == 0)
@@ -178,54 +175,6 @@ public class RagStage : IStage
             null,
             $"context_chars={contextText.Length}; passages={ctx.Passages.Count}"
         ));
-    }
-}
-
-/// <summary>Stub complex_ai — passes through. Willis owns real T11c.</summary>
-public class ComplexAiStage : IStage
-{
-    public string Name => "complex_ai";
-
-    public Task<StageResult> RunAsync(QueryContext ctx)
-    {
-        if (ctx.DirectHit)
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "skipped", Skipped: true));
-
-        return Task.FromResult(new StageResult(StageOutcome.Pass, null, "stub"));
-    }
-}
-
-/// <summary>Stub output_compliance — escalates if no answer. Willis owns real T11c.</summary>
-public class OutputComplianceStage : IStage
-{
-    public string Name => "output_compliance";
-
-    public Task<StageResult> RunAsync(QueryContext ctx)
-    {
-        if (string.IsNullOrWhiteSpace(ctx.AnswerText) && ctx.Passages.Count == 0)
-        {
-            return Task.FromResult(new StageResult(
-                StageOutcome.Escalate,
-                "No content found for this question",
-                "escalate_no_content"
-            ));
-        }
-        return Task.FromResult(new StageResult(StageOutcome.Pass, null, "ok"));
-    }
-}
-
-/// <summary>Stub ticketing — returns fake ticket ref. Willis owns real T11c.</summary>
-public class TicketingStage : IStage
-{
-    private static int _counter;
-    public string Name => "ticketing";
-
-    public Task<StageResult> RunAsync(QueryContext ctx)
-    {
-        var ticket = $"TKT-{Interlocked.Increment(ref _counter):0000}";
-        ctx.TicketReference = ticket;
-        ctx.AnswerText ??= "Your request has been escalated. Use the reference number below.";
-        return Task.FromResult(new StageResult(StageOutcome.Pass, null, $"ticket={ticket}"));
     }
 }
 

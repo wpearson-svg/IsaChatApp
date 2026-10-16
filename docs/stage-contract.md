@@ -2,8 +2,8 @@
 
 Project: Isa, Second Star Collective
 Author: Willis Pearson (T1)
-Status: DRAFT 2026-10-14, waiting for Eliyas's written confirmation (T1b)
-Confirmed on: ____________ (fill in the date Eliyas confirms; the repo copy of this file is the final word)
+Status: CONFIRMED verbally by Eliyas on 2026-10-16 (T1b waived by the Project Lead; no written confirmation)
+Confirmed on: 2026-10-16 (verbal). The repo copy of this file is the final word.
 
 This is the one-page agreement every stage and every person builds to. If you need to change anything here, tell the team first, then change this file.
 
@@ -15,8 +15,8 @@ This is the one-page agreement every stage and every person builds to. If you ne
 |---|---|---|---|
 | 1 | `front_end` | Willis | always |
 | 2 | `access_control` | Eliyas (T5) | always |
-| 3 | `translation` | A'keyrah (T11a) | always |
-| 4 | `input_compliance` | A'keyrah (T11a) | always |
+| 3 | `translation` | Willis and Matt (T11a, moved from A'keyrah) | always |
+| 4 | `input_compliance` | Willis and Matt (T11a, moved from A'keyrah) | always |
 | 5 | `database_search` | Eliyas (T11b) | always |
 | 6 | `knowledge_graph` | Eliyas (T11b) | always |
 | 7 | `rag` | Eliyas (T11b) | always |
@@ -35,6 +35,7 @@ One object travels through the whole run. Each stage reads it and may fill in it
 | `trace_id` | GUID text | `front_end` | Created when the user presses send, before anything else |
 | `user_id` | text | `access_control` | From the sign-in token (Keycloak `preferred_username`) |
 | `roles` | list of text | `access_control` | Client roles: `chat_user`, `dashboard_dev`, `dashboard_content_health`, `auditor` |
+| `profile` | map of text to text | `access_control` | Who the person is, read from token claims Keycloak adds: `person_id`, `chapter_id`, `chapter_role`, `permission` (Leadership or Member), `term_start`, `term_end`, `years_as_leader`, `language`, `formality`, `form_of_address`. Missing for accounts without them (staff, no-role). |
 | `question` | text | `front_end` | The user's question as typed |
 | `language` | text | `translation` | Language code of the question, for example `en` |
 | `passages` | list of {document, section, page, text} | `database_search`, `knowledge_graph` | Found content |
@@ -128,10 +129,10 @@ Errors: `401` for a missing or bad token (the front end sends the user back to s
 - A stub returns its result and its data text. The orchestrator writes the event.
 - Fake means fake: invented passwords, accounts, and content only.
 
-## 9. Open questions for Eliyas (T1b)
+## 9. Open questions for Eliyas (T1b) - closed 2026-10-16, confirmed verbally
 
-- [ ] Stage names and order: OK as written?
-- [ ] Query context fields: anything missing?
-- [ ] Data text shape: OK as written?
-- [ ] API request and response: OK as written?
-- [ ] File location `docs/stage-contract.md`: OK?
+- [x] Stage names and order: OK as written?
+- [x] Query context fields: anything missing?
+- [x] Data text shape: OK as written?
+- [x] API request and response: OK as written?
+- [x] File location `docs/stage-contract.md`: OK?

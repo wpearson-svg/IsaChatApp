@@ -46,7 +46,10 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+// Pretty "not found" page for the website only. /api calls keep their real status code (401, 403 ...);
+// re-executing a POST to a Blazor page would otherwise turn them into a 400.
+app.UseWhen(c => !c.Request.Path.StartsWithSegments("/api"),
+    b => b.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();
@@ -71,7 +74,9 @@ app.MapPost("/api/ask", async (AskRequest req, HttpRequest http, OrchestratorSer
     };
 
     var result = await orchestrator.RunAsync(ctx);
-    return ctx.AuthFailed ? Results.Unauthorized() : Results.Ok(result);
+    if (ctx.AuthFailed) return Results.Unauthorized();
+    if (ctx.AccessDenied) return Results.StatusCode(StatusCodes.Status403Forbidden);
+    return Results.Ok(result);
 });
 
 // Read the event log for one trace ID (used by the acceptance tests).
