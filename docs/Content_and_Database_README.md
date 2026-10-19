@@ -8,6 +8,7 @@ Chapter 360 (6 docs) is deferred to Pipeline Built.
 - content/meaning_map.json - plain-language questions mapped to the right passage (AI-fallback path).
 - content/rechunk_pdf.py - re-splits the PDF guidebook on sentence boundaries (no mid-sentence starts, no page numbers, no table of contents). Run before build_content_db.py if content.json is ever regenerated from the PDF.
 - content/build_content_db.py - rebuilds data/content.db from empty every run. Python 3 only, no packages.
+  It skips table-of-contents passages (any passage that says "Table of Contents" or has two or more dot-leader lines like "Finances ........ 3"), so the database holds 80 passages. Those passages matched many searches and showed up in answers as rows of dots.
 
 ## Build
     python content\build_content_db.py

@@ -16,6 +16,10 @@
    person with a reference number). Update this text when the AI
    stage or more documents come online.
 
+   Layout from Matthew's approved redesign (16 October 2026), with
+   three touches borrowed from isaca.org: uppercase rectangular
+   buttons, a soft ring pattern, and a full dark footer.
+
    Styles: Home.razor.css (scoped to this page).
    ============================================================ *@
 
@@ -93,64 +97,172 @@
         </div>
     </section>
 
-    <section id="how" class="landing__section">
-        <h2 class="landing__sectionTitle">How Isa answers</h2>
-        <div class="landing__steps">
-            <div class="landing__step">
-                <span class="landing__stepNum">1</span>
-                <h3 class="landing__stepTitle">SEARCHES APPROVED CONTENT</h3>
-                <p>
-                    Isa looks only in documents ISACA has approved for chapter leaders,
-                    not the open internet.
-                </p>
-            </div>
-            <div class="landing__step">
-                <span class="landing__stepNum">2</span>
-                <h3 class="landing__stepTitle">SHOWS ITS SOURCES</h3>
-                <p>
-                    Each answer lists the document and section it came from, so you can
-                    check it yourself.
-                </p>
-            </div>
-            <div class="landing__step">
-                <span class="landing__stepNum">3</span>
-                <h3 class="landing__stepTitle">KNOWS WHEN TO HAND OFF</h3>
-                <p>
-                    Sensitive questions, or ones the documents don't cover, go to a person.
-                    You get a reference number to follow up.
-                </p>
+    @* ---- How Isa answers: three numbered steps joined by a dashed
+       line, each with a small brand-style illustration (3px Dark Blue
+       line, ISACA Blue 40% and Green 40% fills). ---- *@
+    <section id="how" class="landing__how">
+        <div class="landing__inner">
+            <p class="landing__kicker">HOW IT WORKS</p>
+            <h2 class="landing__sectionTitle">How Isa answers</h2>
+
+            <div class="landing__steps">
+                <div class="landing__step">
+                    <div class="landing__stepTop">
+                        <span class="landing__stepNum">1</span>
+                        <svg class="landing__spot" viewBox="0 0 120 100" aria-hidden="true">
+                            <rect x="18" y="14" width="56" height="72" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="30" y1="32" x2="62" y2="32" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="30" y1="46" x2="62" y2="46" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="30" y1="60" x2="50" y2="60" stroke="#1d2d5c" stroke-width="3" />
+                            <circle cx="76" cy="58" r="20" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="90" y1="72" x2="106" y2="88" stroke="#1d2d5c" stroke-width="3" />
+                        </svg>
+                    </div>
+                    <h3 class="landing__stepTitle">SEARCHES APPROVED CONTENT</h3>
+                    <p>
+                        Isa looks only in documents ISACA has approved for chapter leaders,
+                        not the open internet.
+                    </p>
+                </div>
+
+                <div class="landing__step">
+                    <div class="landing__stepTop">
+                        <span class="landing__stepNum">2</span>
+                        <svg class="landing__spot" viewBox="0 0 120 100" aria-hidden="true">
+                            <rect x="30" y="10" width="56" height="72" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="42" y1="28" x2="74" y2="28" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="42" y1="42" x2="74" y2="42" stroke="#1d2d5c" stroke-width="3" stroke-dasharray="6 5" />
+                            <circle cx="82" cy="72" r="16" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
+                            <polyline points="74,72 80,78 90,66" fill="none" stroke="#1d2d5c" stroke-width="3" />
+                        </svg>
+                    </div>
+                    <h3 class="landing__stepTitle">SHOWS ITS SOURCES</h3>
+                    <p>
+                        Each answer lists the document and section it came from, so you can
+                        check it yourself.
+                    </p>
+                </div>
+
+                <div class="landing__step">
+                    <div class="landing__stepTop">
+                        <span class="landing__stepNum">3</span>
+                        <svg class="landing__spot" viewBox="0 0 120 100" aria-hidden="true">
+                            @* Speech bubble whose tail points at the person it is handed to;
+                               head and shoulders drawn close together. *@
+                            <path d="M8 14 H62 V40 L72 56 L50 46 H8 Z" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" stroke-linejoin="round" />
+                            <line x1="18" y1="26" x2="52" y2="26" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="18" y1="35" x2="40" y2="35" stroke="#1d2d5c" stroke-width="3" />
+                            <circle cx="92" cy="49" r="12" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
+                            <path d="M72 92 C 72 58, 112 58, 112 92 Z" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
+                        </svg>
+                    </div>
+                    <h3 class="landing__stepTitle">KNOWS WHEN TO HAND OFF</h3>
+                    <p>
+                        Sensitive questions, or ones the documents don't cover, go to a person.
+                        You get a reference number to follow up.
+                    </p>
+                </div>
             </div>
         </div>
     </section>
 
-    <section id="knows" class="landing__section landing__section--tint">
-        <h2 class="landing__sectionTitle">What Isa has read so far</h2>
-        <p class="landing__sectionLede">
-            This prototype draws on five chapter leader documents. More are being added.
-        </p>
-        <ul class="landing__docs">
-            <li>Chapter Leader Guidebook: President (August 2026)</li>
-            <li>Annual Chapter Compliance Framework</li>
-            <li>Common Tasks and Navigation Guide</li>
-            <li>Core Chapter Leader Roles and Responsibilities</li>
-            <li>ISACA Chapter Systems Overview</li>
-        </ul>
-    </section>
+    @* ---- What Isa has read: Medium Blue band with a soft ring
+       pattern, a big "5", and numbered document cards. ---- *@
+    <section id="knows" class="landing__read">
+        <div class="landing__inner landing__readGrid">
+            <div>
+                <p class="landing__kicker landing__kicker--onBlue">THE KNOWLEDGE BASE</p>
+                <h2 class="landing__sectionTitle landing__sectionTitle--light">What Isa has read so far</h2>
+                <p class="landing__sectionLede landing__sectionLede--light">
+                    These are the chapter leader documents Isa can answer from. More are being added as ISACA approves them.
+                </p>
+                <div class="landing__bigStat"><span>5</span>approved ISACA documents</div>
+            </div>
 
-    <section id="try" class="landing__section">
-        <h2 class="landing__sectionTitle">Questions to try</h2>
-        <p class="landing__sectionLede">Open Isa and type any of these.</p>
-        <div class="landing__questions">
-            <div class="landing__question">How many board meetings must a chapter hold each year?</div>
-            <div class="landing__question">How many educational events must a chapter hold?</div>
-            <div class="landing__question">Who writes down what the board decided?</div>
-            <div class="landing__question">When do we send in our yearly paperwork?</div>
+            <ol class="landing__docs">
+                <li><span class="landing__docNum">01</span>Chapter Leader Guidebook: President (August 2026)</li>
+                <li><span class="landing__docNum">02</span>Annual Chapter Compliance Framework</li>
+                <li><span class="landing__docNum">03</span>Common Tasks and Navigation Guide</li>
+                <li><span class="landing__docNum">04</span>Core Chapter Leader Roles and Responsibilities</li>
+                <li><span class="landing__docNum">05</span>ISACA Chapter Systems Overview</li>
+            </ol>
         </div>
     </section>
 
+    @* ---- Questions to try: shown as "you ask" chat bubbles, with a
+       cropped white C and the Isa ring on the left. ---- *@
+    <section id="try" class="landing__try">
+        <svg class="landing__tryC" viewBox="-25 -25 250 250" aria-hidden="true">
+            <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
+        </svg>
+
+        <div class="landing__inner landing__tryGrid">
+            <div>
+                <p class="landing__kicker">TRY IT</p>
+                <h2 class="landing__sectionTitle">Questions to try</h2>
+                <p class="landing__sectionLede">
+                    Open Isa and type any of these. Each one gets an answer with its source.
+                </p>
+                <div class="landing__tryBadge" aria-hidden="true">
+                    <Throbber @rendermode="InteractiveServer" Spinning="false" SpinOnHover="true" />
+                </div>
+            </div>
+
+            <div class="landing__questions">
+                <div class="landing__question"><span class="landing__questionWho">YOU ASK</span>How many board meetings must a chapter hold each year?</div>
+                <div class="landing__question"><span class="landing__questionWho">YOU ASK</span>How many educational events must a chapter hold?</div>
+                <div class="landing__question"><span class="landing__questionWho">YOU ASK</span>Who writes down what the board decided?</div>
+                <div class="landing__question"><span class="landing__questionWho">YOU ASK</span>When do we send in our yearly paperwork?</div>
+            </div>
+        </div>
+    </section>
+
+    @* ---- Footer: dark band with the ring pattern and link columns,
+       like the footer on isaca.org. ---- *@
     <footer class="landing__footer">
-        Isa is a prototype built for ISACA by Second Star Collective (i.c.stars Kansas City).
-        This is a demonstration page, not an official ISACA website.
+        <div class="landing__inner landing__footerGrid">
+            <div class="landing__footerBrand">
+                <span class="landing__footerMark"><Throbber Spinning="false" /></span>
+                <div>
+                    <p class="landing__footerName">Isa</p>
+                    <p class="landing__footerTag">Chapter Support Assistant</p>
+                    <p class="landing__footerNote">Answers come from approved ISACA documents.</p>
+                </div>
+            </div>
+
+            <nav class="landing__footerCol" aria-label="On this page">
+                <h2 class="landing__footerHead">ON THIS PAGE</h2>
+                <a href="#how">How it works</a>
+                <a href="#knows">What Isa knows</a>
+                <a href="#try">Try it</a>
+            </nav>
+
+            <div class="landing__footerCol">
+                <h2 class="landing__footerHead">YOUR ACCOUNT</h2>
+                <AuthorizeView>
+                    <Authorized>
+                        <span>Signed in as <bdi>@context.User.FindFirst(KeycloakSignInService.GreetingClaim)?.Value</bdi></span>
+                        <form method="post" action="account/sign-out" class="landing__signOutForm">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="returnUrl" value="/" />
+                            <button type="submit" class="landing__footerLinkButton">Sign out</button>
+                        </form>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="sign-in">Sign in</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+
+            <div class="landing__footerCol">
+                <h2 class="landing__footerHead">ABOUT THIS PROTOTYPE</h2>
+                <span>Built for ISACA by Second Star Collective (i.c.stars Kansas City).</span>
+            </div>
+        </div>
+
+        <div class="landing__inner landing__footerBottom">
+            This is a demonstration page, not an official ISACA website.
+        </div>
     </footer>
 
 </div>

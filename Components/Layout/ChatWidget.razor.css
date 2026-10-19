@@ -22,11 +22,13 @@
     --isa-accent: #36ac91;
     --isa-ink: #1d2d5c;
     --isa-panel-bg: #ffffff;
-    --isa-border: #d9d9df;
+    --isa-border: #cbd2d9;
     /* Kept for the backdrop -- see .isa-widget__backdrop below.
-       Derived the way ISACA's own guide builds greyscale: a mid
-       screen of the brand navy. */
-    --isa-grey-dim: #b7bcc9;
+       ISACA Grey 4 from the brand guide's official greyscale.
+       Every color in this file is from BRAND_GUIDELINES.md: ISACA
+       Dark Blue, Medium Blue, Light Blue, Teal (focus accent only),
+       10% tints of Dark Blue, and ISACA Greys 1, 3, 4, 7, 8 and 10. Don't add a color that isn't in the guide. */
+    --isa-grey-dim: #9aa5b1;
 
     /* Establishes a fixed point of reference; the bubble/panel and
        backdrop below are positioned relative to the viewport, not
@@ -43,9 +45,9 @@
     /* Translucent ISACA grey, not the old dark navy scrim -- the
        page behind the panel stays visible but reads as dimmed. A
        solid fill (or a near-white translucent one) doesn't actually
-       dim anything visible; this uses the darker of the two brand
-       greys at a mid alpha so the effect is still legible. */
-    background: rgba(183, 188, 201, 0.6); /* var(--isa-grey-dim) at 0.6 alpha */
+       dim anything visible; this uses ISACA Grey 4 at a mid alpha
+       for strong contrast behind the panel. */
+    background: rgba(154, 165, 177, 0.85); /* var(--isa-grey-dim) at 0.85 alpha -- strong contrast behind the panel (Matthew's choice) */
     animation: isa-fade-in 0.2s ease both;
 }
 
@@ -120,7 +122,7 @@
     height: 32px;
     border: none;
     border-radius: 50%;
-    background: rgba(15, 20, 35, 0.72);
+    background: rgba(31, 41, 51, 0.72);
     color: #ffffff;
     font-size: 1.25rem;
     line-height: 1;
@@ -131,7 +133,7 @@
 }
 
 .isa-widget__dashboardClose:hover {
-    background: rgba(15, 20, 35, 0.9);
+    background: rgba(31, 41, 51, 0.9);
 }
 
 /* ---- Panel: expanded only ---------------------------------------- */
@@ -159,7 +161,8 @@
     display: flex;
     flex-direction: column;
     background: var(--isa-panel-bg);
-    font-family: system-ui, -apple-system, sans-serif;
+    /* ISACA's brand font (loaded in App.razor), Arial if offline. */
+    font-family: 'Roboto', Arial, sans-serif;
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
     /* top-left and bottom-left rounded, right edge flush against the
        viewport edge — matches wireframe "Expanded". */
@@ -190,39 +193,100 @@
 
 /* ---- Expanded panel header --------------------------------------- */
 
-/* The title moved down to .isa-widget__directSupportRow below,
-   smaller and left-justified — so this row is shorter, which is what
-   pulls the message list up. Now holds the gear (config) link on the
-   left and the close button on the right, hence space-between. */
+/* ISACA Dark Blue band: Isa's ring, name and role on the left, the
+   icon buttons on the right, and a cropped "C" brand graphic bleeding
+   off the top-right corner behind everything (same graphic as the
+   landing page). Redesigned 16 October 2026. */
 .isa-widget__header {
     flex: 0 0 auto;
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 1.25rem;
-    border-bottom: 1px solid var(--isa-border);
-    background: #f7f8fa;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    background: #1d2d5c;
+    color: #ffffff;
 }
 
-/* Container for the gear / dev-dashboard / content-health-dashboard
-   icons on the left of the header -- see isa-widget__headerLink below
-   for the icons themselves. */
-.isa-widget__headerLinks {
+.isa-widget__headerC {
+    position: absolute;
+    width: 210px;
+    height: 210px;
+    right: -70px;
+    top: -80px;
+    color: #07649d;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.isa-widget__identity {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.7rem;
+    min-width: 0;
+}
+
+/* Isa's ring in a white circle, like the collapsed bubble. */
+.isa-widget__badge {
+    flex: 0 0 auto;
+    display: block;
+    width: 42px;
+    height: 42px;
+    padding: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.isa-widget__identityText {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.isa-widget__name {
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 400;
+    font-size: 1.2rem;
+}
+
+.isa-widget__role {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: #e7f0f5;
+    white-space: nowrap;
+}
+
+/* Small ISACA Green "available" dot. */
+.isa-widget__statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6cb33f;
+    flex: 0 0 auto;
+}
+
+/* Gear / dashboard / new-conversation icons and the close button. */
+.isa-widget__headerLinks {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
 }
 
 .isa-widget__headerLink {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #888;
+    color: #e7f0f5;
     cursor: pointer;
-    /* Dev Dashboard / Content Health Dashboard are <button>s now
-       (OpenDashboard() has no href to navigate to) sharing this class
-       with the Config <a> -- this reset strips default button chrome
-       so all three still read as identical plain icon links. */
+    /* Reset default button chrome so every icon reads as a plain icon. */
     border: none;
     background: none;
     padding: 0;
@@ -231,8 +295,9 @@
     text-decoration: none;
 }
 
-.isa-widget__headerLink:hover {
-    color: var(--isa-ink);
+.isa-widget__headerLink:hover,
+.isa-widget__headerLink:focus-visible {
+    color: #ffffff;
 }
 
 .isa-widget__headerIcon {
@@ -243,15 +308,16 @@
 .isa-widget__close {
     border: none;
     background: none;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     line-height: 1;
-    color: #888;
+    color: #e7f0f5;
     cursor: pointer;
-    padding: 0.1rem 0.3rem;
+    padding: 0 0.1rem;
 }
 
-.isa-widget__close:hover {
-    color: var(--isa-ink);
+.isa-widget__close:hover,
+.isa-widget__close:focus-visible {
+    color: #ffffff;
 }
 
 /* ---- Message list ------------------------------------------------- */
@@ -259,6 +325,8 @@
 .isa-widget__messages {
     flex: 1 1 auto;
     overflow-y: auto;
+    overflow-x: hidden; /* never a sideways scrollbar in the chat */
+    background: #f6f7f8; /* ISACA Grey 1 behind the conversation */
     padding: 1rem 1.25rem;
     display: flex;
     /* The auto-scroll-to-newest trick: children are rendered in the
@@ -279,38 +347,48 @@
     /* Own light surface under each message, not just the panel's
        white -- so contrast holds even if something upstream ends up
        darkening the panel background itself. */
-    background: #f7f8fa;
-    border-radius: 10px;
-    padding: 0.5rem 0.7rem;
+    background: #f6f7f8;
+    border-radius: 12px;
+    padding: 0.6rem 0.8rem;
     /* .isa-widget__messages is a flex column, so align-self below
        controls horizontal position; without a max-width every
        bubble would just stretch to fill the row (the flex default,
        align-items: stretch) and align-self would have no visible
        effect. */
-    max-width: 80%;
+    max-width: 84%;
 }
 
 .isa-widget__message--you {
     align-self: flex-end;
+    border-top-right-radius: 4px; /* small "speech" corner toward the speaker */
 }
 
 .isa-widget__message--ai {
     align-self: flex-start;
+    border: 1px solid #e5e7eb;               /* ISACA Grey 2 */
+    border-top-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(29, 45, 92, 0.06); /* faint ISACA Dark Blue shadow */
 }
 
 .isa-widget__message--error {
     align-self: stretch;
 }
 
+/* "Unable to answer" / not-signed-in / error messages: an ISACA
+   Medium Blue edge (Option B, chosen by Matthew, 16 October 2026).
+   White box, since the chat background is now ISACA Grey 1.
+   Deliberately no red or pink -- a polite stop is not an alarm. */
 .isa-widget__message--error {
-    background: #fdecea;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #07649d;
 }
 
 /* Explicit, not inherited -- without this the message text takes
    whatever color the host page sets on body, which could go
    invisible against a light bubble on a dark-themed host site. */
 .isa-widget__text {
-    color: #1d1d1f;
+    color: #1f2933;
 }
 
 .isa-widget__who {
@@ -318,7 +396,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.02em;
-    color: #999;
+    color: #52606d;
     margin-bottom: 0.15rem;
 }
 
@@ -346,20 +424,23 @@
    fallback values (2nd arg to var()) are what renders before any
    selection is made / if the settings service isn't wired up. */
 .isa-widget__message--you {
-    background: var(--bubble-bg, #eef0f6);
+    background: var(--bubble-bg, #e8eaef);
     text-align: right;
 }
 .isa-widget__message--you .isa-widget__who { color: var(--bubble-text, var(--isa-ink)); }
-.isa-widget__message--you .isa-widget__text { color: var(--bubble-text, #1d1d1f); }
+.isa-widget__message--you .isa-widget__text { color: var(--bubble-text, #1f2933); }
 
+/* Isa's answers default to ISACA Light Blue (set in WidgetSettings).
+   The "ISA" label uses --bubble-label: ISACA Medium Blue when that
+   reads well on the bubble, otherwise the same color as the text. */
 .isa-widget__message--ai {
-    background: var(--bubble-bg, #eaf6f3);
+    background: var(--bubble-bg, #e7f0f5);
 }
-.isa-widget__message--ai .isa-widget__who { color: var(--bubble-text, var(--isa-accent)); }
-.isa-widget__message--ai .isa-widget__text { color: var(--bubble-text, #1d1d1f); }
+.isa-widget__message--ai .isa-widget__who { color: var(--bubble-label, var(--bubble-text, #07649d)); }
+.isa-widget__message--ai .isa-widget__text { color: var(--bubble-text, #1f2933); }
 
-.isa-widget__message--error .isa-widget__who,
-.isa-widget__message--error .isa-widget__text { color: #c0392b; }
+.isa-widget__message--error .isa-widget__who { color: #07649d; }
+.isa-widget__message--error .isa-widget__text { color: #1d2d5c; }
 
 /* ---- Direct Support placeholder + model picker ------------------------
    Sits between the message list and the input row: the Direct Support
@@ -397,12 +478,12 @@
     border: 1px solid var(--isa-border);
     border-radius: 6px;
     background: #fff;
-    color: #222;
+    color: #1f2933;
 }
 
 .isa-widget__modelSelect:disabled {
-    color: #999;
-    background: #f4f4f4;
+    color: #52606d;
+    background: #f6f7f8;
 }
 
 .isa-widget__directSupportLink:hover {
@@ -429,7 +510,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: #f4f4f7;
+    background: #f6f7f8;
     border: 1px solid var(--isa-border);
     border-radius: 999px;
     padding: 0.35rem 0.6rem;
@@ -457,7 +538,7 @@
 }
 
 .isa-widget__input:disabled {
-    color: #999;
+    color: #52606d;
 }
 
 /* Dark, round send button with an arrow icon rather than text,
@@ -477,7 +558,7 @@
 }
 
 .isa-widget__send:disabled {
-    background: #b7bdd0;
+    background: #cbd2d9;
     cursor: not-allowed;
 }
 
@@ -491,7 +572,7 @@
 .isa-widget__modelsPanel {
     flex: 0 0 auto;
     border-bottom: 1px solid var(--isa-border);
-    background: #f4f4f7;
+    background: #f6f7f8;
 }
 
 /* Three-column layout so the label, summary, and Refresh button stay
@@ -507,7 +588,7 @@
     font-weight: 600;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: #777;
+    color: #3f4b59;
 }
 
 .isa-widget__modelsPanelLabel {
@@ -519,7 +600,7 @@
     text-align: center;
     text-transform: none;
     font-weight: 500;
-    color: #666;
+    color: #3f4b59;
     white-space: nowrap;
 }
 
@@ -552,11 +633,11 @@
     overflow-y: auto;
     padding: 0 1.25rem 0.5rem;
     font-size: 0.75rem;
-    color: #666;
+    color: #3f4b59;
 }
 
 .isa-widget__modelStatusRow {
-    color: #999;
+    color: #52606d;
     padding-top: 0.1rem;
 }
 
@@ -565,6 +646,111 @@
    Support link (.isa-widget__modelSelect). */
 
 /* Pipeline answers: keep line breaks from source passages, show sources + trace ID small */
-.isa-widget__text { white-space: pre-line; }
-.isa-widget__sources { margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.85; }
-.isa-widget__trace { margin-top: 0.35rem; font-size: 0.7rem; opacity: 0.7; font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
+/* overflow-wrap: anywhere lets text with no spaces (like a table of
+   contents' "Mentoring.........5" dot leaders, or a long link) wrap
+   inside the bubble instead of running out of it. */
+.isa-widget__text { white-space: pre-line; overflow-wrap: anywhere; }
+.isa-widget__sources { overflow-wrap: anywhere; }
+.isa-widget__sources {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* One source = a small ISACA Light Blue "document" chip. */
+.isa-widget__source {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+/* A tiny outlined page, drawn in CSS (no image needed). */
+.isa-widget__sourceIcon {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 13px;
+    margin-top: 0.1rem;
+    border: 1.5px solid #07649d;
+    border-radius: 2px;
+}
+
+.isa-widget__trace {
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
+    color: #52606d; /* ISACA Grey 7 */
+    font-family: ui-monospace, Consolas, monospace;
+    word-break: break-all;
+}
+
+/* ---- Welcome message + suggested questions ------------------------ */
+
+/* The welcome card is the last element in the DOM; in the reversed
+   (column-reverse) list, margin-bottom: auto pushes it to the TOP of
+   the empty chat instead of the bottom. */
+.isa-widget__welcome {
+    margin-bottom: auto;
+}
+
+.isa-widget__suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.65rem;
+}
+
+.isa-widget__suggestion {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid #cbd2d9;   /* ISACA Grey 3 */
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.isa-widget__suggestion:hover:not(:disabled),
+.isa-widget__suggestion:focus-visible {
+    border-color: #07649d;
+    background: #e7f0f5;
+}
+
+.isa-widget__suggestion:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+/* ---- Footer: where answers come from + reach a person -------------- */
+
+.isa-widget__footer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 1rem 0.75rem;
+    background: #ffffff;
+    font-size: 0.75rem;
+}
+
+.isa-widget__footerNote {
+    color: #52606d; /* ISACA Grey 7 */
+}
+
+.isa-widget__footer .isa-widget__directSupportLink {
+    color: #07649d;
+    white-space: nowrap;
+}
+
+/* Model picker row inside the developer-only tools panel. */
+.isa-widget__modelPickerRow {
+    display: flex;
+    padding: 0 1.25rem 0.6rem;
+}
