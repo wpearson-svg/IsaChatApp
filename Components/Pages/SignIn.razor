@@ -95,7 +95,12 @@
 
             <p class="signin__note">@Text.PrototypeNote</p>
 
-            <a class="signin__back" href="/">&larr; @Text.BackLink</a>
+            @* data-enhance-nav="false" makes this a normal, full page load.
+               The landing page uses a different layout with the live chat
+               widget, and Blazor's quick "enhanced" page swap doesn't load
+               it from this static sign-in page, so the click seemed to do
+               nothing. (Signing in also uses a full page load, forceLoad.) *@
+            <a class="signin__back" href="/" data-enhance-nav="false">&larr; @Text.BackLink</a>
         </div>
     </main>
 
