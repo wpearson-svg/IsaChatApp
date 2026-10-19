@@ -25,6 +25,3 @@ data/stale-*.old
 /IsaChatApp/
 /Web/
 
-# Generated Keycloak realm + dev passwords (contain passwords; rebuilt by directory/build_keycloak_realm.py)
-keycloak/import/
-keycloak/dev-passwords.local.csv
