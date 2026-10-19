@@ -17,6 +17,7 @@ Files that commit also deleted but that Isa doesn't need to run were left out: I
 
 ## Changed files
 
+- **ONBOARDING-FEATURE.md**: added Feature 4, the "Today" note. When a leader opens Isa, a short note shows their day of term and what's coming up. It appears inside Isa only, never as an email. Added to the week 9 build plan and the cut list.
 - **Components/Pages/SignIn.razor**: bug fix. The "Back to Isa home" link at the bottom of the sign-in screen did nothing when clicked, so there was no way back to the landing page. The link now does a normal, full page load (`data-enhance-nav="false"`), the same way signing in already does, and it takes you back to the landing page.
 
 ## Suggested commit message
@@ -28,4 +29,5 @@ Restore files deleted in "Add project"; fix "Back to Isa home" link
   Properties/launchSettings.json, wwwroot/app.css, wwwroot/lib/bootstrap,
   BRAND_GUIDELINES.md and stop-isa-debug.bat
 - Sign-in screen: "Back to Isa home" now does a full page load so it returns to the landing page
+- Onboarding plan: add the "Today" note (Feature 4)
 ```
