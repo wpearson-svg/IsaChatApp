@@ -1,0 +1,74 @@
+@* ============================================================
+   JourneyCard.razor
+
+   Onboarding feature, week 9 (see ONBOARDING-FEATURE.md, Feature 1).
+   The slim "Your first 90 days" strip at the top of the chat widget
+   (Matthew's choice, 19 October 2026: the steps themselves live in
+   the Today window, not here).
+
+   What it shows: "Your first 90 days", the week and day of term, the
+   Today button, the role badge ("Chapter president"), and a thin
+   progress bar through the 90 days.
+
+   The Today button doesn't open anything itself. It tells the chat
+   widget (OnToggleToday), and the widget slides the chat to the left
+   and opens the Today window beside it (TodayPanel.razor). Clicking
+   Today again closes it.
+
+   Where the data comes from: JourneyContextService (who is signed in,
+   their role and day of term, and today's steps). Nothing here comes
+   from the AI model. The strip shows nothing for anyone without a
+   journey on today's date.
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject JourneyContextService JourneyContexts
+
+@if (_ctx is not null)
+{
+    <section class="isa-journey" aria-label="Your first 90 days">
+        <div class="isa-journey__head">
+            <span class="isa-journey__titles">
+                <span class="isa-journey__title">Your first 90 days</span>
+                <span class="isa-journey__when">Week @_ctx.Week &middot; Day @_ctx.Term.DayOfTerm</span>
+            </span>
+            <button type="button" class="isa-journey__today @(TodayOpen ? "is-active" : "")"
+                    @onclick="OnToggleToday" aria-pressed="@(TodayOpen ? "true" : "false")"
+                    title="@(TodayOpen ? "Close Today" : "Open Today")">
+                <svg class="isa-journey__todayIcon" viewBox="0 0 16 16" aria-hidden="true">
+                    <rect x="1.5" y="2.5" width="13" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M1.5 6 H14.5 M5 1 V4 M11 1 V4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                Today
+            </button>
+            <span class="isa-journey__badge">@_ctx.BadgeText</span>
+        </div>
+
+        <div class="isa-journey__bar" role="progressbar" aria-valuemin="0" aria-valuemax="90"
+             aria-valuenow="@_ctx.Term.DayOfTerm" aria-label="Day @_ctx.Term.DayOfTerm of 90">
+            <span class="isa-journey__barFill" style="width: @(_ctx.PercentThrough)%"></span>
+        </div>
+    </section>
+}
+
+@code {
+    /// <summary>True while the Today window is open (the button shows as pressed).</summary>
+    [Parameter] public bool TodayOpen { get; set; }
+
+    /// <summary>Called when the Today button is clicked. The chat widget opens or closes the Today window.</summary>
+    [Parameter] public EventCallback OnToggleToday { get; set; }
+
+    // Who is signed in, from the sign-in cookie.
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private JourneyContext? _ctx;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ctx = null;
+        if (AuthState is null) return;
+        var user = (await AuthState).User;
+        _ctx = JourneyContexts.GetFor(user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value);
+    }
+}

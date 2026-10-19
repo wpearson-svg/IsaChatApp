@@ -47,11 +47,8 @@
       style="--throbber-ring-color:@RingColor; --throbber-word-color:@WordColor;"
       @onmouseenter="OnMouseEnter" @onmouseleave="OnMouseLeave">
     <svg class="throbber__ring" viewBox="-2 -2 204 204" aria-hidden="true">
-        <mask id="@_maskId" maskUnits="userSpaceOnUse" x="-50" y="-50" width="304" height="304">
-            <rect x="-50" y="-50" width="304" height="304" fill="#fff" />
-            <rect x="110" y="74.75" width="110" height="50.5" fill="#000" />
-        </mask>
-        <circle cx="100" cy="100" r="78.96" mask="url(#@_maskId)" />
+        @* The ISACA-approved C (brand.isaca.org/visual-style), opening to the right. *@
+        <path class="throbber__c" d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z" />
     </svg>
     <svg class="throbber__word" viewBox="0 0 59.59 29.82" aria-hidden="true">
         <g class="throbber__letters">
@@ -67,12 +64,6 @@
     [Parameter] public bool SpinOnHover { get; set; }
     [Parameter] public string RingColor { get; set; } = "#6cb33f";
     [Parameter] public string WordColor { get; set; } = "#1d2d5c";
-
-    // Unique per instance — more than one <Throbber /> can be on the
-    // page at once (e.g. this component used in two different places
-    // at once, or several instances in a future page), and each needs
-    // its own <mask> id so they don't collide.
-    private readonly string _maskId = "throbberMask-" + Guid.NewGuid().ToString("N");
 
     // How long it takes for the ring rotation (1.1s per lap, see
     // Throbber.razor.css) and the colour cycle (2.2s per lap) to both

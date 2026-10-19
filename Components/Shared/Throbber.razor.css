@@ -36,11 +36,9 @@
     transition: transform 0.12s ease-out;
 }
 
-.throbber__ring circle {
-    fill: none;
-    stroke-width: 43.86;
-    stroke: var(--throbber-ring-color, #6cb33f);
-    transition: stroke 0.12s ease-out;
+.throbber__c {
+    fill: var(--throbber-ring-color, #6cb33f);
+    transition: fill 0.12s ease-out;
 }
 
 .throbber__word {
@@ -67,8 +65,8 @@
     animation: throbber-spin 1.1s linear infinite;
 }
 
-.throbber.is-spinning .throbber__ring circle {
-    animation: throbber-stroke-cycle 2.2s linear infinite;
+.throbber.is-spinning .throbber__c {
+    animation: throbber-ring-cycle 2.2s linear infinite;
 }
 
 .throbber.is-spinning .throbber__letters {
@@ -80,13 +78,13 @@
     to   { transform: rotate(360deg); }
 }
 
-@keyframes throbber-stroke-cycle {
-    0%   { stroke: #6cb33f; }
-    20%  { stroke: #36ac91; }
-    40%  { stroke: #00a4e4; }
-    60%  { stroke: #07649d; }
-    80%  { stroke: #1d2d5c; }
-    100% { stroke: #6cb33f; }
+@keyframes throbber-ring-cycle {
+    0%   { fill: #6cb33f; }
+    20%  { fill: #36ac91; }
+    40%  { fill: #00a4e4; }
+    60%  { fill: #07649d; }
+    80%  { fill: #1d2d5c; }
+    100% { fill: #6cb33f; }
 }
 
 @keyframes throbber-fill-cycle {
@@ -100,7 +98,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .throbber.is-spinning .throbber__ring,
-    .throbber.is-spinning .throbber__ring circle,
+    .throbber.is-spinning .throbber__c,
     .throbber.is-spinning .throbber__letters {
         animation: none;
     }

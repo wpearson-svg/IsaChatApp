@@ -180,13 +180,32 @@
 @media (prefers-reduced-motion: reduce) {
     .isa-widget__panel.is-expanded {
         animation: none;
+        transition: none;
     }
+}
+
+/* Onboarding: while the Today window is open (TodayPanel.razor), the
+   chat slides left by its own width so the two sit side by side, and
+   slides back when Today closes. Its right corners round too, since
+   it no longer touches the screen edge. */
+.isa-widget__panel.is-expanded {
+    /* Same timing and gentle ease-to-a-stop as the Today window's
+       entrance (TodayPanel.razor.css), so the two move together. */
+    transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.isa-widget__panel.is-expanded.is-shifted {
+    right: 33.333vw;
+    border-radius: 12px;
 }
 
 /* Narrower screens: don't let the panel get unusably thin. */
 @media (max-width: 720px) {
-    .isa-widget__panel.is-expanded {
+    .isa-widget__panel.is-expanded,
+    .isa-widget__panel.is-expanded.is-shifted {
         width: 100vw;
+        right: 0;              /* no room to slide aside; Today covers the chat instead */
         border-radius: 0;
     }
 }

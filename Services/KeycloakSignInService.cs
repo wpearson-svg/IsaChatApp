@@ -45,6 +45,14 @@ public class KeycloakSignInService
     /// <summary>Claim holding the person's preferred language code, e.g. "ja-JP".</summary>
     public const string LocaleClaim = "locale";
 
+    /// <summary>
+    /// Claim holding the person's ID in the directory, e.g. "P-0001".
+    /// Only chapter people have one (staff test accounts don't). The
+    /// onboarding journey card uses it to look up the person's role and
+    /// day of term (Components/Shared/JourneyCard.razor).
+    /// </summary>
+    public const string PersonIdClaim = "person_id";
+
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
     private readonly ILogger<KeycloakSignInService> _log;
@@ -250,6 +258,9 @@ public class KeycloakSignInService
 
         var locale = Get("locale");
         if (locale is not null) claims.Add(new Claim(LocaleClaim, locale));
+
+        var personId = Get("person_id");
+        if (personId is not null) claims.Add(new Claim(PersonIdClaim, personId));
 
         // Keycloak puts roles inside realm_access.roles and
         // resource_access.<client>.roles.

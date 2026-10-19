@@ -192,4 +192,19 @@ public class WidgetSettings
     /// /isa-config: User: no, Developer: no, Executive: yes, Manager: yes.
     /// </summary>
     public bool CanAccessContentHealthDashboard => CurrentRole is UserRole.Executive or UserRole.Manager;
+
+    // ---- Onboarding feature: demo date (see ONBOARDING-FEATURE.md) ----
+    // The 90-day journey counts each leader's day of term from "today".
+    // For the demo, "today" is a fixed date, so the screens look the same
+    // whatever day the presentation falls on. Like every setting here, it
+    // resets to these defaults when the app restarts.
+
+    /// <summary>The date the demo pretends it is. Decided 16 October 2026: 3 July 2026.</summary>
+    public DateOnly DemoDate { get; set; } = new DateOnly(2026, 7, 3);
+
+    /// <summary>When true (the default), days of term are counted from DemoDate instead of the real date.</summary>
+    public bool UseDemoDate { get; set; } = true;
+
+    /// <summary>The date the onboarding feature treats as today: DemoDate, or the real date when the demo date is off.</summary>
+    public DateOnly Today => UseDemoDate ? DemoDate : DateOnly.FromDateTime(DateTime.Today);
 }

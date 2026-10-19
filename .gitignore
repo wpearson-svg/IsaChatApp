@@ -28,3 +28,5 @@ data/stale-*.old
 # Generated Keycloak realm + dev passwords (contain passwords; rebuilt by directory/build_keycloak_realm.py)
 keycloak/import/
 keycloak/dev-passwords.local.csv
+
+dev-keys.json

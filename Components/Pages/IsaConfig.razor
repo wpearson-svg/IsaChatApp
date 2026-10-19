@@ -10,8 +10,12 @@
    disk.
    ============================================================ *@
 @using System
+@using System.Globalization
 @using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
 @inject WidgetSettings Settings
+@inject LeaderTermService Terms
+@inject JourneyService Journey
 @rendermode InteractiveServer
 
 <PageTitle>Isa Configuration</PageTitle>
@@ -172,8 +176,125 @@
 
 <hr class="mt-4" />
 
+@* ---- Onboarding feature: demo date and day-of-term check ----
+   The demo date decides what day of term every leader is on, so the
+   90-day journey looks the same whatever day it is shown. The table
+   below is the week 8 "done" check: every test leader with a role on
+   that date, their day of term (day 1 = term start date), and the
+   journey steps their role sees on that day. *@
+<h2 class="h4">Onboarding: demo date</h2>
+<p class="text-muted">
+    The 90-day journey counts each leader's day of term from this date,
+    so the demo looks the same whatever day it is shown. Resets to
+    3 July 2026 on app restart.
+</p>
+
+<div class="form-check form-switch">
+    <input class="form-check-input" type="checkbox" role="switch" id="useDemoDate"
+           checked="@Settings.UseDemoDate"
+           @onchange="@(e => Settings.UseDemoDate = (bool)e.Value!)" />
+    <label class="form-check-label" for="useDemoDate">
+        Count days of term from the demo date instead of today's real date
+    </label>
+</div>
+
+<div class="mt-2" style="max-width: 240px;">
+    <label class="form-label" for="demoDate">Demo date</label>
+    <input type="date" class="form-control" id="demoDate"
+           value="@(Settings.DemoDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))"
+           disabled="@(!Settings.UseDemoDate)"
+           @onchange="OnDemoDateChanged" />
+</div>
+
+<p class="mt-3">
+    Days of term are counted from
+    <strong>@(Settings.Today.ToString("d MMMM yyyy", CultureInfo.InvariantCulture))</strong>.
+</p>
+
+@if (!Terms.DirectoryExists)
+{
+    <div class="alert alert-warning" style="max-width: 640px;">
+        The directory database hasn't been built yet, so no leaders can be
+        looked up. In the IsaChatApp folder, run
+        <code>python directory\build_directory_db.py</code>, then reload this page.
+    </div>
+}
+else
+{
+    if (!Journey.StepsExist)
+    {
+        <div class="alert alert-warning" style="max-width: 640px;">
+            The journey steps database hasn't been built yet, so no steps can
+            be shown. In the IsaChatApp folder, run
+            <code>python onboarding\build_onboarding_db.py</code>, then reload this page.
+        </div>
+    }
+    var terms = Terms.GetAllCurrentTerms(Settings.Today);
+    if (terms.Count == 0)
+    {
+        <p>Nobody in the directory holds a role on this date.</p>
+    }
+    else
+    {
+        <table class="table table-sm" style="max-width: 860px;">
+            <thead>
+                <tr>
+                    <th>Person</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Chapter</th>
+                    <th>Term start</th>
+                    <th>Day of term</th>
+                    <th>Journey steps today</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in terms)
+                {
+                    <tr>
+                        <td>@t.PersonId</td>
+                        <td>@t.Name</td>
+                        <td>@t.Role</td>
+                        <td>@t.ChapterId &middot; @t.ChapterName</td>
+                        <td>@(t.TermStart.ToString("d MMMM yyyy", CultureInfo.InvariantCulture))</td>
+                        <td>@t.DayOfTerm</td>
+                        <td>
+                            @{ var steps = Journey.GetStepsForDay(t.Role, t.DayOfTerm); }
+                            @if (steps.Count == 0)
+                            {
+                                <span class="text-muted">&mdash;</span>
+                            }
+                            else
+                            {
+                                foreach (var step in steps)
+                                {
+                                    <div>@step.StepId &middot; @step.Title</div>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+<hr class="mt-4" />
+
 <p>
     <a href="/throbber-test" target="_blank">Throbber test page &rarr;</a>
     <br />
     <span class="text-muted">Standalone playground for every Throbber setting (spinning, hover, color-cycle, size, etc.) -- opens in a new tab.</span>
 </p>
+@code {
+    // Called when a new date is picked in the Demo date box. The browser
+    // sends the date as YYYY-MM-DD text; anything else is ignored.
+    private void OnDemoDateChanged(ChangeEventArgs e)
+    {
+        if (DateOnly.TryParseExact(e.Value as string, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                                   DateTimeStyles.None, out var picked))
+        {
+            Settings.DemoDate = picked;
+        }
+    }
+}

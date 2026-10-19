@@ -1,0 +1,6 @@
+Contact ID,Name,Team,Region label,Time zone,Email,Chapter IDs
+CX-01,Mei Ling Tan,Chapter Experience,Asia-Pacific chapters,Asia/Singapore,meiling.tan@example.org,C-001;C-002;C-007
+CX-02,Lena Vogel,Chapter Experience,Europe chapters,Europe/Amsterdam,lena.vogel@example.org,C-004;C-005;C-008
+CX-03,Omar Haddad,Chapter Experience,Middle East chapters,Asia/Dubai,omar.haddad@example.org,C-006
+CX-04,Valentina Ruiz,Chapter Experience,Latin America chapters,America/Bogota,valentina.ruiz@example.org,C-003;C-010
+CX-05,Jordan Ellis,Chapter Experience,North America chapters,America/Chicago,jordan.ellis@example.org,C-009

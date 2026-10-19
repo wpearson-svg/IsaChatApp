@@ -32,10 +32,10 @@
     --light-blue: #e7f0f5;
 
     /* The soft ring pattern (like the footer on isaca.org): four
-       "C" rings per tile, each turned a quarter turn, the way the
+       approved ISACA Cs per tile, each turned a quarter turn, the way the
        Cs sit in the ISACA logo. Two versions, one per background. */
-    --rings-on-medium-blue: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='%23e7f0f5' stroke-opacity='0.07' stroke-width='10' stroke-dasharray='88 25.1'%3E%3Ccircle cx='30' cy='30' r='18' transform='rotate(40 30 30)'/%3E%3Ccircle cx='90' cy='30' r='18' transform='rotate(130 90 30)'/%3E%3Ccircle cx='30' cy='90' r='18' transform='rotate(310 30 90)'/%3E%3Ccircle cx='90' cy='90' r='18' transform='rotate(220 90 90)'/%3E%3C/g%3E%3C/svg%3E");
-    --rings-on-dark-blue: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='%23e7f0f5' stroke-opacity='0.04' stroke-width='10' stroke-dasharray='88 25.1'%3E%3Ccircle cx='30' cy='30' r='18' transform='rotate(40 30 30)'/%3E%3Ccircle cx='90' cy='30' r='18' transform='rotate(130 90 30)'/%3E%3Ccircle cx='30' cy='90' r='18' transform='rotate(310 30 90)'/%3E%3Ccircle cx='90' cy='90' r='18' transform='rotate(220 90 90)'/%3E%3C/g%3E%3C/svg%3E");
+    --rings-on-medium-blue: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23e7f0f5' fill-opacity='0.07'%3E%3Cpath transform='translate(30 30) rotate(0)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3Cpath transform='translate(90 30) rotate(90)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3Cpath transform='translate(30 90) rotate(270)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3Cpath transform='translate(90 90) rotate(180)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3C/g%3E%3C/svg%3E");
+    --rings-on-dark-blue: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='%23e7f0f5' fill-opacity='0.04'%3E%3Cpath transform='translate(30 30) rotate(0)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3Cpath transform='translate(90 30) rotate(90)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3Cpath transform='translate(30 90) rotate(270)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3Cpath transform='translate(90 90) rotate(180)' d='M12.14 -5.73L21.27 -5.73A0.76 0.76 0 0 0 22 -6.71A23 23 0 1 0 22 6.71A0.76 0.76 0 0 0 21.27 5.73L12.14 5.73A0.76 0.76 0 0 0 11.47 6.13A13.01 13.01 0 1 1 11.47 -6.13A0.76 0.76 0 0 0 12.14 -5.73Z'/%3E%3C/g%3E%3C/svg%3E");
 
     min-height: 100vh;
     background: #ffffff;
@@ -186,30 +186,62 @@
 .landing__hero {
     position: relative;
     overflow: hidden;
-    background: var(--dark-blue);
+    display: flex;
+    align-items: center;
+    /* border-box so the 620px includes the padding (without it the
+       hero was about 770px tall and ran off shorter screens). It also
+       shrinks to fit a short screen, so the text and the window stay
+       centered in what the visitor can see. 73px = the top bar. */
+    box-sizing: border-box;
+    min-height: clamp(480px, calc(100vh - 73px), 620px);
+    /* Dark Blue into Medium Blue: the analogous gradient the brand
+       guide pairs with the intersecting Cs. */
+    background: linear-gradient(115deg, #1d2d5c 0%, #1d2d5c 48%, #0a3d73 78%, #07649d 100%);
     color: #ffffff;
-    padding: 4.5rem 2.5rem 5rem;
+    padding: 3rem 2.5rem 3.5rem;
 }
 
-/* The "cropped C" brand graphic: one big C, bleeding off the top and
-   right edges, in a single brand color behind the hero text. */
-.landing__heroC {
+/* The window group: art and Isa badge share one fixed 1440 x 1240 box,
+   pinned to the right edge and centered top to bottom, so the badge
+   always sits in the window. The box is taller than the hero on
+   purpose: the arcs run past its top and bottom edges. */
+.landing__window {
     position: absolute;
-    width: 620px;
-    height: 620px;
-    right: -170px;
-    top: -150px;
-    color: var(--medium-blue);
-    opacity: 0.55;
+    top: 50%;
+    right: 0;
+    width: 1440px;
+    height: 1240px;
+    /* The window's center (640px down the box) sits 40px above the
+       middle of the hero and 70px in from the right, level with the
+       headline, so the page doesn't feel bottom heavy. Scaling below
+       is done around that same point. */
+    margin-top: -680px;
+    transform-origin: right 640px;
+    transform: translateX(-70px);
+    /* Above the hero text box, which is wide enough to reach under the
+       badge and would otherwise catch the mouse, so hovering the badge
+       never started the spin. The art itself ignores the mouse
+       (pointer-events: none), so the text stays selectable; only the
+       badge takes the mouse. */
+    z-index: 1;
     pointer-events: none;
+}
+
+.landing__windowArt {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* The arcs keep going past the box's right edge, since the group
+       is shifted left. */
+    overflow: visible;
 }
 
 .landing__heroInner {
     position: relative;
+    width: 100%;
     max-width: 1100px;
-    display: flex;
-    align-items: center;
-    gap: 3rem;
 }
 
 .landing__heroText {
@@ -265,12 +297,17 @@
 
 /* Big Isa ring in a white circle, the same look as the chat bubble.
    Spins when you hover over it. */
+/* Isa's spinning C in a white circle, centered in the window (the
+   window's widest point is at 1120, 640 in the 1440 x 1240 box). */
 .landing__heroBadge {
-    flex: 0 0 auto;
+    position: absolute;
+    left: 1040px;
+    top: 560px;
+    pointer-events: auto;
     box-sizing: border-box;
-    width: 200px;
-    height: 200px;
-    padding: 28px;
+    width: 160px;
+    height: 160px;
+    padding: 22px;
     border-radius: 50%;
     background: #ffffff;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
@@ -611,8 +648,34 @@
 
 /* ---- Smaller screens -------------------------------------------- */
 
+/* The window scales down with the screen so its arcs never reach the
+   hero text. */
+@media (max-width: 1300px) {
+    .landing__window { transform: translateX(-60px) scale(0.86); }
+}
+
+@media (max-width: 1120px) {
+    .landing__window { transform: translateX(-40px) scale(0.72); }
+    .landing__heroText { max-width: 500px; }
+}
+
 @media (max-width: 900px) {
-    .landing__heroBadge { display: none; }
+    /* On tablets and phones the window moves below the text, never
+       behind it, and fades in at its top edge. */
+    .landing__hero { display: block; min-height: 0; padding-bottom: 380px; }
+    .landing__heroText { max-width: none; }
+    .landing__window {
+        top: auto;
+        /* -186px = the 310px overhang at 0.6 scale, so the drawing's
+           usual bottom edge lines up with the hero's bottom edge. */
+        bottom: -186px;
+        margin-top: 0;
+        transform: scale(0.6);
+        transform-origin: right bottom;
+        /* The fade sits where the 380px of bottom padding begins. */
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 300px, #000 460px);
+        mask-image: linear-gradient(to bottom, transparent 0, transparent 300px, #000 460px);
+    }
     .landing__headline { font-size: 2.3rem; }
     .landing__steps { grid-template-columns: 1fr; }
     .landing__steps::before { display: none; }

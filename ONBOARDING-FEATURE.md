@@ -112,10 +112,10 @@ A. Handoff checklist for the outgoing president
 - The prompts appear in the outgoing president's "Today" note and as journey steps.
 - This closes the loop in the story: one leader leaves something behind, the next one finds it.
 
-B. Journeys for other board roles
-- Treasurers, secretaries and other board roles get their own short journeys, built from the guidebook sections on their duties.
-- They use the same journey tables and screens as the president journey; only the steps differ.
-- For the demo, the president journey is shown working. Other roles are shown only if they are fully built; otherwise they go on the roadmap slide, labeled as planned.
+B. Journeys for other board roles (FUTURE BUILD, not built for the demo)
+- Treasurers, secretaries and other board roles would get their own short journeys, built from the guidebook sections on their duties.
+- They would use the same journey tables and screens as the president journey; only the steps differ.
+- Decided October 19, 2026: not built now. It goes in the presentation as a future build, labeled as planned. The demo shows the president journey only.
 
 C. "Meet your board" step
 - Shows the new leader who else is on their chapter board, from the team's directory data.
@@ -131,6 +131,15 @@ E. Day 30, 60 and 90 check-ins
 - Unshared answers stay private to the leader. Counts are logged by milestone only, never by person.
 - This supports ISACA staff without replacing them, and keeps the leader in control of what is shared.
 
+=== FEATURE 5: DOCUMENT LIBRARY WITH A "LISTEN" BUTTON (ADDED OCTOBER 19, 2026) ===
+
+- A "Library" page lists the ISACA-approved documents Isa answers from, grouped by topic, each with a short description and a way to open the document itself.
+- Each document has a "Listen" button. Isa reads the document aloud word for word, with pause and play, so a leader can listen on the way to work.
+- It uses the read-aloud feature built into the leader's web browser and the voices already on their computer or phone. No paid service, nothing to install, no extra load on the demo laptop, and no ISACA material is sent anywhere.
+- Word for word means nothing is rewritten or summarized, so nothing can be wrong that isn't already in the approved document.
+- Limits to state honestly: the page has to stay open while it reads; voices and languages depend on what the leader's device has installed; some phones stop reading when the screen locks.
+- Only approved documents are listed. Any sample chapter documents made for the sandbox must be labeled as samples and kept separate from ISACA guidance.
+
 === OPEN NOTEBOOK: WHERE IT FITS AND WHERE IT DOESN'T ===
 
 Open Notebook is a free, open-source, self-hosted alternative to Google's NotebookLM. It runs locally in Docker, works with Ollama, and has a REST API. Google's NotebookLM itself is not an option: it runs only in Google's cloud, the developer version costs money, and ISACA material can't leave our sandbox.
@@ -142,7 +151,7 @@ Open Notebook is a free, open-source, self-hosted alternative to Google's Notebo
 - Hardware caution: Open Notebook running alongside Ollama could slow our old demo laptop. Test it on the actual demo machine before committing to it.
 - Scale caution: it appears to be built mainly for one person's research, not thousands of users. Check before describing it as production-ready.
 
-Roadmap ideas (slides only, labeled as planned, not built for the demo): a compliance evidence folder checked against ISACA's 11 compliance requirements; side-by-side chapter bylaws and ISACA rules (Isa flags possible conflicts and routes them to a person, never rules on them); board meeting prep from past minutes; and audio briefings. Leader-uploaded files would have to pass through the Input Compliance gate, since uploads could contain personal information or hidden instructions.
+Roadmap ideas (slides only, labeled as planned, not built for the demo): journeys for other board roles (treasurer, secretary and others); downloadable audio files of the library documents, so leaders can listen offline, for example in the car; a compliance evidence folder checked against ISACA's 11 compliance requirements; side-by-side chapter bylaws and ISACA rules (Isa flags possible conflicts and routes them to a person, never rules on them); board meeting prep from past minutes; and audio briefings. Leader-uploaded files would have to pass through the Input Compliance gate, since uploads could contain personal information or hidden instructions.
 
 === THE DEMO (ISACA PRESENTATION, INTERNSHIP WEEK 12) ===
 
@@ -158,7 +167,7 @@ Slides carry the why, the save-offer rules, the privacy rules, and the roadmap. 
 
 - Week 8, foundation: database tables for journey steps, leader progress, contact time slots, and notebook entries, plus synthetic presidents with different term start dates. Done when any test president can be looked up with their current day of term.
 - Week 9, the journey: week-one steps, day 3 vs. day 60 view, marking steps complete, the "Get to know Isa" tour, the "Today" note, the "Meet your board" step, and the ISACA terms glossary. Done when the day 3 and day 60 presidents see different next steps and a different "Today" note.
-- Week 10, the notebook: save icon, save offer, the "Read what your predecessor left you" step, the outgoing president's handoff checklist, the day 30/60/90 check-ins, and journeys for other board roles. Done when a decision saved by one president shows up for the next.
+- Week 10, the notebook: save icon, save offer, the "Read what your predecessor left you" step, the outgoing president's handoff checklist, the day 30/60/90 check-ins, and the document library with its "Listen" button. Done when a decision saved by one president shows up for the next.
 - Week 11, freeze: no new features. Fix bugs, QA, rehearse, record the backup video. Done when the full sequence runs cleanly three times in a row.
 - Week 12: present.
 
@@ -170,25 +179,48 @@ If we fall behind, cut from the bottom of this list first:
 5. Handoff checklist for the outgoing president
 6. ISACA terms glossary
 7. "Meet your board" step
-8. Smart save offer (fallback: the plain save icon)
-9. Day 30/60/90 check-ins (fallback: roadmap slide)
-10. Full help section (fallback: a short static page)
-11. Journeys for other board roles (fallback: roadmap slide)
+8. Document library with "Listen" button
+9. Smart save offer (fallback: the plain save icon)
+10. Day 30/60/90 check-ins (fallback: roadmap slide)
+11. Full help section (fallback: a short static page)
 
 === DECIDED ===
 
 - Database: SQLite, the same as the rest of the team's code (decided October 16, 2026). The onboarding tables (journey steps, leader progress, contact time slots, notebook entries) go in SQLite files in the data folder, like the event log and content database.
-- Test data: the team's synthetic test people live in data/synthetic (people.csv, role_assignments.csv, README.md). Onboarding test people go into those same shared files, not a separate onboarding-only file, so the whole team has all the test data (decided October 16, 2026).
+- Test data: the team's directory/ folder (people.csv, role_assignments.csv, chapters.csv) is the one master list of test people and chapters, because it is what Isa reads to build the directory database and the sign-in accounts. Onboarding test people go into those shared files, not a separate onboarding-only file. data/synthetic keeps a matching copy; change directory/ first (decided October 16, 2026; master list moved to directory/ on October 19, 2026, after the two lists were found to disagree).
 - Demo date: Isa gets a "demo date" setting on the Config page. Day of term is counted from that date instead of the real date, so the demo looks the same whatever day it is given. For the demo it is set to 3 July 2026. Day 1 is the term start date itself (decided October 16, 2026).
 - Demo cast, on the demo date of 3 July 2026:
-  - Sato Yumiko (P-0010, new), C-001: outgoing President (1 July 2025 to 30 June 2026), now Immediate Past President. Saves a decision to the succession notebook.
+  - Sato Yumiko (P-0012, new), C-001: outgoing President (1 July 2025 to 30 June 2026), now Immediate Past President. Saves a decision to the succession notebook.
   - Watanabe Kenji (P-0001), C-001: incoming President, term started 1 July 2026, so day 3. Asia/Tokyo, matching the approved contact-step mockup. Finds Sato Yumiko's saved decision.
-  - Ana Beatriz Souza (P-0011, new), C-010: President since 5 May 2026, so day 60. Sees a different next step.
+  - Ana Beatriz Souza (P-0013, new), C-010: President since 5 May 2026, so day 60. Sees a different next step.
   - Backup: Fahad Al-Harbi (P-0006) is also on day 3, for showing the same screens in Arabic, right to left.
 
 - "Today" note: added as Feature 4, built by Matthew without needing approval from Willis or Eliyas. It appears inside Isa only, never as an email or notification (decided October 19, 2026).
 
-- More onboarding pieces: handoff checklist, other board role journeys, "Meet your board," ISACA terms glossary, and day 30/60/90 check-ins all added to the plan (decided October 19, 2026).
+- More onboarding pieces: handoff checklist, "Meet your board," ISACA terms glossary, and day 30/60/90 check-ins added to the plan. Journeys for other board roles are a future build for the presentation's roadmap, not built now (decided October 19, 2026).
+
+- Document library with a "Listen" button (word-for-word read-aloud in the browser) added as Feature 5; downloadable audio files go on the roadmap slide (decided October 19, 2026).
+
+- Journey steps: stored in onboarding/journey_steps.csv (the master copy) and built into data/onboarding.db by onboarding/build_onboarding_db.py, the same pattern as the directory. That database holds content only. What leaders do (such as marking a step complete) will go in a separate database, so rebuilding the steps never erases anyone's progress. The first 18 steps are a DRAFT, built before Matthew's review (decided October 19, 2026).
+
+- Today window (built October 19, 2026): the chat shows a slim "Your first 90 days" strip with a Today button left of the role badge. Today slides the chat left and opens a same-size window on the right; closing it slides the chat back. Every step can be opened. Opening a step never completes it: a step is complete only when the leader clicks "Mark as done", or, on the contact step, books a call, sends the introduction or saves a group seat. The contact step's three options work with made-up data (invented contacts in onboarding/contacts.csv, a fake calendar worked out from the demo date). Introductions are saved in Isa, never emailed. Progress is kept in data/progress.db.
+
+- Progress record and sharing with ISACA (decided October 19, 2026). Not raised with Camille in advance: Matthew wants to show it as a finished, anticipatory feature. Build in this order, checking each with Matthew before the next:
+  1. The leader's own record: each finished step shows "Done on [date]" (the demo date, not the real date); "Mark as not done" adds to the history instead of erasing it; a "My progress" list covering all 90 days. BUILT October 19, 2026: My progress opens inside the Today window from a link under today's steps (Matthew chose this over a second button in the strip); each step shows a History list.
+  2. The contact's view: a simple page where the Chapter Experience contact sees their chapters' new leaders (day of term, steps done, whether contact was made). Steps only, never the leader's questions to Isa. A page to open when useful, not an email for every step.
+  3. ISACA's on/off switch for progress sharing ("we built it, you decide whether to use it"), plus honesty for the leader:
+     - The privacy line under the contact options names exactly what the contact sees, including onboarding progress, whenever sharing is on.
+     - A one-time note at the top of the Today window the first time a leader opens it (not a blocking pop-up): two sentences and a "Got it" button, e.g. "As you finish steps, your Chapter Experience contact can see your progress, so they know when to check in. Your questions to Isa stay private." Remembered per leader; shown only when sharing is switched on.
+     - The full explanation goes in the "How to use Isa" help section under "What happens to your information."
+  - "Done" is the leader's own word, not proof: present it to ISACA as a guide for when to check in, not a compliance record.
+
+=== MATTHEW'S TO-DO ===
+
+- Review the draft journey steps in onboarding/journey_steps.csv: titles, "What to do" wording, and day ranges. Only the 60-day deadline comes from the guidebook; the other day ranges are suggestions. Things to look at:
+  - Days 6-7 and days 61-89 have no steps. Fine as quiet days, or add something?
+  - The guidebook has no orientation checklist for a new president. Steps J-06 to J-09 use the topics the president must cover when orienting incoming leaders (guidebook p. 13).
+  - The prototype counts AGM-based deadlines from the term start date, because the test data has no AGM dates.
+  After any change, run: python onboarding\build_onboarding_db.py
 
 === STILL TO CONFIRM WITH WILLIS BEFORE WEEK 8 ===
 

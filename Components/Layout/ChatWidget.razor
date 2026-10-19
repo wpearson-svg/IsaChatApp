@@ -123,7 +123,9 @@
         @* Dimmed backdrop behind the expanded panel. *@
         <div class="isa-widget__backdrop" @onclick="Collapse"></div>
 
-        <div class="isa-widget__panel is-expanded">
+        @* is-shifted slides the chat to the left while the Today window
+           is open beside it (see .is-shifted in the .css file). *@
+        <div class="isa-widget__panel is-expanded @(IsTodayOpen ? "is-shifted" : "")">
 
             @* Header: ISACA Dark Blue band with the Isa ring, name and
                role, and a cropped "C" brand graphic behind it (same
@@ -131,7 +133,7 @@
                Redesigned 16 October 2026 (Matthew's approved mockup). *@
             <div class="isa-widget__header">
                 <svg class="isa-widget__headerC" viewBox="-25 -25 250 250" aria-hidden="true">
-                    <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
+                    <path d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z" fill="currentColor" />
                 </svg>
                 <div class="isa-widget__identity">
                     <span class="isa-widget__badge" aria-hidden="true"><Throbber Spinning="false" /></span>
@@ -245,6 +247,13 @@
             </div>
             }
 
+            @* Onboarding: the slim "Your first 90 days" strip with the
+               Today button (see Components/Shared/JourneyCard.razor). It
+               shows only for a signed-in leader inside the first 90 days
+               of a role that has a journey; for everyone else it renders
+               nothing. *@
+            <JourneyCard TodayOpen="@IsTodayOpen" OnToggleToday="ToggleToday" />
+
             <div class="isa-widget__messages">
                 @* The CSS container uses flex-direction: column-reverse
                    so the browser keeps the view pinned to the newest
@@ -353,6 +362,14 @@
                 <a href="#" class="isa-widget__directSupportLink" @onclick:preventDefault="true">@Title &rsaquo;</a>
             </div>
         </div>
+
+        @* Onboarding: the Today window, beside the chat (see
+           Components/Shared/TodayPanel.razor). After the panel in the
+           page, so it is drawn on top of the dimmed backdrop too. *@
+        if (IsTodayOpen)
+        {
+            <TodayPanel OnClose="CloseToday" />
+        }
     }
 
 </div>
@@ -597,7 +614,25 @@
     }
 
     private void Expand() => IsExpanded = true;
-    private void Collapse() => IsExpanded = false;
+
+    // Closing the chat also closes the Today window, so the next time
+    // the chat opens it is back in its usual place.
+    private void Collapse()
+    {
+        IsExpanded = false;
+        IsTodayOpen = false;
+    }
+
+    // ---- Onboarding: the Today window ------------------------------------
+    //
+    // The Today button in the journey strip (JourneyCard.razor) calls
+    // ToggleToday. While IsTodayOpen is true, the chat panel gets the
+    // is-shifted class (slides left) and TodayPanel opens on the right.
+    // The Today window's close button calls CloseToday, and the chat
+    // slides back.
+    private bool IsTodayOpen { get; set; } = false;
+    private void ToggleToday() => IsTodayOpen = !IsTodayOpen;
+    private void CloseToday() => IsTodayOpen = false;
 
     // Starts a dashboard loading behind the still-open panel, then
     // collapses Isa back to her bubble a beat later so the dashboard is

@@ -1,4 +1,6 @@
-# Isa Synthetic Test Data (draft, Oct 16, 2026)
+# Isa Synthetic Test Data (draft, Oct 16, 2026; updated Oct 19, 2026)
+
+**The master copy of this data is now the team's `directory/` folder** (people.csv, role_assignments.csv, chapters.csv). That is the list Isa reads: `directory/build_directory_db.py` builds `data/directory.db` from it, and `directory/build_keycloak_realm.py` builds the sign-in accounts from it. The files in this folder are kept as a matching copy with database-style column names. Make any change in `directory/` first, then copy it here (decided 19 October 2026).
 
 Fictional chapter leaders for the Isa sandbox database. Every person is invented. All emails use example.org, a domain reserved for testing, so no message can ever reach a real person. No real ISACA member data is included.
 
@@ -35,20 +37,21 @@ The two files link through `person_id`. P-0007 in both files is the same person 
 - **P-0006 Fahad Al-Harbi (Saudi Arabia):** Arabic script, right-to-left text, "bin" in name, Friday–Saturday weekend for business-day counts.
 - **P-0007 Priya Raghunathan (India):** English speaker outside the US, UTC+5:30 offset, role history across two terms.
 - **P-0008 Sophie Favre (Switzerland):** French in a multilingual country, formal "vous."
-- **P-0009 Marcus Johnson (United States):** baseline for comparison.
-- **P-0010 Sato Yumiko (Japan):** outgoing President of C-001 (term 1 July 2025 to 30 June 2026), now Immediate Past President. Watanabe Kenji's predecessor, so she is the leader who leaves notes in the succession notebook. Added 16 October 2026 for the onboarding feature.
-- **P-0011 Ana Beatriz Souza (Brazil):** President of C-010 since 5 May 2026, so she is on day 60 of her term on the demo date. Also tests Portuguese from Brazil (pt-BR) and a São Paulo time zone. Added 16 October 2026 for the onboarding feature.
+- **P-0009 Marcus Johnson (United States):** baseline for comparison. President of C-009, matching the team's directory list.
+- **P-0010 Dana Whitfield (United States):** a chapter member (not a leader) in C-009, from the team's directory list. Willis's sign-in test account (d.whitfield) uses this person.
+- **P-0012 Sato Yumiko (Japan):** outgoing President of C-001 (term 1 July 2025 to 30 June 2026), now Immediate Past President. Watanabe Kenji's predecessor, so she is the leader who leaves notes in the succession notebook. Added 16 October 2026 for the onboarding feature (first numbered P-0010; renumbered 19 October 2026 because P-0010 was already Dana Whitfield in the team's list).
+- **P-0013 Ana Beatriz Souza (Brazil):** President of C-010 since 5 May 2026, so she is on day 60 of her term on the demo date. Also tests Portuguese from Brazil (pt-BR) and a São Paulo time zone. Added 16 October 2026 for the onboarding feature (first numbered P-0011; renumbered 19 October 2026).
 
 ## Onboarding demo cast (New Chapter Leader feature)
 
 The onboarding feature works out each president's day of term from their term start date. For the demo, Isa's "demo date" setting is set to 3 July 2026, so the screens look the same whatever day the presentation falls on. (Day 1 is the term start date itself.)
 
 On the demo date:
-- **Sato Yumiko (P-0010), C-001:** outgoing president, now Immediate Past President. Saves a decision to the chapter's succession notebook.
+- **Sato Yumiko (P-0012), C-001:** outgoing president, now Immediate Past President. Saves a decision to the chapter's succession notebook.
 - **Watanabe Kenji (P-0001), C-001:** incoming President, term started 1 July 2026, so day 3. Sees the week-one steps, including "Meet your Chapter Experience contact," and finds Sato Yumiko's saved decision in the notebook.
-- **Ana Beatriz Souza (P-0011), C-010:** President on day 60. Sees a different next step.
+- **Ana Beatriz Souza (P-0013), C-010:** President on day 60. Sees a different next step.
 
-The original nine people are unchanged.
+The original nine people are unchanged, except that Marcus Johnson's role now matches the team's list (President of C-009, not Treasurer).
 
 ## Open questions
 
