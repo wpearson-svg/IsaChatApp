@@ -25,6 +25,7 @@
 
 @using IsaChatApp.Services
 @inject WidgetSettings Settings
+@inject DevKeysStore DevKeys
 @rendermode InteractiveServer
 
 <PageTitle>Developer Dashboard</PageTitle>
@@ -222,6 +223,47 @@ else
                     @TestingConsole
                 </div>
             }
+            else if (ActiveSection == "models")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Models, RAG, access &amp; ticketing</h1>
+                </div>
+                <div class="dd__card">
+                    <div class="dd__cardHeader">
+                        <h3>Ticketing (Salesforce)</h3>
+                        <span class="dd__tag dd__tag--purple">TICKETING</span>
+                    </div>
+                    <p class="dd__cardHint">
+                        Saved to <code>dev-keys.json</code> in the project folder, the same file
+                        <code>test-salesforce.ps1</code> reads. The secret is never shown again
+                        after saving; leave it blank to keep the saved one.
+                    </p>
+                    <div class="dd__fields">
+                        <label class="dd__field">Org address
+                            <input type="text" class="dd__testInput" @bind="_sfOrgUrl" autocomplete="off"
+                                   placeholder="https://your-org.develop.my.salesforce.com" />
+                        </label>
+                        <label class="dd__field">API version
+                            <input type="text" class="dd__testInput" @bind="_sfApiVersion" autocomplete="off"
+                                   placeholder="v68.0" />
+                        </label>
+                        <label class="dd__field">Consumer key
+                            <input type="text" class="dd__testInput" @bind="_sfClientId" autocomplete="off" />
+                        </label>
+                        <label class="dd__field">Consumer secret
+                            <input type="password" class="dd__testInput" @bind="_sfSecret" autocomplete="new-password"
+                                   placeholder="@(_sfSecretIsSet ? "Saved. Leave blank to keep" : "Not set")" />
+                        </label>
+                    </div>
+                    <div class="dd__saveRow">
+                        <button type="button" class="dd__btn dd__btn--primary" @onclick="SaveSalesforce">Save</button>
+                        @if (!string.IsNullOrEmpty(_sfMessage))
+                        {
+                            <span class="dd__saveNote @(_sfMessageIsError ? "dd__saveNote--err" : "dd__saveNote--ok")">@_sfMessage</span>
+                        }
+                    </div>
+                </div>
+            }
             else
             {
                 <div class="dd__topbar">
@@ -252,6 +294,53 @@ else
     };
 
     private string ActiveSection = "compliance";
+
+    // ---- Ticketing (Salesforce) settings -> dev-keys.json ---------
+
+    private string _sfOrgUrl = "";
+    private string _sfApiVersion = "";
+    private string _sfClientId = "";
+    private string _sfSecret = "";
+    private bool _sfSecretIsSet;
+    private string _sfMessage = "";
+    private bool _sfMessageIsError;
+
+    protected override void OnInitialized() => LoadSalesforce();
+
+    private void LoadSalesforce()
+    {
+        try
+        {
+            var keys = DevKeys.GetSalesforce();
+            _sfOrgUrl = keys.OrgUrl;
+            _sfApiVersion = keys.ApiVersion;
+            _sfClientId = keys.ClientId;
+            _sfSecretIsSet = keys.SecretIsSet;
+        }
+        catch (Exception ex)
+        {
+            _sfMessage = "Could not read dev-keys.json: " + ex.Message;
+            _sfMessageIsError = true;
+        }
+    }
+
+    private void SaveSalesforce()
+    {
+        if (!Settings.CanAccessDevDashboard) return;
+        try
+        {
+            DevKeys.SaveSalesforce(_sfOrgUrl, _sfApiVersion, _sfClientId, _sfSecret);
+            _sfSecret = "";
+            LoadSalesforce();
+            _sfMessage = "Saved to dev-keys.json";
+            _sfMessageIsError = false;
+        }
+        catch (Exception ex)
+        {
+            _sfMessage = "Could not save: " + ex.Message;
+            _sfMessageIsError = true;
+        }
+    }
     private string CurrentSectionLabel =>
         Sections.First(s => s.Key == ActiveSection).Label;
 

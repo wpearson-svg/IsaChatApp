@@ -47,6 +47,8 @@ builder.Services.AddSingleton<KeycloakSignInService>();
 // --- Working Foundation: event log, access control, pipeline stages ---
 builder.Services.AddHttpClient("keycloak");
 builder.Services.AddSingleton<EventLogService>();
+// Reads/writes dev-keys.json (Dev Dashboard > Models, RAG, access & ticketing).
+builder.Services.AddSingleton<DevKeysStore>();
 builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapter>();
 // Stage order matters: it is the order they are registered (matches docs/stage-contract.md).
 // front_end is logged by the orchestrator itself; ticketing runs only on Escalate.

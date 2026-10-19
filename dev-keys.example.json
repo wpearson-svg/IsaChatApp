@@ -1,0 +1,8 @@
+{
+  "salesforce": {
+    "orgUrl": "https://orgfarm-6fed9c4712-dev-ed.develop.my.salesforce.com",
+    "apiVersion": "v68.0",
+    "clientId": "PASTE_CONSUMER_KEY_HERE",
+    "clientSecret": "PASTE_CONSUMER_SECRET_HERE"
+  }
+}
