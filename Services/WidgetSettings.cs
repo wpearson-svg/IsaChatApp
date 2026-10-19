@@ -55,7 +55,11 @@ public class WidgetSettings
         ("ISACA Red", "#e31837"),
         ("ISACA Orange", "#e57524"),
         ("ISACA Yellow", "#fbb034"),
-        ("ISACA Purple", "#6658b1"),
+        ("ISACA Purple", "#6558b1"),
+        // Greyscale (added 16 October 2026 so Isa's answers can be white
+        // cards on the grey chat background -- White is the first entry
+        // of the brand guide's official greyscale)
+        ("White", "#ffffff"),
     };
 
     /// <summary>
@@ -85,18 +89,48 @@ public class WidgetSettings
     }
 
     /// <summary>
-    /// White or near-black text, whichever reads better on top of the
-    /// given background -- used so a light 10%/30% tint doesn't end up
-    /// with illegible white-on-pale-pastel text.
+    /// White or ISACA Grey 10 (#1f2933) text, whichever has the higher
+    /// contrast on the given background, using the WCAG 2.1 contrast
+    /// formula that BRAND_GUIDELINES.md's accessibility rules are based
+    /// on (preferred 7:1, minimum 4.5:1). Used so a light 10%/30% tint
+    /// doesn't get white-on-pale text, and so a mid color like ISACA
+    /// Teal gets dark text (white on Teal is only about 2.8:1).
     /// </summary>
     public static string ReadableTextColor(string hex)
     {
+        const string Dark = "#1f2933";   // ISACA Grey 10
+        const string Light = "#ffffff";
+        double bg = RelativeLuminance(hex);
+        double contrastWithDark = (bg + 0.05) / (RelativeLuminance(Dark) + 0.05);
+        double contrastWithLight = (RelativeLuminance(Light) + 0.05) / (bg + 0.05);
+        return contrastWithDark >= contrastWithLight ? Dark : Light;
+    }
+
+    /// <summary>WCAG 2.1 relative luminance of a #rrggbb color (0 = black, 1 = white).</summary>
+    private static double RelativeLuminance(string hex)
+    {
         hex = hex.TrimStart('#');
-        int r = Convert.ToInt32(hex.Substring(0, 2), 16);
-        int g = Convert.ToInt32(hex.Substring(2, 2), 16);
-        int b = Convert.ToInt32(hex.Substring(4, 2), 16);
-        double brightness = (r * 299 + g * 587 + b * 114) / 1000.0;
-        return brightness > 150 ? "#1d1d1f" : "#ffffff";
+        double Channel(int start)
+        {
+            double c = Convert.ToInt32(hex.Substring(start, 2), 16) / 255.0;
+            return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+        return 0.2126 * Channel(0) + 0.7152 * Channel(2) + 0.0722 * Channel(4);
+    }
+
+    /// <summary>
+    /// Color for the small "ISA" label on a bubble: ISACA Medium Blue
+    /// (#07649d) when it meets the brand guide's 4.5:1 minimum contrast
+    /// on that background (it does on ISACA Light Blue, the default),
+    /// otherwise the same color as the bubble's text.
+    /// </summary>
+    public static string LabelColor(string hex)
+    {
+        const string MediumBlue = "#07649d";
+        double bg = RelativeLuminance(hex);
+        double label = RelativeLuminance(MediumBlue);
+        double contrast = (Math.Max(bg, label) + 0.05) / (Math.Min(bg, label) + 0.05);
+        return contrast >= 4.5 ? MediumBlue : ReadableTextColor(hex);
     }
 
     /// <summary>Name of the base ISACA color picked for "you" (user) chat bubbles -- must match an IsacaColors.Name.</summary>
@@ -116,8 +150,14 @@ public class WidgetSettings
     public string UserBubbleColor =>
         Tint(IsacaColors.First(c => c.Name == UserBubbleColorName).Hex, UserBubbleColorPercent);
 
-    /// <summary>Name of the base ISACA color picked for "ai" (Isa) chat bubbles.</summary>
-    public string AiBubbleColorName { get; set; } = "ISACA Teal";
+    /// <summary>
+    /// Name of the base ISACA color picked for "ai" (Isa) chat bubbles.
+    /// Default is White: Isa's answers are white cards on the chat's
+    /// ISACA Grey 1 background, with sources shown in ISACA Light Blue
+    /// (Matthew's approved redesign, 16 October 2026; earlier the
+    /// default was ISACA Teal). Still changeable on /isa-config.
+    /// </summary>
+    public string AiBubbleColorName { get; set; } = "White";
 
     /// <summary>Tint percent applied to AiBubbleColorName -- must be one of TintPercents.</summary>
     public int AiBubbleColorPercent { get; set; } = 100;

@@ -7,6 +7,7 @@ Chapter 360 (6 docs) is deferred to Pipeline Built.
 - content/content.json - 83 passages (document, section, page, text). Word files have no pages, so page = "n/a"; the PDF keeps real page numbers.
 - content/meaning_map.json - plain-language questions mapped to the right passage (AI-fallback path).
 - content/build_content_db.py - rebuilds data/content.db from empty every run. Python 3 only, no packages.
+  It skips table-of-contents passages (any passage that says "Table of Contents" or has two or more dot-leader lines like "Finances ........ 3"), so the database holds 80 passages. Those passages matched many searches and showed up in answers as rows of dots.
 
 ## Build
     python content\build_content_db.py

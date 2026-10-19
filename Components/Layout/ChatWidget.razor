@@ -125,8 +125,22 @@
 
         <div class="isa-widget__panel is-expanded">
 
+            @* Header: ISACA Dark Blue band with the Isa ring, name and
+               role, and a cropped "C" brand graphic behind it (same
+               graphic as the landing page). Icons sit on the right.
+               Redesigned 16 October 2026 (Matthew's approved mockup). *@
             <div class="isa-widget__header">
-                @* Header icon links -- all the same grey. Deliberately
+                <svg class="isa-widget__headerC" viewBox="-25 -25 250 250" aria-hidden="true">
+                    <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
+                </svg>
+                <div class="isa-widget__identity">
+                    <span class="isa-widget__badge" aria-hidden="true"><Throbber Spinning="false" /></span>
+                    <span class="isa-widget__identityText">
+                        <span class="isa-widget__name">Isa</span>
+                        <span class="isa-widget__role"><span class="isa-widget__statusDot" aria-hidden="true"></span>Chapter Support Assistant</span>
+                    </span>
+                </div>
+                @* Header icon links -- all the same color. Deliberately
                    still not in NavMenu.razor; these are the discoverable
                    entry points into settings and the (placeholder)
                    dashboards, everywhere the widget itself appears. Config,
@@ -160,10 +174,28 @@
                             </svg>
                         </button>
                     }
+                    @* New conversation: clears the chat so the welcome
+                       message and suggested questions show again. Hidden
+                       while the chat is already empty or a question is
+                       still being answered. *@
+                    @if (Messages.Count > 0 && !IsSending)
+                    {
+                        <button type="button" class="isa-widget__headerLink" @onclick="NewConversation" title="New conversation" aria-label="New conversation">
+                            <svg viewBox="0 0 24 24" class="isa-widget__headerIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                        </button>
+                    }
+                    <button type="button" class="isa-widget__close" @onclick="Collapse" aria-label="Close chat">&times;</button>
                 </div>
-                <button type="button" class="isa-widget__close" @onclick="Collapse" aria-label="Close chat">&times;</button>
             </div>
 
+            @* Developer tools (Ollama hosts, model list, model picker):
+               shown only when the role on /isa-config is Developer.
+               Chapter leaders never see them. *@
+            @if (ShowDeveloperTools)
+            {
             <div class="isa-widget__modelsPanel">
                 <div class="isa-widget__modelsPanelHeader">
                     <span class="isa-widget__modelsPanelLabel">Available Models</span>
@@ -194,7 +226,24 @@
                         }
                     </div>
                 }
+                <div class="isa-widget__modelPickerRow">
+                    <select class="isa-widget__modelSelect" @bind="SelectedIndexString" disabled="@(IsSending || ModelEntries.Count == 0)" aria-label="Model">
+                        @if (ModelEntries.Count == 0)
+                        {
+                            <option value="">@(IsLoadingModels ? "Loading..." : "No models available")</option>
+                        }
+                        else
+                        {
+                            @for (int i = 0; i < ModelEntries.Count; i++)
+                            {
+                                var entry = ModelEntries[i];
+                                <option value="@i">@entry.ModelName (@entry.HostName)</option>
+                            }
+                        }
+                    </select>
+                </div>
             </div>
+            }
 
             <div class="isa-widget__messages">
                 @* The CSS container uses flex-direction: column-reverse
@@ -212,7 +261,7 @@
                     <div class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
                         <div class="isa-widget__who">
                             @msg.DisplayName
-                            @if (Settings.ShowResponseTime && msg.ElapsedMs is not null)
+                            @if (ShowDeveloperTools && Settings.ShowResponseTime && msg.ElapsedMs is not null)
                             {
                                 <span class="isa-widget__responseTime">&middot; @FormatElapsed(msg.ElapsedMs.Value)</span>
                             }
@@ -220,47 +269,49 @@
                         <div class="isa-widget__text">@msg.Text</div>
                         @if (msg.Sources is { Count: > 0 })
                         {
-                            <div class="isa-widget__sources">
-                                <span>Sources:</span>
+                            @* Each source as a small document "chip". *@
+                            <div class="isa-widget__sources" aria-label="Sources">
                                 @foreach (var src in msg.Sources)
                                 {
-                                    <div>@src</div>
+                                    <div class="isa-widget__source">
+                                        <span class="isa-widget__sourceIcon" aria-hidden="true"></span>
+                                        <span>@src</span>
+                                    </div>
                                 }
                             </div>
                         }
                         @if (!string.IsNullOrEmpty(msg.TraceId))
                         {
-                            <div class="isa-widget__trace">Trace ID: @msg.TraceId</div>
+                            @* The trace ID, shown to leaders as a "Reference #"
+                               they can quote to a person. Full ID kept, since
+                               the event log is searched by the full ID. *@
+                            <div class="isa-widget__trace">Reference # @msg.TraceId</div>
                         }
                     </div>
                 }
-            </div>
 
-            @* Left: placeholder link for the future ticketing-system
-               bridge — @Title ("Direct Support") used to sit large in
-               the header; it now lives here instead, small and
-               left-justified. Not wired up to anything yet; swap the
-               href / add a click handler once the ticketing bridge
-               exists.
-               Right: the model picker, moved up from its own row below
-               the input. No "Model:" label — this is a test demo, the
-               dropdown's contents are self-explanatory here. *@
-            <div class="isa-widget__directSupportRow">
-                <a href="#" class="isa-widget__directSupportLink" @onclick:preventDefault="true">@Title</a>
-                <select class="isa-widget__modelSelect" @bind="SelectedIndexString" disabled="@(IsSending || ModelEntries.Count == 0)">
-                    @if (ModelEntries.Count == 0)
-                    {
-                        <option value="">@(IsLoadingModels ? "Loading..." : "No models available")</option>
-                    }
-                    else
-                    {
-                        @for (int i = 0; i < ModelEntries.Count; i++)
-                        {
-                            var entry = ModelEntries[i];
-                            <option value="@i">@entry.ModelName (@entry.HostName)</option>
-                        }
-                    }
-                </select>
+                @* Welcome message and suggested questions: shown whenever
+                   the conversation is empty (first open, after a restart,
+                   or after "New conversation") -- never repeated after
+                   answers. It is the LAST element in the DOM, so with the
+                   column-reverse layout it sits at the top (see
+                   .isa-widget__welcome in the .css file). Tapping a
+                   suggestion sends it through Send(), exactly as if the
+                   leader had typed it, so it passes through every stage
+                   of Isa's pipeline: no side door. *@
+                @if (Messages.Count == 0)
+                {
+                    <div class="isa-widget__message isa-widget__message--ai isa-widget__welcome" style="@BubbleStyle("ai")">
+                        <div class="isa-widget__who">Isa</div>
+                        <div class="isa-widget__text">Hello! I can answer questions about running your chapter, using ISACA's approved guidance. Every answer shows where it came from.</div>
+                        <div class="isa-widget__suggestions">
+                            @foreach (var s in SuggestedQuestions)
+                            {
+                                <button type="button" class="isa-widget__suggestion" @onclick="() => AskSuggestedAsync(s.Question)" disabled="@IsSending" title="@s.Question">@s.Label</button>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
 
             @* Input row, matching wireframe "Expanded": the ring icon
@@ -279,7 +330,8 @@
                 <div class="isa-widget__inputWrap">
                     <span class="isa-widget__inputIcon"><Throbber Spinning="@IsSending" /></span>
                     <input class="isa-widget__input"
-                           placeholder="Ask a question..."
+                           placeholder="Ask about your chapter..."
+                           aria-label="Ask Isa a question"
                            value="@InputDisplayValue"
                            @oninput="OnDraftInput"
                            @onkeydown="HandleKeyDown"
@@ -287,9 +339,18 @@
                 </div>
                 <button type="button" class="isa-widget__send" @onclick="Send" disabled="@(IsSending || !CanSend || string.IsNullOrWhiteSpace(DraftText))" aria-label="Send">
                     <svg viewBox="0 0 24 24" class="isa-widget__sendIcon" aria-hidden="true">
-                        <path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M9 5 L16 12 L9 19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                 </button>
+            </div>
+
+            @* Footer: a plain promise about where answers come from, and
+               the way to reach a person. "Talk to a person" (@Title) is
+               still the placeholder for the future ticketing bridge --
+               not wired up yet; add the click handler once it exists. *@
+            <div class="isa-widget__footer">
+                <span class="isa-widget__footerNote">Answers come from approved ISACA documents.</span>
+                <a href="#" class="isa-widget__directSupportLink" @onclick:preventDefault="true">@Title &rsaquo;</a>
             </div>
         </div>
     }
@@ -299,8 +360,52 @@
 @code {
     // ---- Configuration -------------------------------------------------
 
-    /// <summary>Header text shown when the widget is expanded.</summary>
-    [Parameter] public string Title { get; set; } = "Direct Support";
+    /// <summary>Text of the footer link to reach a person (placeholder for the future ticketing bridge).</summary>
+    [Parameter] public string Title { get; set; } = "Talk to a person";
+
+    /// <summary>
+    /// True only when the role picked on /isa-config is Developer. Hides
+    /// the team's testing tools (Ollama hosts, model list, model picker,
+    /// response-time labels) from everyone else, so chapter leaders see
+    /// only the conversation.
+    /// </summary>
+    private bool ShowDeveloperTools => Settings.CurrentRole == WidgetSettings.UserRole.Developer;
+
+    // ---- Welcome message: suggested questions ---------------------------
+    //
+    // Shown as buttons in the welcome message whenever the conversation
+    // is empty. Label = the short text on the button; Question = what is
+    // actually sent. Each one is a question known to get a cited answer
+    // from the current content database (see docs/Content_and_Database_
+    // README.md). Edit this list as more content is added. Later these
+    // can be personalized to a leader's onboarding step.
+    private sealed record SuggestedQuestion(string Label, string Question);
+
+    private static readonly SuggestedQuestion[] SuggestedQuestions =
+    {
+        new("Board meetings per year", "How many board meetings must a chapter hold each year?"),
+        new("Educational events", "How many educational events must a chapter hold?"),
+        new("Yearly paperwork", "When do we send in our yearly paperwork?"),
+    };
+
+    // A suggestion button puts its question in the box and sends it the
+    // normal way, so it goes through the whole pipeline like typed text.
+    private async Task AskSuggestedAsync(string question)
+    {
+        if (IsSending) return;
+        DraftText = question;
+        await Send();
+    }
+
+    // "New conversation" in the header: clears the chat on screen so the
+    // welcome message and suggestions show again. Nothing is deleted from
+    // the event log -- every question already asked stays logged.
+    private void NewConversation()
+    {
+        if (IsSending) return;
+        Messages.Clear();
+        DraftText = string.Empty;
+    }
 
     /// <summary>
     /// When true (default), Send() runs the question through the stage
@@ -470,7 +575,7 @@
         get
         {
             if (!IsSending) return DraftText;
-            if (!Settings.ShowResponseTime) return CurrentStatusText;
+            if (!ShowDeveloperTools || !Settings.ShowResponseTime) return CurrentStatusText;
             var elapsed = FormatElapsed((DateTime.UtcNow - _sendStartedAt).TotalMilliseconds);
             return $"{CurrentStatusText} ({elapsed})";
         }
@@ -520,8 +625,9 @@
     // ReadableTextColor rather than hardcoded white, since a 10%/30%
     // screened tint (e.g. ISACA Light Blue at 10%) is pale enough that
     // white text would be unreadable on it -- "error" bubbles are
-    // left alone (empty string), keeping their own hardcoded red
-    // styling.
+    // left alone (empty string), keeping their own fixed grey-and-blue
+    // styling from the .css file. --bubble-label is the color of the
+    // small "ISA" / "YOU" label (see WidgetSettings.LabelColor).
     private string BubbleStyle(string role) => role switch
     {
         "you" => BubbleStyleFor(Settings.UserBubbleColor),
@@ -530,7 +636,7 @@
     };
 
     private static string BubbleStyleFor(string hex) =>
-        $"--bubble-bg: {hex}; --bubble-text: {WidgetSettings.ReadableTextColor(hex)};";
+        $"--bubble-bg: {hex}; --bubble-text: {WidgetSettings.ReadableTextColor(hex)}; --bubble-label: {WidgetSettings.LabelColor(hex)};";
 
     private async Task HandleKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
     {

@@ -1,0 +1,12 @@
+person_id,full_name_as_written,full_name_latin,short_name,form_of_address,title,formality,preferred_language,country,time_zone,years_as_leader,user_type,email
+P-0001,渡辺健二,Watanabe Kenji,Kenji Watanabe,Watanabe-san,,Formal,ja-JP,Japan,Asia/Tokyo,4,Chapter leader,k.watanabe@example.org
+P-0002,Sutrisno,Sutrisno,Sutrisno,Pak Sutrisno,,Formal,id-ID,Indonesia,Asia/Jakarta,2,Chapter leader,sutrisno@example.org
+P-0003,María Fernández López,María Fernández López,María Fernández,Lic. Fernández,Lic.,Formal,es-MX,Mexico,America/Mexico_City,1,Chapter leader,m.fernandez@example.org
+P-0004,Guðrún Jónsdóttir,Gudrun Jonsdottir,Guðrún Jónsdóttir,Guðrún,,Informal,is-IS,Iceland,Atlantic/Reykjavik,6,Chapter leader,g.jonsdottir@example.org
+P-0005,Andreas Müller,Andreas Mueller,Andreas Müller,Herr Dr. Müller,Dr.,Formal,de-DE,Germany,Europe/Berlin,9,Chapter leader,a.mueller@example.org
+P-0006,فهد بن عبدالله الحربي,Fahad bin Abdullah Al-Harbi,Fahad Al-Harbi,Ustadh Fahad,,Formal,ar-SA,Saudi Arabia,Asia/Riyadh,3,Chapter leader,f.alharbi@example.org
+P-0007,Priya Raghunathan,Priya Raghunathan,Priya Raghunathan,Priya,,Informal,en-IN,India,Asia/Kolkata,12,Chapter leader,p.raghunathan@example.org
+P-0008,Sophie Favre,Sophie Favre,Sophie Favre,Madame Favre,,Formal,fr-CH,Switzerland,Europe/Zurich,5,Chapter leader,s.favre@example.org
+P-0009,Marcus Johnson,Marcus Johnson,Marcus Johnson,Marcus,,Informal,en-US,United States,America/Chicago,5,Chapter leader,m.johnson@example.org
+P-0010,佐藤由美子,Sato Yumiko,Yumiko Sato,Sato-san,,Formal,ja-JP,Japan,Asia/Tokyo,7,Chapter leader,y.sato@example.org
+P-0011,Ana Beatriz Souza,Ana Beatriz Souza,Ana Beatriz Souza,Ana Beatriz,,Informal,pt-BR,Brazil,America/Sao_Paulo,2,Chapter leader,a.souza@example.org
