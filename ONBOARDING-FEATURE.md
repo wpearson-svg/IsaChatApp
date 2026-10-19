@@ -94,6 +94,15 @@ Rules:
 - The guide describes only what Isa actually does at the time of each demo. Never document a feature that isn't built yet.
 - Load the guide into Isa's knowledge base, so leaders can ask "What can you do?" and get a cited answer.
 
+=== FEATURE 4: THE "TODAY" NOTE (ADDED OCTOBER 19, 2026) ===
+
+- When a leader opens Isa, she greets them with a short "Today" note at the top of the chat. Example: "You're on day 12. Coming up this week: book your welcome call. The compliance window opens in 19 days."
+- The note is built from data Isa already has: the leader's day of term, their next journey steps, and dated items from ISACA-approved content (the President Guidebook's annual checklist and the compliance timeline).
+- It only appears inside Isa when the leader opens it. Nothing is sent by email or notification while they are away, because ISACA has said new tools should support its staff, not replace email or the help desk.
+- The dates and counts in the note come from the database, not from the AI model, so they are always exact. The day of term uses the demo date setting.
+- Everything in the note follows the same rules as the rest of the feature: approved content only, no side door around Isa's pipeline, and any question about an item goes through the normal question-and-answer pipeline with citations.
+- Not part of this feature: a full calendar where leaders add or remove their own deliverables and keep private notes. That goes on the roadmap slide, labeled as planned. If it is built later, ISACA's required items stay locked so they cannot be removed.
+
 === OPEN NOTEBOOK: WHERE IT FITS AND WHERE IT DOESN'T ===
 
 Open Notebook is a free, open-source, self-hosted alternative to Google's NotebookLM. It runs locally in Docker, works with Ollama, and has a REST API. Google's NotebookLM itself is not an option: it runs only in Google's cloud, the developer version costs money, and ISACA material can't leave our sandbox.
@@ -120,7 +129,7 @@ Slides carry the why, the save-offer rules, the privacy rules, and the roadmap. 
 === BUILD PLAN (WEEK 7 ENDED OCTOBER 16, 2026) ===
 
 - Week 8, foundation: database tables for journey steps, leader progress, contact time slots, and notebook entries, plus synthetic presidents with different term start dates. Done when any test president can be looked up with their current day of term.
-- Week 9, the journey: week-one steps, day 3 vs. day 60 view, marking steps complete, the "Get to know Isa" tour. Done when the day 3 and day 60 presidents see different next steps.
+- Week 9, the journey: week-one steps, day 3 vs. day 60 view, marking steps complete, the "Get to know Isa" tour, and the "Today" note. Done when the day 3 and day 60 presidents see different next steps and a different "Today" note.
 - Week 10, the notebook: save icon, save offer, the "Read what your predecessor left you" step. Done when a decision saved by one president shows up for the next.
 - Week 11, freeze: no new features. Fix bugs, QA, rehearse, record the backup video. Done when the full sequence runs cleanly three times in a row.
 - Week 12: present.
@@ -129,8 +138,9 @@ If we fall behind, cut from the bottom of this list first:
 1. Day 3 vs. day 60 journey (must have)
 2. Saving a decision and finding it in the notebook (must have)
 3. Contact step with fake time slots
-4. Smart save offer (fallback: the plain save icon)
-5. Full help section (fallback: a short static page)
+4. "Today" note
+5. Smart save offer (fallback: the plain save icon)
+6. Full help section (fallback: a short static page)
 
 === DECIDED ===
 
@@ -142,6 +152,8 @@ If we fall behind, cut from the bottom of this list first:
   - Watanabe Kenji (P-0001), C-001: incoming President, term started 1 July 2026, so day 3. Asia/Tokyo, matching the approved contact-step mockup. Finds Sato Yumiko's saved decision.
   - Ana Beatriz Souza (P-0011, new), C-010: President since 5 May 2026, so day 60. Sees a different next step.
   - Backup: Fahad Al-Harbi (P-0006) is also on day 3, for showing the same screens in Arabic, right to left.
+
+- "Today" note: added as Feature 4, built by Matthew without needing approval from Willis or Eliyas. It appears inside Isa only, never as an email or notification (decided October 19, 2026).
 
 === STILL TO CONFIRM WITH WILLIS BEFORE WEEK 8 ===
 
