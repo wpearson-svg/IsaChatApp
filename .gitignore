@@ -25,3 +25,5 @@ data/stale-*.old
 /IsaChatApp/
 /Web/
 
+# Real API keys and secrets. Copy dev-keys.example.json to dev-keys.json, or enter them on the Dev Dashboard (Models, RAG, access & ticketing).
+dev-keys.json

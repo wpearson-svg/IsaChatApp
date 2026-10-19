@@ -4,7 +4,7 @@
 $ErrorActionPreference = 'Stop'
 
 $keysPath = Join-Path $PSScriptRoot 'dev-keys.json'
-if (-not (Test-Path $keysPath)) { throw "Missing $keysPath" }
+if (-not (Test-Path $keysPath)) { throw "Missing $keysPath. Copy dev-keys.example.json to dev-keys.json and fill it in, or save the settings on the Dev Dashboard." }
 $sf = (Get-Content $keysPath -Raw | ConvertFrom-Json).salesforce
 
 foreach ($name in 'orgUrl', 'apiVersion', 'clientId', 'clientSecret') {
