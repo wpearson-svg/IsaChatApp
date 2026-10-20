@@ -44,6 +44,7 @@ One object travels through the whole run. Each stage reads it and may fill in it
 | `status` | `answered` / `stopped` / `escalated` | orchestrator | Final outcome |
 | `reason` | text | any stage | Why a stage stopped or escalated |
 | `ticket_reference` | text or empty | `ticketing` | Format `TKT-0001`, counting up |
+| `work_steps` | list of {stage, outcome, skipped, reason, data_text, elapsed_ms} | orchestrator | "Show the work": one entry per stage, added by the orchestrator after it writes that stage's event, from the same stage result. Stages never write to it. Used by the chat only; not sent in the API response (section 6). Added 2026-10-20 by Matt, OK'd by Willis. |
 
 ## 3. Stage results
 
@@ -63,6 +64,7 @@ If no stage stops or escalates and the last stage passes, `status = answered`.
 - A separate SQLite file (not the content database), in WAL mode.
 - One table, one row per stage per question.
 - Only the orchestrator writes events, after each stage, from what the stage returned. Stages never write to the log.
+- Text a leader types outside the chat (for example a succession notebook note) is checked with `access_control` and `input_compliance` only, through the orchestrator's `CheckTextAsync`. Its events carry `purpose=...` (for example `purpose=notebook_note`), and `front_end` records the text length, never the text. Added 2026-10-20 by Matt.
 
 | Column | Content |
 |---|---|

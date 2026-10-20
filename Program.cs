@@ -1,5 +1,6 @@
 using IsaChatApp.Components;
 using IsaChatApp.Services;
+using IsaChatApp.Services.Onboarding;
 using IsaChatApp.Services.Orchestrator;
 using IsaChatApp.Services.Orchestrator.Stages;
 using Microsoft.AspNetCore.Authentication;
@@ -43,6 +44,24 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddSingleton<KeycloakSignInService>();
+
+// --- Onboarding feature (see ONBOARDING-FEATURE.md) ---
+// LeaderTermService: a leader's current role and day of term, from
+// data/directory.db. JourneyService: the 90-day journey steps, from
+// data/onboarding.db. Both read-only; paths are in appsettings.json.
+builder.Services.AddSingleton<LeaderTermService>();
+builder.Services.AddSingleton<JourneyService>();
+// JourneyContextService: puts the two above together for one signed-in
+// leader on "today" (used by the journey strip and the Today window).
+// ContactService: the chapter's invented sample Chapter Experience
+// contact and the fake calendar. ProgressService: what leaders have done
+// (completed steps, bookings), kept in data/progress.db, created on first run.
+builder.Services.AddSingleton<JourneyContextService>();
+builder.Services.AddSingleton<ContactService>();
+builder.Services.AddSingleton<ProgressService>();
+// NotebookService: each chapter's succession notebook (saved answers and
+// notes), kept in data/notebook.db, created on first run.
+builder.Services.AddSingleton<NotebookService>();
 
 // --- Working Foundation: event log, access control, pipeline stages ---
 builder.Services.AddHttpClient("keycloak");

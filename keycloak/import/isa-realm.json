@@ -595,6 +595,655 @@
         }
       ],
       "requiredActions": []
+    },
+    {
+      "username": "k.watanabe",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "k.watanabe@example.org",
+      "firstName": "Kenji",
+      "lastName": "Watanabe",
+      "attributes": {
+        "person_id": [
+          "P-0001"
+        ],
+        "language": [
+          "ja-JP"
+        ],
+        "formality": [
+          "Formal"
+        ],
+        "display_name": [
+          "渡辺健二"
+        ],
+        "form_of_address": [
+          "Watanabe-san"
+        ],
+        "years_as_leader": [
+          "4"
+        ],
+        "chapter_id": [
+          "C-001"
+        ],
+        "chapter_role": [
+          "President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-07-01"
+        ],
+        "term_end": [
+          "2027-06-30"
+        ],
+        "role_history": [
+          "[{\"role\": \"President\", \"chapter\": \"C-001\", \"start\": \"2026-07-01\", \"end\": \"2027-06-30\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "X_oZwzH_NFPla0CC",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "sutrisno",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "sutrisno@example.org",
+      "firstName": "Sutrisno",
+      "lastName": "Sutrisno",
+      "attributes": {
+        "person_id": [
+          "P-0002"
+        ],
+        "language": [
+          "id-ID"
+        ],
+        "formality": [
+          "Formal"
+        ],
+        "display_name": [
+          "Sutrisno"
+        ],
+        "form_of_address": [
+          "Pak Sutrisno"
+        ],
+        "years_as_leader": [
+          "2"
+        ],
+        "chapter_id": [
+          "C-002"
+        ],
+        "chapter_role": [
+          "Treasurer"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-01-01"
+        ],
+        "term_end": [
+          "2026-12-31"
+        ],
+        "role_history": [
+          "[{\"role\": \"Treasurer\", \"chapter\": \"C-002\", \"start\": \"2026-01-01\", \"end\": \"2026-12-31\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "FAeEjlMFT_w9gzW1",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "m.fernandez",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "m.fernandez@example.org",
+      "firstName": "María",
+      "lastName": "Fernández",
+      "attributes": {
+        "person_id": [
+          "P-0003"
+        ],
+        "language": [
+          "es-MX"
+        ],
+        "formality": [
+          "Formal"
+        ],
+        "display_name": [
+          "María Fernández López"
+        ],
+        "form_of_address": [
+          "Lic. Fernández"
+        ],
+        "years_as_leader": [
+          "1"
+        ],
+        "chapter_id": [
+          "C-003"
+        ],
+        "chapter_role": [
+          "Secretary"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-09-01"
+        ],
+        "term_end": [
+          "2027-08-31"
+        ],
+        "role_history": [
+          "[{\"role\": \"Secretary\", \"chapter\": \"C-003\", \"start\": \"2026-09-01\", \"end\": \"2027-08-31\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "so0tq24kdHf79Hjx",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "g.jonsdottir",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "g.jonsdottir@example.org",
+      "firstName": "Guðrún",
+      "lastName": "Jónsdóttir",
+      "attributes": {
+        "person_id": [
+          "P-0004"
+        ],
+        "language": [
+          "is-IS"
+        ],
+        "formality": [
+          "Informal"
+        ],
+        "display_name": [
+          "Guðrún Jónsdóttir"
+        ],
+        "form_of_address": [
+          "Guðrún"
+        ],
+        "years_as_leader": [
+          "6"
+        ],
+        "chapter_id": [
+          "C-004"
+        ],
+        "chapter_role": [
+          "Vice President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-07-01"
+        ],
+        "term_end": [
+          "2027-06-30"
+        ],
+        "role_history": [
+          "[{\"role\": \"Vice President\", \"chapter\": \"C-004\", \"start\": \"2026-07-01\", \"end\": \"2027-06-30\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "wBhDO_tnVbsBa3v0",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "a.mueller",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "a.mueller@example.org",
+      "firstName": "Andreas",
+      "lastName": "Müller",
+      "attributes": {
+        "person_id": [
+          "P-0005"
+        ],
+        "language": [
+          "de-DE"
+        ],
+        "formality": [
+          "Formal"
+        ],
+        "display_name": [
+          "Andreas Müller"
+        ],
+        "form_of_address": [
+          "Herr Dr. Müller"
+        ],
+        "years_as_leader": [
+          "9"
+        ],
+        "chapter_id": [
+          "C-005"
+        ],
+        "chapter_role": [
+          "Membership Director"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-01-01"
+        ],
+        "term_end": [
+          "2027-12-31"
+        ],
+        "role_history": [
+          "[{\"role\": \"Membership Director\", \"chapter\": \"C-005\", \"start\": \"2026-01-01\", \"end\": \"2027-12-31\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "gjlQHif4aSdIAeWF",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "f.alharbi",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "f.alharbi@example.org",
+      "firstName": "Fahad",
+      "lastName": "Al-Harbi",
+      "attributes": {
+        "person_id": [
+          "P-0006"
+        ],
+        "language": [
+          "ar-SA"
+        ],
+        "formality": [
+          "Formal"
+        ],
+        "display_name": [
+          "فهد بن عبدالله الحربي"
+        ],
+        "form_of_address": [
+          "Ustadh Fahad"
+        ],
+        "years_as_leader": [
+          "3"
+        ],
+        "chapter_id": [
+          "C-006"
+        ],
+        "chapter_role": [
+          "President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-07-01"
+        ],
+        "term_end": [
+          "2027-06-30"
+        ],
+        "role_history": [
+          "[{\"role\": \"President\", \"chapter\": \"C-006\", \"start\": \"2026-07-01\", \"end\": \"2027-06-30\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "upobMybklFuKRix_",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "p.raghunathan",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "p.raghunathan@example.org",
+      "firstName": "Priya",
+      "lastName": "Raghunathan",
+      "attributes": {
+        "person_id": [
+          "P-0007"
+        ],
+        "language": [
+          "en-IN"
+        ],
+        "formality": [
+          "Informal"
+        ],
+        "display_name": [
+          "Priya Raghunathan"
+        ],
+        "form_of_address": [
+          "Priya"
+        ],
+        "years_as_leader": [
+          "12"
+        ],
+        "chapter_id": [
+          "C-007"
+        ],
+        "chapter_role": [
+          "Immediate Past President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-07-01"
+        ],
+        "term_end": [
+          "2027-06-30"
+        ],
+        "role_history": [
+          "[{\"role\": \"President\", \"chapter\": \"C-007\", \"start\": \"2025-07-01\", \"end\": \"2026-06-30\"}, {\"role\": \"Immediate Past President\", \"chapter\": \"C-007\", \"start\": \"2026-07-01\", \"end\": \"2027-06-30\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "u4qd5waTS7aRGuqk",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "s.favre",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "s.favre@example.org",
+      "firstName": "Sophie",
+      "lastName": "Favre",
+      "attributes": {
+        "person_id": [
+          "P-0008"
+        ],
+        "language": [
+          "fr-CH"
+        ],
+        "formality": [
+          "Formal"
+        ],
+        "display_name": [
+          "Sophie Favre"
+        ],
+        "form_of_address": [
+          "Madame Favre"
+        ],
+        "years_as_leader": [
+          "5"
+        ],
+        "chapter_id": [
+          "C-008"
+        ],
+        "chapter_role": [
+          "President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-01-01"
+        ],
+        "term_end": [
+          "2026-12-31"
+        ],
+        "role_history": [
+          "[{\"role\": \"President\", \"chapter\": \"C-008\", \"start\": \"2026-01-01\", \"end\": \"2026-12-31\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "w07q1u1VVDSMtEU_",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "m.johnson",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "m.johnson@example.org",
+      "firstName": "Marcus",
+      "lastName": "Johnson",
+      "attributes": {
+        "person_id": [
+          "P-0009"
+        ],
+        "language": [
+          "en-US"
+        ],
+        "formality": [
+          "Informal"
+        ],
+        "display_name": [
+          "Marcus Johnson"
+        ],
+        "form_of_address": [
+          "Marcus"
+        ],
+        "years_as_leader": [
+          "5"
+        ],
+        "chapter_id": [
+          "C-009"
+        ],
+        "chapter_role": [
+          "President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-07-01"
+        ],
+        "term_end": [
+          "2027-06-30"
+        ],
+        "role_history": [
+          "[{\"role\": \"President\", \"chapter\": \"C-009\", \"start\": \"2026-07-01\", \"end\": \"2027-06-30\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Y0Bpi3vlxMnR-wNb",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "y.sato",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "y.sato@example.org",
+      "firstName": "Yumiko",
+      "lastName": "Sato",
+      "attributes": {
+        "person_id": [
+          "P-0012"
+        ],
+        "language": [
+          "ja-JP"
+        ],
+        "formality": [
+          "Formal"
+        ],
+        "display_name": [
+          "佐藤由美子"
+        ],
+        "form_of_address": [
+          "Sato-san"
+        ],
+        "years_as_leader": [
+          "7"
+        ],
+        "chapter_id": [
+          "C-001"
+        ],
+        "chapter_role": [
+          "Immediate Past President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-07-01"
+        ],
+        "term_end": [
+          "2027-06-30"
+        ],
+        "role_history": [
+          "[{\"role\": \"President\", \"chapter\": \"C-001\", \"start\": \"2025-07-01\", \"end\": \"2026-06-30\"}, {\"role\": \"Immediate Past President\", \"chapter\": \"C-001\", \"start\": \"2026-07-01\", \"end\": \"2027-06-30\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "HfzB04yLU86ifH7A",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
+    },
+    {
+      "username": "a.souza",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "a.souza@example.org",
+      "firstName": "Ana",
+      "lastName": "Beatriz Souza",
+      "attributes": {
+        "person_id": [
+          "P-0013"
+        ],
+        "language": [
+          "pt-BR"
+        ],
+        "formality": [
+          "Informal"
+        ],
+        "display_name": [
+          "Ana Beatriz Souza"
+        ],
+        "form_of_address": [
+          "Ana Beatriz"
+        ],
+        "years_as_leader": [
+          "2"
+        ],
+        "chapter_id": [
+          "C-010"
+        ],
+        "chapter_role": [
+          "President"
+        ],
+        "permission": [
+          "Leadership"
+        ],
+        "term_start": [
+          "2026-05-05"
+        ],
+        "term_end": [
+          "2027-05-04"
+        ],
+        "role_history": [
+          "[{\"role\": \"President\", \"chapter\": \"C-010\", \"start\": \"2026-05-05\", \"end\": \"2027-05-04\"}]"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "cJ8Y9h-A2IniUfQe",
+          "temporary": false
+        }
+      ],
+      "requiredActions": [],
+      "clientRoles": {
+        "isa-chat": [
+          "chat_user"
+        ]
+      }
     }
   ]
 }

@@ -86,6 +86,8 @@
 @inject UsageLogService UsageLog
 @inject IsaChatApp.Services.Orchestrator.Orchestrator Pipeline
 @inject KeycloakSignInService SignInService
+@inject IsaChatApp.Services.Onboarding.NotebookService Notebook
+@inject IsaChatApp.Services.Onboarding.JourneyContextService JourneyContexts
 
 <div class="isa-widget">
 
@@ -123,7 +125,10 @@
         @* Dimmed backdrop behind the expanded panel. *@
         <div class="isa-widget__backdrop" @onclick="Collapse"></div>
 
-        <div class="isa-widget__panel is-expanded">
+        @* is-shifted rounds the chat's right corners while Today or the
+           notebook is open beside it. Its width and position come from
+           ChatPanelStyle (see "Onboarding: the side panels" below). *@
+        <div class="isa-widget__panel is-expanded @(IsTodayOpen || IsNotebookOpen ? "is-shifted" : "")" style="@ChatPanelStyle">
 
             @* Header: ISACA Dark Blue band with the Isa ring, name and
                role, and a cropped "C" brand graphic behind it (same
@@ -131,7 +136,7 @@
                Redesigned 16 October 2026 (Matthew's approved mockup). *@
             <div class="isa-widget__header">
                 <svg class="isa-widget__headerC" viewBox="-25 -25 250 250" aria-hidden="true">
-                    <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
+                    <path d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z" fill="currentColor" />
                 </svg>
                 <div class="isa-widget__identity">
                     <span class="isa-widget__badge" aria-hidden="true"><Throbber Spinning="false" /></span>
@@ -148,6 +153,21 @@
                    behind the panel via OpenDashboard() instead of opening
                    a new tab -- see the @code block. *@
                 <div class="isa-widget__headerLinks">
+                    @* Succession notebook, for someone who can open it but has
+                       no "Your first 90 days" strip (for example the outgoing
+                       president, now Immediate Past President). Leaders with
+                       the strip use its Notebook button instead. *@
+                    @if (CanOpenNotebook && !HasJourney)
+                    {
+                        <button type="button" class="isa-widget__headerLink" @onclick="ToggleNotebook"
+                                title="Succession notebook" aria-label="Succession notebook" aria-pressed="@(IsNotebookOpen ? "true" : "false")">
+                            <svg viewBox="0 0 24 24" class="isa-widget__headerIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z" />
+                                <path d="M5 17a3 3 0 0 1 3-3h11" />
+                                <path d="M9 8h6" />
+                            </svg>
+                        </button>
+                    }
                     <button type="button" class="isa-widget__headerLink" @onclick='() => OpenDashboard("/isa-config")' title="Config" aria-label="Isa configuration">
                         <svg viewBox="0 0 24 24" class="isa-widget__headerIcon" aria-hidden="true">
                             <path fill="currentColor" d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
@@ -245,6 +265,14 @@
             </div>
             }
 
+            @* Onboarding: the slim "Your first 90 days" strip with the
+               Today button (see Components/Shared/JourneyCard.razor). It
+               shows only for a signed-in leader inside the first 90 days
+               of a role that has a journey; for everyone else it renders
+               nothing. *@
+            <JourneyCard TodayOpen="@IsTodayOpen" OnToggleToday="ToggleToday"
+                         NotebookOpen="@IsNotebookOpen" OnToggleNotebook="ToggleNotebook" />
+
             <div class="isa-widget__messages">
                 @* The CSS container uses flex-direction: column-reverse
                    so the browser keeps the view pinned to the newest
@@ -256,6 +284,20 @@
                    "column"), so this walks Messages newest-to-oldest,
                    via MessagesNewestFirst below, rather than in the
                    order they were actually sent. *@
+                @* "Show the work", live: while the pipeline is running, a
+                   reply bubble with "Working..." and the step that just
+                   finished (Components/Shared/ShowTheWork.razor). It is
+                   the FIRST element so it sits at the bottom, below the
+                   question (see the column-reverse note above). It goes
+                   away the moment the real reply is added. *@
+                @if (_liveSteps is not null && Settings.ShowTheWork)
+                {
+                    <div class="isa-widget__message isa-widget__message--ai" style="@BubbleStyle("ai")">
+                        <div class="isa-widget__who">@(Settings.UseIsaLabel ? "Isa" : "pipeline")</div>
+                        <ShowTheWork Steps="@_liveSteps" Live="true" Developer="@ShowDeveloperTools" />
+                    </div>
+                }
+
                 @foreach (var msg in MessagesNewestFirst)
                 {
                     <div class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
@@ -266,19 +308,42 @@
                                 <span class="isa-widget__responseTime">&middot; @FormatElapsed(msg.ElapsedMs.Value)</span>
                             }
                         </div>
+                        @if (msg.Steps is { Count: > 0 } && Settings.ShowTheWork)
+                        {
+                            @* "Show the work": closed to one line until clicked. *@
+                            <ShowTheWork Steps="@msg.Steps" TotalMs="@(msg.WorkMs ?? 0)" Developer="@ShowDeveloperTools" />
+                        }
                         <div class="isa-widget__text">@msg.Text</div>
                         @if (msg.Sources is { Count: > 0 })
                         {
-                            @* Each source as a small document "chip". *@
+                            @* Each source as a card: the document's name, then
+                               its section and page (approved "show the work"
+                               mockup). Cards are 48px tall so they suit a
+                               phone; they become tappable once the document
+                               Library (Feature 5) can open the passage. *@
+                            <div class="isa-widget__sourcesLabel">Sources (@msg.Sources.Count)</div>
                             <div class="isa-widget__sources" aria-label="Sources">
                                 @foreach (var src in msg.Sources)
                                 {
                                     <div class="isa-widget__source">
                                         <span class="isa-widget__sourceIcon" aria-hidden="true"></span>
-                                        <span>@src</span>
+                                        <span class="isa-widget__sourceBody">
+                                            <span class="isa-widget__sourceDoc">@src.Document</span>
+                                            <span class="isa-widget__sourceWhere">@SourceWhere(src)</span>
+                                        </span>
                                     </div>
                                 }
                             </div>
+                        }
+                        @if (msg.Question is not null)
+                        {
+                            @* Succession notebook: "Save to notebook" on
+                               answered questions (only shown to someone who
+                               can write to their chapter's notebook). Keyed by
+                               the trace ID so each answer keeps its own state. *@
+                            <SaveToNotebook @key="msg.TraceId" Question="@msg.Question" Answer="@msg.Text"
+                                            Sources="@(msg.Sources ?? new())"
+                                            OnSaved="NotebookChanged" OnOpenNotebook="OpenNotebook" />
                         }
                         @if (!string.IsNullOrEmpty(msg.TraceId))
                         {
@@ -353,6 +418,24 @@
                 <a href="#" class="isa-widget__directSupportLink" @onclick:preventDefault="true">@Title &rsaquo;</a>
             </div>
         </div>
+
+        @* Onboarding: the Today window, beside the chat (see
+           Components/Shared/TodayPanel.razor). After the panel in the
+           page, so it is drawn on top of the dimmed backdrop too. *@
+        if (IsTodayOpen)
+        {
+            <TodayPanel OnClose="CloseToday" Style="@SidePanelStyle(SidePanel.Today)" Rightmost="@(!IsNotebookOpen)"
+                        Enlarged="@(Enlarged == SidePanel.Today)" OnToggleEnlarge="() => ToggleEnlarge(SidePanel.Today)"
+                        OnOpenNotebook="OpenNotebook" />
+        }
+
+        @* Onboarding: the succession notebook, always the rightmost panel
+           (see Components/Shared/NotebookPanel.razor). *@
+        if (IsNotebookOpen)
+        {
+            <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion"
+                           Enlarged="@(Enlarged == SidePanel.Notebook)" OnToggleEnlarge="() => ToggleEnlarge(SidePanel.Notebook)" />
+        }
     }
 
 </div>
@@ -515,6 +598,11 @@
     private string DraftText { get; set; } = string.Empty;
     private List<ChatEntry> Messages { get; set; } = new();
 
+    // "Show the work", live: the steps of the question that is running
+    // right now (the same list the orchestrator fills, ctx.WorkSteps), or
+    // null when nothing is running. See RunPipeline below.
+    private IReadOnlyList<IsaChatApp.Services.Orchestrator.WorkStep>? _liveSteps;
+
     // Messages, in actual chronological order, walked backwards for
     // display — see the comment on .isa-widget__messages in the markup
     // above for why the column-reverse auto-scroll trick needs this.
@@ -597,7 +685,96 @@
     }
 
     private void Expand() => IsExpanded = true;
-    private void Collapse() => IsExpanded = false;
+
+    // Closing the chat also closes Today and the notebook, so the next
+    // time the chat opens it is back in its usual place.
+    private void Collapse()
+    {
+        IsExpanded = false;
+        IsTodayOpen = false;
+        IsNotebookOpen = false;
+        Enlarged = null;
+    }
+
+    // ---- Onboarding: the Today window ------------------------------------
+    //
+    // The Today button in the journey strip (JourneyCard.razor) calls
+    // ToggleToday. While IsTodayOpen is true, the chat panel gets the
+    // is-shifted class (slides left) and TodayPanel opens on the right.
+    // The Today window's close button calls CloseToday, and the chat
+    // slides back.
+    private bool IsTodayOpen { get; set; } = false;
+    private void ToggleToday() { IsTodayOpen = !IsTodayOpen; if (!IsTodayOpen) Unenlarge(SidePanel.Today); }
+    private void CloseToday() { IsTodayOpen = false; Unenlarge(SidePanel.Today); }
+
+    // ---- Onboarding: the succession notebook ------------------------------
+    //
+    // Opened by the Notebook button in the journey strip, by "Open the
+    // notebook" on the "Read what your predecessor left you" step, or (for
+    // someone with no journey strip, like the outgoing president) by the
+    // notebook icon in the header. NotebookService decides who may open it.
+    private bool IsNotebookOpen { get; set; } = false;
+    private void ToggleNotebook() { IsNotebookOpen = !IsNotebookOpen; if (!IsNotebookOpen) Unenlarge(SidePanel.Notebook); }
+    private void OpenNotebook() => IsNotebookOpen = true;
+    private void CloseNotebook() { IsNotebookOpen = false; Unenlarge(SidePanel.Notebook); }
+
+    // Goes up by one whenever something is saved to the notebook from the
+    // chat, so an open notebook panel reads its entries again.
+    private int _notebookVersion;
+    private void NotebookChanged() => _notebookVersion++;
+
+    // Whether the signed-in person gets the notebook icon in the header.
+    private bool CanOpenNotebook { get; set; }
+    private bool HasJourney { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        CanOpenNotebook = false;
+        HasJourney = false;
+        if (AuthState is null) return;
+        var personId = (await AuthState).User.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
+        if (personId is null) return;
+        CanOpenNotebook = Notebook.GetAccess(personId, Settings.Today).CanRead;
+        HasJourney = JourneyContexts.GetFor(personId) is not null;
+    }
+
+    // ---- Onboarding: the side panels (Today and the notebook) -------------
+    //
+    // Matthew's layout (20 October 2026): chat, Today and Notebook sit side
+    // by side, left to right, a third of the screen each, so all three fill
+    // the screen. Opening a panel slides the ones to its left over. "Enlarge"
+    // widens Today or the notebook to half the screen; only one is enlarged
+    // at a time. With all three open, the other two shrink to a quarter each
+    // so everything still fits; with two open, the chat keeps its third.
+    // On narrow screens (phones) each panel fills the screen instead (the
+    // .css files override these sizes there).
+    private enum SidePanel { Today, Notebook }
+    private SidePanel? Enlarged { get; set; }
+
+    private void ToggleEnlarge(SidePanel panel) => Enlarged = Enlarged == panel ? null : panel;
+    private void Unenlarge(SidePanel panel) { if (Enlarged == panel) Enlarged = null; }
+
+    private const double Third = 100.0 / 3;
+    private bool AllThreeOpen => IsTodayOpen && IsNotebookOpen;
+
+    // Width of a side panel, as a percentage of the visible window. (A
+    // percentage of a fixed panel leaves out the page's scrollbar, so the
+    // three panels fit exactly; "vw" would include it and overflow.)
+    private double SideWidth(SidePanel panel) =>
+        Enlarged == panel ? 50 : AllThreeOpen && Enlarged is not null ? 25 : Third;
+
+    private double ChatWidth => AllThreeOpen && Enlarged is not null ? 25 : Third;
+
+    // Distance from the right edge: the notebook is always rightmost,
+    // Today sits to its left, and the chat to the left of both.
+    private double TodayRight => IsNotebookOpen ? SideWidth(SidePanel.Notebook) : 0;
+    private double ChatRight =>
+        (IsTodayOpen ? SideWidth(SidePanel.Today) : 0) + (IsNotebookOpen ? SideWidth(SidePanel.Notebook) : 0);
+
+    private static string Pct(double v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture) + "%";
+    private string ChatPanelStyle => $"width: {Pct(ChatWidth)}; right: {Pct(ChatRight)};";
+    private string SidePanelStyle(SidePanel panel) =>
+        $"width: {Pct(SideWidth(panel))}; right: {Pct(panel == SidePanel.Today ? TodayRight : 0)};";
 
     // Starts a dashboard loading behind the still-open panel, then
     // collapses Isa back to her bubble a beat later so the dashboard is
@@ -858,9 +1035,25 @@
             IncomingToken = await GetBearerTokenAsync()
         };
 
-        var result = await Pipeline.RunAsync(ctx);
+        // "Show the work": the live bubble shows ctx.WorkSteps as the
+        // orchestrator fills it. After each stage, the orchestrator calls
+        // back here so the bubble updates right away.
+        _liveSteps = ctx.WorkSteps;
+        IsaChatApp.Services.Orchestrator.AskResponse result;
+        try
+        {
+            result = await Pipeline.RunAsync(ctx, _ => InvokeAsync(StateHasChanged));
+        }
+        finally
+        {
+            _liveSteps = null;   // the reply (added below) takes over
+        }
         var elapsedMs = (DateTime.UtcNow - _sendStartedAt).TotalMilliseconds;
         UsageLog.Record("pipeline", "local", null, null, elapsedMs);
+
+        // A copy of the steps travels with the reply, so the reply can
+        // always show what was done for it.
+        var steps = ctx.WorkSteps.ToList();
 
         if (ctx.AuthFailed)
         {
@@ -869,19 +1062,22 @@
         }
 
         var name = Settings.UseIsaLabel ? "Isa" : "pipeline";
-        var sources = result.Sources.Select(x => $"{x.Document} \u2013 {x.Section}" + (x.Page is "" or "n/a" ? "" : $" (p. {x.Page})")).Distinct().ToList();
+        var sources = result.Sources.Distinct().ToList();
 
         switch (result.Status)
         {
             case "answered":
-                Messages.Add(new ChatEntry("ai", name, result.Message, "pipeline", elapsedMs, sources, result.TraceId));
+                Messages.Add(new ChatEntry("ai", name, result.Message, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, Question: text));
                 break;
             case "escalated":
-                var ticket = string.IsNullOrEmpty(result.TicketReference) ? "" : $" Your reference number is {result.TicketReference}.";
-                Messages.Add(new ChatEntry("ai", $"{name} \u00b7 Escalated", result.Message + ticket, "pipeline", elapsedMs, sources, result.TraceId));
+                // The ticketing stage's message already names the ticket, so
+                // only add it here when the message doesn't (no doubled line).
+                var ticket = string.IsNullOrEmpty(result.TicketReference) || result.Message.Contains(result.TicketReference)
+                    ? "" : $" Your reference number is {result.TicketReference}.";
+                Messages.Add(new ChatEntry("ai", $"{name} \u00b7 Passed to a person", result.Message + ticket, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs));
                 break;
             default: // stopped
-                Messages.Add(new ChatEntry("error", "Unable to answer", result.Message, TraceId: result.TraceId));
+                Messages.Add(new ChatEntry("error", "Unable to answer", result.Message, TraceId: result.TraceId, Steps: steps, WorkMs: elapsedMs));
                 break;
         }
     }
@@ -914,7 +1110,15 @@
     // which is exactly what the markup's `msg.ElapsedMs is not null`
     // check uses to decide whether a response-time label belongs next
     // to that message at all.
-    private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null, List<string>? Sources = null, string? TraceId = null);
+    // Steps and WorkMs are "show the work": the pipeline steps behind a
+    // reply and how long they took. Only pipeline replies have them.
+    // A source card's second line: section, then page when there is one.
+    private static string SourceWhere(IsaChatApp.Services.Orchestrator.SourceRef src) =>
+        src.Section + (src.Page is "" or "n/a" ? "" : $" · p. {src.Page}");
+
+    private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null, List<IsaChatApp.Services.Orchestrator.SourceRef>? Sources = null, string? TraceId = null,
+        List<IsaChatApp.Services.Orchestrator.WorkStep>? Steps = null, double? WorkMs = null,
+        string? Question = null);   // set only on answered pipeline replies: the question asked, for "Save to notebook"
 
     private record ModelEntry(string HostName, string HostUrl, string ModelName, long? Size);
 

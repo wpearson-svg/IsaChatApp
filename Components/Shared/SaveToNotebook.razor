@@ -1,0 +1,155 @@
+@* ============================================================
+   SaveToNotebook.razor
+
+   Onboarding feature, Feature 2 (see ONBOARDING-FEATURE.md): the quiet
+   "Save to notebook" button under each of Isa's answers. Demo step 1:
+   the outgoing president asks Isa a question, gets a cited answer, and
+   saves the decision with one tap.
+
+   - Shown only to someone who can write to their chapter's notebook
+     (the president, or the outgoing president for 30 days after their
+     term), and only on answered questions (never on a stopped or
+     escalated reply; ChatWidget.razor decides that).
+   - Tapping it opens a small box: who will see this, an optional "What
+     did you decide?" line, "Share with the board" (off by default), and
+     Save / Cancel.
+   - Saving stores the question, Isa's answer, its sources and the date
+     (NotebookService.SaveAnswerAsync). The question and answer already
+     went through Isa's whole pipeline; the "what we decided" line is
+     checked by the sign-in check and the Input Compliance gate first.
+   - Afterwards it says "Saved to the notebook" with "Open the notebook".
+
+   Nothing here comes from the AI model. The smart save offer ("Want me
+   to save this?") comes later; this button is always there for anyone
+   who can write, so leaders can always save something themselves.
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@using IsaChatApp.Services.Orchestrator
+@inject NotebookService Notebook
+@inject WidgetSettings Settings
+@inject KeycloakSignInService SignInService
+
+@if (_canWrite)
+{
+    <div class="isa-save">
+        @if (_saved)
+        {
+            <div class="isa-save__done" role="status">
+                <svg class="isa-save__icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path d="M4 2h8v12l-4-3-4 3Z" fill="currentColor" />
+                </svg>
+                <span>Saved to the notebook</span>
+                <button type="button" class="isa-save__link" @onclick="OnOpenNotebook">Open the notebook</button>
+            </div>
+        }
+        else if (!_open)
+        {
+            <button type="button" class="isa-save__btn" @onclick="() => _open = true"
+                    title="Save this question and answer to your chapter's succession notebook">
+                <svg class="isa-save__icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path d="M4 2h8v12l-4-3-4 3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                </svg>
+                <span>Save to notebook</span>
+            </button>
+        }
+        else
+        {
+            <div class="isa-save__box" role="group" aria-label="Save to the succession notebook">
+                <p class="isa-save__title">Save to your chapter's succession notebook</p>
+                <p class="isa-save__who">The next president will see your question, this answer and its sources.</p>
+                <label class="isa-save__label" for="@_inputId">What did you decide? <span>(optional)</span></label>
+                <input id="@_inputId" class="isa-save__input" type="text" maxlength="300"
+                       placeholder="For example: we'll hold this year's election online"
+                       @bind="_decided" @bind:event="oninput" disabled="@_saving" />
+                <div class="isa-save__row">
+                    <label class="isa-save__share">
+                        <input type="checkbox" @bind="_share" disabled="@_saving" />
+                        <span>Share with the board</span>
+                    </label>
+                    <span class="isa-save__btns">
+                        <button type="button" class="isa-save__cancel" @onclick="Cancel" disabled="@_saving">Cancel</button>
+                        <button type="button" class="isa-save__primary" @onclick="SaveAsync" disabled="@_saving">@(_saving ? "Checking..." : "Save")</button>
+                    </span>
+                </div>
+                @if (_problem is not null)
+                {
+                    <p class="isa-save__problem" role="status">@_problem</p>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>The leader's question, exactly as asked.</summary>
+    [Parameter, EditorRequired] public string Question { get; set; } = "";
+
+    /// <summary>Isa's answer, exactly as shown (after the Output Compliance gate).</summary>
+    [Parameter, EditorRequired] public string Answer { get; set; } = "";
+
+    /// <summary>The answer's sources.</summary>
+    [Parameter] public IReadOnlyList<SourceRef> Sources { get; set; } = Array.Empty<SourceRef>();
+
+    /// <summary>Called after a save, so the chat widget can refresh an open notebook.</summary>
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    /// <summary>Called by "Open the notebook".</summary>
+    [Parameter] public EventCallback OnOpenNotebook { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private readonly string _inputId = "isa-save-" + Guid.NewGuid().ToString("N");
+    private string? _personId;
+    private string? _sessionId;
+    private bool _canWrite;
+    private bool _open;
+    private bool _saving;
+    private bool _saved;
+    private bool _share;
+    private string _decided = "";
+    private string? _problem;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is null) return;
+        var user = (await AuthState).User;
+        _personId = user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
+        _sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+        _canWrite = _personId is not null && Notebook.GetAccess(_personId, Settings.Today).CanWrite;
+    }
+
+    private void Cancel()
+    {
+        _open = false;
+        _problem = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_personId is null || _saving) return;
+        _saving = true;
+        _problem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(_sessionId);
+            var result = await Notebook.SaveAnswerAsync(_personId, Settings.Today, Question, Answer, Sources,
+                _decided, _share, token is null ? null : $"Bearer {token}");
+            if (result.IsSaved)
+            {
+                _saved = true;
+                _open = false;
+                await OnSaved.InvokeAsync();
+            }
+            else
+            {
+                _problem = result.Problem;
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

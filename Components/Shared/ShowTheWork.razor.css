@@ -1,0 +1,209 @@
+/* "Show the work", from the approved mockup (Claude outputs/Show the work
+   mockups.html). Narrow screens first; every tappable row is at least 44px.
+
+   Colors, each paired with its own icon shape:
+   - pass:    ISACA Green, darkened so small icons read on white (5.4:1)
+   - handled: ISACA Medium Blue (6.4:1), tinted with ISACA Light Blue
+   - skip:    grey (5.4:1)        -- developer mode only
+   - error:   red                 -- developer mode only */
+
+.isa-work {
+    --work-pass: #3f7d20;
+    --work-pass-bg: #edf6e8;
+    --work-handled: #07649d;
+    --work-handled-bg: #e7f0f5;
+    --work-skip: #5f6b7a;
+    --work-skip-bg: #f1f3f5;
+    --work-error: #b42318;
+    --work-error-bg: #fdecea;
+    --work-ink: #1d2d5c;   /* ISACA Dark Blue */
+    --work-text: #323e48;  /* Grey 9 */
+    --work-line: #dde3e9;
+
+    margin: 0 -4px 0.5rem;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+/* ---- The closed line: one tinted, tappable row ------------------------ */
+
+.isa-work__toggle {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border: 0;
+    border-radius: 10px;
+    font: inherit;
+    text-align: left;
+    color: var(--work-ink);
+    cursor: pointer;
+}
+
+.isa-work__toggle--pass { background: var(--work-pass-bg); }
+.isa-work__toggle--handled { background: var(--work-handled-bg); }
+.isa-work__toggle--error { background: var(--work-error-bg); }
+.isa-work__toggle--skip { background: var(--work-skip-bg); }
+
+.isa-work__toggle:hover { filter: brightness(0.97); }
+
+.isa-work__toggle:focus-visible {
+    outline: 2px solid var(--work-handled);
+    outline-offset: 2px;
+}
+
+.isa-work__summary { flex: 1 1 auto; min-width: 0; }
+
+.isa-work__meta {
+    flex: 0 0 auto;
+    color: var(--work-skip);
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+/* A small arrow: points down when closed, up when open. */
+.isa-work__chevron {
+    flex: 0 0 auto;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin: 0 0.3rem 0.2rem 0.1rem;
+    border-right: 2px solid var(--work-skip);
+    border-bottom: 2px solid var(--work-skip);
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.isa-work--open .isa-work__chevron {
+    transform: rotate(-135deg);
+    margin-bottom: -0.2rem;
+}
+
+/* ---- Icons: color comes from the tone ---------------------------------- */
+
+.isa-work__icon { flex: 0 0 auto; }
+.isa-work__icon--pass { color: var(--work-pass); }
+.isa-work__icon--handled { color: var(--work-handled); }
+.isa-work__icon--skip { color: var(--work-skip); }
+.isa-work__icon--error { color: var(--work-error); }
+
+/* ---- The opened list ---------------------------------------------------- */
+
+.isa-work__steps {
+    list-style: none;
+    margin: 0.4rem 0 0.15rem 0.5rem;
+    padding: 0.1rem 0 0.1rem 0.85rem;
+    border-left: 2px solid var(--work-line);
+    animation: isa-work-open 0.2s ease-out;
+}
+
+@keyframes isa-work-open {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: none; }
+}
+
+.isa-work__step {
+    display: flex;
+    gap: 0.55rem;
+    padding: 0.3rem 0;
+}
+
+.isa-work__step .isa-work__icon { margin-top: 0.05rem; }
+
+.isa-work__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.isa-work__text { color: var(--work-text); }
+.isa-work__step--skip .isa-work__text { color: var(--work-skip); }
+.isa-work__detail { color: var(--work-skip); font-size: 0.76rem; }
+
+/* Developer mode: the stage name and the exact event-log data text. */
+.isa-work__raw {
+    margin-top: 0.1rem;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.7rem;
+    color: var(--work-skip);
+    overflow-wrap: anywhere;
+}
+
+.isa-work__raw--error { color: var(--work-error); }
+
+/* ---- While working: status line and progress dots ----------------------- */
+
+.isa-work--live {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0 0 0.25rem;
+    padding: 0.15rem 0;
+}
+
+.isa-work__liveRow {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--work-ink);
+    font-size: 0.85rem;
+}
+
+.isa-work__spinner {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2.5px solid var(--work-handled-bg);
+    border-top-color: var(--work-handled);
+    animation: isa-work-spin 0.9s linear infinite;
+}
+
+@keyframes isa-work-spin { to { transform: rotate(360deg); } }
+
+.isa-work__shimmer {
+    background: linear-gradient(90deg, var(--work-ink) 0 40%, #9fb3c8 50%, var(--work-ink) 60% 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: isa-work-shimmer 1.8s linear infinite;
+}
+
+@keyframes isa-work-shimmer {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+}
+
+.isa-work__dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding-left: 1.6rem;
+}
+
+.isa-work__dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--work-line);
+}
+
+.isa-work__dots i.pass { background: var(--work-pass); }
+.isa-work__dots i.handled { background: var(--work-handled); }
+.isa-work__dots i.skip { background: #aab4bf; }
+.isa-work__dots i.error { background: var(--work-error); }
+.isa-work__dots i.now { background: #fff; box-shadow: 0 0 0 2px var(--work-handled); }
+
+.isa-work__dots small {
+    margin-left: 0.4rem;
+    color: var(--work-skip);
+    font-size: 0.72rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-work__spinner, .isa-work__steps { animation: none; }
+    .isa-work__shimmer { animation: none; background: none; color: var(--work-ink); }
+    .isa-work__chevron { transition: none; }
+}

@@ -1,0 +1,571 @@
+@* ============================================================
+   TodayPanel.razor
+
+   Onboarding feature, week 9 (see ONBOARDING-FEATURE.md, Feature 1).
+   The Today window: opens beside the chat when a leader clicks
+   "Today" in the "Your first 90 days" strip. The chat widget slides
+   the chat to the left to make room and slides it back when this
+   window closes (ChatWidget.razor, IsTodayOpen).
+
+   Four views, one at a time:
+     1. Today's steps: a list of the leader's steps for today. Every
+        step can be clicked. Completed steps show a check mark and the
+        date. Opening a step never completes it. A "My progress" link
+        sits under the list.
+     4. My progress: all the steps of the 90 days, each marked done
+        (with its date), not done yet, or coming up. Every step can be
+        clicked from here too.
+     2. The contact step ("Meet your Chapter Experience contact",
+        J-03): Matthew's approved mockup. The sample contact's card,
+        three ways to make contact (book a welcome call, send an
+        introduction, join a group welcome), and the privacy line.
+        Any one of the three completes the step.
+     3. Any other step: its "What to do" text, its source if it comes
+        from an ISACA document, and a "Mark as done" button.
+   Views 2 and 3 also show the step's history. Every "done" and "not
+   done" is kept as its own entry (ProgressService.step_history), so
+   the record is never rewritten. Dates are the leader's "today": the
+   demo date while it is switched on.
+
+   Where the data comes from (nothing here comes from the AI model):
+     - JourneyContextService: who is signed in, role, day of term, steps.
+     - ContactService: the chapter's invented sample contact, and the
+       fake calendar (call times and group sessions worked out from the
+       demo date).
+     - ProgressService: what the leader has done (data/progress.db).
+
+   Prototype limits, stated on screen where they matter: the calendar is
+   made up, and introductions are saved in Isa but never emailed.
+   ============================================================ *@
+
+@using System.Globalization
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject JourneyContextService JourneyContexts
+@inject ContactService Contacts
+@inject ProgressService Progress
+
+<aside class="isa-today @(Rightmost ? "" : "is-inner")" style="@Style" aria-label="Today">
+
+    @* Header band: ISACA Dark Blue, like the chat's header. *@
+    <div class="isa-today__header">
+        <div class="isa-today__headText">
+            <span class="isa-today__name">Today</span>
+            <span class="isa-today__date">@DateLabel</span>
+        </div>
+        <div class="isa-today__headBtns">
+            @* Enlarge: widens this window to half the screen (the chat
+               widget works out the sizes; see ChatWidget.razor). *@
+            <button type="button" class="isa-today__iconBtn isa-today__enlarge" @onclick="OnToggleEnlarge"
+                    aria-pressed="@(Enlarged ? "true" : "false")"
+                    title="@(Enlarged ? "Make smaller" : "Enlarge")" aria-label="@(Enlarged ? "Make Today smaller" : "Enlarge Today")">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    @if (Enlarged)
+                    {
+                        <path d="M6.5 2.5v4h-4M9.5 13.5v-4h4M6.5 6.5L2 2M9.5 9.5L14 14" />
+                    }
+                    else
+                    {
+                        <path d="M10 2h4v4M6 14H2v-4M14 2L9 7M2 14l5-5" />
+                    }
+                </svg>
+            </button>
+            <button type="button" class="isa-today__close" @onclick="OnClose" aria-label="Close Today" title="Close Today">&times;</button>
+        </div>
+    </div>
+
+    @if (_ctx is null)
+    {
+        <p class="isa-today__empty">Your first-90-days steps appear here when you are signed in as a chapter leader in the first 90 days of your term.</p>
+    }
+    else
+    {
+        @* Journey summary, as in the mockup: title, week and day, role
+           badge, progress bar. Stays in view whichever step is open. *@
+        <div class="isa-today__summary">
+            <div class="isa-today__summaryRow">
+                <span class="isa-today__summaryTitles">
+                    <span class="isa-today__summaryTitle">Your first 90 days</span>
+                    <span class="isa-today__summaryWhen">Week @_ctx.Week &middot; Day @_ctx.Term.DayOfTerm</span>
+                </span>
+                <span class="isa-today__badge">@_ctx.BadgeText</span>
+            </div>
+            <div class="isa-today__bar" role="progressbar" aria-valuemin="0" aria-valuemax="90"
+                 aria-valuenow="@_ctx.Term.DayOfTerm" aria-label="Day @_ctx.Term.DayOfTerm of 90">
+                <span class="isa-today__barFill" style="width: @(_ctx.PercentThrough)%"></span>
+            </div>
+        </div>
+
+        <div class="isa-today__body">
+
+            @if (_selected is null && _showProgress)
+            {
+                @* ---- View 4: My progress, all 90 days ---- *@
+                <button type="button" class="isa-today__back" @onclick="CloseProgress">&lsaquo; Today's steps</button>
+
+                <h2 class="isa-today__stepHeading">My progress</h2>
+                <p class="isa-today__lede">@DoneCount of @_ctx.AllSteps.Count steps done in your first 90 days.</p>
+
+                <ul class="isa-today__steps">
+                    @foreach (var step in _ctx.AllSteps)
+                    {
+                        var isDone = _done.ContainsKey(step.StepId);
+                        var isToday = step.DayFrom <= _ctx.Term.DayOfTerm && step.DayTo >= _ctx.Term.DayOfTerm;
+                        <li>
+                            <button type="button" class="isa-today__step @(isDone ? "is-done" : "") @(isToday ? "is-today" : "")" @onclick="() => OpenStep(step, true)">
+                                <span class="isa-today__check" aria-hidden="true"></span>
+                                <span class="isa-today__stepText">
+                                    <span class="isa-today__stepTitle">@step.Title</span>
+                                    <span class="isa-today__stepSub">@DaysLabel(step) &middot; @StatusLabel(step)</span>
+                                </span>
+                                <span class="isa-today__arrow" aria-hidden="true"></span>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            }
+            else if (_selected is null)
+            {
+                @* ---- View 1: today's steps ---- *@
+                <h2 class="isa-today__sectionTitle">Today's steps</h2>
+
+                @if (_ctx.TodaySteps.Count == 0)
+                {
+                    <p class="isa-today__quiet">
+                        No new steps today.
+                        @if (_ctx.NextStepDay is not null)
+                        {
+                            <span>Your next step starts on day @_ctx.NextStepDay.</span>
+                        }
+                    </p>
+                }
+                else
+                {
+                    <ul class="isa-today__steps">
+                        @foreach (var step in _ctx.TodaySteps)
+                        {
+                            var isDone = _done.ContainsKey(step.StepId);
+                            <li>
+                                <button type="button" class="isa-today__step @(isDone ? "is-done" : "")" @onclick="() => OpenStep(step)">
+                                    <span class="isa-today__check" aria-hidden="true"></span>
+                                    <span class="isa-today__stepText">
+                                        <span class="isa-today__stepTitle">@step.Title</span>
+                                        <span class="isa-today__stepSub">@(isDone ? DoneLabel(_done[step.StepId]) : step.Details)</span>
+                                    </span>
+                                    <span class="isa-today__arrow" aria-hidden="true"></span>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                <button type="button" class="isa-today__progressLink" @onclick="OpenProgress">
+                    <span>My progress <span class="isa-today__progressCount">&middot; @DoneCount of @_ctx.AllSteps.Count done</span></span>
+                    <span class="isa-today__arrow" aria-hidden="true"></span>
+                </button>
+            }
+            else if (_selected.StepId == JourneyContextService.ContactStepId)
+            {
+                @* ---- View 2: Meet your Chapter Experience contact (approved mockup) ---- *@
+                <button type="button" class="isa-today__back" @onclick="Back">&lsaquo; @BackLabel</button>
+
+                <h2 class="isa-today__stepHeading">@_selected.Title</h2>
+                <p class="isa-today__lede">Your contact is the person to reach when Isa can't help, or when you'd rather talk to someone.</p>
+
+                @if (_contact is null)
+                {
+                    <p class="isa-today__notice">No contact is set up for your chapter yet. (Developers: run python onboarding\build_onboarding_db.py.)</p>
+                }
+                else
+                {
+                    <div class="isa-today__contact">
+                        <span class="isa-today__initials" aria-hidden="true">@_contact.Initials</span>
+                        <span class="isa-today__contactText">
+                            <span class="isa-today__contactName">@_contact.Name</span>
+                            <span class="isa-today__contactTeam">@_contact.Team &middot; @_contact.RegionLabel</span>
+                        </span>
+                    </div>
+
+                    @if (_contactHow is not null)
+                    {
+                        @* Step complete: say what was chosen. *@
+                        <div class="isa-today__doneBox">
+                            <div class="isa-today__doneTitle"><span class="isa-today__check is-on" aria-hidden="true"></span> @StepCompleteLabel(_selected)</div>
+                            <p class="isa-today__doneText">@ContactDoneText</p>
+                            @if (_contactHow == "introduction" && _myIntro is not null)
+                            {
+                                <blockquote class="isa-today__quote">@_myIntro</blockquote>
+                            }
+                            <button type="button" class="isa-today__linkBtn" @onclick="ChangeContactChoice">Change my choice</button>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (_notice is not null)
+                        {
+                            <p class="isa-today__notice" role="status">@_notice</p>
+                        }
+
+                        <div class="isa-today__options">
+
+                            @* Option 1: book a welcome call. *@
+                            <div class="isa-today__option">
+                                <div class="isa-today__optionTitle">Book a welcome call</div>
+                                <div class="isa-today__optionSub">Times shown in @_ctx.Term.TimeZone</div>
+                                <div class="isa-today__slots">
+                                    @foreach (var slot in _slots)
+                                    {
+                                        var key = ContactService.ToKey(slot);
+                                        var takenByOther = _booked.TryGetValue(key, out var owner) && owner != _ctx.PersonId;
+                                        <button type="button" class="isa-today__slot" disabled="@takenByOther" @onclick="() => BookCall(slot)">
+                                            @ContactService.FormatInZone(slot, _ctx.Term.TimeZone)@(takenByOther ? " (taken)" : "")
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            @* Option 2: send an introduction. Spans the full width while writing. *@
+                            <div class="isa-today__option @(_writing ? "is-wide" : "")">
+                                <div class="isa-today__optionTitle">Send an introduction</div>
+                                <div class="isa-today__optionSub">A short hello by email, written your way.</div>
+                                @if (!_writing)
+                                {
+                                    <button type="button" class="isa-today__optionBtn" @onclick="StartWriting">Write message</button>
+                                }
+                                else
+                                {
+                                    <label class="isa-today__label" for="isa-today-intro">To: @_contact.Name</label>
+                                    <textarea id="isa-today-intro" class="isa-today__textarea" rows="7" @bind="_draft" @bind:event="oninput"></textarea>
+                                    <p class="isa-today__hint">Prototype: your message is saved in Isa. Nothing is sent by email.</p>
+                                    <div class="isa-today__btnRow">
+                                        <button type="button" class="isa-today__optionBtn" disabled="@string.IsNullOrWhiteSpace(_draft)" @onclick="SendIntroduction">Send</button>
+                                        <button type="button" class="isa-today__linkBtn" @onclick="CancelWriting">Cancel</button>
+                                    </div>
+                                }
+                            </div>
+
+                            @* Option 3: join a group welcome. *@
+                            <div class="isa-today__option">
+                                <div class="isa-today__optionTitle">Join a group welcome</div>
+                                <div class="isa-today__optionSub">Meet other new presidents in your region.</div>
+                                @if (!_showSession)
+                                {
+                                    <button type="button" class="isa-today__optionBtn" @onclick="ShowSession">See next session</button>
+                                }
+                                else
+                                {
+                                    <div class="isa-today__session">
+                                        <span class="isa-today__sessionWhen">@ContactService.FormatInZone(_sessionUtc, _ctx.Term.TimeZone)</span>
+                                        <span class="isa-today__sessionWhat">New presidents, @_contact.RegionLabel</span>
+                                    </div>
+                                    <button type="button" class="isa-today__optionBtn" @onclick="SaveSeat">Save my seat</button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <p class="isa-today__privacy">
+                        <svg class="isa-today__lock" viewBox="0 0 16 16" aria-hidden="true">
+                            <rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M5.5 7 V5 a2.5 2.5 0 0 1 5 0 V7" fill="none" stroke="currentColor" stroke-width="1.5" />
+                        </svg>
+                        Your contact sees your chapter, role, and term dates. Your questions to Isa stay private.
+                    </p>
+                }
+
+                <StepHistoryList Entries="_history" />
+            }
+            else
+            {
+                @* ---- View 3: any other step ---- *@
+                <button type="button" class="isa-today__back" @onclick="Back">&lsaquo; @BackLabel</button>
+
+                <h2 class="isa-today__stepHeading">@_selected.Title</h2>
+                <p class="isa-today__when">@DaysLabel(_selected)</p>
+                <p class="isa-today__lede">@_selected.Details</p>
+
+                @if (JourneyContext.IsFromIsacaContent(_selected))
+                {
+                    <div class="isa-today__source">
+                        <span class="isa-today__sourceIcon" aria-hidden="true"></span>
+                        <span>@_selected.Source</span>
+                    </div>
+                }
+
+                @if (_selected.StepId == NotebookStepId)
+                {
+                    @* "Read what your predecessor left you": opens the
+                       succession notebook beside this window. *@
+                    <button type="button" class="isa-today__notebookBtn" @onclick="OnOpenNotebook">Open the notebook</button>
+                }
+
+                @if (_done.ContainsKey(_selected.StepId))
+                {
+                    <div class="isa-today__doneBox">
+                        <div class="isa-today__doneTitle"><span class="isa-today__check is-on" aria-hidden="true"></span> @StepCompleteLabel(_selected)</div>
+                        <button type="button" class="isa-today__linkBtn" @onclick="MarkNotDone">Mark as not done</button>
+                    </div>
+                }
+                else
+                {
+                    <button type="button" class="isa-today__primaryBtn" @onclick="MarkDone">Mark as done</button>
+                }
+
+                <StepHistoryList Entries="_history" />
+            }
+        </div>
+    }
+</aside>
+
+@code {
+    /// <summary>Called by the close button. The chat widget closes this window and slides the chat back.</summary>
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    /// <summary>Called by the Enlarge button. The chat widget widens this window to half the screen, or back.</summary>
+    [Parameter] public EventCallback OnToggleEnlarge { get; set; }
+
+    /// <summary>True while this window is enlarged (the button shows "Make smaller").</summary>
+    [Parameter] public bool Enlarged { get; set; }
+
+    /// <summary>Width and position, worked out by the chat widget so the panels sit side by side.</summary>
+    [Parameter] public string Style { get; set; } = "";
+
+    /// <summary>False when the notebook is open to its right, so all four corners round.</summary>
+    [Parameter] public bool Rightmost { get; set; } = true;
+
+    /// <summary>Called by "Open the notebook" on the "Read what your predecessor left you" step.</summary>
+    [Parameter] public EventCallback OnOpenNotebook { get; set; }
+
+    // The journey step that leads to the succession notebook.
+    private const string NotebookStepId = "J-04";
+
+    // Who is signed in, from the sign-in cookie.
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private JourneyContext? _ctx;
+
+    // Steps this leader has completed: step ID mapped to how and when.
+    private IReadOnlyDictionary<string, StepDone> _done = new Dictionary<string, StepDone>();
+
+    // The step open in view 2 or 3; null shows a list (view 1 or 4).
+    private JourneyStep? _selected;
+
+    // True shows My progress (view 4) instead of today's steps (view 1).
+    private bool _showProgress;
+
+    // True when the open step was opened from My progress, so Back returns there.
+    private bool _openedFromProgress;
+
+    // The open step's history, oldest first.
+    private IReadOnlyList<StepHistoryEntry> _history = Array.Empty<StepHistoryEntry>();
+
+    // ---- Contact step state ----
+    private ChapterContact? _contact;
+    private IReadOnlyList<DateTime> _slots = Array.Empty<DateTime>();
+    private IReadOnlyDictionary<string, string> _booked = new Dictionary<string, string>();
+    private DateTime _sessionUtc;
+    private string? _contactHow;     // how the contact step was completed, or null
+    private string? _myCall;         // time key of this leader's booked call
+    private string? _mySeat;         // time key of this leader's group seat
+    private string? _myIntro;        // the introduction this leader wrote
+    private bool _writing;           // the introduction box is open
+    private string _draft = "";
+    private bool _showSession;       // the group session details are showing
+    private string? _notice;         // e.g. "That time was just taken"
+
+    // e.g. "Friday 3 July 2026" (the demo date unless it is switched off).
+    private string DateLabel => _ctx is null ? "" : _ctx.Today.ToString("dddd d MMMM yyyy", CultureInfo.InvariantCulture);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ctx = null;
+        if (AuthState is null) return;
+        var user = (await AuthState).User;
+        _ctx = JourneyContexts.GetFor(user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value);
+        Reload();
+    }
+
+    // Reads everything this window shows from the databases again.
+    private void Reload()
+    {
+        if (_ctx is null) return;
+        _done = Progress.GetCompletedSteps(_ctx.PersonId);
+        _history = _selected is null
+            ? Array.Empty<StepHistoryEntry>()
+            : Progress.GetHistory(_ctx.PersonId, _selected.StepId);
+
+        _contact = Contacts.GetContactForChapter(_ctx.Term.ChapterId);
+        if (_contact is null) return;
+
+        _slots = Contacts.GetCallSlotsUtc(_contact, _ctx.Today);
+        _sessionUtc = Contacts.GetGroupSessionUtc(_contact, _ctx.Today);
+        _booked = Progress.GetBookedCalls(_contact.ContactId);
+        _contactHow = _done.TryGetValue(JourneyContextService.ContactStepId, out var how) ? how.How : null;
+        _myCall = Progress.GetMyCall(_ctx.PersonId);
+        _mySeat = Progress.GetMySeat(_ctx.PersonId);
+        _myIntro = Progress.GetMyIntroduction(_ctx.PersonId);
+    }
+
+    private void OpenStep(JourneyStep step) => OpenStep(step, false);
+
+    private void OpenStep(JourneyStep step, bool fromProgress)
+    {
+        _selected = step;
+        _openedFromProgress = fromProgress;
+        _writing = false;
+        _showSession = false;
+        _notice = null;
+        Reload();
+    }
+
+    // Back from a step: to My progress if it was opened there, otherwise to today's steps.
+    private void Back()
+    {
+        _selected = null;
+        _showProgress = _openedFromProgress;
+        Reload();
+    }
+
+    private string BackLabel => _openedFromProgress ? "My progress" : "All of today's steps";
+
+    private void OpenProgress()
+    {
+        _selected = null;
+        _showProgress = true;
+        Reload();
+    }
+
+    private void CloseProgress()
+    {
+        _showProgress = false;
+        Reload();
+    }
+
+    // ---- Labels for the record ----
+
+    private int DoneCount => _ctx is null ? 0 : _ctx.AllSteps.Count(s => _done.ContainsKey(s.StepId));
+
+    // e.g. "Fri 3 July"
+    public static string FormatDate(DateOnly date) => date.ToString("ddd d MMMM", CultureInfo.InvariantCulture);
+
+    private static string DoneLabel(StepDone done) =>
+        done.DoneOn is { } day ? $"Done on {FormatDate(day)}" : "Done";
+
+    // "Step complete" heading, with the date when there is one.
+    private string StepCompleteLabel(JourneyStep step) =>
+        _done.TryGetValue(step.StepId, out var d) && d.DoneOn is { } day
+            ? $"Step complete on {FormatDate(day)}"
+            : "Step complete";
+
+    // "Day 1" or "Days 2 to 3": when the step is meant for.
+    private static string DaysLabel(JourneyStep step) =>
+        step.DayFrom == step.DayTo ? $"Day {step.DayFrom}" : $"Days {step.DayFrom} to {step.DayTo}";
+
+    // Status in My progress: done (with date), coming up, or not done yet.
+    private string StatusLabel(JourneyStep step)
+    {
+        if (_done.TryGetValue(step.StepId, out var d)) return DoneLabel(d);
+        if (_ctx is not null && step.DayFrom > _ctx.Term.DayOfTerm) return $"Coming up on day {step.DayFrom}";
+        return "Not done yet";
+    }
+
+    // ---- Plain steps ----
+
+    private void MarkDone()
+    {
+        if (_ctx is null || _selected is null) return;
+        Progress.CompleteStep(_ctx.PersonId, _selected.StepId, "done", _ctx.Today);
+        Reload();
+    }
+
+    private void MarkNotDone()
+    {
+        if (_ctx is null || _selected is null) return;
+        Progress.UndoStep(_ctx.PersonId, _selected.StepId, _ctx.Today);
+        Reload();
+    }
+
+    // ---- Contact step ----
+
+    private void BookCall(DateTime slotUtc)
+    {
+        if (_ctx is null || _contact is null) return;
+        if (!Progress.BookCall(_contact.ContactId, ContactService.ToKey(slotUtc), _ctx.PersonId))
+        {
+            _notice = "Sorry, someone else just booked that time. Please choose another.";
+            Reload();
+            return;
+        }
+        Progress.CompleteStep(_ctx.PersonId, JourneyContextService.ContactStepId, "call", _ctx.Today);
+        _notice = null;
+        Reload();
+    }
+
+    private void StartWriting()
+    {
+        if (_ctx is null || _contact is null) return;
+        var t = _ctx.Term;
+        _draft =
+            $"Hello {_contact.FirstName},\n\n" +
+            $"I'm {t.Name}, the new {t.Role.ToLowerInvariant()} of the {t.ChapterName}. " +
+            $"My term started on {t.TermStart.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}. " +
+            "I'm looking forward to working with you.\n\n" +
+            $"Best regards,\n{t.Name}";
+        _writing = true;
+    }
+
+    private void CancelWriting()
+    {
+        _writing = false;
+        _draft = "";
+    }
+
+    private void SendIntroduction()
+    {
+        if (_ctx is null || _contact is null || string.IsNullOrWhiteSpace(_draft)) return;
+        Progress.SaveIntroduction(_ctx.PersonId, _contact.ContactId, _draft.Trim());
+        Progress.CompleteStep(_ctx.PersonId, JourneyContextService.ContactStepId, "introduction", _ctx.Today);
+        _writing = false;
+        _draft = "";
+        Reload();
+    }
+
+    private void ShowSession() => _showSession = true;
+
+    private void SaveSeat()
+    {
+        if (_ctx is null || _contact is null) return;
+        Progress.SaveSeat(_ctx.PersonId, ContactService.ToKey(_sessionUtc));
+        Progress.CompleteStep(_ctx.PersonId, JourneyContextService.ContactStepId, "group", _ctx.Today);
+        _showSession = false;
+        Reload();
+    }
+
+    private void ChangeContactChoice()
+    {
+        if (_ctx is null) return;
+        Progress.ClearContactChoice(_ctx.PersonId, JourneyContextService.ContactStepId, _ctx.Today);
+        _notice = null;
+        Reload();
+    }
+
+    // What the "Step complete" box says on the contact step.
+    private string ContactDoneText
+    {
+        get
+        {
+            if (_ctx is null || _contact is null) return "";
+            var tz = _ctx.Term.TimeZone;
+            return _contactHow switch
+            {
+                "call" when _myCall is not null =>
+                    $"Welcome call with {_contact.Name} booked for {ContactService.FormatInZone(ContactService.FromKey(_myCall), tz)} ({tz}).",
+                "group" when _mySeat is not null =>
+                    $"Seat saved at the group welcome for new presidents on {ContactService.FormatInZone(ContactService.FromKey(_mySeat), tz)} ({tz}).",
+                "introduction" =>
+                    $"Your introduction to {_contact.Name} is saved. In this prototype, nothing is sent by email.",
+                _ => "You have made contact."
+            };
+        }
+    }
+}

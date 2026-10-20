@@ -22,12 +22,26 @@ public class Orchestrator
         _log = log;
     }
 
-    public async Task<AskResponse> RunAsync(QueryContext ctx)
+    /// <param name="onStep">
+    /// Optional. Called after each stage finishes, with the step just added to
+    /// ctx.WorkSteps, so the chat can show "show the work" live while the run
+    /// is still going. Leaving it out changes nothing about the run.
+    /// </param>
+    public async Task<AskResponse> RunAsync(QueryContext ctx, Func<WorkStep, Task>? onStep = null)
     {
+        // Records one stage for "show the work" and tells the chat, if it asked.
+        async Task AddStepAsync(WorkStep step)
+        {
+            ctx.WorkSteps.Add(step);
+            if (onStep is not null) await onStep(step);
+        }
+
         // front_end event as soon as the question arrives
         // The question text is never logged. user_id does not exist yet (access_control sets it).
+        var frontEndData = $"question_chars={ctx.Question.Length}";
         await _eventLog.WriteAsync(ctx.TraceId, "front_end",
-            $"result=pass; reason=none; question_chars={ctx.Question.Length}");
+            $"result=pass; reason=none; {frontEndData}");
+        await AddStepAsync(new WorkStep("front_end", "pass", false, null, frontEndData, 0));
 
         string finalStatus = "answered";
         string? message = null;
@@ -42,10 +56,12 @@ public class Orchestrator
             if (finalStatus == "escalating" && stage.Name != "ticketing")
             {
                 await _eventLog.WriteAsync(ctx.TraceId, stage.Name, "result=pass; reason=none; note=skipped, escalated");
+                await AddStepAsync(new WorkStep(stage.Name, "pass", true, null, "escalated", 0));
                 continue;
             }
 
             StageResult result;
+            var stageClock = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 result = await stage.RunAsync(ctx);
@@ -55,6 +71,7 @@ public class Orchestrator
                 _log.LogError(ex, "Stage {Stage} threw", stage.Name);
                 result = new StageResult(StageOutcome.Stop, "Something went wrong. Please try again.", $"error={ex.GetType().Name}");
             }
+            stageClock.Stop();   // time the stage only, not the event-log write below
 
             // Contract format: result=pass; reason=none; <stage data>
             // A stage that does not apply returns Pass with the note "skipped" (contract section 3)
@@ -63,6 +80,8 @@ public class Orchestrator
                 : $"result={result.Outcome.ToString().ToLowerInvariant()}; reason={result.Reason ?? "none"}; {result.DataText}";
 
             await _eventLog.WriteAsync(ctx.TraceId, stage.Name, dataText.Trim());
+            await AddStepAsync(new WorkStep(stage.Name, result.Outcome.ToString().ToLowerInvariant(),
+                result.Skipped, result.Reason, result.DataText, stageClock.Elapsed.TotalMilliseconds));
 
             if (result.Outcome == StageOutcome.Stop)
             {
@@ -100,6 +119,45 @@ public class Orchestrator
             TicketReference: ctx.TicketReference,
             TraceId: ctx.TraceId
         );
+    }
+
+    // The stages that check text a leader types outside the chat, in order.
+    private static readonly string[] TextCheckStages = { "access_control", "input_compliance" };
+
+    /// <summary>
+    /// Checks a piece of text a leader typed outside the chat (for example a
+    /// succession notebook note) with ONLY the sign-in check (access_control)
+    /// and the Input Compliance gate, so typed text can't become a side door
+    /// around Isa's rules. Nothing is searched or answered. Writes one event
+    /// per stage like RunAsync, with front_end recording what was checked
+    /// (purpose=...) and the text length, never the text. Added 2026-10-20
+    /// for the succession notebook (Matt).
+    /// </summary>
+    /// <returns>The first stage result that isn't Pass, or Pass if both passed.</returns>
+    public async Task<StageResult> CheckTextAsync(QueryContext ctx, string purpose)
+    {
+        await _eventLog.WriteAsync(ctx.TraceId, "front_end",
+            $"result=pass; reason=none; purpose={purpose}; text_chars={ctx.Question.Length}");
+
+        foreach (var stage in _stages.Where(s => TextCheckStages.Contains(s.Name)))
+        {
+            StageResult result;
+            try
+            {
+                result = await stage.RunAsync(ctx);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Stage {Stage} threw during a text check", stage.Name);
+                result = new StageResult(StageOutcome.Stop, "Something went wrong. Please try again.", $"error={ex.GetType().Name}");
+            }
+
+            await _eventLog.WriteAsync(ctx.TraceId, stage.Name,
+                $"result={result.Outcome.ToString().ToLowerInvariant()}; reason={result.Reason ?? "none"}; purpose={purpose}; {result.DataText}".Trim());
+
+            if (result.Outcome != StageOutcome.Pass) return result;
+        }
+        return new StageResult(StageOutcome.Pass);
     }
 }
 

@@ -1,0 +1,111 @@
+/* ============================================================
+   JourneyCard.razor.css
+
+   The slim "Your first 90 days" strip at the top of the chat widget.
+   Scoped to JourneyCard.razor by Blazor's CSS isolation.
+   Every color is from BRAND_GUIDELINES.md: ISACA Dark Blue
+   (#1d2d5c), Medium Blue (#07649d), Light Blue (#e7f0f5), and
+   ISACA Greys 2, 3 and 7.
+   ============================================================ */
+
+.isa-journey {
+    flex: 0 0 auto;              /* keeps its own height inside the panel's column */
+    background: #ffffff;
+    border-bottom: 1px solid #cbd2d9;   /* ISACA Grey 3 */
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* ---- Title, week and day, Today button, role badge ---------------- */
+
+.isa-journey__head {
+    display: flex;
+    flex-wrap: wrap;             /* when the chat is narrow (a quarter of the screen), the buttons move to a second row */
+    align-items: center;
+    gap: 0.5rem 0.6rem;
+    padding: 0.65rem 1.25rem 0.5rem;
+}
+
+.isa-journey__titles {
+    flex: 1 1 10rem;             /* never squeezed narrower than its title */
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.isa-journey__title {
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1rem;
+    color: #1d2d5c;
+}
+
+.isa-journey__when {
+    font-size: 0.75rem;
+    color: #52606d;              /* ISACA Grey 7 */
+}
+
+/* The Today button: outlined in ISACA Medium Blue; filled while the
+   Today window is open, so it reads as "on". */
+.isa-journey__today {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid #07649d;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #07649d;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.isa-journey__today:hover {
+    background: #e7f0f5;
+}
+
+.isa-journey__today:focus-visible {
+    outline: 2px solid #1d2d5c;
+    outline-offset: 2px;
+}
+
+.isa-journey__today.is-active {
+    background: #07649d;
+    color: #ffffff;
+}
+
+.isa-journey__todayIcon {
+    width: 13px;
+    height: 13px;
+}
+
+.isa-journey__badge {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ---- Progress bar --------------------------------------------------- */
+
+.isa-journey__bar {
+    height: 4px;
+    margin: 0 1.25rem 0.65rem;
+    border-radius: 999px;
+    background: #e5e7eb;         /* ISACA Grey 2 */
+    overflow: hidden;
+}
+
+.isa-journey__barFill {
+    display: block;
+    height: 100%;
+    background: #07649d;
+    border-radius: 999px;
+}

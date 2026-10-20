@@ -1,0 +1,713 @@
+/* ============================================================
+   TodayPanel.razor.css
+
+   The Today window, beside the chat. Same size as the chat panel
+   (one third of the screen wide, full height), pinned to the right
+   edge; the chat slides left to make room (ChatWidget.razor.css,
+   .is-shifted). Scoped to TodayPanel.razor by Blazor's CSS isolation.
+
+   Every color is from BRAND_GUIDELINES.md: ISACA Dark Blue (#1d2d5c),
+   Medium Blue (#07649d), Light Blue (#e7f0f5), Green (#6cb33f, for
+   "done" only), and ISACA Greys 1, 2, 3, 7 and 10.
+   ============================================================ */
+
+.isa-today {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 33.333vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #1f2933;              /* ISACA Grey 10 */
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+    border-radius: 12px 0 0 12px;
+    overflow: hidden;
+    /* Opening: a short, soft glide (24px) with a fade. It starts
+       gently and settles gently (no quick launch at the start), over
+       0.5s, with the same timing as the chat's slide to the left
+       (ChatWidget.razor.css, .is-shifted) so the two move together.
+       Matthew asked for smoother and slower, then a bit slower and
+       softer again, 19 October 2026 (0.25s, then 0.35s, now 0.5s). */
+    animation: isa-today-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    /* Width and position come from the chat widget (the Style
+       parameter), so it can make room for the notebook or be enlarged;
+       both glide with the same timing as the chat's slide. */
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                right 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The notebook is open to its right: no edge to sit flush against. */
+.isa-today.is-inner { border-radius: 12px; }
+
+@keyframes isa-today-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-today { animation: none; transition: none; }
+}
+
+/* Narrow screens: the chat can't move aside, so Today covers it. */
+@media (max-width: 720px) {
+    .isa-today {
+        width: 100vw !important;
+        right: 0 !important;
+        border-radius: 0;
+    }
+    .isa-today__enlarge { display: none; }
+}
+
+/* ---- Header band ------------------------------------------------- */
+
+.isa-today__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    background: #1d2d5c;
+    color: #ffffff;
+}
+
+.isa-today__headText {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.isa-today__name {
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1.2rem;
+}
+
+.isa-today__date {
+    font-size: 0.78rem;
+    color: #e7f0f5;
+}
+
+.isa-today__close {
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #e7f0f5;
+    cursor: pointer;
+    padding: 0 0.1rem;
+}
+
+.isa-today__close:hover,
+.isa-today__close:focus-visible {
+    color: #ffffff;
+}
+
+.isa-today__headBtns {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.isa-today__iconBtn {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #e7f0f5;
+    cursor: pointer;
+}
+
+.isa-today__iconBtn:hover,
+.isa-today__iconBtn:focus-visible { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+/* "Open the notebook" on the "Read what your predecessor left you" step. */
+.isa-today__notebookBtn {
+    align-self: flex-start;
+    margin-right: 0.5rem;        /* space before "Mark as done" beside it */
+    min-height: 40px;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid #1d2d5c;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-today__notebookBtn:hover { background: #e7f0f5; }
+
+.isa-today__empty {
+    margin: 0;
+    padding: 1.25rem;
+    font-size: 0.85rem;
+    color: #52606d;
+}
+
+/* ---- Journey summary (title, week and day, badge, bar) ----------- */
+
+.isa-today__summary {
+    flex: 0 0 auto;
+    padding: 0.75rem 1.25rem 0.7rem;
+    border-bottom: 1px solid #cbd2d9;
+}
+
+.isa-today__summaryRow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.55rem;
+}
+
+.isa-today__summaryTitles {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.isa-today__summaryTitle {
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1rem;
+    color: #1d2d5c;
+}
+
+.isa-today__summaryWhen {
+    font-size: 0.75rem;
+    color: #52606d;
+}
+
+.isa-today__badge {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.isa-today__bar {
+    height: 4px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    overflow: hidden;
+}
+
+.isa-today__barFill {
+    display: block;
+    height: 100%;
+    background: #07649d;
+    border-radius: 999px;
+}
+
+/* ---- Scrolling body ----------------------------------------------- */
+
+.isa-today__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 1.25rem 1.5rem;
+    background: #f6f7f8;         /* ISACA Grey 1, like the chat */
+}
+
+.isa-today__sectionTitle {
+    margin: 0 0 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #52606d;
+}
+
+.isa-today__quiet {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #52606d;
+}
+
+/* ---- View 1: the step list ----------------------------------------- */
+
+.isa-today__steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.isa-today__step {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(29, 45, 92, 0.06);
+}
+
+.isa-today__step:hover,
+.isa-today__step:focus-visible {
+    border-color: #07649d;
+}
+
+.isa-today__stepText {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.isa-today__stepTitle {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #1d2d5c;
+}
+
+.isa-today__stepSub {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: #52606d;
+}
+
+/* Round check: empty ring when not done, ISACA Green with a tick when done. */
+.isa-today__check {
+    flex: 0 0 auto;
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cbd2d9;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.isa-today__step.is-done .isa-today__check,
+.isa-today__check.is-on {
+    border-color: #6cb33f;
+    background: #6cb33f;
+}
+
+.isa-today__step.is-done .isa-today__check::after,
+.isa-today__check.is-on::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    transform: rotate(45deg);
+}
+
+/* In My progress: today's steps get an ISACA Medium Blue left edge,
+   so the leader can see where they are in the 90 days. */
+.isa-today__step.is-today {
+    border-left: 3px solid #07649d;
+}
+
+/* "My progress" link under today's steps. */
+.isa-today__progressLink {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-top: 1rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px dashed #cbd2d9;
+    border-radius: 10px;
+    background: transparent;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #07649d;
+    text-align: left;
+    cursor: pointer;
+}
+
+.isa-today__progressLink:hover,
+.isa-today__progressLink:focus-visible {
+    border-color: #07649d;
+    background: #ffffff;
+}
+
+.isa-today__progressCount {
+    font-weight: 400;
+    color: #52606d;
+}
+
+/* "Days 8 to 14" under a step's title. */
+.isa-today__when {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #52606d;
+}
+
+.isa-today__arrow {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid #52606d;
+    border-top: 2px solid #52606d;
+    transform: rotate(45deg);
+}
+
+/* ---- Views 2 and 3: one step ---------------------------------------- */
+
+.isa-today__back {
+    border: none;
+    background: none;
+    padding: 0;
+    margin-bottom: 0.75rem;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #07649d;
+    cursor: pointer;
+}
+
+.isa-today__back:hover {
+    text-decoration: underline;
+}
+
+.isa-today__stepHeading {
+    margin: 0 0 0.3rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: #1d2d5c;
+}
+
+.isa-today__lede {
+    margin: 0 0 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.isa-today__notice {
+    margin: 0 0 0.8rem;
+    padding: 0.55rem 0.75rem;
+    border-left: 4px solid #07649d;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 0.8rem;
+    color: #1d2d5c;
+}
+
+/* The ISACA document a step comes from, like the source chips in the chat. */
+.isa-today__source {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.isa-today__sourceIcon {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 13px;
+    margin-top: 0.1rem;
+    border: 1.5px solid #07649d;
+    border-radius: 2px;
+}
+
+/* ---- Contact card ----------------------------------------------------- */
+
+.isa-today__contact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.isa-today__initials {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1d2d5c;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+}
+
+.isa-today__contactText {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+    min-width: 0;
+}
+
+.isa-today__contactName {
+    font-weight: 600;
+    color: #1d2d5c;
+}
+
+.isa-today__contactTeam {
+    font-size: 0.78rem;
+    color: #52606d;
+}
+
+/* ---- The three option cards ------------------------------------------ */
+
+/* Side by side when there is room; they wrap onto more rows when the
+   window is narrow. */
+.isa-today__options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.isa-today__option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+/* The introduction card takes the full row while the message is being written. */
+.isa-today__option.is-wide {
+    grid-column: 1 / -1;
+}
+
+.isa-today__optionTitle {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1d2d5c;
+}
+
+.isa-today__optionSub {
+    font-size: 0.74rem;
+    line-height: 1.4;
+    color: #52606d;
+}
+
+.isa-today__slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.15rem;
+}
+
+.isa-today__slot {
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #07649d;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #07649d;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-today__slot:hover:not(:disabled) {
+    background: #e7f0f5;
+}
+
+.isa-today__slot:disabled {
+    border-color: #cbd2d9;
+    color: #52606d;
+    cursor: not-allowed;
+}
+
+.isa-today__optionBtn,
+.isa-today__primaryBtn {
+    align-self: flex-start;
+    margin-top: auto;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-today__primaryBtn {
+    margin-top: 0;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+}
+
+.isa-today__optionBtn:hover:not(:disabled),
+.isa-today__primaryBtn:hover {
+    background: #07649d;
+}
+
+.isa-today__optionBtn:disabled {
+    background: #cbd2d9;
+    cursor: not-allowed;
+}
+
+.isa-today__linkBtn {
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #07649d;
+    cursor: pointer;
+}
+
+.isa-today__linkBtn:hover {
+    text-decoration: underline;
+}
+
+.isa-today__btnRow {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.isa-today__btnRow .isa-today__optionBtn {
+    margin-top: 0;
+}
+
+.isa-today__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1d2d5c;
+}
+
+.isa-today__textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #cbd2d9;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    resize: vertical;
+    color: #1f2933;
+}
+
+.isa-today__textarea:focus {
+    outline: none;
+    border-color: #1d2d5c;
+}
+
+.isa-today__hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: #52606d;
+}
+
+.isa-today__session {
+    display: flex;
+    flex-direction: column;
+    padding: 0.4rem 0.5rem;
+    border-radius: 6px;
+    background: #e7f0f5;
+    line-height: 1.35;
+}
+
+.isa-today__sessionWhen {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1d2d5c;
+}
+
+.isa-today__sessionWhat {
+    font-size: 0.72rem;
+    color: #1d2d5c;
+}
+
+/* ---- "Step complete" box ---------------------------------------------- */
+
+.isa-today__doneBox {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #6cb33f;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.isa-today__doneTitle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #1d2d5c;
+}
+
+.isa-today__doneText {
+    margin: 0;
+    font-size: 0.83rem;
+    line-height: 1.5;
+}
+
+.isa-today__quote {
+    margin: 0;
+    padding: 0.5rem 0.7rem;
+    border-left: 3px solid #cbd2d9;
+    background: #f6f7f8;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    white-space: pre-line;
+}
+
+/* ---- Privacy line ------------------------------------------------------- */
+
+.isa-today__privacy {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: #52606d;
+}
+
+.isa-today__lock {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin-top: 0.05rem;
+}

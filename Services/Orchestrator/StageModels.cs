@@ -43,7 +43,32 @@ public class QueryContext
     /// <summary>Set by the orchestrator when a stage returns Escalate: which stage, and why.</summary>
     public string? EscalatedBy { get; set; }
     public string? EscalationReason { get; set; }
+
+    /// <summary>
+    /// "Show the work": one entry per stage, added by the orchestrator in the
+    /// order the stages ran. The chat turns these into plain sentences
+    /// (Services/ShowTheWork/WorkStepText.cs). Filled from what each stage
+    /// returned, the same facts the event log gets; never the question text
+    /// or the model's own reasoning.
+    /// </summary>
+    public List<WorkStep> WorkSteps { get; } = new();
 }
+
+/// <summary>One stage of one run, for "show the work".</summary>
+/// <param name="Stage">Stage name from the stage contract, e.g. input_compliance.</param>
+/// <param name="Outcome">pass, stop or escalate.</param>
+/// <param name="Skipped">True when the stage did not apply (or was passed over after an escalation).</param>
+/// <param name="Reason">The stage's reason for a stop or escalation, if any.</param>
+/// <param name="DataText">The stage's short data text, exactly as written to the event log.</param>
+/// <param name="ElapsedMs">How long the stage took.</param>
+public record WorkStep(
+    string Stage,
+    string Outcome,
+    bool Skipped,
+    string? Reason,
+    string DataText,
+    double ElapsedMs
+);
 
 public record Passage(
     string Document,

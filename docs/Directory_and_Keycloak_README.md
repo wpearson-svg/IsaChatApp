@@ -1,6 +1,6 @@
 # Directory data and Keycloak (no manual T4 setup)
 
-Master source: the CSV files in `directory/` (from Matt's synthetic database: 10 fictional people, 11 role assignments).
+Master source: the CSV files in `directory/` (from Matt's synthetic database: 12 fictional people, 14 role assignments, 10 chapters). This is the one master list; `data/synthetic/` keeps a matching copy.
 Everything else is generated from them, so copies never drift.
 
 ## One-time / after any change to the CSVs
@@ -12,7 +12,7 @@ Everything else is generated from them, so copies never drift.
     docker compose down -v      (only if an "isa" realm already exists from clicking through the console)
     docker compose up -d
 The realm `isa`, client `isa-chat` (secret `dev-only-placeholder-secret`), the four client roles, the token claims and
-the 5 accounts are created on first start. Check: http://localhost:8080/realms/isa/.well-known/openid-configuration
+the 16 accounts are created on first start. Check: http://localhost:8080/realms/isa/.well-known/openid-configuration
 
 ## Accounts (edit directory/keycloak_accounts.csv to change)
 | Username | Roles | Notes |
@@ -22,6 +22,7 @@ the 5 accounts are created on first start. Check: http://localhost:8080/realms/i
 | staff.content | chat_user, dashboard_content_health | no directory row |
 | staff.audit | chat_user, auditor | no directory row |
 | norole.test | none | must be refused (login-failure test) |
+| k.watanabe, sutrisno, m.fernandez, g.jonsdottir, a.mueller, f.alharbi, p.raghunathan, s.favre, m.johnson, y.sato, a.souza | chat_user | The 11 chapter leaders (P-0001 to P-0009, P-0012, P-0013); token carries each person's current chapter, role and term |
 Passwords: dev only, in keycloak\dev-passwords.local.csv (git-ignored). To use Matt's sheet instead, put `username,password`
 rows in that file BEFORE running build_keycloak_realm.py. Never commit it.
 

@@ -1,0 +1,53 @@
+@* ============================================================
+   StepHistoryList.razor
+
+   Onboarding feature (see ONBOARDING-FEATURE.md): the "History" list
+   under a step in the Today window (TodayPanel.razor).
+
+   Shows every change to the step, oldest first, with its date, e.g.
+     Booked a welcome call  ·  Fri 3 July
+     Changed my choice      ·  Fri 3 July
+     Sent an introduction   ·  Fri 3 July
+   Entries are only ever added (ProgressService.step_history), so this
+   is the leader's record of what they did and when. Dates are the
+   leader's "today": the demo date while it is switched on.
+
+   Shows nothing when the step has no history yet.
+   ============================================================ *@
+
+@using System.Globalization
+@using IsaChatApp.Services.Onboarding
+
+@if (Entries.Count > 0)
+{
+    <section class="isa-history" aria-label="History of this step">
+        <h3 class="isa-history__title">History</h3>
+        <ol class="isa-history__list">
+            @foreach (var entry in Entries)
+            {
+                <li class="isa-history__item @(entry.Action == "done" ? "is-done" : "is-undone")">
+                    <span class="isa-history__dot" aria-hidden="true"></span>
+                    <span class="isa-history__what">@Describe(entry)</span>
+                    <span class="isa-history__date">@entry.OnDate.ToString("ddd d MMMM", CultureInfo.InvariantCulture)</span>
+                </li>
+            }
+        </ol>
+    </section>
+}
+
+@code {
+    /// <summary>The step's history, oldest first (ProgressService.GetHistory).</summary>
+    [Parameter] public IReadOnlyList<StepHistoryEntry> Entries { get; set; } = Array.Empty<StepHistoryEntry>();
+
+    // Plain words for each entry. "how" says which way a step was done.
+    private static string Describe(StepHistoryEntry e) => (e.Action, e.How) switch
+    {
+        ("done", "call")         => "Booked a welcome call",
+        ("done", "introduction") => "Sent an introduction",
+        ("done", "group")        => "Saved a seat at a group welcome",
+        ("done", _)              => "Marked done",
+        ("undone", "done")       => "Marked not done",
+        ("undone", _)            => "Changed my choice",
+        _                        => e.Action
+    };
+}

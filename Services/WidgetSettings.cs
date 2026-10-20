@@ -34,6 +34,16 @@ public class WidgetSettings
     public bool ShowResponseTime { get; set; } = true;
 
     /// <summary>
+    /// "Show the work" (Willis's request): when true, every reply from the
+    /// pipeline has a quiet "Worked for 1.2s" line above it that opens into
+    /// the steps Isa took (see Components/Shared/ShowTheWork.razor). While a
+    /// question is running, the same line reads "Working..." with the step
+    /// just finished. Defaults on. Unlike the response-time label, this is
+    /// for chapter leaders too, not only developers.
+    /// </summary>
+    public bool ShowTheWork { get; set; } = true;
+
+    /// <summary>
     /// ISACA's full brand palette (Primary + Secondary + Tertiary --
     /// 10 named colors), straight off brand.isaca.org/visual-style.
     /// These are the "100%" base colors; TintPercents below are the
@@ -192,4 +202,19 @@ public class WidgetSettings
     /// /isa-config: User: no, Developer: no, Executive: yes, Manager: yes.
     /// </summary>
     public bool CanAccessContentHealthDashboard => CurrentRole is UserRole.Executive or UserRole.Manager;
+
+    // ---- Onboarding feature: demo date (see ONBOARDING-FEATURE.md) ----
+    // The 90-day journey counts each leader's day of term from "today".
+    // For the demo, "today" is a fixed date, so the screens look the same
+    // whatever day the presentation falls on. Like every setting here, it
+    // resets to these defaults when the app restarts.
+
+    /// <summary>The date the demo pretends it is. Decided 16 October 2026: 3 July 2026.</summary>
+    public DateOnly DemoDate { get; set; } = new DateOnly(2026, 7, 3);
+
+    /// <summary>When true (the default), days of term are counted from DemoDate instead of the real date.</summary>
+    public bool UseDemoDate { get; set; } = true;
+
+    /// <summary>The date the onboarding feature treats as today: DemoDate, or the real date when the demo date is off.</summary>
+    public DateOnly Today => UseDemoDate ? DemoDate : DateOnly.FromDateTime(DateTime.Today);
 }

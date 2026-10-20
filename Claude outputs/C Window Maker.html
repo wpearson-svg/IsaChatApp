@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C Window Maker</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #1c1f24; --muted: #5f6672; --line: #d9dce2;
+    --accent: #1f6feb; --canvas: #ffffff; --grid: rgba(0,0,0,.07); --sel: #111111;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a; --panel: #1d2026; --ink: #eceef2; --muted: #9aa2af; --line: #343944;
+      --accent: #5aa2ff; --canvas: #23272e; --grid: rgba(255,255,255,.07); --sel: #ffffff;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 16px 6px; max-width: 1180px; margin: 0 auto; }
+  h1 { margin: 0; font-size: 22px; }
+  header p { margin: 4px 0 0; color: var(--muted); }
+  main { max-width: 1180px; margin: 0 auto; padding: 12px 16px 40px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 900px) { main { grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); align-items: start; } }
+  .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  #stage { width: 100%; height: auto; aspect-ratio: 1 / 1; display: block; background: var(--canvas); border-radius: 8px; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .hint { color: var(--muted); font-size: 13px; margin: 8px 4px 2px; }
+  .panel { display: grid; gap: 12px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  h2 { margin: 0 0 8px; font-size: 14px; letter-spacing: .02em; text-transform: uppercase; color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+  .row label { min-width: 92px; color: var(--muted); font-size: 13px; }
+  .row input[type=range] { flex: 1 1 140px; min-width: 100px; }
+  input[type=number] { width: 84px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--canvas); color: var(--ink); }
+  input[type=color] { width: 40px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; }
+  select, textarea { border: 1px solid var(--line); border-radius: 6px; background: var(--canvas); color: var(--ink); padding: 6px; font: inherit; }
+  textarea { width: 100%; min-height: 70px; font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace; }
+  button { font: inherit; padding: 7px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--canvas); color: var(--ink); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  button.pick { display: inline-flex; gap: 8px; align-items: center; }
+  button.pick[aria-pressed=true] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+  .sw { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.25); }
+  details summary { cursor: pointer; color: var(--accent); margin: 6px 0; }
+  #status { min-height: 1.3em; color: var(--muted); font-size: 13px; margin-top: 6px; }
+  #status.err { color: #d33; }
+  label.chk { display: inline-flex; gap: 6px; align-items: center; color: var(--ink); min-width: 0; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>C Window Maker</h1>
+  <p>Overlap two Cs. The red and the blue overlap in green, and the green shape is the window. Move, rotate and flip them, then save an SVG.</p>
+</header>
+<main>
+  <div class="stage">
+    <svg id="stage" viewBox="0 0 600 600" role="img" aria-label="Two overlapping Cs with the overlap shown in green"></svg>
+    <p class="hint">Drag a C to move it. Drag the round handle to rotate it (it snaps to 15 degrees; hold Shift to turn snapping off or on). Arrow keys nudge, [ and ] rotate, H and V flip.</p>
+  </div>
+
+  <div class="panel">
+    <section>
+      <h2>Pick a C</h2>
+      <div class="row">
+        <button class="pick" id="pickA" aria-pressed="true"><span class="sw" id="swA"></span>Red C</button>
+        <button class="pick" id="pickB" aria-pressed="false"><span class="sw" id="swB"></span>Blue C</button>
+      </div>
+      <div class="row"><label for="xIn">Position X</label><input type="number" id="xIn" step="1"><label for="yIn" style="min-width:auto">Y</label><input type="number" id="yIn" step="1"></div>
+      <div class="row"><label for="rotRange">Rotation</label><input type="range" id="rotRange" min="-180" max="180" step="1"><input type="number" id="rotIn" step="1" min="-180" max="180"></div>
+      <div class="row"><label for="sizeRange">Size %</label><input type="range" id="sizeRange" min="30" max="200" step="1"><input type="number" id="sizeIn" step="1" min="30" max="200"></div>
+      <div class="row">
+        <button id="rotL">Rotate -15</button><button id="rotR">Rotate +15</button>
+        <button id="flipH">Flip left-right</button><button id="flipV">Flip top-bottom</button>
+        <button id="resetC">Reset this C</button>
+      </div>
+      <div class="row"><label class="chk"><input type="checkbox" id="snap" checked> Snap rotation to 15 degrees</label><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
+    </section>
+
+    <section>
+      <h2>Colors</h2>
+      <div class="row"><label for="cA">First C</label><input type="color" id="cA"><label for="cB" style="min-width:auto">Second C</label><input type="color" id="cB"><label for="cW" style="min-width:auto">Window</label><input type="color" id="cW"></div>
+    </section>
+
+    <section>
+      <h2>Shape of the C</h2>
+      <p class="hint" style="margin-top:0">The built-in C is the ISACA-approved C from the brand guide's Visual Style page, with its straight slot and rounded corners. These two sliders start at its real values.</p>
+      <div class="row"><label for="gapRange">Opening</label><input type="range" id="gapRange" min="10" max="120" step="0.01"><input type="number" id="gapIn" min="10" max="120" step="0.01"></div>
+      <div class="row"><label for="thickRange">Thickness</label><input type="range" id="thickRange" min="10" max="60" step="0.01"><input type="number" id="thickIn" min="10" max="60" step="0.01"></div>
+      <details>
+        <summary>Use my own C shape</summary>
+        <p class="hint" style="margin-top:0">Paste the path data (the d value) of a single closed, filled shape, or load an SVG file with one path. Transforms inside the file are not applied. The shape is centered and sized to match the built-in C.</p>
+        <textarea id="customD" spellcheck="false" placeholder="M0 0 L100 0 ..."></textarea>
+        <div class="row"><button id="applyCustom">Use this shape</button><button id="builtin">Back to the built-in C</button><input type="file" id="shapeFile" accept=".svg,image/svg+xml"></div>
+      </details>
+    </section>
+
+    <section>
+      <h2>Save</h2>
+      <div class="row">
+        <label for="what">Save</label>
+        <select id="what"><option value="full">Both Cs and the window</option><option value="window">The window only (green)</option></select>
+      </div>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="crop" checked> Crop to the artwork</label>
+        <label for="pad" style="min-width:auto">Margin</label><input type="number" id="pad" value="20" min="0" step="1">
+      </div>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="transparent" checked> Transparent background</label>
+        <input type="color" id="bgc" value="#ffffff" aria-label="Background color">
+      </div>
+      <div class="row"><label for="outW">Width (px)</label><input type="number" id="outW" value="1000" min="50" step="10"></div>
+      <div class="row">
+        <button class="primary" id="download">Download SVG</button>
+        <button id="copy">Copy SVG code</button>
+        <button id="open">Open a saved SVG to keep editing</button>
+        <input type="file" id="openFile" accept=".svg,image/svg+xml" hidden>
+      </div>
+      <div id="status" role="status" aria-live="polite"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var VB = 600;
+  var BASE_R = 140;
+  var $ = function (id) { return document.getElementById(id); };
+  var svg = $('stage');
+  var f = function (n) { return +Number(n).toFixed(2); };
+
+  var DEF = {
+    a: { x: 240, y: 300, rot: 0, s: 1, fx: 1, fy: 1 },
+    b: { x: 360, y: 300, rot: 0, s: 1, fx: -1, fy: 1 }
+  };
+  var state = {
+    shape: { kind: 'builtin', gap: 50.24, thick: 43.84, custom: '' },
+    colors: { a: '#d6362f', b: '#2457d6', w: '#1fa35a' },
+    cs: { a: Object.assign({}, DEF.a), b: Object.assign({}, DEF.b) }
+  };
+  var ui = { sel: 'a' };
+  var shape = null;
+  var drag = null;
+
+  /* ---------- status ---------- */
+  function say(msg, isErr) {
+    var el = $('status');
+    el.textContent = msg || '';
+    el.className = isErr ? 'err' : '';
+  }
+
+  /* ---------- shape ---------- */
+  /* The ISACA-approved C (brand.isaca.org/visual-style), measured from ISACA's own artwork:
+     outer radius R = 100.89 (the same size the Isa throbber uses), inner radius 0.5655 R,
+     a straight slot on the right 0.498 R tall, and all four slot corners rounded at 0.033 R.
+     Centered on the ring. */
+  var RING_OUTER = 100.89;
+  var CORNER = 0.033 * RING_OUTER;
+  function builtinD(thick, gapH) {
+    var R = RING_OUTER, r = R - thick;
+    var h = Math.min(gapH / 2, Math.sqrt(Math.max(0, r * r - 100)));
+    var p = Math.min(CORNER, thick / 4, h);
+    if (!((R - p) > (h + p)) || !((r + p) > (h + p))) p = 0;
+    var cox = Math.sqrt((R - p) * (R - p) - (h + p) * (h + p)), coy = h + p;
+    var cix = Math.sqrt((r + p) * (r + p) - (h + p) * (h + p)), ciy = h + p;
+    var oLx = cox, oCx = cox * R / (R - p), oCy = coy * R / (R - p);
+    var iLx = cix, iCx = cix * r / (r + p), iCy = ciy * r / (r + p);
+    var arc = function (rad, large, sweep, x, y) { return 'A' + f(rad) + ' ' + f(rad) + ' 0 ' + large + ' ' + sweep + ' ' + f(x) + ' ' + f(y); };
+    var d = 'M' + f(iLx) + ' ' + f(-h) + 'L' + f(oLx) + ' ' + f(-h);
+    if (p > 0) d += arc(p, 0, 0, oCx, -oCy);
+    d += arc(R, 1, 0, oCx, oCy);
+    if (p > 0) d += arc(p, 0, 0, oLx, h);
+    d += 'L' + f(iLx) + ' ' + f(h);
+    if (p > 0) d += arc(p, 0, 0, iCx, iCy);
+    d += arc(r, 1, 1, iCx, -iCy);
+    if (p > 0) d += arc(p, 0, 0, iLx, -h);
+    return d + 'Z';
+  }
+
+  function computeShape() {
+    var useCustom = state.shape.kind === 'custom' && state.shape.custom;
+    var d = useCustom ? state.shape.custom : builtinD(state.shape.thick, state.shape.gap);
+    var host = document.createElementNS(SVGNS, 'svg');
+    host.setAttribute('width', '0'); host.setAttribute('height', '0');
+    host.style.position = 'absolute'; host.style.visibility = 'hidden';
+    var p = document.createElementNS(SVGNS, 'path');
+    p.setAttribute('d', d);
+    host.appendChild(p); document.body.appendChild(host);
+    var pts = [], L = 0;
+    try {
+      L = p.getTotalLength();
+      if (L > 0) {
+        var N = 720;
+        for (var i = 0; i <= N; i++) { var q = p.getPointAtLength(L * i / N); pts.push([q.x, q.y]); }
+      }
+    } catch (e) { L = 0; }
+    document.body.removeChild(host);
+    if (!(L > 0) || pts.length < 4) return null;
+    var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+    pts.forEach(function (q) { minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); });
+    var ox = 0, oy = 0;
+    if (useCustom) { ox = (minx + maxx) / 2; oy = (miny + maxy) / 2; }
+    var rmax = 0;
+    pts.forEach(function (q) { rmax = Math.max(rmax, Math.hypot(q[0] - ox, q[1] - oy)); });
+    if (!(rmax > 0)) return null;
+    var norm = BASE_R / rmax;
+    var npts = pts.map(function (q) { return [(q[0] - ox) * norm, (q[1] - oy) * norm]; });
+    var rm = 0;
+    npts.forEach(function (q) { rm = Math.max(rm, Math.hypot(q[0], q[1])); });
+    return { d: d, ox: ox, oy: oy, norm: norm, pts: npts, rmax: rm };
+  }
+
+  function refreshShape(keepOnFail) {
+    var s = computeShape();
+    if (!s) { return false; }
+    shape = s; return true;
+  }
+
+  /* ---------- geometry ---------- */
+  function tf(c) {
+    return 'translate(' + f(c.x) + ' ' + f(c.y) + ') scale(' + c.fx + ' ' + c.fy + ') rotate(' + f(c.rot) + ') scale(' + f(c.s * shape.norm) + ') translate(' + f(-shape.ox) + ' ' + f(-shape.oy) + ')';
+  }
+  function toWorld(c, p) {
+    var x = p[0] * c.s, y = p[1] * c.s;
+    var a = c.rot * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    var xr = (x * ca - y * sa) * c.fx, yr = (x * sa + y * ca) * c.fy;
+    return [xr + c.x, yr + c.y];
+  }
+  function bboxOf(c) {
+    var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+    shape.pts.forEach(function (p) {
+      var w = toWorld(c, p);
+      minx = Math.min(minx, w[0]); maxx = Math.max(maxx, w[0]);
+      miny = Math.min(miny, w[1]); maxy = Math.max(maxy, w[1]);
+    });
+    return { x0: minx, y0: miny, x1: maxx, y1: maxy };
+  }
+
+  /* ---------- live drawing ---------- */
+  function render() {
+    if (!shape) return;
+    var cs = state.cs, col = state.colors;
+    var D = shape.d;
+    var out = '';
+    out += '<defs><clipPath id="clipA"><path d="' + D + '" transform="' + tf(cs.a) + '" clip-rule="evenodd"/></clipPath></defs>';
+    if ($('grid').checked) {
+      for (var g = 50; g < VB; g += 50) {
+        out += '<line x1="' + g + '" y1="0" x2="' + g + '" y2="' + VB + '" stroke="var(--grid)" stroke-width="1" pointer-events="none"/>';
+        out += '<line x1="0" y1="' + g + '" x2="' + VB + '" y2="' + g + '" stroke="var(--grid)" stroke-width="1" pointer-events="none"/>';
+      }
+    }
+    out += '<path data-k="a" d="' + D + '" transform="' + tf(cs.a) + '" fill="' + col.a + '" fill-rule="evenodd" style="cursor:move"/>';
+    out += '<path data-k="b" d="' + D + '" transform="' + tf(cs.b) + '" fill="' + col.b + '" fill-rule="evenodd" style="cursor:move"/>';
+    out += '<g clip-path="url(#clipA)" pointer-events="none"><path d="' + D + '" transform="' + tf(cs.b) + '" fill="' + col.w + '" fill-rule="evenodd"/></g>';
+    var c = cs[ui.sel];
+    out += '<path d="' + D + '" transform="' + tf(c) + '" fill="none" stroke="var(--sel)" stroke-width="1.5" stroke-dasharray="6 5" vector-effect="non-scaling-stroke" pointer-events="none"/>';
+    var hd = shape.rmax * c.s + 36;
+    out += '<g transform="translate(' + f(c.x) + ' ' + f(c.y) + ') scale(' + c.fx + ' ' + c.fy + ') rotate(' + f(c.rot) + ')">' +
+           '<line x1="0" y1="0" x2="0" y2="' + f(-hd) + '" stroke="var(--sel)" stroke-width="1.5" pointer-events="none"/>' +
+           '<circle cx="0" cy="0" r="4" fill="var(--sel)" pointer-events="none"/>' +
+           '<circle data-k="h" cx="0" cy="' + f(-hd) + '" r="10" fill="#ffffff" stroke="var(--sel)" stroke-width="2" style="cursor:grab"/></g>';
+    svg.innerHTML = out;
+  }
+
+  /* ---------- panel ---------- */
+  function syncPanel() {
+    var c = state.cs[ui.sel];
+    $('xIn').value = f(c.x); $('yIn').value = f(c.y);
+    $('rotRange').value = Math.round(c.rot); $('rotIn').value = f(c.rot);
+    $('sizeRange').value = Math.round(c.s * 100); $('sizeIn').value = Math.round(c.s * 100);
+    $('pickA').setAttribute('aria-pressed', ui.sel === 'a');
+    $('pickB').setAttribute('aria-pressed', ui.sel === 'b');
+    $('swA').style.background = state.colors.a; $('swB').style.background = state.colors.b;
+  }
+  function syncAll() {
+    syncPanel();
+    $('cA').value = state.colors.a; $('cB').value = state.colors.b; $('cW').value = state.colors.w;
+    $('gapRange').value = state.shape.gap; $('gapIn').value = state.shape.gap;
+    $('thickRange').value = state.shape.thick; $('thickIn').value = state.shape.thick;
+    var custom = state.shape.kind === 'custom';
+    ['gapRange', 'gapIn', 'thickRange', 'thickIn'].forEach(function (id) { $(id).disabled = custom; });
+    $('customD').value = custom ? state.shape.custom : $('customD').value;
+  }
+  function normRot(r) { r = ((r + 180) % 360 + 360) % 360 - 180; return r === -180 ? 180 : r; }
+  function select(k) { ui.sel = k; syncPanel(); render(); }
+
+  function num(id, fn) {
+    $(id).addEventListener('input', function () {
+      var v = parseFloat($(id).value);
+      if (isFinite(v)) { fn(v); render(); }
+    });
+  }
+  var cur = function () { return state.cs[ui.sel]; };
+
+  $('pickA').addEventListener('click', function () { select('a'); });
+  $('pickB').addEventListener('click', function () { select('b'); });
+  num('xIn', function (v) { cur().x = v; });
+  num('yIn', function (v) { cur().y = v; });
+  num('rotRange', function (v) { cur().rot = normRot(v); $('rotIn').value = f(cur().rot); });
+  num('rotIn', function (v) { cur().rot = normRot(v); $('rotRange').value = Math.round(cur().rot); });
+  num('sizeRange', function (v) { cur().s = Math.max(.3, v / 100); $('sizeIn').value = Math.round(cur().s * 100); });
+  num('sizeIn', function (v) { cur().s = Math.max(.3, v / 100); $('sizeRange').value = Math.round(cur().s * 100); });
+  $('rotL').addEventListener('click', function () { cur().rot = normRot(cur().rot - 15); syncPanel(); render(); });
+  $('rotR').addEventListener('click', function () { cur().rot = normRot(cur().rot + 15); syncPanel(); render(); });
+  $('flipH').addEventListener('click', function () { cur().fx *= -1; render(); });
+  $('flipV').addEventListener('click', function () { cur().fy *= -1; render(); });
+  $('resetC').addEventListener('click', function () { state.cs[ui.sel] = Object.assign({}, DEF[ui.sel]); syncPanel(); render(); });
+  $('grid').addEventListener('change', render);
+
+  ['a', 'b', 'w'].forEach(function (k) {
+    $('c' + k.toUpperCase()).addEventListener('input', function () { state.colors[k] = $('c' + k.toUpperCase()).value; syncPanel(); render(); });
+  });
+
+  function setBuiltin(key, v) {
+    var old = state.shape[key];
+    state.shape[key] = v;
+    if (!refreshShape()) { state.shape[key] = old; refreshShape(); }
+    syncAll(); render();
+  }
+  function link(rangeId, numId, key) {
+    $(rangeId).addEventListener('input', function () { setBuiltin(key, parseFloat($(rangeId).value)); });
+    $(numId).addEventListener('input', function () {
+      var v = parseFloat($(numId).value);
+      if (isFinite(v)) setBuiltin(key, Math.min(+$(numId).max, Math.max(+$(numId).min, v)));
+    });
+  }
+  link('gapRange', 'gapIn', 'gap');
+  link('thickRange', 'thickIn', 'thick');
+
+  function useCustom(d) {
+    var prev = Object.assign({}, state.shape);
+    state.shape.kind = 'custom'; state.shape.custom = d;
+    if (!refreshShape()) {
+      state.shape = prev; refreshShape();
+      say('That shape could not be read. Paste the d value of one path.', true);
+      return false;
+    }
+    syncAll(); render(); say('Using your shape.');
+    return true;
+  }
+  $('applyCustom').addEventListener('click', function () {
+    var d = $('customD').value.trim();
+    if (d) useCustom(d); else say('Paste some path data first.', true);
+  });
+  $('builtin').addEventListener('click', function () {
+    state.shape.kind = 'builtin'; state.shape.custom = '';
+    refreshShape(); syncAll(); render(); say('Back to the built-in C.');
+  });
+  $('shapeFile').addEventListener('change', function (e) {
+    var file = e.target.files[0]; if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var doc = new DOMParser().parseFromString(String(rd.result), 'image/svg+xml');
+      var p = doc.querySelector('path');
+      if (!p || !p.getAttribute('d')) { say('No path found in that file.', true); return; }
+      $('customD').value = p.getAttribute('d');
+      useCustom(p.getAttribute('d'));
+    };
+    rd.readAsText(file);
+    e.target.value = '';
+  });
+
+  /* ---------- pointer interaction ---------- */
+  function svgPoint(e) {
+    var m = svg.getScreenCTM().inverse();
+    var p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m);
+    return { x: p.x, y: p.y };
+  }
+  svg.addEventListener('pointerdown', function (e) {
+    var k = e.target && e.target.getAttribute && e.target.getAttribute('data-k');
+    if (!k) return;
+    var pt = svgPoint(e);
+    if (k === 'h') { drag = { type: 'rot' }; }
+    else {
+      if (k !== ui.sel) { ui.sel = k; syncPanel(); }
+      var c = state.cs[k];
+      drag = { type: 'move', dx: pt.x - c.x, dy: pt.y - c.y };
+    }
+    render();
+    try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    e.preventDefault();
+  });
+  svg.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    var pt = svgPoint(e), c = cur();
+    if (drag.type === 'move') {
+      c.x = pt.x - drag.dx; c.y = pt.y - drag.dy;
+    } else {
+      var ang = Math.atan2((pt.x - c.x) * c.fx, -((pt.y - c.y) * c.fy)) * 180 / Math.PI;
+      var snap = $('snap').checked !== e.shiftKey;
+      if (snap) ang = Math.round(ang / 15) * 15;
+      c.rot = normRot(ang);
+    }
+    syncPanel(); render();
+  });
+  function endDrag() { drag = null; }
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+
+  document.addEventListener('keydown', function (e) {
+    var t = e.target && e.target.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    var c = cur(), step = e.shiftKey ? 10 : 1, used = true;
+    if (e.key === 'ArrowLeft') c.x -= step;
+    else if (e.key === 'ArrowRight') c.x += step;
+    else if (e.key === 'ArrowUp') c.y -= step;
+    else if (e.key === 'ArrowDown') c.y += step;
+    else if (e.key === '[') c.rot = normRot(c.rot - (e.shiftKey ? 15 : 1));
+    else if (e.key === ']') c.rot = normRot(c.rot + (e.shiftKey ? 15 : 1));
+    else if (e.key === 'h' || e.key === 'H') c.fx *= -1;
+    else if (e.key === 'v' || e.key === 'V') c.fy *= -1;
+    else if (e.key === '1') { ui.sel = 'a'; }
+    else if (e.key === '2') { ui.sel = 'b'; }
+    else used = false;
+    if (used) { e.preventDefault(); syncPanel(); render(); }
+  });
+
+  /* ---------- export ---------- */
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+  function buildSvg() {
+    var cs = state.cs, col = state.colors, D = shape.d;
+    var mode = $('what').value;
+    var ba = bboxOf(cs.a), bb = bboxOf(cs.b);
+    var note = '';
+    var box;
+    if (mode === 'window') {
+      box = { x0: Math.max(ba.x0, bb.x0), y0: Math.max(ba.y0, bb.y0), x1: Math.min(ba.x1, bb.x1), y1: Math.min(ba.y1, bb.y1) };
+      if (box.x1 <= box.x0 || box.y1 <= box.y0) { note = 'The two Cs do not overlap, so there is no window yet.'; box = { x0: 0, y0: 0, x1: VB, y1: VB }; }
+    } else {
+      box = { x0: Math.min(ba.x0, bb.x0), y0: Math.min(ba.y0, bb.y0), x1: Math.max(ba.x1, bb.x1), y1: Math.max(ba.y1, bb.y1) };
+    }
+    var x0 = 0, y0 = 0, w = VB, h = VB;
+    if ($('crop').checked && !note) {
+      var pad = Math.max(0, parseFloat($('pad').value) || 0);
+      x0 = box.x0 - pad; y0 = box.y0 - pad; w = (box.x1 - box.x0) + 2 * pad; h = (box.y1 - box.y0) + 2 * pad;
+    }
+    var width = Math.max(50, parseFloat($('outW').value) || 1000);
+    var height = Math.max(1, Math.round(width * h / w));
+    var stateJson = JSON.stringify({ shape: state.shape, colors: state.colors, cs: state.cs })
+      .replace(/&/g, '\\u0026').replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    var s = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="' + f(x0) + ' ' + f(y0) + ' ' + f(w) + ' ' + f(h) + '">\n';
+    s += '<title>C window</title>\n';
+    s += '<metadata id="c-window-state">' + stateJson + '</metadata>\n';
+    s += '<defs><clipPath id="cw-clip-a"><path d="' + D + '" transform="' + tf(cs.a) + '" clip-rule="evenodd"/></clipPath></defs>\n';
+    if (!$('transparent').checked) {
+      s += '<rect x="' + f(x0) + '" y="' + f(y0) + '" width="' + f(w) + '" height="' + f(h) + '" fill="' + esc($('bgc').value) + '"/>\n';
+    }
+    if (mode === 'full') {
+      s += '<path id="c-first" d="' + D + '" transform="' + tf(cs.a) + '" fill="' + esc(col.a) + '" fill-rule="evenodd"/>\n';
+      s += '<path id="c-second" d="' + D + '" transform="' + tf(cs.b) + '" fill="' + esc(col.b) + '" fill-rule="evenodd"/>\n';
+    }
+    s += '<g id="window" clip-path="url(#cw-clip-a)"><path d="' + D + '" transform="' + tf(cs.b) + '" fill="' + esc(col.w) + '" fill-rule="evenodd"/></g>\n';
+    s += '</svg>\n';
+    return { text: s, note: note };
+  }
+
+  $('download').addEventListener('click', function () {
+    var r = buildSvg();
+    var blob = new Blob([r.text], { type: 'image/svg+xml' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = $('what').value === 'window' ? 'c-window-only.svg' : 'c-window.svg';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    say(r.note || 'Saved ' + a.download + '.', !!r.note);
+  });
+  $('copy').addEventListener('click', function () {
+    var r = buildSvg();
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = r.text; document.body.appendChild(ta); ta.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      say(ok ? 'SVG code copied.' : 'Could not copy. Use Download instead.', !ok);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(r.text).then(function () { say('SVG code copied.'); }, fallback);
+    } else fallback();
+  });
+
+  $('open').addEventListener('click', function () { $('openFile').click(); });
+  $('openFile').addEventListener('change', function (e) {
+    var file = e.target.files[0]; if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var doc = new DOMParser().parseFromString(String(rd.result), 'image/svg+xml');
+        var m = doc.getElementById('c-window-state');
+        if (!m) { say('That SVG has no saved settings. Only SVGs saved from this page can be reopened.', true); return; }
+        var saved = JSON.parse(m.textContent);
+        var prev = JSON.stringify(state);
+        state.shape = saved.shape; state.colors = saved.colors; state.cs = saved.cs;
+        if (!refreshShape()) { var p = JSON.parse(prev); state.shape = p.shape; state.colors = p.colors; state.cs = p.cs; refreshShape(); say('Could not read the shape in that file.', true); return; }
+        syncAll(); render(); say('Opened ' + file.name + '.');
+      } catch (err) { say('Could not open that file.', true); }
+    };
+    rd.readAsText(file);
+    e.target.value = '';
+  });
+
+  /* ---------- start ---------- */
+  refreshShape();
+  syncAll();
+  render();
+})();
+</script>
+</body>
+</html>

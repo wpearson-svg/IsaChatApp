@@ -1,10 +1,11 @@
-Chapter ID,Chapter name
-C-001,Sample Chapter 1
-C-002,Sample Chapter 2
-C-003,Sample Chapter 3
-C-004,Sample Chapter 4
-C-005,Sample Chapter 5
-C-006,Sample Chapter 6
-C-007,Sample Chapter 7
-C-008,Sample Chapter 8
-C-009,Sample Chapter 9
+Chapter ID,Chapter name,Country,Region,Time zone,Work week
+C-001,Sakura Bay Chapter,Japan,Asia-Pacific,Asia/Tokyo,Mon-Fri
+C-002,Emerald Isles Chapter,Indonesia,Asia-Pacific,Asia/Jakarta,Mon-Fri
+C-003,Sierra Alta Chapter,Mexico,Latin America,America/Mexico_City,Mon-Fri
+C-004,Northern Lights Chapter,Iceland,Europe,Atlantic/Reykjavik,Mon-Fri
+C-005,Black Forest Chapter,Germany,Europe,Europe/Berlin,Mon-Fri
+C-006,Desert Rose Chapter,Saudi Arabia,Middle East,Asia/Riyadh,Sun-Thu
+C-007,Monsoon Coast Chapter,India,Asia-Pacific,Asia/Kolkata,Mon-Fri
+C-008,Alpine Lakes Chapter,Switzerland,Europe,Europe/Zurich,Mon-Fri
+C-009,Windy City Chapter,United States,North America,America/Chicago,Mon-Fri
+C-010,Rainforest Coast Chapter,Brazil,Latin America,America/Sao_Paulo,Mon-Fri

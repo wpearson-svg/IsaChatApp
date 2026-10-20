@@ -59,11 +59,8 @@
                             </linearGradient>
                         </defs>
                     }
-                    <mask id="ttRingMask" maskUnits="userSpaceOnUse" x="-50" y="-50" width="304" height="304">
-                        <rect x="-50" y="-50" width="304" height="304" fill="#fff" />
-                        <rect x="110" y="74.75" width="110" height="50.5" fill="#000" />
-                    </mask>
-                    <circle cx="100" cy="100" r="78.96" mask="url(#ttRingMask)" />
+                    @* The ISACA-approved C (brand.isaca.org/visual-style), opening to the right. *@
+                    <path class="isa-throbber__c" d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z" />
 
                     @* In-gap wordmark: only shown by the "ingap" placement, sitting in the ring's own notch. *@
                     <g class="isa-throbber__word isa-throbber__word--gap @WordAnimClass(Spinning)"

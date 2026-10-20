@@ -180,13 +180,35 @@
 @media (prefers-reduced-motion: reduce) {
     .isa-widget__panel.is-expanded {
         animation: none;
+        transition: none;
     }
+}
+
+/* Onboarding: while the Today window is open (TodayPanel.razor), the
+   chat slides left by its own width so the two sit side by side, and
+   slides back when Today closes. Its right corners round too, since
+   it no longer touches the screen edge. */
+.isa-widget__panel.is-expanded {
+    /* Same timing and gentle ease-to-a-stop as the Today window's
+       entrance (TodayPanel.razor.css), so the two move together. */
+    transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Today or the notebook is open beside the chat. How far the chat
+   slides, and how wide it is, come from ChatWidget.razor
+   (ChatPanelStyle), so it can make room for one or two side panels. */
+.isa-widget__panel.is-expanded.is-shifted {
+    border-radius: 12px;
 }
 
 /* Narrower screens: don't let the panel get unusably thin. */
 @media (max-width: 720px) {
-    .isa-widget__panel.is-expanded {
-        width: 100vw;
+    .isa-widget__panel.is-expanded,
+    .isa-widget__panel.is-expanded.is-shifted {
+        width: 100vw !important;   /* beats the side-panel sizes set in ChatWidget.razor */
+        right: 0 !important;       /* no room to slide aside; Today and the notebook cover the chat instead */
         border-radius: 0;
     }
 }
@@ -652,34 +674,65 @@
 .isa-widget__text { white-space: pre-line; overflow-wrap: anywhere; }
 .isa-widget__sources { overflow-wrap: anywhere; }
 .isa-widget__sources {
-    margin-top: 0.6rem;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.4rem;
 }
 
-/* One source = a small ISACA Light Blue "document" chip. */
+/* "SOURCES (2)" above the cards (approved "show the work" mockup). */
+.isa-widget__sourcesLabel {
+    margin: 0.75rem 0 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5f6b7a; /* grey, 5.4:1 on white */
+}
+
+/* One source = a card: document name, then section and page. */
 .isa-widget__source {
     display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 8px;
-    background: #e7f0f5;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 48px;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid #dde3e9;
+    border-radius: 10px;
+    background: #ffffff;
     color: #1d2d5c;
-    font-size: 0.75rem;
-    line-height: 1.4;
+    line-height: 1.35;
 }
 
-/* A tiny outlined page, drawn in CSS (no image needed). */
+/* A small page in ISACA Light Blue with two lines of "text", drawn in CSS. */
 .isa-widget__sourceIcon {
+    position: relative;
     flex: 0 0 auto;
-    width: 10px;
-    height: 13px;
-    margin-top: 0.1rem;
+    width: 22px;
+    height: 28px;
     border: 1.5px solid #07649d;
-    border-radius: 2px;
+    border-radius: 3px;
+    background: #e7f0f5;
 }
+
+.isa-widget__sourceIcon::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 7px;
+    height: 8px;
+    border-top: 1.5px solid #07649d;
+    border-bottom: 1.5px solid #07649d;
+}
+
+.isa-widget__sourceBody {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.isa-widget__sourceDoc { font-size: 0.8rem; font-weight: 500; }
+.isa-widget__sourceWhere { font-size: 0.74rem; color: #5f6b7a; }
 
 .isa-widget__trace {
     margin-top: 0.4rem;

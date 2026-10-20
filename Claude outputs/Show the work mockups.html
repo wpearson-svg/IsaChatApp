@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Show the Work Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup only: not used by the app. Phone-width frames (360px, a common
+     Android width), since Isa may become an Android app and a Chrome
+     extension side panel. */
+  :root {
+    --ink: #1d2d5c;          /* ISACA Dark Blue */
+    --text: #323e48;         /* Grey 9 */
+    --page: #eef2f5;
+    --panel: #ffffff;
+    --bubble-you: #1d2d5c;
+    --line: #dde3e9;
+    --pass: #3f7d20;         /* ISACA Green, darkened: 5.4:1 on white */
+    --pass-bg: #edf6e8;
+    --handled: #07649d;      /* ISACA Medium Blue: 6.4:1 on white */
+    --handled-bg: #e7f0f5;   /* ISACA Light Blue */
+    --skip: #5f6b7a;         /* grey: 5.4:1 on white */
+    --skip-bg: #f1f3f5;
+    --error: #b42318;        /* developer mode only */
+    --error-bg: #fdecea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 48px;
+    background: var(--page); color: var(--text);
+    font-family: Roboto, Arial, sans-serif;
+  }
+  h1 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.6rem; margin: 0 0 6px; }
+  .intro { max-width: 760px; margin: 0 0 20px; line-height: 1.5; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 0 0 28px; padding: 12px 14px; background: #fff; border-radius: 10px; max-width: 760px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+  .grid { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+  figure { margin: 0; width: 360px; max-width: 100%; }
+  figcaption { font-weight: 700; color: var(--ink); margin: 0 0 4px; }
+  figcaption + p { margin: 0 0 10px; font-size: 0.85rem; line-height: 1.45; min-height: 3.6em; }
+
+  /* The phone */
+  .phone { background: var(--panel); border-radius: 22px; border: 1px solid #cbd2d9; overflow: hidden; box-shadow: 0 6px 18px rgba(29,45,92,.08); }
+  .bar { background: var(--ink); color: #fff; padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+  .bar .logo { width: 30px; height: 30px; border-radius: 50%; background: #fff; display: grid; place-items: center; }
+  .bar b { display: block; font-size: 0.95rem; }
+  .bar small { opacity: .85; font-size: 0.72rem; }
+  .chat { padding: 14px 12px 16px; display: flex; flex-direction: column; gap: 10px; background: #f7f9fb; }
+  .you { align-self: flex-end; max-width: 85%; background: var(--bubble-you); color: #fff; padding: 9px 12px; border-radius: 14px 14px 4px 14px; font-size: 0.9rem; line-height: 1.4; }
+  .isa { align-self: flex-start; width: 92%; background: #fff; border: 1px solid var(--line); padding: 10px 12px 12px; border-radius: 14px 14px 14px 4px; font-size: 0.9rem; line-height: 1.45; }
+  .who { font-size: 0.68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--handled); margin-bottom: 6px; }
+  .answer { margin: 8px 0 0; color: var(--text); }
+  .ref { margin-top: 8px; font-family: ui-monospace, Consolas, monospace; font-size: 0.68rem; color: var(--skip); }
+
+  /* Icons: a small filled circle with a white symbol inside */
+  .ic { flex: 0 0 auto; width: 20px; height: 20px; display: inline-block; }
+  .ic.sm { width: 16px; height: 16px; }
+
+  /* Collapsed line: one tappable row, 48px tall for fingers */
+  .work { margin: 0 -4px; }
+  .work-toggle {
+    width: 100%; min-height: 44px; display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border: 0; border-radius: 10px; font: inherit; font-size: 0.82rem;
+    text-align: left; cursor: pointer; color: var(--ink);
+  }
+  .work-toggle .meta { margin-left: auto; color: var(--skip); font-size: 0.75rem; white-space: nowrap; }
+  .work-toggle .chev { width: 8px; height: 8px; border-right: 2px solid var(--skip); border-bottom: 2px solid var(--skip); transform: rotate(45deg); margin: 0 4px 3px 2px; }
+  .open .chev { transform: rotate(-135deg); margin-bottom: -3px; }
+  .t-pass { background: var(--pass-bg); }
+  .t-handled { background: var(--handled-bg); }
+
+  /* Opened steps */
+  .steps { list-style: none; margin: 6px 0 2px 8px; padding: 2px 0 2px 14px; border-left: 2px solid var(--line); }
+  .steps li { display: flex; gap: 9px; padding: 5px 0; font-size: 0.82rem; line-height: 1.35; }
+  .steps .txt { color: var(--text); }
+  .steps .det { display: block; color: var(--skip); font-size: 0.76rem; }
+  .steps .skip .txt { color: var(--skip); }
+  .steps .raw { display: block; margin-top: 2px; font-family: ui-monospace, Consolas, monospace; font-size: 0.68rem; color: var(--error); }
+  .steps a { color: var(--handled); }
+
+  /* Live status line */
+  .live { display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; }
+  .live-row { display: flex; align-items: center; gap: 9px; font-size: 0.85rem; color: var(--ink); }
+  .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--handled-bg); border-top-color: var(--handled); animation: spin .9s linear infinite; flex: 0 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .shimmer { background: linear-gradient(90deg, var(--ink) 0 40%, #9fb3c8 50%, var(--ink) 60% 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sh 1.8s linear infinite; }
+  @keyframes sh { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+  .dots { display: flex; gap: 5px; align-items: center; padding-left: 27px; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+  .dots i.p { background: var(--pass); } .dots i.h { background: var(--handled); } .dots i.s { background: #aab4bf; }
+  .dots i.now { background: #fff; box-shadow: 0 0 0 2px var(--handled); }
+  .dots small { margin-left: 6px; color: var(--skip); font-size: 0.72rem; }
+  @media (prefers-reduced-motion: reduce) { .spinner, .shimmer { animation: none; } .shimmer { color: var(--ink); background: none; } }
+
+  /* Sources */
+  .src-label { margin: 12px 0 6px; font-size: 0.68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--skip); }
+  .src { display: flex; gap: 10px; align-items: center; min-height: 48px; padding: 8px 10px; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); text-decoration: none; }
+  .src .doc { flex: 0 0 auto; width: 26px; height: 32px; border-radius: 3px; background: var(--handled-bg); border: 1.5px solid var(--handled); position: relative; }
+  .src .doc::after { content: ""; position: absolute; left: 5px; right: 5px; top: 8px; height: 10px; border-top: 1.5px solid var(--handled); border-bottom: 1.5px solid var(--handled); }
+  .src b { display: block; font-size: 0.82rem; font-weight: 500; }
+  .src small { display: block; font-size: 0.74rem; color: var(--skip); }
+  .src .go { margin-left: auto; color: var(--handled); font-size: 1.1rem; }
+
+  .note { margin-top: 10px; font-size: 0.78rem; line-height: 1.45; color: var(--text); }
+  .note b { color: var(--ink); }
+  .devtag { display: inline-block; font-size: 0.66rem; font-weight: 700; letter-spacing: .05em; color: var(--error); background: var(--error-bg); border-radius: 4px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
+</style>
+</head>
+<body>
+
+<!-- Icon set, drawn once and reused. Each state has its own shape, so the
+     meaning never depends on color alone. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-pass" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#3f7d20"/><path d="M5.5 10.3l3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#07649d"/><rect x="5" y="8.8" width="10" height="2.4" rx="1.2" fill="#fff"/></symbol>
+    <symbol id="i-person" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#07649d"/><circle cx="8" cy="7" r="2.4" fill="#fff"/><path d="M3.8 14.6c.6-2.4 2.3-3.6 4.2-3.6s3.6 1.2 4.2 3.6z" fill="#fff"/><path d="M12.5 9.5h4m-1.6-1.7l1.7 1.7-1.7 1.7" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#07649d"/><path d="M14.6 9.2A4.7 4.7 0 1 0 13 13.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M15.4 5.6v3.9h-3.9" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-skip" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="none" stroke="#5f6b7a" stroke-width="2"/><path d="M6 10h8" stroke="#5f6b7a" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-error" viewBox="0 0 20 20"><path d="M10 1.5l9 16H1z" fill="#b42318" stroke="#b42318" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 7.5v4.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="14.8" r="1.2" fill="#fff"/></symbol>
+  </defs>
+</svg>
+
+<h1>Show the work: mockups</h1>
+<p class="intro">Drawn at 360px wide, a common Android phone width, so the same design works in the web chat, a future Android app and a Chrome extension side panel. Every row you tap is at least 44px tall. Every state has its own icon, so nothing depends on color alone. Mockup only: nothing here is in the app yet.</p>
+
+<div class="legend" aria-label="What the colors mean">
+  <span><svg class="ic sm"><use href="#i-pass"/></svg> Green: passed</span>
+  <span><svg class="ic sm"><use href="#i-stop"/></svg> Blue: stopped, handled</span>
+  <span><svg class="ic sm"><use href="#i-person"/></svg> Blue: passed to a person</span>
+  <span><svg class="ic sm"><use href="#i-retry"/></svg> Blue: something went wrong, handled</span>
+  <span><svg class="ic sm"><use href="#i-skip"/></svg> Gray: skipped <span class="devtag">DEVELOPER ONLY</span></span>
+  <span><svg class="ic sm"><use href="#i-error"/></svg> Red: real error <span class="devtag">DEVELOPER ONLY</span></span>
+</div>
+
+<div class="grid">
+
+  <!-- 1. Live status line -->
+  <figure>
+    <figcaption>1. While Isa is working</figcaption>
+    <p>The status line names the stage running now. The dots fill in as each stage finishes (green, or blue if handled), so the leader sees progress without reading.</p>
+    <div class="phone">
+      <div class="bar"><span class="logo"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#6cb33f" stroke-width="3"/></svg></span><div><b>Isa</b><small>Chapter Support Assistant</small></div></div>
+      <div class="chat">
+        <div class="you">How many board meetings must a chapter hold each year?</div>
+        <div class="isa">
+          <div class="who">Isa</div>
+          <div class="live" role="status" aria-live="polite">
+            <div class="live-row"><span class="spinner" aria-hidden="true"></span><span class="shimmer">Searching ISACA's approved content&hellip;</span></div>
+            <div class="dots" aria-label="Step 5 of 9"><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="now"></i><i></i><i></i><i></i><i></i><small>Step 5 of 9</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- 2. Answered, collapsed, with sources -->
+  <figure>
+    <figcaption>2. Answered, closed</figcaption>
+    <p>One line above the answer, colored by the outcome. Sources sit under the answer as tappable cards: document, section, page.</p>
+    <div class="phone">
+      <div class="bar"><span class="logo"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#6cb33f" stroke-width="3"/></svg></span><div><b>Isa</b><small>Chapter Support Assistant</small></div></div>
+      <div class="chat">
+        <div class="you">How many board meetings must a chapter hold each year?</div>
+        <div class="isa">
+          <div class="who">Isa</div>
+          <div class="work">
+            <button class="work-toggle t-pass" aria-expanded="false"><svg class="ic"><use href="#i-pass"/></svg><span>Answered from approved content</span><span class="meta">6 checks</span><span class="chev"></span></button>
+          </div>
+          <p class="answer">At least four board meetings a year. The president usually chairs them and makes sure they follow the chapter's bylaws.</p>
+          <div class="src-label">Sources (2)</div>
+          <a class="src" href="#"><span class="doc"></span><span><b>President Guidebook</b><small>Chapter Board Meetings &middot; p. 7</small></span><span class="go">&rsaquo;</span></a>
+          <a class="src" href="#"><span class="doc"></span><span><b>Annual Chapter Compliance Framework</b><small>Rubric: board meetings</small></span><span class="go">&rsaquo;</span></a>
+          <div class="ref">Reference # 95be5ad7&hellip;eaec</div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- 3. Answered, opened -->
+  <figure>
+    <figcaption>3. Answered, opened</figcaption>
+    <p>Tapping the line opens the steps. Leaders see only the steps that ran. An exact match is shown as the strength it is: ISACA's own wording.</p>
+    <div class="phone">
+      <div class="bar"><span class="logo"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#6cb33f" stroke-width="3"/></svg></span><div><b>Isa</b><small>Chapter Support Assistant</small></div></div>
+      <div class="chat">
+        <div class="isa">
+          <div class="who">Isa</div>
+          <div class="work open">
+            <button class="work-toggle t-pass" aria-expanded="true"><svg class="ic"><use href="#i-pass"/></svg><span>Answered from approved content</span><span class="meta">6 checks</span><span class="chev"></span></button>
+            <ol class="steps">
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Checked that you can use Isa</span></li>
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Checked your question against Isa's rules</span></li>
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Searched ISACA's approved content<span class="det">Found the answer in ISACA's approved text</span></span></li>
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Looked for related topics</span></li>
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Checked the answer against its sources<span class="det">Answer uses ISACA's exact wording &middot; backed by 2 sources</span></span></li>
+            </ol>
+          </div>
+          <p class="answer">At least four board meetings a year&hellip;</p>
+        </div>
+      </div>
+    </div>
+    <p class="note"><b>Shorter list:</b> leaders never see skipped steps, and "Received your question" and "Checked the language" are left out when they simply pass. Developers still see every stage, skipped ones in gray.</p>
+  </figure>
+
+  <!-- 4. Stopped -->
+  <figure>
+    <figcaption>4. Outside what Isa covers</figcaption>
+    <p>Blue, not red: Isa did her job. The closed line already says what happened, and the steps say where it stopped.</p>
+    <div class="phone">
+      <div class="bar"><span class="logo"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#6cb33f" stroke-width="3"/></svg></span><div><b>Isa</b><small>Chapter Support Assistant</small></div></div>
+      <div class="chat">
+        <div class="you">Where's a good pizza place near the conference?</div>
+        <div class="isa">
+          <div class="who">Isa</div>
+          <div class="work open">
+            <button class="work-toggle t-handled" aria-expanded="true"><svg class="ic"><use href="#i-stop"/></svg><span>Outside what Isa covers</span><span class="meta">0.1s</span><span class="chev"></span></button>
+            <ol class="steps">
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Checked that you can use Isa</span></li>
+              <li><svg class="ic sm"><use href="#i-stop"/></svg><span class="txt">Checked your question against Isa's rules<span class="det">It's outside chapter support, so Isa stopped here and didn't search</span></span></li>
+            </ol>
+          </div>
+          <p class="answer">I can only help with running your chapter, using ISACA's approved guidance.</p>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- 5. Passed to a person -->
+  <figure>
+    <figcaption>5. Passed to a person</figcaption>
+    <p>Blue with the person icon. Steps not needed after the hand-off are simply not listed.</p>
+    <div class="phone">
+      <div class="bar"><span class="logo"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#6cb33f" stroke-width="3"/></svg></span><div><b>Isa</b><small>Chapter Support Assistant</small></div></div>
+      <div class="chat">
+        <div class="you">A board member keeps harassing me, what should I do?</div>
+        <div class="isa">
+          <div class="who">Isa &middot; Passed to a person</div>
+          <div class="work open">
+            <button class="work-toggle t-handled" aria-expanded="true"><svg class="ic"><use href="#i-person"/></svg><span>Passed to a person</span><span class="meta">TKT-0001</span><span class="chev"></span></button>
+            <ol class="steps">
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Checked that you can use Isa</span></li>
+              <li><svg class="ic sm"><use href="#i-person"/></svg><span class="txt">Checked your question against Isa's rules<span class="det">This needs a person, so Isa won't answer it herself</span></span></li>
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Created your ticket<span class="det">Reference TKT-0001</span></span></li>
+            </ol>
+          </div>
+          <p class="answer">This looks like a sensitive matter, so I have passed it to a person who can help. Your reference number is TKT-0001.</p>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- 6. Something went wrong: leader and developer -->
+  <figure>
+    <figcaption>6. Something went wrong</figcaption>
+    <p>The leader sees it as handled, in blue, with what to do next. Only developer mode shows red and the raw error.</p>
+    <div class="phone">
+      <div class="bar"><span class="logo"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#6cb33f" stroke-width="3"/></svg></span><div><b>Isa</b><small>Chapter Support Assistant</small></div></div>
+      <div class="chat">
+        <div class="isa">
+          <div class="who">Isa &middot; leader view</div>
+          <div class="work">
+            <button class="work-toggle t-handled" aria-expanded="false"><svg class="ic"><use href="#i-retry"/></svg><span>Something went wrong on our side</span><span class="chev"></span></button>
+          </div>
+          <p class="answer">Try again, or talk to a person.</p>
+        </div>
+        <div class="isa">
+          <div class="who">Isa &middot; developer view <span class="devtag">DEVELOPER ONLY</span></div>
+          <div class="work open">
+            <button class="work-toggle t-handled" aria-expanded="true"><svg class="ic"><use href="#i-retry"/></svg><span>Something went wrong on our side</span><span class="meta">4.0s</span><span class="chev"></span></button>
+            <ol class="steps">
+              <li><svg class="ic sm"><use href="#i-pass"/></svg><span class="txt">Searched ISACA's approved content</span></li>
+              <li><svg class="ic sm"><use href="#i-error"/></svg><span class="txt">Wrote the answer<span class="raw">complex_ai &middot; stop &middot; 4.0s &middot; error=TimeoutException</span></span></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+</div>
+</body>
+</html>

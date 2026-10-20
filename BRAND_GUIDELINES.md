@@ -100,6 +100,26 @@ an international ISACA audience — not just as decoration.
 The rotating/interlocking C shapes are the core visual signature (9 Cs locked together = the ISACA
 logo itself). Variants used across materials:
 
+**The approved C shape.** Every C in this project uses the single C from the Visual Style page
+(the blue C in the "Cropped C graphic" section), measured from ISACA's own artwork. In units of the
+outer radius R:
+
+- Inner radius: 0.5655 R (so the band is 0.4345 R thick)
+- Opening: a straight slot on the right, 0.498 R tall, with flat top and bottom edges
+- All four corners of the slot are rounded, radius 0.033 R
+
+The ready-made SVG path, for a C of outer radius 100.89 centered on (100, 100) in a
+`viewBox="-2 -2 204 204"` (the size the throbber and favicon use):
+
+```
+M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z
+```
+
+Draw it as a filled shape (fill), not a stroked circle. Rotate it for other directions; never
+stretch it or change its proportions. Do not use the 9C logo's Cs as a source: the logo is
+ISACA-supplied artwork only.
+
+
 - **9C graphic** — the 3×3 grid of Cs, can be centered and cropped as long as 6 full circles stay visible.
 - **C graphic strip** — a single row/column of repeating Cs, any palette color/tint.
 - **C graphic pattern** — a grid of Cs, all same size, aligned to rows/columns.

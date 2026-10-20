@@ -68,9 +68,44 @@
     </header>
 
     <section class="landing__hero">
-        <svg class="landing__heroC" viewBox="-25 -25 250 250" aria-hidden="true">
-            <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
-        </svg>
+        @* ---- The intersecting-C "window" (ISACA Visual Style, graphic
+           version, no photo). Two approved Cs of the same size, their
+           openings pointing off the edge so only the arcs show. Each C is
+           a brand color at 50% opacity in normal blend; where they cross,
+           the window, a Blue-to-Teal tint is added on top. Isa's spinning
+           C sits inside the window.
+
+           Everything is drawn at a fixed size and anchored to the right
+           edge, so the Isa badge always lands in the window. The drawing
+           runs 310px past the top and bottom of the hero so the arcs never
+           end in a straight line when the hero is taller than usual.
+           Smaller screens scale the whole group down (Home.razor.css). ---- *@
+        <div class="landing__window">
+            <svg class="landing__windowArt" viewBox="0 -310 1440 1240" aria-hidden="true">
+                <defs>
+                    <clipPath id="heroWindowA"><path d="M0.5279 -0.249L0.92497 -0.249A0.033 0.033 0 0 0 0.95653 -0.29162A1 1 0 1 0 0.95653 0.29162A0.033 0.033 0 0 0 0.92497 0.249L0.5279 0.249A0.033 0.033 0 0 0 0.49879 0.26645A0.5655 0.5655 0 1 1 0.49879 -0.26645A0.033 0.033 0 0 0 0.5279 -0.249Z" transform="translate(1499.6 549.2) rotate(30) scale(560)" /></clipPath>
+                    <clipPath id="heroWindowB"><path d="M0.5279 -0.249L0.92497 -0.249A0.033 0.033 0 0 0 0.95653 -0.29162A1 1 0 1 0 0.95653 0.29162A0.033 0.033 0 0 0 0.92497 0.249L0.5279 0.249A0.033 0.033 0 0 0 0.49879 0.26645A0.5655 0.5655 0 1 1 0.49879 -0.26645A0.033 0.033 0 0 0 0.5279 -0.249Z" transform="translate(1339.2 -49.6) rotate(-60) scale(560)" /></clipPath>
+                    <linearGradient id="heroWindowTint" x1="0" y1="0" x2="0.3" y2="1">
+                        <stop offset="0" stop-color="#00a4e4" />
+                        <stop offset="1" stop-color="#36ac91" />
+                    </linearGradient>
+                </defs>
+                <path d="M0.5279 -0.249L0.92497 -0.249A0.033 0.033 0 0 0 0.95653 -0.29162A1 1 0 1 0 0.95653 0.29162A0.033 0.033 0 0 0 0.92497 0.249L0.5279 0.249A0.033 0.033 0 0 0 0.49879 0.26645A0.5655 0.5655 0 1 1 0.49879 -0.26645A0.033 0.033 0 0 0 0.5279 -0.249Z" transform="translate(1499.6 549.2) rotate(30) scale(560)" fill="#298dcb" fill-opacity="0.5" />
+                <path d="M0.5279 -0.249L0.92497 -0.249A0.033 0.033 0 0 0 0.95653 -0.29162A1 1 0 1 0 0.95653 0.29162A0.033 0.033 0 0 0 0.92497 0.249L0.5279 0.249A0.033 0.033 0 0 0 0.49879 0.26645A0.5655 0.5655 0 1 1 0.49879 -0.26645A0.033 0.033 0 0 0 0.5279 -0.249Z" transform="translate(1339.2 -49.6) rotate(-60) scale(560)" fill="#07649d" fill-opacity="0.5" />
+                <g clip-path="url(#heroWindowA)">
+                    <g clip-path="url(#heroWindowB)">
+                        <rect x="0" y="-310" width="1800" height="1240" fill="url(#heroWindowTint)" fill-opacity="0.5" />
+                    </g>
+                </g>
+            </svg>
+
+            @* InteractiveServer so the hover spin actually runs -- this
+               page itself is static, and a static component can't react
+               to the mouse. *@
+            <div class="landing__heroBadge" aria-hidden="true">
+                <Throbber @rendermode="InteractiveServer" Spinning="false" SpinOnHover="true" />
+            </div>
+        </div>
 
         <div class="landing__heroInner">
             <div class="landing__heroText">
@@ -86,13 +121,6 @@
                     <span class="landing__ctaDot" aria-hidden="true"></span>
                     Click the Isa button in the bottom-right corner to start.
                 </p>
-            </div>
-
-            @* InteractiveServer so the hover spin actually runs -- this
-               page itself is static, and a static component can't react
-               to the mouse. *@
-            <div class="landing__heroBadge" aria-hidden="true">
-                <Throbber @rendermode="InteractiveServer" Spinning="false" SpinOnHover="true" />
             </div>
         </div>
     </section>
@@ -193,7 +221,7 @@
        cropped white C and the Isa ring on the left. ---- *@
     <section id="try" class="landing__try">
         <svg class="landing__tryC" viewBox="-25 -25 250 250" aria-hidden="true">
-            <path d="M 162 52 A 79 79 0 1 0 162 148" fill="none" stroke="currentColor" stroke-width="44" />
+            <path d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z" fill="currentColor" />
         </svg>
 
         <div class="landing__inner landing__tryGrid">

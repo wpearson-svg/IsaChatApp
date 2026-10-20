@@ -134,14 +134,12 @@
     animation-direction: var(--isa-ring-dir);
 }
 
-.isa-throbber__ring circle {
-    fill: none;
-    stroke-width: 43.86;
-    stroke: var(--isa-ring-color);
+.isa-throbber__c {
+    fill: var(--isa-ring-color);
 }
 
-.isa-throbber__ring.is-spinning circle {
-    animation: isa-stroke-cycle var(--isa-cycle) linear infinite;
+.isa-throbber__ring.is-spinning .isa-throbber__c {
+    animation: isa-ring-cycle var(--isa-cycle) linear infinite;
     animation-direction: var(--isa-ring-dir);
 }
 
@@ -249,13 +247,13 @@
     to   { transform: rotate(360deg); }
 }
 
-@keyframes isa-stroke-cycle {
-    0%   { stroke: #6cb33f; }
-    20%  { stroke: #36ac91; }
-    40%  { stroke: #00a4e4; }
-    60%  { stroke: #0f69a0; }
-    80%  { stroke: #1d2d5c; }
-    100% { stroke: #6cb33f; }
+@keyframes isa-ring-cycle {
+    0%   { fill: #6cb33f; }
+    20%  { fill: #36ac91; }
+    40%  { fill: #00a4e4; }
+    60%  { fill: #0f69a0; }
+    80%  { fill: #1d2d5c; }
+    100% { fill: #6cb33f; }
 }
 
 @keyframes isa-fill-cycle {
@@ -323,7 +321,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .isa-throbber__ring.is-spinning,
-    .isa-throbber__ring.is-spinning circle,
+    .isa-throbber__ring.is-spinning .isa-throbber__c,
     .isa-throbber__word.is-spinning,
     .isa-throbber__word.is-spinning path,
     .isa-throbber__grad-stop.is-spinning {

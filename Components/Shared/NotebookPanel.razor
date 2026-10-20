@@ -1,0 +1,303 @@
+@* ============================================================
+   NotebookPanel.razor
+
+   Onboarding feature, Feature 2 (see ONBOARDING-FEATURE.md): the
+   succession notebook panel. It opens beside the chat (and beside the
+   Today window, if that is open), the same height as both. The chat
+   widget decides each panel's width and position (ChatWidget.razor,
+   PanelLayout), so the three always sit side by side: chat, Today,
+   Notebook, left to right, a third of the screen each. "Enlarge" widens
+   this panel to half the screen.
+
+   What it shows:
+     - who can see the notebook, in one line (only the president,
+       unless an entry is shared with the board)
+     - an "Add a note" box for anyone who can write: the president, and
+       the outgoing president for 30 days after their term ends
+     - every entry this person may see, newest first: saved answers
+       (question, answer, sources, "what we decided") and typed notes
+     - on the writer's own entries: a "Share with the board" switch and
+       "Remove" (the entry is hidden; the record stays)
+
+   Where the data comes from: NotebookService (data/notebook.db), which
+   also enforces who can read and write, so this panel can't show or
+   save anything the rules don't allow. Typed notes are checked by Isa's
+   sign-in check and Input Compliance gate before they are saved
+   (NotebookService.AddNoteAsync). Nothing here comes from the AI model.
+   ============================================================ *@
+
+@using System.Globalization
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject NotebookService Notebook
+@inject WidgetSettings Settings
+@inject KeycloakSignInService SignInService
+
+<aside class="isa-nb" style="@Style" aria-label="Succession notebook">
+
+    <div class="isa-nb__header">
+        <div class="isa-nb__headText">
+            <span class="isa-nb__name">Succession notebook</span>
+            @if (_access.ChapterName is not null)
+            {
+                <span class="isa-nb__sub">@_access.ChapterName</span>
+            }
+        </div>
+        <div class="isa-nb__headBtns">
+            <button type="button" class="isa-nb__iconBtn isa-nb__enlarge" @onclick="OnToggleEnlarge"
+                    aria-pressed="@(Enlarged ? "true" : "false")"
+                    title="@(Enlarged ? "Make smaller" : "Enlarge")" aria-label="@(Enlarged ? "Make the notebook smaller" : "Enlarge the notebook")">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    @if (Enlarged)
+                    {
+                        <path d="M6.5 2.5v4h-4M9.5 13.5v-4h4M6.5 6.5L2 2M9.5 9.5L14 14" />
+                    }
+                    else
+                    {
+                        <path d="M10 2h4v4M6 14H2v-4M14 2L9 7M2 14l5-5" />
+                    }
+                </svg>
+            </button>
+            <button type="button" class="isa-nb__iconBtn isa-nb__close" @onclick="OnClose" aria-label="Close the notebook" title="Close">&times;</button>
+        </div>
+    </div>
+
+    <div class="isa-nb__body">
+        @if (!_access.CanRead)
+        {
+            <p class="isa-nb__empty">Only your chapter's president can open the succession notebook.</p>
+        }
+        else
+        {
+            <p class="isa-nb__lede">What your chapter's presidents leave for the next one.</p>
+            <p class="isa-nb__privacy">
+                <span class="isa-nb__lock" aria-hidden="true"></span>
+                <span>@PrivacyLine</span>
+            </p>
+
+            @if (_access.CanWrite)
+            {
+                @* ---- Add a note ---- *@
+                <section class="isa-nb__add" aria-label="Add a note">
+                    <h2 class="isa-nb__addTitle">Add a note</h2>
+                    <div class="isa-nb__kinds" role="radiogroup" aria-label="What kind of note">
+                        @foreach (var cat in NotebookService.Categories)
+                        {
+                            <button type="button" role="radio" aria-checked="@(_category == cat ? "true" : "false")"
+                                    class="isa-nb__kind @(_category == cat ? "is-on" : "")" @onclick="() => _category = cat">@CategoryLabel(cat)</button>
+                        }
+                    </div>
+                    <textarea class="isa-nb__text" rows="3" maxlength="1000" aria-label="Your note"
+                              placeholder="@Placeholder(_category)" @bind="_draft" @bind:event="oninput" disabled="@_saving"></textarea>
+                    <div class="isa-nb__addRow">
+                        <label class="isa-nb__share">
+                            <input type="checkbox" @bind="_shareDraft" disabled="@_saving" />
+                            <span>Share with the board</span>
+                        </label>
+                        <button type="button" class="isa-nb__saveBtn" @onclick="SaveNoteAsync"
+                                disabled="@(_saving || string.IsNullOrWhiteSpace(_draft))">@(_saving ? "Checking..." : "Save note")</button>
+                    </div>
+                    @if (_problem is not null)
+                    {
+                        <p class="isa-nb__problem" role="status">@_problem</p>
+                    }
+                    else if (_justSaved)
+                    {
+                        <p class="isa-nb__saved" role="status">Saved to the notebook.</p>
+                    }
+                </section>
+            }
+
+            @* ---- The entries ---- *@
+            @if (_entries.Count == 0)
+            {
+                <p class="isa-nb__empty">Nothing here yet. Notes and saved answers from your chapter's presidents will appear here.</p>
+            }
+            else
+            {
+                <ol class="isa-nb__entries" aria-label="Notebook entries">
+                    @foreach (var e in _entries)
+                    {
+                        var mine = e.AuthorId == _personId;
+                        <li class="isa-nb__entry">
+                            <div class="isa-nb__entryTop">
+                                <span class="isa-nb__tag">@(e.Kind == "saved_answer" ? "Saved answer" : CategoryLabel(e.Category))</span>
+                                @if (e.Shared)
+                                {
+                                    <span class="isa-nb__sharedTag">Shared with the board</span>
+                                }
+                            </div>
+
+                            @if (e.Kind == "saved_answer")
+                            {
+                                <p class="isa-nb__q">@e.Question</p>
+                                <p class="isa-nb__a">@e.Answer</p>
+                                @if (e.Sources.Count > 0)
+                                {
+                                    <ul class="isa-nb__sources" aria-label="Sources">
+                                        @foreach (var s in e.Sources)
+                                        {
+                                            <li>@s.Document &middot; @s.Section@(s.Page is "" or "n/a" ? "" : $" · p. {s.Page}")</li>
+                                        }
+                                    </ul>
+                                }
+                                @if (!string.IsNullOrEmpty(e.Note))
+                                {
+                                    <p class="isa-nb__decided"><span>What we decided:</span> @e.Note</p>
+                                }
+                            }
+                            else
+                            {
+                                <p class="isa-nb__note">@e.Note</p>
+                            }
+
+                            <p class="isa-nb__meta">@e.AuthorName &middot; @e.AuthorRole &middot; @DayLabel(e.OnDate)</p>
+
+                            @if (mine && _access.CanWrite)
+                            {
+                                <div class="isa-nb__own">
+                                    <label class="isa-nb__share">
+                                        <input type="checkbox" checked="@e.Shared" @onchange="ev => SetShared(e, (bool)ev.Value!)" />
+                                        <span>Share with the board</span>
+                                    </label>
+                                    @if (_confirmRemove == e.EntryId)
+                                    {
+                                        <span class="isa-nb__confirm">
+                                            Remove this entry?
+                                            <button type="button" class="isa-nb__linkBtn" @onclick="() => Remove(e)">Remove</button>
+                                            <button type="button" class="isa-nb__linkBtn" @onclick="() => _confirmRemove = null">Keep</button>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="isa-nb__linkBtn" @onclick="() => _confirmRemove = e.EntryId">Remove</button>
+                                    }
+                                </div>
+                            }
+                        </li>
+                    }
+                </ol>
+            }
+        }
+    </div>
+</aside>
+
+@code {
+    /// <summary>Called by the close button. The chat widget closes this panel and slides the others back.</summary>
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    /// <summary>Called by the Enlarge button. The chat widget widens this panel to half the screen, or back.</summary>
+    [Parameter] public EventCallback OnToggleEnlarge { get; set; }
+
+    /// <summary>True while this panel is enlarged (the button shows "Make smaller").</summary>
+    [Parameter] public bool Enlarged { get; set; }
+
+    /// <summary>Goes up when something is saved to the notebook from the chat, so this panel reads its entries again.</summary>
+    [Parameter] public int Version { get; set; }
+
+    /// <summary>Width and position, worked out by the chat widget so the panels sit side by side.</summary>
+    [Parameter] public string Style { get; set; } = "";
+
+    // Who is signed in, from the sign-in cookie.
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private string? _personId;
+    private string? _sessionId;
+    private NotebookAccess _access = NotebookAccess.None;
+    private IReadOnlyList<NotebookEntry> _entries = Array.Empty<NotebookEntry>();
+
+    private string _category = "decision";
+    private string _draft = "";
+    private bool _shareDraft;
+    private bool _saving;
+    private bool _justSaved;
+    private string? _problem;
+    private long? _confirmRemove;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthState is not null)
+        {
+            var user = (await AuthState).User;
+            _personId = user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
+            _sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+        }
+        Reload();
+    }
+
+    // Reads the rules and the entries again, for the leader's "today" (the demo date when it is on).
+    private void Reload()
+    {
+        _access = _personId is null ? NotebookAccess.None : Notebook.GetAccess(_personId, Settings.Today);
+        _entries = _personId is null ? Array.Empty<NotebookEntry>() : Notebook.GetEntries(_personId, Settings.Today);
+    }
+
+    private string PrivacyLine =>
+        !_access.SeesAll ? "You're seeing the entries your president shared with the board."
+        : _access.HandoffEnds is DateOnly ends ? $"Only presidents see this notebook, unless an entry is shared with the board. You can add to it until {DayLabel(ends)}."
+        : "Only you see this notebook, unless you share an entry with the board. The outgoing president can also see it for 30 days after their term.";
+
+    private async Task SaveNoteAsync()
+    {
+        if (_personId is null || _saving) return;
+        _saving = true;
+        _problem = null;
+        _justSaved = false;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(_sessionId);
+            var result = await Notebook.AddNoteAsync(_personId, Settings.Today, _category, _draft, _shareDraft,
+                token is null ? null : $"Bearer {token}");
+            if (result.IsSaved)
+            {
+                _draft = "";
+                _shareDraft = false;
+                _justSaved = true;
+                Reload();
+            }
+            else
+            {
+                _problem = result.Problem;
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void SetShared(NotebookEntry e, bool share)
+    {
+        if (_personId is null) return;
+        Notebook.SetShared(_personId, e.EntryId, share, Settings.Today);
+        Reload();
+    }
+
+    private void Remove(NotebookEntry e)
+    {
+        if (_personId is null) return;
+        Notebook.Remove(_personId, e.EntryId, Settings.Today);
+        _confirmRemove = null;
+        Reload();
+    }
+
+    private static string CategoryLabel(string? category) => category switch
+    {
+        "decision" => "Decision",
+        "contact" => "Contact",
+        "worked" => "What worked",
+        "unfinished" => "Unfinished",
+        _ => "Other",
+    };
+
+    private static string Placeholder(string category) => category switch
+    {
+        "decision" => "What did the board decide, and why?",
+        "contact" => "Who should the next president know, and what for?",
+        "worked" => "What worked well this year?",
+        "unfinished" => "What's still open, and what's the next step?",
+        _ => "Anything else the next president should know",
+    };
+
+    private static string DayLabel(DateOnly d) => d.ToString("ddd d MMMM", CultureInfo.InvariantCulture);
+}
