@@ -31,6 +31,7 @@ public static class WorkStepText
     public enum StepState
     {
         Passed,     // green check
+        NotFound,   // blue "?": a search found nothing (handled, not an error)
         Stopped,    // blue "no entry": Isa declined, as designed
         ToPerson,   // blue person: handed to a person
         Problem,    // a real error: blue "try again" for leaders, red in developer mode
@@ -112,6 +113,22 @@ public static class WorkStepText
         };
     }
 
+    /// <summary>What Isa is doing right now, from the stage a "started" update names.</summary>
+    public static string RunningStage(string stage) => stage switch
+    {
+        "front_end" => "Reading your question",
+        "access_control" => "Checking you can use Isa",
+        "translation" => "Checking the language",
+        "input_compliance" => "Checking your question",
+        "database_search" => "Searching ISACA's approved content",
+        "knowledge_graph" => "Looking for related topics",
+        "rag" => "Gathering passages",
+        "complex_ai" => "Writing the answer",
+        "output_compliance" => "Checking the answer against its sources",
+        "ticketing" => "Passing your question to a person",
+        _ => "Working on your question",
+    };
+
     /// <summary>How many stages this run will have, for "Step 5 of 9".</summary>
     public static int TotalStages(IReadOnlyList<WorkStep> finished) =>
         Order.Length + (finished.Any(s => s.Outcome == "escalate") ? 1 : 0);
@@ -120,6 +137,7 @@ public static class WorkStepText
     public static StepState StateOf(WorkStep step) =>
         IsError(step) ? StepState.Problem
         : step.Skipped || DidNothing(step) ? StepState.Skipped
+        : step.Outcome == "not_found" ? StepState.NotFound
         : step.Outcome == "stop" ? StepState.Stopped
         : step.Outcome == "escalate" ? StepState.ToPerson
         : StepState.Passed;
@@ -173,6 +191,7 @@ public static class WorkStepText
 
             case "rag":
                 if (step.Skipped) return L("Skipped gathering passages", "Direct hit: the exact text answers it");
+                if (state == StepState.ToPerson) return L("Gathered the passages to answer from", "Nothing approved to answer from, so it's going to a person");
                 if (step.DataText.StartsWith("no_context")) return L("Gathered the passages to answer from", "There was nothing to gather");
                 return L("Gathered the passages to answer from", Number(step.DataText, "passages") is int p ? Passages(p) : null);
 

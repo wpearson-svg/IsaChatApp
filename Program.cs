@@ -129,7 +129,7 @@ app.MapPost("/api/ask", async (AskRequest req, HttpRequest http, OrchestratorSer
     {
         TraceId = string.IsNullOrWhiteSpace(req.TraceId) ? Guid.NewGuid().ToString() : req.TraceId!,
         Question = req.Question,
-        Language = req.Language ?? "en",
+        // Language is not taken from the caller: the front end works it out (LanguageCheck).
         IncomingToken = http.Headers.Authorization.FirstOrDefault(),
     };
 
