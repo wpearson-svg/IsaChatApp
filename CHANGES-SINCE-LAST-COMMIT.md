@@ -76,7 +76,11 @@ No code changed.
 
 - **Claude outputs/Isa hand-off and refusal rules - proposal for review.pdf** (new, 7 pages): which questions Isa answers, passes to a person, or declines, for the real Input Compliance gate (Willis and Matthew's stage). Covers the four outcomes (answer; answer, then point to a person; pass to a person; stop), the "always to a person" topic groups A to H with suggested routes, the requests Isa stops, ways people may try to get around Isa and what protects against each, other considerations, and next steps with decisions for Willis. Also kept as an editable doc: https://claude.ai/artifact/UcHZZuoo2quuEV7JwDzSfW
 - **docs/Handoff_and_Refusal_Rules_Proposal.md** (new): the same proposal as a Markdown file in the docs folder, so it lives with the code and shows up in Git.
-- **docs/Show_the_Work_Wording.md** (new): the wording table for review with Willis: the plain label and message for each of the 10 pipeline stages in each state (running, passed, stopped, passed to a person, something went wrong, skipped in developer mode), the closed line above each reply, the reply bubble labels and messages, and the two hand-off messages with the ticket reference (plus the safety line). The AI step is shown as "Diving Deeper". Its last section lists the 8 changes from today's code, with the file and owner for each. No code changed yet.
+- **docs/Show_the_Work_Wording.md** (new): the wording table for review with Willis: the plain label and message for each of the 10 pipeline stages in each state (running, passed, stopped, passed to a person, something went wrong, skipped in developer mode), the closed line above each reply, the reply bubble labels and messages, and the two hand-off messages with the ticket reference (plus the safety line). The AI step is shown as "Diving Deeper". Its last section lists the 8 changes from today's code, with the file and owner for each. No code changed yet. Marked as a DRAFT: the wording is still to be reviewed by Matthew and Willis.
+
+## Project instructions
+
+- **CLAUDE.md**: the Git rule is now explicit: Claude never commits, merges or pushes, under any circumstances; those are Matthew's job only. Claude prepares the work (builds it, keeps this list and the commit message ready) and may use read-only Git commands.
 
 The last two commits, for reference:
 - "Add show the work, succession notebook and three-panel layout; fit journey to five phases" (afc89d7): everything from 20 October.
@@ -109,4 +113,7 @@ Greet leaders in their own language; add the Today note; open replies at their s
   "Your first 90 days" bands match in height with the progress bars aligned
 - Sign-in page: fix build warning BL0008 (the form input is created in
   OnInitialized instead of with a starting value); the build has no warnings
+- Docs for review with Willis: docs/Handoff_and_Refusal_Rules_Proposal.md
+  (plus a PDF in Claude outputs/) and docs/Show_the_Work_Wording.md (DRAFT)
+- CLAUDE.md: Claude never commits, merges or pushes; Matthew does
 ```

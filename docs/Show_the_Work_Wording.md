@@ -1,5 +1,7 @@
 # Isa wording table: what leaders see at each stage
 
+**DRAFT: wording not yet decided. Don't build from this until Matthew and Willis have agreed it.**
+
 October 20, 2026 · Matthew Brady · for review with Willis
 
 The user-facing label and message for each pipeline stage and each state, in plain words. It covers "show the work" (the line above each reply and the steps it opens into), the reply bubble itself, and the hand-off messages that carry the ticket reference. The AI step is shown as **"Diving Deeper"**.
