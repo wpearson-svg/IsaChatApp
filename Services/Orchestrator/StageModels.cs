@@ -31,7 +31,8 @@ public class QueryContext
     /// <summary>Who the person is, read from the sign-in token (chapter_role, permission, term_start, term_end, years_as_leader, language, formality, form_of_address ...). Empty for accounts without them.</summary>
     public IReadOnlyDictionary<string, string> Profile { get; set; } = new Dictionary<string, string>();
     public string Question { get; set; } = "";
-    public string Language { get; set; } = "en";
+    /// <summary>Two-letter code from the quick language check, set by the front end (LanguageCheck). "und" = could not tell, treated as not English.</summary>
+    public string Language { get; set; } = "und";
 
     // Filled by earlier stages
     public List<Passage> Passages { get; set; } = new();
@@ -68,6 +69,27 @@ public record WorkStep(
     string? Reason,
     string DataText,
     double ElapsedMs
+);
+
+/// <summary>The three kinds of live update (stage contract, section 6).</summary>
+public enum StagePhase { Started, Finished, Done }
+
+/// <summary>
+/// One live update from a run, so the chat can show "Show the work" as it
+/// happens (stage contract section 6, decided in task T2W).
+/// Started: a stage that really runs has begun (Stage is set).
+/// Finished: a stage ended; Step is the same entry added to work_steps.
+///   A skipped stage sends only Finished, with Step.Skipped = true.
+/// Done: the run is over; Status is answered, stopped or escalated.
+/// Never carries the question text or the model's own reasoning.
+/// </summary>
+public record StageProgress(
+    string TraceId,
+    int Seq,
+    StagePhase Phase,
+    string Stage = "",
+    WorkStep? Step = null,
+    string? Status = null
 );
 
 public record Passage(

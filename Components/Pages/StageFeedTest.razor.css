@@ -1,0 +1,12 @@
+.sf { max-width: 560px; margin: 1.5rem auto; padding: 0 16px; font-family: system-ui, sans-serif; color: #1d2d5c; }
+.sf h1 { font-size: 1.3rem; margin: 0 0 .25rem; }
+.sf__lead { margin: 0 0 1rem; color: #4a5a78; font-size: .9rem; }
+.sf__controls { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: .75rem; font-size: .85rem; }
+.sf__cases { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .5rem; }
+.sf__cases li { display: flex; gap: .6rem; align-items: flex-start; font-size: .85rem; }
+.sf__cases button { flex: 0 0 auto; padding: .3rem .7rem; border: 0; border-radius: 6px; background: #1d2d5c; color: #fff; cursor: pointer; }
+.sf__cases button:disabled { opacity: .5; cursor: default; }
+.sf__cases small { color: #4a5a78; }
+.sf__bubble { border: 1px solid #d5e0ea; border-radius: 10px; padding: .75rem; background: #fff; }
+.sf__q { font-size: .85rem; margin-bottom: .5rem; color: #4a5a78; }
+.sf__status { margin-top: .5rem; font-size: .8rem; color: #4a5a78; }

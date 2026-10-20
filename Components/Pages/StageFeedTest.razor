@@ -1,0 +1,79 @@
+@page "/dev/stage-feed"
+@rendermode InteractiveServer
+@using IsaChatApp.Services.Orchestrator
+@using IsaChatApp.Services.ShowTheWork
+@implements IDisposable
+@*
+    Test page for "Show the work" (task T3W). Plays the made-up stage feed for
+    the five test questions (stage contract section 11) through the same panel
+    the chat uses, so the panel's behavior can be checked before the real stages
+    report anything. No pipeline, no model.
+*@
+
+<PageTitle>Show the work: made-up feed</PageTitle>
+
+<div class="sf">
+    <h1>Show the work: made-up feed</h1>
+    <p class="sf__lead">Pick a question to play. The panel below is the one the chat uses. Nothing here calls the pipeline or a model.</p>
+
+    <div class="sf__controls">
+        <label>Seconds per stage
+            <input type="range" min="0" max="2" step="0.1" @bind="_seconds" @bind:event="oninput" /> @_seconds.ToString("0.0")
+        </label>
+        <label><input type="checkbox" @bind="_developer" /> Developer view</label>
+    </div>
+
+    <ol class="sf__cases">
+        @foreach (var c in MockStageFeed.Cases)
+        {
+            <li>
+                <button type="button" disabled="@_running" @onclick="() => Play(c.Number)">Play @c.Number</button>
+                <span><b>@c.Question</b><br /><small>@c.Expect</small></span>
+            </li>
+        }
+    </ol>
+
+    @if (_state is not null)
+    {
+        <div class="sf__bubble">
+            <div class="sf__q">@_question</div>
+            @if (!_state.IsDone)
+            {
+                <ShowTheWork Steps="@_state.Finished" Current="@_state.Current" Live="true" Developer="@_developer" />
+            }
+            else
+            {
+                @* The done update: the live panel is replaced by the finished one, closed. *@
+                <ShowTheWork @key="_runId" Steps="@_state.Finished" TotalMs="@_state.Finished.Sum(s => s.ElapsedMs)" Developer="@_developer" />
+                <div class="sf__status">Status: <b>@_state.Status</b></div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private StageFeedState? _state;
+    private string _question = "";
+    private bool _running, _developer;
+    private double _seconds = 0.7;
+    private int _runId;
+    private CancellationTokenSource? _cts;
+
+    private async Task Play(int number)
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        _running = true;
+        _runId++;
+        var state = _state = new StageFeedState();
+        _question = MockStageFeed.Cases.First(c => c.Number == number).Question;
+        try
+        {
+            await MockStageFeed.PlayAsync(number, async p => { state.Apply(p); await InvokeAsync(StateHasChanged); }, (int)(_seconds * 1000), _cts.Token);
+        }
+        catch (OperationCanceledException) { }
+        finally { _running = false; }
+    }
+
+    public void Dispose() => _cts?.Cancel();
+}

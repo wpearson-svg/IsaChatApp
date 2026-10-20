@@ -38,7 +38,10 @@ public class Orchestrator
 
         // front_end event as soon as the question arrives
         // The question text is never logged. user_id does not exist yet (access_control sets it).
-        var frontEndData = $"question_chars={ctx.Question.Length}";
+        // The quick language check (T4W) runs here, before any stage, so the
+        // whole pipeline sees the language. English skips translation.
+        ctx.Language = LanguageCheck.Detect(ctx.Question);
+        var frontEndData = $"question_chars={ctx.Question.Length}; language={ctx.Language}";
         await _eventLog.WriteAsync(ctx.TraceId, "front_end",
             $"result=pass; reason=none; {frontEndData}");
         await AddStepAsync(new WorkStep("front_end", "pass", false, null, frontEndData, 0));

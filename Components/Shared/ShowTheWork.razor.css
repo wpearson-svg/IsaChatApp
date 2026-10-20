@@ -202,6 +202,22 @@
     font-size: 0.72rem;
 }
 
+.isa-work__liveToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    align-self: flex-start;
+    margin: 0.1rem 0 0 1.6rem;
+    padding: 0.1rem 0;
+    border: 0;
+    background: none;
+    color: var(--work-handled);
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.isa-work__liveToggle:hover { text-decoration: underline; }
+
 @media (prefers-reduced-motion: reduce) {
     .isa-work__spinner, .isa-work__steps { animation: none; }
     .isa-work__shimmer { animation: none; background: none; color: var(--work-ink); }

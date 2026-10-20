@@ -183,7 +183,11 @@ public class TranslationStage : IStage
 {
     public string Name => "translation";
     public Task<StageResult> RunAsync(QueryContext ctx)
-        => Task.FromResult(new StageResult(StageOutcome.Pass, null, $"lang={ctx.Language}"));
+        => Task.FromResult(ctx.Language == "en"
+            // English needs no translation: the contract's "skipped, english" (shown gray in developer view).
+            ? new StageResult(StageOutcome.Pass, null, "english", Skipped: true)
+            // Any other language (or "und"): still a stub that passes the text through unchanged.
+            : new StageResult(StageOutcome.Pass, null, $"from={ctx.Language}"));
 }
 
 /// <summary>

@@ -28,10 +28,11 @@
 {
     var stepNo = Math.Min(Steps.Count + 1, TotalStages(Steps));
     var total = TotalStages(Steps);
-    <div class="isa-work isa-work--live" role="status" aria-live="polite">
-        <div class="isa-work__liveRow">
+    var shown = Lines(Steps, Developer);
+    <div class="isa-work isa-work--live @(_open ? "isa-work--open" : "")">
+        <div class="isa-work__liveRow" role="status" aria-live="polite">
             <span class="isa-work__spinner" aria-hidden="true"></span>
-            <span class="isa-work__shimmer">@Running(Steps)&hellip;</span>
+            <span class="isa-work__shimmer">@(string.IsNullOrEmpty(Current) ? Running(Steps) : RunningStage(Current))&hellip;</span>
         </div>
         <div class="isa-work__dots" aria-label="Step @stepNo of @total">
             @for (var i = 0; i < total; i++)
@@ -40,6 +41,16 @@
             }
             <small aria-hidden="true">Step @stepNo of @total</small>
         </div>
+        @if (shown.Count > 0)
+        {
+            @* Finished steps collect here. Closed until someone asks. *@
+            <button type="button" class="isa-work__liveToggle" aria-expanded="@(_open ? "true" : "false")"
+                    @onclick="() => _open = !_open">
+                @(_open ? "Hide" : "Show") the @(shown.Count == 1 ? "1 step" : $"{shown.Count} steps") done so far
+                <span class="isa-work__chevron" aria-hidden="true"></span>
+            </button>
+            @if (_open) { @StepList(shown) }
+        }
     </div>
 }
 else
@@ -61,26 +72,7 @@ else
 
         @if (_open)
         {
-            <ol class="isa-work__steps" aria-label="Steps Isa took">
-                @foreach (var line in Lines(Steps, Developer))
-                {
-                    <li class="isa-work__step isa-work__step--@ToneOf(line.State)">
-                        @Icon(line.State, 16)
-                        <span class="isa-work__body">
-                            <span class="isa-work__text">@line.Text<span class="visually-hidden"> (@StateLabel(line.State))</span></span>
-                            @if (!string.IsNullOrEmpty(line.Detail))
-                            {
-                                <span class="isa-work__detail">@line.Detail</span>
-                            }
-                            @if (Developer)
-                            {
-                                var s = line.Step;
-                                <span class="isa-work__raw @(line.State == StepState.Problem ? "isa-work__raw--error" : "")">@s.Stage &middot; @s.Outcome@(s.Skipped ? " (skipped)" : "") &middot; @FormatMs(s.ElapsedMs)@(string.IsNullOrEmpty(s.DataText) ? "" : " · " + s.DataText)</span>
-                            }
-                        </span>
-                    </li>
-                }
-            </ol>
+            @StepList(Lines(Steps, Developer))
         }
     </div>
 }
@@ -98,7 +90,35 @@ else
     /// <summary>Developer mode: show every stage, gray skipped steps, red errors and the raw data text.</summary>
     [Parameter] public bool Developer { get; set; }
 
+    /// <summary>Live only: the stage running right now, from the latest "started" update (empty = work it out from the finished steps).</summary>
+    [Parameter] public string? Current { get; set; }
+
     private bool _open;
+
+    // The list of steps, used both while working and after the reply.
+    private RenderFragment StepList(IReadOnlyList<StepLine> lines) => __builder =>
+    {
+        <ol class="isa-work__steps" aria-label="Steps Isa took">
+            @foreach (var line in lines)
+            {
+                <li class="isa-work__step isa-work__step--@ToneOf(line.State)">
+                    @Icon(line.State, 16)
+                    <span class="isa-work__body">
+                        <span class="isa-work__text">@line.Text<span class="visually-hidden"> (@StateLabel(line.State))</span></span>
+                        @if (!string.IsNullOrEmpty(line.Detail))
+                        {
+                            <span class="isa-work__detail">@line.Detail</span>
+                        }
+                        @if (Developer)
+                        {
+                            var s = line.Step;
+                            <span class="isa-work__raw @(line.State == StepState.Problem ? "isa-work__raw--error" : "")">@s.Stage &middot; @s.Outcome@(s.Skipped ? " (skipped)" : "") &middot; @FormatMs(s.ElapsedMs)@(string.IsNullOrEmpty(s.DataText) ? "" : " · " + s.DataText)</span>
+                        }
+                    </span>
+                </li>
+            }
+        </ol>
+    };
 
     // The color family for a state. A real error is blue ("handled") for
     // leaders and red only in developer mode; skipped is gray.
@@ -129,6 +149,7 @@ else
     private string StateLabel(StepState state) => state switch
     {
         StepState.Passed => "passed",
+        StepState.NotFound => "nothing found",
         StepState.Stopped => "stopped here",
         StepState.ToPerson => "passed to a person",
         StepState.Problem => Developer ? "error" : "something went wrong",
@@ -145,6 +166,11 @@ else
                 case StepState.Passed:
                     <circle cx="10" cy="10" r="10" fill="currentColor" />
                     <path d="M5.5 10.3l3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    break;
+                case StepState.NotFound:
+                    <circle cx="10" cy="10" r="10" fill="currentColor" />
+                    <path d="M7.6 7.8a2.5 2.5 0 1 1 3.6 2.2c-.9.5-1.2.9-1.2 1.8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                    <circle cx="10" cy="14.6" r="1.2" fill="#fff" />
                     break;
                 case StepState.Stopped:
                     <circle cx="10" cy="10" r="10" fill="currentColor" />
