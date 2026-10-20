@@ -31,27 +31,29 @@
         <div class="isa-journey__head">
             <span class="isa-journey__titles">
                 <span class="isa-journey__title">Your first 90 days</span>
-                <span class="isa-journey__when">Week @_ctx.Week &middot; Day @_ctx.Term.DayOfTerm</span>
+                @* The role sits in this line (not a separate badge) so the
+                   strip stays one row and lines up with the Today window's
+                   band beside it. *@
+                <span class="isa-journey__when">Week @_ctx.Week &middot; Day @_ctx.Term.DayOfTerm &middot; @_ctx.BadgeText</span>
             </span>
             <button type="button" class="isa-journey__today @(TodayOpen ? "is-active" : "")"
                     @onclick="OnToggleToday" aria-pressed="@(TodayOpen ? "true" : "false")"
-                    title="@(TodayOpen ? "Close Today" : "Open Today")">
+                    title="@(TodayOpen ? "Close Today" : "Open Today")" aria-label="Today">
                 <svg class="isa-journey__todayIcon" viewBox="0 0 16 16" aria-hidden="true">
                     <rect x="1.5" y="2.5" width="13" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
                     <path d="M1.5 6 H14.5 M5 1 V4 M11 1 V4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                 </svg>
-                Today
+                <span class="isa-journey__btnText">Today</span>
             </button>
             @* Opens the succession notebook beside the chat (ChatWidget.razor). *@
             <button type="button" class="isa-journey__today @(NotebookOpen ? "is-active" : "")"
                     @onclick="OnToggleNotebook" aria-pressed="@(NotebookOpen ? "true" : "false")"
-                    title="@(NotebookOpen ? "Close the notebook" : "Open the succession notebook")">
+                    title="@(NotebookOpen ? "Close the notebook" : "Open the succession notebook")" aria-label="Notebook">
                 <svg class="isa-journey__todayIcon" viewBox="0 0 16 16" aria-hidden="true">
                     <path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2Z M3 11.5a2 2 0 0 1 2-2h7.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
                 </svg>
-                Notebook
+                <span class="isa-journey__btnText">Notebook</span>
             </button>
-            <span class="isa-journey__badge">@_ctx.BadgeText</span>
         </div>
 
         <div class="isa-journey__bar" role="progressbar" aria-valuemin="0" aria-valuemax="90"

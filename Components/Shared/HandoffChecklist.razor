@@ -1,0 +1,182 @@
+@* ============================================================
+   HandoffChecklist.razor
+
+   Onboarding feature, piece A (see ONBOARDING-FEATURE.md): the outgoing
+   president's handoff checklist, at the top of the succession notebook
+   panel (NotebookPanel.razor).
+
+   - Shown to a president in the last 30 days of their term, and to a
+     former president for the 30 days after it ends (HandoffService).
+   - The 13 items are the President Guidebook's own words, unchanged
+     (p. 8, and the Turnover Procedures on pp. 12-13), each with a short
+     title in Isa's words (Matthew's choice). Tapping a title shows the
+     guidebook's text and its page, "Mark as done", and the item's history.
+   - "List the open items" (H-06) also offers "Add to the notebook", which
+     opens the notebook's "Add a note" box with "Unfinished" chosen, so
+     the open items end up where the next president will find them.
+   - "Mark as done" is kept in the same progress record as the journey
+     steps (ProgressService); every change is added to the history.
+   Nothing here comes from the AI model.
+   ============================================================ *@
+
+@using System.Globalization
+@using System.Text.RegularExpressions
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject HandoffService Handoff
+@inject ProgressService Progress
+
+@if (_ctx is not null)
+{
+    var doneCount = _ctx.Steps.Count(s => _done.ContainsKey(s.StepId));
+    <section class="isa-handoff" aria-label="Your handoff checklist">
+        <div class="isa-handoff__head">
+            <h2 class="isa-handoff__title">Your handoff checklist</h2>
+            <span class="isa-handoff__count">@doneCount of @_ctx.Steps.Count done</span>
+        </div>
+        <div class="isa-handoff__bar" role="progressbar" aria-valuemin="0" aria-valuemax="@_ctx.Steps.Count" aria-valuenow="@doneCount">
+            <span style="width: @(doneCount * 100 / _ctx.Steps.Count)%"></span>
+        </div>
+        <p class="isa-handoff__when">@WhenLine</p>
+        <p class="isa-handoff__from">From the President Guidebook (August 2026): its handover items, in its own words.</p>
+
+        <ol class="isa-handoff__list">
+            @foreach (var step in _ctx.Steps)
+            {
+                var isDone = _done.TryGetValue(step.StepId, out var d);
+                var open = _openId == step.StepId;
+                <li class="isa-handoff__item @(isDone ? "is-done" : "") @(open ? "is-open" : "")">
+                    <button type="button" class="isa-handoff__row" aria-expanded="@(open ? "true" : "false")"
+                            @onclick="() => Toggle(step.StepId)">
+                        <span class="isa-handoff__check @(isDone ? "is-on" : "")" aria-hidden="true"></span>
+                        <span class="isa-handoff__stepTitle">@step.Title<span class="visually-hidden">@(isDone ? " (done)" : "")</span></span>
+                        <span class="isa-handoff__chev" aria-hidden="true"></span>
+                    </button>
+
+                    @if (open)
+                    {
+                        <div class="isa-handoff__body">
+                            @{ var (lead, examples) = SplitExamples(step.Text); }
+                            <blockquote class="isa-handoff__quote">
+                                <p>@lead</p>
+                                @if (examples.Count > 0)
+                                {
+                                    <p class="isa-handoff__exLead">Examples may include:</p>
+                                    <ul>
+                                        @foreach (var ex in examples)
+                                        {
+                                            <li>@ex</li>
+                                        }
+                                    </ul>
+                                }
+                            </blockquote>
+                            <p class="isa-handoff__source">
+                                <span class="isa-handoff__sourceIcon" aria-hidden="true"></span>
+                                @step.Source
+                            </p>
+                            <div class="isa-handoff__actions">
+                                @if (isDone)
+                                {
+                                    <span class="isa-handoff__doneOn">Done on @d!.DoneOn?.ToString("ddd d MMMM", CultureInfo.InvariantCulture)</span>
+                                    <button type="button" class="isa-handoff__link" @onclick="() => MarkNotDone(step)">Mark as not done</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="isa-handoff__primary" @onclick="() => MarkDone(step)">Mark as done</button>
+                                }
+                                @if (step.NotebookKind is not null && CanAddToNotebook)
+                                {
+                                    <button type="button" class="isa-handoff__secondary" @onclick="() => OnAddToNotebook.InvokeAsync(step.NotebookKind)">Add to the notebook</button>
+                                }
+                            </div>
+                            <StepHistoryList Entries="_history" />
+                        </div>
+                    }
+                </li>
+            }
+        </ol>
+    </section>
+}
+
+@code {
+    /// <summary>
+    /// Called by "Add to the notebook" with the note kind to start with
+    /// (e.g. "unfinished"). The notebook panel opens its "Add a note" box.
+    /// </summary>
+    [Parameter] public EventCallback<string> OnAddToNotebook { get; set; }
+
+    /// <summary>Called after an item is marked done or not done, so the Today note can update its count.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    /// <summary>False when the person can no longer write to the notebook, so "Add to the notebook" is hidden.</summary>
+    [Parameter] public bool CanAddToNotebook { get; set; } = true;
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private HandoffContext? _ctx;
+    private IReadOnlyDictionary<string, StepDone> _done = new Dictionary<string, StepDone>();
+    private IReadOnlyList<StepHistoryEntry> _history = Array.Empty<StepHistoryEntry>();
+    private string? _openId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is null) return;
+        var user = (await AuthState).User;
+        _ctx = Handoff.GetFor(user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value);
+        if (_ctx is not null) _done = Progress.GetCompletedSteps(_ctx.PersonId);
+    }
+
+    private string WhenLine
+    {
+        get
+        {
+            if (_ctx is null) return "";
+            string Day(DateOnly x) => x.ToString("d MMMM", CultureInfo.InvariantCulture);
+            string Days(int n) => n == 1 ? "1 day" : $"{n} days";
+            return _ctx.TermHasEnded
+                ? $"Your term ended on {Day(_ctx.Term.TermEnd)}. You can work through this, and add to the notebook, until {Day(_ctx.WindowEnds)} ({Days(_ctx.DaysLeft)} left)."
+                : $"Your term ends on {Day(_ctx.Term.TermEnd)} ({Days(_ctx.DaysLeft)} left). Hand over what your successor will need.";
+        }
+    }
+
+    private void Toggle(string stepId)
+    {
+        _openId = _openId == stepId ? null : stepId;
+        _history = _ctx is null || _openId is null ? Array.Empty<StepHistoryEntry>() : Progress.GetHistory(_ctx.PersonId, _openId);
+    }
+
+    private async Task MarkDone(HandoffStep step)
+    {
+        if (_ctx is null) return;
+        Progress.CompleteStep(_ctx.PersonId, step.StepId, "done", _ctx.Today);
+        Refresh(step.StepId);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task MarkNotDone(HandoffStep step)
+    {
+        if (_ctx is null) return;
+        Progress.UndoStep(_ctx.PersonId, step.StepId, _ctx.Today);
+        Refresh(step.StepId);
+        await OnChanged.InvokeAsync();
+    }
+
+    private void Refresh(string stepId)
+    {
+        if (_ctx is null) return;
+        _done = Progress.GetCompletedSteps(_ctx.PersonId);
+        _history = Progress.GetHistory(_ctx.PersonId, stepId);
+    }
+
+    // The guidebook lists examples under "Examples may include:" (H-06).
+    // Shows them as a list, keeping every word as written.
+    private static (string Lead, List<string> Examples) SplitExamples(string text)
+    {
+        const string marker = "Examples may include:";
+        var at = text.IndexOf(marker, StringComparison.Ordinal);
+        if (at < 0) return (text, new List<string>());
+        var examples = Regex.Split(text[(at + marker.Length)..].Trim(), @"(?<=\.)\s+(?=[A-Z])")
+            .Where(s => s.Length > 0).ToList();
+        return (text[..at].Trim(), examples);
+    }
+}

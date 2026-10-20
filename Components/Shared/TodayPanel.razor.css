@@ -40,8 +40,15 @@
                 border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* The notebook is open to its right: no edge to sit flush against. */
-.isa-today.is-inner { border-radius: 12px; }
+/* Today always sits beside the chat, so its edges meet the windows
+   next to it square, with a thin divider instead of a shadow (a shadow
+   darkened the edge of the window beside it). */
+.isa-today,
+.isa-today.is-inner {
+    border-radius: 0;
+    box-shadow: none;
+    border-left: 1px solid #cbd2d9;
+}
 
 @keyframes isa-today-in {
     from { transform: translateX(24px); opacity: 0; }
@@ -71,6 +78,11 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.9rem 1.1rem;
+    /* Same fixed height in all three windows (chat, Today, Notebook), so
+       the blue headers line up side by side (Matthew, 20 October 2026).
+       72px fits the chat's round Isa badge (42px) plus its padding. */
+    height: 72px;
+    box-sizing: border-box;
     background: #1d2d5c;
     color: #ffffff;
 }
@@ -156,7 +168,14 @@
 
 .isa-today__summary {
     flex: 0 0 auto;
-    padding: 0.75rem 1.25rem 0.7rem;
+    /* Same fixed height, spacing and bar position as the chat's "Your
+       first 90 days" strip (JourneyCard.razor.css), so the two line up
+       side by side (Matthew, 20 October 2026). */
+    display: flex;
+    flex-direction: column;
+    height: 70px;
+    box-sizing: border-box;
+    padding: 0.65rem 1.25rem 0.65rem;
     border-bottom: 1px solid #cbd2d9;
 }
 
@@ -164,7 +183,6 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    margin-bottom: 0.55rem;
 }
 
 .isa-today__summaryTitles {
@@ -198,6 +216,8 @@
 }
 
 .isa-today__bar {
+    flex: 0 0 auto;
+    margin-top: auto;            /* pinned to the bottom of the band */
     height: 4px;
     border-radius: 999px;
     background: #e5e7eb;
@@ -219,6 +239,33 @@
     overflow-x: hidden;
     padding: 1rem 1.25rem 1.5rem;
     background: #f6f7f8;         /* ISACA Grey 1, like the chat */
+}
+
+/* Moving between screens inside the window: the new screen glides in a
+   short way with a fade, with the same gentle start and finish as the
+   window's own opening (isa-today-in), a little quicker because the move
+   is smaller. Forward (into a step or My progress) comes from the right;
+   back comes from the left. */
+.isa-today__view {
+    animation: isa-today-view-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.isa-today__view--back {
+    animation-name: isa-today-view-back;
+}
+
+@keyframes isa-today-view-in {
+    from { transform: translateX(16px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes isa-today-view-back {
+    from { transform: translateX(-16px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-today__view { animation: none; }
 }
 
 .isa-today__sectionTitle {

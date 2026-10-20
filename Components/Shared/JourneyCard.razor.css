@@ -10,6 +10,14 @@
 
 .isa-journey {
     flex: 0 0 auto;              /* keeps its own height inside the panel's column */
+    /* Same fixed height, spacing and bar position as the Today window's
+       band (TodayPanel.razor.css, .isa-today__summary), so the two line
+       up side by side (Matthew, 20 October 2026). */
+    display: flex;
+    flex-direction: column;
+    height: 70px;
+    box-sizing: border-box;
+    container-type: inline-size; /* lets the buttons shrink to icons when the chat is narrow */
     background: #ffffff;
     border-bottom: 1px solid #cbd2d9;   /* ISACA Grey 3 */
     font-family: 'Roboto', Arial, sans-serif;
@@ -19,14 +27,13 @@
 
 .isa-journey__head {
     display: flex;
-    flex-wrap: wrap;             /* when the chat is narrow (a quarter of the screen), the buttons move to a second row */
     align-items: center;
-    gap: 0.5rem 0.6rem;
-    padding: 0.65rem 1.25rem 0.5rem;
+    gap: 0.6rem;
+    padding: 0.65rem 1.25rem 0;
 }
 
 .isa-journey__titles {
-    flex: 1 1 10rem;             /* never squeezed narrower than its title */
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -42,6 +49,18 @@
 .isa-journey__when {
     font-size: 0.75rem;
     color: #52606d;              /* ISACA Grey 7 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* When the chat is narrow (a quarter of the screen, with another window
+   enlarged), the Today and Notebook buttons show only their icons, so the
+   strip never wraps to a second row. Screen readers still hear the
+   buttons' names (aria-label). */
+@container (max-width: 400px) {
+    .isa-journey__btnText { display: none; }
+    .isa-journey__today { padding: 0.3rem 0.5rem; }
 }
 
 /* The Today button: outlined in ISACA Medium Blue; filled while the
@@ -82,22 +101,13 @@
     height: 13px;
 }
 
-.isa-journey__badge {
-    flex: 0 0 auto;
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    background: #e7f0f5;
-    color: #1d2d5c;
-    font-size: 0.72rem;
-    font-weight: 600;
-    white-space: nowrap;
-}
 
 /* ---- Progress bar --------------------------------------------------- */
 
 .isa-journey__bar {
+    flex: 0 0 auto;
     height: 4px;
-    margin: 0 1.25rem 0.65rem;
+    margin: auto 1.25rem 0.65rem;  /* auto above: pinned to the bottom of the band */
     border-radius: 999px;
     background: #e5e7eb;         /* ISACA Grey 2 */
     overflow: hidden;

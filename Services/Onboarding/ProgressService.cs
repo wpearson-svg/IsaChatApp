@@ -59,6 +59,12 @@ public class ProgressService
               contact_id TEXT NOT NULL,
               message    TEXT NOT NULL,
               written_at TEXT NOT NULL);
+            -- The "Today" note: the days a leader tapped "Got it", so the
+            -- note shrinks to one line for the rest of that day.
+            CREATE TABLE IF NOT EXISTS today_note_seen(
+              person_id TEXT NOT NULL,
+              on_date   TEXT NOT NULL,   -- the leader's "today" (demo date when on), YYYY-MM-DD
+              PRIMARY KEY (person_id, on_date));
             -- The record: one row per change, only ever added to.
             CREATE TABLE IF NOT EXISTS step_history(
               entry_id    INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -190,6 +196,30 @@ public class ProgressService
 
     private static DateOnly ParseDate(string text) =>
         DateOnly.ParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    // ---- The "Today" note ------------------------------------------------
+
+    /// <summary>True if the leader tapped "Got it" on the Today note on this day.</summary>
+    public bool HasSeenTodayNote(string personId, DateOnly onDate)
+    {
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT 1 FROM today_note_seen WHERE person_id = $p AND on_date = $d;";
+        cmd.Parameters.AddWithValue("$p", personId);
+        cmd.Parameters.AddWithValue("$d", onDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        return cmd.ExecuteScalar() is not null;
+    }
+
+    /// <summary>Remembers that the leader tapped "Got it" on this day.</summary>
+    public void MarkTodayNoteSeen(string personId, DateOnly onDate)
+    {
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "INSERT OR IGNORE INTO today_note_seen(person_id, on_date) VALUES($p, $d);";
+        cmd.Parameters.AddWithValue("$p", personId);
+        cmd.Parameters.AddWithValue("$d", onDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        cmd.ExecuteNonQuery();
+    }
 
     // ---- Contact step: welcome call --------------------------------------
 

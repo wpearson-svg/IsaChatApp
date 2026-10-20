@@ -62,36 +62,40 @@
                 <div class="signin__error" role="alert">@ErrorMessage</div>
             }
 
-            <EditForm Model="Input" method="post" OnValidSubmit="HandleSignInAsync" FormName="isa-sign-in" class="signin__form">
-                <DataAnnotationsValidator />
+            @* Input is always set by OnInitialized; the check lets the compiler know. *@
+            @if (Input is not null)
+            {
+                <EditForm Model="Input" method="post" OnValidSubmit="HandleSignInAsync" FormName="isa-sign-in" class="signin__form">
+                    <DataAnnotationsValidator />
 
-                <div class="signin__field">
-                    <label class="signin__label" for="signin-email">@Text.EmailLabel</label>
-                    <InputText id="signin-email"
-                               class="signin__input"
-                               @bind-Value="Input.Email"
-                               type="text"
-                               inputmode="email"
-                               autocomplete="username"
-                               autocapitalize="none"
-                               spellcheck="false"
-                               dir="auto" />
-                    <ValidationMessage For="() => Input.Email" />
-                </div>
+                    <div class="signin__field">
+                        <label class="signin__label" for="signin-email">@Text.EmailLabel</label>
+                        <InputText id="signin-email"
+                                   class="signin__input"
+                                   @bind-Value="Input.Email"
+                                   type="text"
+                                   inputmode="email"
+                                   autocomplete="username"
+                                   autocapitalize="none"
+                                   spellcheck="false"
+                                   dir="auto" />
+                        <ValidationMessage For="() => Input.Email" />
+                    </div>
 
-                <div class="signin__field">
-                    <label class="signin__label" for="signin-password">@Text.PasswordLabel</label>
-                    <InputText id="signin-password"
-                               class="signin__input"
-                               @bind-Value="Input.Password"
-                               type="password"
-                               autocomplete="current-password"
-                               dir="auto" />
-                    <ValidationMessage For="() => Input.Password" />
-                </div>
+                    <div class="signin__field">
+                        <label class="signin__label" for="signin-password">@Text.PasswordLabel</label>
+                        <InputText id="signin-password"
+                                   class="signin__input"
+                                   @bind-Value="Input.Password"
+                                   type="password"
+                                   autocomplete="current-password"
+                                   dir="auto" />
+                        <ValidationMessage For="() => Input.Password" />
+                    </div>
 
-                <button type="submit" class="signin__submit">@Text.SubmitButton</button>
-            </EditForm>
+                    <button type="submit" class="signin__submit">@Text.SubmitButton</button>
+                </EditForm>
+            }
 
             <p class="signin__note">@Text.PrototypeNote</p>
 
@@ -128,8 +132,15 @@
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
+    // What the person typed into the sign-in form. Blazor fills this in
+    // when the form is sent, so it has no starting value of its own (a
+    // starting value could be overwritten with nothing on a form post:
+    // build warning BL0008). OnInitialized creates an empty form only if
+    // Blazor hasn't already filled it.
     [SupplyParameterFromForm(FormName = "isa-sign-in")]
-    private SignInInput Input { get; set; } = new();
+    private SignInInput? Input { get; set; }
+
+    protected override void OnInitialized() => Input ??= new();
 
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
 
@@ -137,6 +148,7 @@
 
     private async Task HandleSignInAsync()
     {
+        if (Input is null) return;   // can't happen after OnInitialized; keeps the compiler sure
         var result = await SignInService.SignInAsync(Input.Email, Input.Password);
 
         if (result.Outcome == SignInOutcome.Success && result.Principal is not null)

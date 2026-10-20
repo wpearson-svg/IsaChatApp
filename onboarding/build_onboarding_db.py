@@ -6,8 +6,11 @@ directory/build_directory_db.py: the CSV is the master copy, this script
 checks it and builds the database from empty every run.
 
 This database holds only CONTENT that comes from the CSV files: the
-journey steps (journey_steps.csv) and the invented sample Chapter
-Experience contacts (contacts.csv). Things leaders do in Isa, such as marking a step
+journey steps (journey_steps.csv), the invented sample Chapter
+Experience contacts (contacts.csv), the key calendar dates from
+ISACA documents, such as the compliance window (key_dates.csv), and the
+outgoing president's handoff checklist, word for word from the President
+Guidebook (handoff_steps.csv). Things leaders do in Isa, such as marking a step
 complete, will be stored in a separate database that this script never
 touches, so rebuilding never erases anyone's progress.
 
@@ -23,6 +26,15 @@ with open(os.path.join(here, "journey_steps.csv"), encoding="utf-8-sig", newline
 # Invented sample contacts only -- never real ISACA staff.
 with open(os.path.join(here, "contacts.csv"), encoding="utf-8-sig", newline="") as f:
     contacts = list(csv.DictReader(f))
+
+# Key calendar dates from ISACA documents (for the "Today" note).
+with open(os.path.join(here, "key_dates.csv"), encoding="utf-8-sig", newline="") as f:
+    key_dates = list(csv.DictReader(f))
+
+# The outgoing president's handoff checklist: the guidebook's own words,
+# with a short title for each item (Matthew's choice, 20 October 2026).
+with open(os.path.join(here, "handoff_steps.csv"), encoding="utf-8-sig", newline="") as f:
+    handoff = list(csv.DictReader(f))
 
 # ---- Check the data before building -------------------------------------
 problems = []
@@ -60,6 +72,32 @@ for c in contacts:
             problems.append(f"contacts.csv: chapter {ch} has two contacts ({seen_chapters[ch]} and {cid})")
         seen_chapters[ch] = cid
 
+for k in key_dates:
+    kid = k["Date ID"]
+    if not re.fullmatch(r"K-\d{2}", kid):
+        problems.append(f"key_dates.csv: bad Date ID {kid!r} (use K- and two digits, like K-01)")
+    for field in ("Title", "Starts (month-day)", "Source"):
+        if not k[field].strip():
+            problems.append(f"key_dates.csv {kid}: {field} is empty")
+    for field in ("Starts (month-day)", "Ends (month-day)"):
+        v = k[field].strip()
+        if v and not re.fullmatch(r"(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])", v):
+            problems.append(f"key_dates.csv {kid}: {field} must look like 11-01 (month-day)")
+
+handoff_ids = [h["Step ID"] for h in handoff]
+if len(set(handoff_ids)) != len(handoff_ids):
+    problems.append("handoff_steps.csv: duplicate Step ID")
+for h in handoff:
+    hid = h["Step ID"]
+    if not re.fullmatch(r"H-\d{2}", hid):
+        problems.append(f"handoff_steps.csv: bad Step ID {hid!r} (use H- and two digits, like H-01)")
+    for field in ("Title", "Guidebook text", "Source"):
+        if not h[field].strip():
+            problems.append(f"handoff_steps.csv {hid}: {field} is empty")
+    kind = h["Notebook kind"].strip()
+    if kind and kind not in ("decision", "contact", "worked", "unfinished", "other"):
+        problems.append(f"handoff_steps.csv {hid}: Notebook kind must be empty or a notebook note kind")
+
 if problems:
     print("DATA PROBLEMS:")
     for p in problems:
@@ -90,6 +128,20 @@ CREATE TABLE contacts(
   time_zone    TEXT NOT NULL,   -- e.g. Asia/Singapore
   email        TEXT NOT NULL
 );
+CREATE TABLE handoff_steps(
+  step_id       TEXT PRIMARY KEY,
+  title         TEXT NOT NULL,   -- short title, Isa's own words
+  text          TEXT NOT NULL,   -- the President Guidebook's words, unchanged
+  source        TEXT NOT NULL,   -- guidebook page
+  notebook_kind TEXT             -- if set, the item offers "Add to the notebook" with this note kind
+);
+CREATE TABLE key_dates(
+  date_id  TEXT PRIMARY KEY,
+  title    TEXT NOT NULL,     -- e.g. The annual compliance window
+  starts   TEXT NOT NULL,     -- month-day, every year, e.g. 11-01
+  ends     TEXT,              -- month-day, or empty for a single day
+  source   TEXT NOT NULL      -- the ISACA document it comes from
+);
 CREATE TABLE contact_chapters(
   chapter_id TEXT PRIMARY KEY,  -- each chapter has one contact
   contact_id TEXT NOT NULL REFERENCES contacts(contact_id)
@@ -102,6 +154,12 @@ db.executemany("INSERT INTO contacts VALUES(?,?,?,?,?,?)", [
     (c["Contact ID"], c["Name"].strip(), c["Team"].strip(), c["Region label"].strip(),
      c["Time zone"].strip(), c["Email"].strip()) for c in contacts])
 db.executemany("INSERT INTO contact_chapters VALUES(?,?)", list(seen_chapters.items()))
+db.executemany("INSERT INTO handoff_steps VALUES(?,?,?,?,?)", [
+    (h["Step ID"], h["Title"].strip(), h["Guidebook text"].strip(), h["Source"].strip(),
+     h["Notebook kind"].strip() or None) for h in handoff])
+db.executemany("INSERT INTO key_dates VALUES(?,?,?,?,?)", [
+    (k["Date ID"], k["Title"].strip(), k["Starts (month-day)"].strip(),
+     k["Ends (month-day)"].strip() or None, k["Source"].strip()) for k in key_dates])
 db.commit()
 db.close()
-print(f"built {out}: {len(steps)} journey steps, {len(contacts)} sample contacts")
+print(f"built {out}: {len(steps)} journey steps, {len(contacts)} sample contacts, {len(key_dates)} key dates, {len(handoff)} handoff steps")

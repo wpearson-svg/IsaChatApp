@@ -1,0 +1,253 @@
+@* ============================================================
+   TodayNote.razor
+
+   Onboarding feature, Feature 4 (see ONBOARDING-FEATURE.md): the
+   "Today" note at the top of the chat. When a leader opens Isa, she
+   greets them with what matters today, without them clicking anything:
+
+     Day 3 of your first 90 days
+     For today:   Meet your Chapter Experience contact
+                  Read what your predecessor left you
+     Coming up:   Meet your board (days 6 to 7)
+     Key date:    The annual compliance window opens in 12 days (only
+                  when it falls within the next 30 days)
+     [Open Today]  Got it
+
+   - Shown in full the first time each day (the leader's "today", so the
+     demo date while it is on). "Got it" shrinks it to one line for the
+     rest of that day; the line can be opened again.
+   - "For today" leaves out steps already done; when nothing is left it
+     says so.
+   - Every fact comes from the database (the journey steps, the leader's
+     progress, and onboarding/key_dates.csv), never from the AI model,
+     so the days and counts are always exact.
+   - Shown only to a signed-in leader inside their first 90 days; for
+     anyone else it shows nothing. Inside Isa only: nothing is ever
+     emailed or sent as a notification.
+   ============================================================ *@
+
+@using System.Globalization
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject JourneyContextService JourneyContexts
+@inject JourneyService Journey
+@inject ProgressService Progress
+@inject HandoffService Handoff
+
+@if (_ctx is null && _handoff is not null)
+{
+    @* The outgoing president's version: their handoff checklist. *@
+    var hDone = _handoff.Steps.Count(s => _done.ContainsKey(s.StepId));
+    @if (_compact)
+    {
+        <div class="isa-tnote isa-tnote--compact" role="note" aria-label="Today">
+            <span class="isa-tnote__sun" aria-hidden="true"></span>
+            <span class="isa-tnote__line">Handoff checklist &middot; @hDone of @_handoff.Steps.Count done</span>
+            <button type="button" class="isa-tnote__link" @onclick="() => _compact = false">Show</button>
+            <button type="button" class="isa-tnote__link" @onclick="OnOpenNotebook">Open the checklist</button>
+        </div>
+    }
+    else
+    {
+        <section class="isa-tnote" aria-label="Today">
+            <p class="isa-tnote__title">
+                <span class="isa-tnote__sun" aria-hidden="true"></span>
+                Your handoff checklist
+                <span class="isa-tnote__date">@_handoff.Today.ToString("dddd d MMMM", CultureInfo.InvariantCulture)</span>
+            </p>
+            <dl class="isa-tnote__rows">
+                <dt>Progress</dt>
+                <dd>@hDone of @_handoff.Steps.Count handover items done, from the President Guidebook.</dd>
+                <dt>Time left</dt>
+                <dd>@HandoffWhen</dd>
+                @if (_handoffNext is not null)
+                {
+                    <dt>Next</dt>
+                    <dd>@_handoffNext.Title</dd>
+                }
+            </dl>
+            <div class="isa-tnote__actions">
+                <button type="button" class="isa-tnote__primary" @onclick="OnOpenNotebook">Open the checklist</button>
+                <button type="button" class="isa-tnote__link" @onclick="GotIt">Got it</button>
+            </div>
+        </section>
+    }
+}
+else if (_ctx is not null)
+{
+    @if (_compact)
+    {
+        <div class="isa-tnote isa-tnote--compact" role="note" aria-label="Today">
+            <span class="isa-tnote__sun" aria-hidden="true"></span>
+            <span class="isa-tnote__line">
+                Day @_ctx.Term.DayOfTerm &middot;
+                @(_todayLeft.Count == 0 ? "up to date for today" : _todayLeft.Count == 1 ? "1 step for today" : $"{_todayLeft.Count} steps for today")
+            </span>
+            <button type="button" class="isa-tnote__link" @onclick="() => _compact = false">Show</button>
+            <button type="button" class="isa-tnote__link" @onclick="OnOpenToday">Open Today</button>
+        </div>
+    }
+    else
+    {
+        <section class="isa-tnote" aria-label="Today">
+            <p class="isa-tnote__title">
+                <span class="isa-tnote__sun" aria-hidden="true"></span>
+                Day @_ctx.Term.DayOfTerm of your first 90 days
+                <span class="isa-tnote__date">@_ctx.Today.ToString("dddd d MMMM", CultureInfo.InvariantCulture)</span>
+            </p>
+
+            <dl class="isa-tnote__rows">
+                <dt>For today</dt>
+                <dd>
+                    @if (_todayLeft.Count == 0)
+                    {
+                        <span>You're up to date for today.</span>
+                    }
+                    else
+                    {
+                        <ul>
+                            @foreach (var s in _todayLeft)
+                            {
+                                <li>@s.Title</li>
+                            }
+                        </ul>
+                    }
+                </dd>
+
+                @if (_comingUp.Count > 0)
+                {
+                    <dt>Coming up</dt>
+                    <dd>
+                        <ul>
+                            @foreach (var s in _comingUp)
+                            {
+                                <li>@s.Title <span class="isa-tnote__days">(@DaysLabel(s))</span></li>
+                            }
+                        </ul>
+                    </dd>
+                }
+
+                @foreach (var k in _keyDates)
+                {
+                    <dt>Key date</dt>
+                    <dd title="@k.Source">@KeyDateLine(k)</dd>
+                }
+            </dl>
+
+            <div class="isa-tnote__actions">
+                <button type="button" class="isa-tnote__primary" @onclick="OnOpenToday">Open Today</button>
+                <button type="button" class="isa-tnote__link" @onclick="GotIt">Got it</button>
+            </div>
+        </section>
+    }
+}
+
+@code {
+    /// <summary>Called by "Open Today". The chat widget opens the Today panel.</summary>
+    [Parameter] public EventCallback OnOpenToday { get; set; }
+
+    /// <summary>Goes up when the handoff checklist changes in the notebook panel, so the note reads its counts again.</summary>
+    [Parameter] public int Version { get; set; }
+
+    /// <summary>Called by "Open the checklist" (outgoing president). The chat widget opens the notebook, where the checklist is.</summary>
+    [Parameter] public EventCallback OnOpenNotebook { get; set; }
+
+    // Who is signed in, from the sign-in cookie.
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    // A key date shows only when it is open, or starts within this many days.
+    private const int KeyDateWindowDays = 30;
+
+    private JourneyContext? _ctx;
+    private List<JourneyStep> _todayLeft = new();
+    private List<JourneyStep> _comingUp = new();
+    private List<KeyDateOnDay> _keyDates = new();
+    private bool _compact;
+
+    // The outgoing president's handoff checklist (when they have no journey).
+    private HandoffContext? _handoff;
+    private HandoffStep? _handoffNext;
+    private IReadOnlyDictionary<string, StepDone> _done = new Dictionary<string, StepDone>();
+
+    private int _loadedVersion = -1;
+
+    // Reads everything again only when it is new or the checklist changed
+    // (not on every redraw of the chat), so "Show" stays open.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Version == _loadedVersion) return;
+        var first = _loadedVersion == -1;
+        _loadedVersion = Version;
+        await LoadAsync(first);
+    }
+
+    private async Task LoadAsync(bool first)
+    {
+        if (AuthState is null) return;
+        var user = (await AuthState).User;
+        var personId = user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
+        _ctx = JourneyContexts.GetFor(personId);
+        if (_ctx is null)
+        {
+            _handoff = Handoff.GetFor(personId);
+            if (_handoff is null) return;
+            _done = Progress.GetCompletedSteps(_handoff.PersonId);
+            _handoffNext = _handoff.Steps.FirstOrDefault(s => !_done.ContainsKey(s.StepId));
+            if (first) _compact = Progress.HasSeenTodayNote(_handoff.PersonId, _handoff.Today);
+            return;
+        }
+
+        var done = Progress.GetCompletedSteps(_ctx.PersonId);
+        var day = _ctx.Term.DayOfTerm;
+
+        // Today's steps that aren't done yet.
+        _todayLeft = _ctx.TodaySteps.Where(s => !done.ContainsKey(s.StepId)).ToList();
+
+        // Steps that start in the next 7 days (not already shown for today, not done).
+        _comingUp = _ctx.AllSteps
+            .Where(s => s.DayFrom > day && s.DayFrom <= day + 7 && !done.ContainsKey(s.StepId))
+            .ToList();
+
+        // Key dates that are open now or start within the next 30 days.
+        _keyDates = Journey.GetKeyDates(_ctx.Today)
+            .Where(k => k.IsOpen || k.DaysUntil <= KeyDateWindowDays)
+            .ToList();
+
+        if (first) _compact = Progress.HasSeenTodayNote(_ctx.PersonId, _ctx.Today);
+    }
+
+    private void GotIt()
+    {
+        if (_ctx is not null) Progress.MarkTodayNoteSeen(_ctx.PersonId, _ctx.Today);
+        else if (_handoff is not null) Progress.MarkTodayNoteSeen(_handoff.PersonId, _handoff.Today);
+        _compact = true;
+    }
+
+    private string HandoffWhen
+    {
+        get
+        {
+            if (_handoff is null) return "";
+            string Day(DateOnly x) => x.ToString("d MMMM", CultureInfo.InvariantCulture);
+            string Days(int n) => n == 1 ? "1 day" : $"{n} days";
+            return _handoff.TermHasEnded
+                ? $"Your term ended on {Day(_handoff.Term.TermEnd)}. You have until {Day(_handoff.WindowEnds)} ({Days(_handoff.DaysLeft)})."
+                : $"Your term ends on {Day(_handoff.Term.TermEnd)} ({Days(_handoff.DaysLeft)}).";
+        }
+    }
+
+    private static string DaysLabel(JourneyStep s) =>
+        s.DayFrom == s.DayTo ? $"day {s.DayFrom}" : $"days {s.DayFrom} to {s.DayTo}";
+
+    private static string KeyDateLine(KeyDateOnDay k)
+    {
+        string Day(DateOnly d) => d.ToString("d MMMM", CultureInfo.InvariantCulture);
+        if (k.IsOpen)
+            return k.DaysLeft == 0
+                ? $"{k.Title} closes today ({Day(k.Ends)})."
+                : $"{k.Title} is open until {Day(k.Ends)} ({k.DaysLeft} {(k.DaysLeft == 1 ? "day" : "days")} left).";
+        return k.DaysUntil == 1
+            ? $"{k.Title} opens tomorrow ({Day(k.Starts)})."
+            : $"{k.Title} opens in {k.DaysUntil} days ({Day(k.Starts)}).";
+    }
+}

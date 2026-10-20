@@ -96,7 +96,14 @@
             </div>
         </div>
 
-        <div class="isa-today__body">
+        @* Each screen (today's steps, My progress, a step) is drawn fresh
+           when it changes (@key), so it starts at the top and glides in:
+           from the right when going into a step or My progress, from the
+           left when going back (Matthew asked, 20 October 2026: it used to
+           just switch). The first screen doesn't glide, because the window
+           itself is already sliding in. *@
+        <div class="isa-today__body" @key="ViewKey">
+          <div class="@ViewClass">
 
             @if (_selected is null && _showProgress)
             {
@@ -313,6 +320,7 @@
 
                 <StepHistoryList Entries="_history" />
             }
+          </div>
         </div>
     }
 </aside>
@@ -408,8 +416,17 @@
 
     private void OpenStep(JourneyStep step) => OpenStep(step, false);
 
+    // Which screen is showing, so a new screen glides in when it changes,
+    // and which way: back (from the left) or forward (from the right).
+    private string ViewKey => _selected?.StepId ?? (_showProgress ? "progress" : "today");
+    private bool _goingBack;
+    private bool _hasMoved;   // false until the first move inside the window
+    private string ViewClass => !_hasMoved ? "" : _goingBack ? "isa-today__view isa-today__view--back" : "isa-today__view";
+
     private void OpenStep(JourneyStep step, bool fromProgress)
     {
+        _goingBack = false;
+        _hasMoved = true;
         _selected = step;
         _openedFromProgress = fromProgress;
         _writing = false;
@@ -421,6 +438,8 @@
     // Back from a step: to My progress if it was opened there, otherwise to today's steps.
     private void Back()
     {
+        _goingBack = true;
+        _hasMoved = true;
         _selected = null;
         _showProgress = _openedFromProgress;
         Reload();
@@ -430,6 +449,8 @@
 
     private void OpenProgress()
     {
+        _goingBack = false;
+        _hasMoved = true;
         _selected = null;
         _showProgress = true;
         Reload();
@@ -437,6 +458,8 @@
 
     private void CloseProgress()
     {
+        _goingBack = true;
+        _hasMoved = true;
         _showProgress = false;
         Reload();
     }

@@ -1,0 +1,188 @@
+/* The outgoing president's handoff checklist, at the top of the notebook
+   panel. ISACA Dark Blue, Medium Blue and Light Blue (BRAND_GUIDELINES.md);
+   the darkened green from "show the work" marks finished items. */
+
+.isa-handoff {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.9rem;
+    border: 1px solid #c9d8e3;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1d2d5c;
+}
+
+.isa-handoff__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 0.75rem;
+}
+
+.isa-handoff__title {
+    margin: 0;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.isa-handoff__count { font-size: 0.8rem; font-weight: 600; color: #3f7d20; }
+
+.isa-handoff__bar { height: 4px; border-radius: 2px; background: #e4e7eb; overflow: hidden; }
+.isa-handoff__bar span { display: block; height: 100%; background: #3f7d20; transition: width 0.3s ease; }
+
+.isa-handoff__when { margin: 0; font-size: 0.82rem; }
+.isa-handoff__from { margin: 0; font-size: 0.76rem; color: #5f6b7a; }
+
+.isa-handoff__list {
+    list-style: none;
+    margin: 0.25rem 0 0;
+    padding: 0;
+    border-top: 1px solid #eef2f5;
+}
+
+.isa-handoff__item { border-bottom: 1px solid #eef2f5; }
+
+/* Each item: a tappable row, at least 44px tall. */
+.isa-handoff__row {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.2rem;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.86rem;
+    text-align: left;
+    color: #1d2d5c;
+    cursor: pointer;
+}
+
+.isa-handoff__row:hover { background: #f6f9fb; }
+.isa-handoff__row:focus-visible { outline: 2px solid #07649d; outline-offset: -2px; }
+
+.isa-handoff__stepTitle { flex: 1 1 auto; }
+.isa-handoff__item.is-done .isa-handoff__stepTitle { color: #52606d; }
+
+/* A round check: empty until done, then filled green with a white tick. */
+.isa-handoff__check {
+    position: relative;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #9fb3c8;
+    border-radius: 50%;
+}
+
+.isa-handoff__check.is-on { border-color: #3f7d20; background: #3f7d20; }
+
+.isa-handoff__check.is-on::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.isa-handoff__chev {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    margin-right: 0.3rem;
+    border-right: 2px solid #5f6b7a;
+    border-bottom: 2px solid #5f6b7a;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.isa-handoff__item.is-open .isa-handoff__chev { transform: rotate(-135deg); }
+
+.isa-handoff__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.25rem 0.2rem 0.85rem 2rem;
+    font-size: 0.84rem;
+}
+
+/* The guidebook's words, set apart as a quotation. */
+.isa-handoff__quote {
+    margin: 0;
+    padding: 0.5rem 0.7rem;
+    border-left: 3px solid #07649d;
+    border-radius: 4px;
+    background: #e7f0f5;
+    color: #323e48;
+    line-height: 1.45;
+}
+
+.isa-handoff__quote p { margin: 0; }
+.isa-handoff__quote .isa-handoff__exLead { margin-top: 0.4rem; }
+.isa-handoff__quote ul { margin: 0.2rem 0 0; padding-left: 1.1rem; }
+
+.isa-handoff__source {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.76rem;
+    color: #5f6b7a;
+}
+
+.isa-handoff__sourceIcon {
+    flex: 0 0 auto;
+    width: 9px;
+    height: 12px;
+    border: 1.5px solid #07649d;
+    border-radius: 2px;
+}
+
+.isa-handoff__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.isa-handoff__primary,
+.isa-handoff__secondary {
+    min-height: 36px;
+    padding: 0.35rem 0.9rem;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-handoff__primary { border: none; background: #1d2d5c; color: #ffffff; }
+.isa-handoff__primary:hover { background: #07649d; }
+.isa-handoff__secondary { border: 1.5px solid #1d2d5c; background: #ffffff; color: #1d2d5c; }
+.isa-handoff__secondary:hover { background: #e7f0f5; }
+
+.isa-handoff__doneOn { color: #3f7d20; font-weight: 600; }
+
+.isa-handoff__link {
+    border: none;
+    background: none;
+    padding: 0.2rem 0;
+    font: inherit;
+    color: #07649d;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.isa-handoff__primary:focus-visible,
+.isa-handoff__secondary:focus-visible,
+.isa-handoff__link:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-handoff__chev, .isa-handoff__bar span { transition: none; }
+}
