@@ -66,6 +66,8 @@ $form.StartPosition = 'CenterScreen'
 $form.ClientSize = New-Object System.Drawing.Size(1290, 640)
 $form.MinimumSize = New-Object System.Drawing.Size(700, 400)
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
+$iconPath = Join-Path $script:root 'isa-icon.ico'
+if (Test-Path $iconPath) { try { $form.Icon = New-Object System.Drawing.Icon($iconPath) } catch { } }
 
 $split = New-Object System.Windows.Forms.TableLayoutPanel
 $split.Dock = 'Fill'
