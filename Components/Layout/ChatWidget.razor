@@ -81,6 +81,7 @@
 @using System.Text.Json.Serialization
 @using IsaChatApp.Services
 @implements IDisposable
+@inject IJSRuntime JS
 @inject HttpClient Http
 @inject WidgetSettings Settings
 @inject UsageLogService UsageLog
@@ -273,7 +274,7 @@
             <JourneyCard TodayOpen="@IsTodayOpen" OnToggleToday="ToggleToday"
                          NotebookOpen="@IsNotebookOpen" OnToggleNotebook="ToggleNotebook" />
 
-            <div class="isa-widget__messages">
+            <div class="isa-widget__messages" @ref="_messagesEl">
                 @* The CSS container uses flex-direction: column-reverse
                    so the browser keeps the view pinned to the newest
                    message with zero JS (no scrollIntoView call needed)
@@ -300,7 +301,7 @@
 
                 @foreach (var msg in MessagesNewestFirst)
                 {
-                    <div class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
+                    <div id="@msg.DomId" class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
                         <div class="isa-widget__who">
                             @msg.DisplayName
                             @if (ShowDeveloperTools && Settings.ShowResponseTime && msg.ElapsedMs is not null)
@@ -377,6 +378,13 @@
                         </div>
                     </div>
                 }
+
+                @* Onboarding: the "Today" note (Components/Shared/TodayNote.razor).
+                   The LAST element in the message area, so with the
+                   column-reverse layout it sits at the very TOP of the
+                   chat, above the welcome message. Shows only for a
+                   signed-in leader in their first 90 days. *@
+                <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenNotebook" Version="@_notebookVersion" />
             </div>
 
             @* Input row, matching wireframe "Expanded": the ring icon
@@ -433,7 +441,7 @@
            (see Components/Shared/NotebookPanel.razor). *@
         if (IsNotebookOpen)
         {
-            <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion"
+            <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion" OnChecklistChanged="NotebookChanged"
                            Enlarged="@(Enlarged == SidePanel.Notebook)" OnToggleEnlarge="() => ToggleEnlarge(SidePanel.Notebook)" />
         }
     }
@@ -706,6 +714,7 @@
     private bool IsTodayOpen { get; set; } = false;
     private void ToggleToday() { IsTodayOpen = !IsTodayOpen; if (!IsTodayOpen) Unenlarge(SidePanel.Today); }
     private void CloseToday() { IsTodayOpen = false; Unenlarge(SidePanel.Today); }
+    private void OpenToday() => IsTodayOpen = true;
 
     // ---- Onboarding: the succession notebook ------------------------------
     //
@@ -909,7 +918,8 @@
         var entry = UsePipeline ? null! : ModelEntries[SelectedIndex!.Value];
 
         DraftText = string.Empty;
-        Messages.Add(new ChatEntry("you", "You", text));
+        var question = new ChatEntry("you", "You", text);
+        Messages.Add(question);
         IsSending = true;
 
         // This is currently the only stage that's real, so it's the
@@ -1015,6 +1025,38 @@
                 await Task.Delay(minDelay);
             }
             IsSending = false;
+
+            // Bring the start of the reply into view: the question at the
+            // top of the chat, the answer right under it (see
+            // OnAfterRenderAsync and ChatWidget.razor.js).
+            if (Messages.Count > 0 && !ReferenceEquals(Messages[^1], question))
+                _scrollToId = question.DomId;
+        }
+    }
+
+    // ---- Scrolling to the start of a reply --------------------------------
+    //
+    // The message area keeps itself pinned to the newest message (the
+    // column-reverse layout), which suits short messages. A long reply
+    // would then land at its END, so after a reply arrives the chat
+    // scrolls the question to the top instead (ChatWidget.razor.js).
+    private ElementReference _messagesEl;
+    private string? _scrollToId;
+    private IJSObjectReference? _chatJs;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_scrollToId is null) return;
+        var id = _scrollToId;
+        _scrollToId = null;
+        try
+        {
+            _chatJs ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/ChatWidget.razor.js");
+            await _chatJs.InvokeVoidAsync("scrollToMessage", _messagesEl, id);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page went away mid-reply; nothing to scroll.
         }
     }
 
@@ -1117,7 +1159,13 @@
 
     private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null, List<IsaChatApp.Services.Orchestrator.SourceRef>? Sources = null, string? TraceId = null,
         List<IsaChatApp.Services.Orchestrator.WorkStep>? Steps = null, double? WorkMs = null,
-        string? Question = null);   // set only on answered pipeline replies: the question asked, for "Save to notebook"
+        string? Question = null)    // set only on answered pipeline replies: the question asked, for "Save to notebook"
+    {
+        // A unique id for the message's element on the page, so the chat
+        // can scroll to it (and two messages with the same text never
+        // count as the same message).
+        public string DomId { get; } = "isa-msg-" + Guid.NewGuid().ToString("N");
+    }
 
     private record ModelEntry(string HostName, string HostUrl, string ModelName, long? Size);
 

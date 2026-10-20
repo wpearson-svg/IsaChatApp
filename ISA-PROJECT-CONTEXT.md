@@ -133,3 +133,9 @@ Colors, each with its own icon (color alone never carries the meaning):
 - Use darker shades of green and gray than the brand swatches, so small icons and text stay readable (text at least 4.5:1 on white), including over a Teams screen share.
 
 To design from the mockup: the collapsed line, the live status line for the current stage, and how the sources are shown with the answer.
+
+=== GREETING IN THE LEADER'S LANGUAGE (DECIDED OCTOBER 20, 2026) ===
+
+- Only the word "Welcome" on the landing page is shown in the leader's language of preference (Services/WelcomeWords.cs), to show ISACA that Isa can greet each person in their own language. Names stay exactly as in the directory.
+- Everything else stays in English for now (Matthew: "leave the rest of it off the table"). Isa's answers stay in English because they come word for word from ISACA's English documents.
+- Have a native speaker check the words before showing them to ISACA.

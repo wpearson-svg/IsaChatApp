@@ -1,0 +1,112 @@
+/* The "Today" note at the top of the chat. ISACA Light Blue card with a
+   Medium Blue edge, ISACA Dark Blue text (BRAND_GUIDELINES.md); the grey
+   is darkened for readable small text, as in "show the work". */
+
+.isa-tnote {
+    padding: 0.8rem 0.95rem;
+    border-left: 4px solid #07649d;
+    border-radius: 10px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.isa-tnote__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.45rem;
+    margin: 0 0 0.55rem;
+    font-weight: 700;
+}
+
+.isa-tnote__date {
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: #52606d;
+}
+
+/* A small sun-like dot in ISACA Green, drawn in CSS. */
+.isa-tnote__sun {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #6cb33f;
+    box-shadow: 0 0 0 3px rgba(108, 179, 63, 0.25);
+}
+
+.isa-tnote__rows {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.35rem 0.75rem;
+    margin: 0;
+}
+
+.isa-tnote__rows dt {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #52606d;
+    padding-top: 0.1rem;
+}
+
+.isa-tnote__rows dd { margin: 0; }
+
+.isa-tnote__rows ul { margin: 0; padding-left: 1rem; }
+
+.isa-tnote__days { color: #52606d; font-size: 0.78rem; }
+
+.isa-tnote__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.7rem;
+}
+
+.isa-tnote__primary {
+    min-height: 36px;
+    padding: 0.35rem 0.9rem;
+    border: none;
+    border-radius: 6px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-tnote__primary:hover { background: #07649d; }
+
+.isa-tnote__link {
+    min-height: 32px;
+    border: none;
+    background: none;
+    padding: 0.2rem 0;
+    font: inherit;
+    color: #07649d;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.isa-tnote__primary:focus-visible,
+.isa-tnote__link:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+/* After "Got it": one line. */
+.isa-tnote--compact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.75rem;
+    padding: 0.45rem 0.85rem;
+}
+
+.isa-tnote__line { flex: 1 1 auto; font-weight: 500; }
+
+/* Narrow screens (phones): the labels sit above their rows. */
+@media (max-width: 420px) {
+    .isa-tnote__rows { grid-template-columns: 1fr; }
+}

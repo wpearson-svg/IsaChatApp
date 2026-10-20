@@ -44,14 +44,18 @@
 
             @* Sign in / signed-in greeting. The greeting uses the
                person's preferred form of address from Keycloak (see
-               KeycloakSignInService.GreetingClaim), in their own script.
-               <bdi> keeps a right-to-left name (Arabic, Hebrew) from
-               scrambling the surrounding English. *@
+               KeycloakSignInService.GreetingClaim), in their own script,
+               and the word "Welcome" in their language of preference
+               (Services/WelcomeWords.cs, from the locale claim).
+               <bdi> keeps right-to-left text (Arabic, Hebrew) from
+               scrambling the text around it; lang tells screen readers
+               and fonts which language the word is in. *@
             <div class="landing__account">
                 <AuthorizeView>
                     <Authorized>
                         <span class="landing__welcome">
-                            Welcome, <bdi>@context.User.FindFirst(KeycloakSignInService.GreetingClaim)?.Value</bdi>
+                            @{ var welcome = WelcomeWords.For(context.User.FindFirst(KeycloakSignInService.LocaleClaim)?.Value); }
+                            <bdi lang="@welcome.Lang">@welcome.Text</bdi>, <bdi>@context.User.FindFirst(KeycloakSignInService.GreetingClaim)?.Value</bdi>
                         </span>
                         <form method="post" action="account/sign-out" class="landing__signOutForm">
                             <AntiforgeryToken />
@@ -138,12 +142,15 @@
                     <div class="landing__stepTop">
                         <span class="landing__stepNum">1</span>
                         <svg class="landing__spot" viewBox="0 0 120 100" aria-hidden="true">
-                            <rect x="18" y="14" width="56" height="72" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" />
-                            <line x1="30" y1="32" x2="62" y2="32" stroke="#1d2d5c" stroke-width="3" />
-                            <line x1="30" y1="46" x2="62" y2="46" stroke="#1d2d5c" stroke-width="3" />
-                            <line x1="30" y1="60" x2="50" y2="60" stroke="#1d2d5c" stroke-width="3" />
-                            <circle cx="76" cy="58" r="20" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
-                            <line x1="90" y1="72" x2="106" y2="88" stroke="#1d2d5c" stroke-width="3" />
+                            @* Both papers (steps 1 and 2) use the same size AND
+                               position (x 26, y 12, 56 x 72), so they read as the
+                               same page. *@
+                            <rect x="26" y="12" width="56" height="72" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="38" y1="30" x2="70" y2="30" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="38" y1="44" x2="70" y2="44" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="38" y1="58" x2="58" y2="58" stroke="#1d2d5c" stroke-width="3" />
+                            <circle cx="82" cy="58" r="18" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="95" y1="71" x2="110" y2="86" stroke="#1d2d5c" stroke-width="3" />
                         </svg>
                     </div>
                     <h3 class="landing__stepTitle">SEARCHES APPROVED CONTENT</h3>
@@ -157,11 +164,11 @@
                     <div class="landing__stepTop">
                         <span class="landing__stepNum">2</span>
                         <svg class="landing__spot" viewBox="0 0 120 100" aria-hidden="true">
-                            <rect x="30" y="10" width="56" height="72" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" />
-                            <line x1="42" y1="28" x2="74" y2="28" stroke="#1d2d5c" stroke-width="3" />
-                            <line x1="42" y1="42" x2="74" y2="42" stroke="#1d2d5c" stroke-width="3" stroke-dasharray="6 5" />
-                            <circle cx="82" cy="72" r="16" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
-                            <polyline points="74,72 80,78 90,66" fill="none" stroke="#1d2d5c" stroke-width="3" />
+                            <rect x="26" y="12" width="56" height="72" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="38" y1="30" x2="70" y2="30" stroke="#1d2d5c" stroke-width="3" />
+                            <line x1="38" y1="44" x2="70" y2="44" stroke="#1d2d5c" stroke-width="3" stroke-dasharray="6 5" />
+                            <circle cx="80" cy="74" r="16" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />
+                            <polyline points="72,74 78,80 88,68" fill="none" stroke="#1d2d5c" stroke-width="3" />
                         </svg>
                     </div>
                     <h3 class="landing__stepTitle">SHOWS ITS SOURCES</h3>
@@ -177,7 +184,7 @@
                         <svg class="landing__spot" viewBox="0 0 120 100" aria-hidden="true">
                             @* Speech bubble whose tail points at the person it is handed to;
                                head and shoulders drawn close together. *@
-                            <path d="M8 14 H62 V40 L72 56 L50 46 H8 Z" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" stroke-linejoin="round" />
+                            <path d="M8 14 H62 V42.4 L68 52 L54.8 46 H8 Z" fill="#99dbf4" stroke="#1d2d5c" stroke-width="3" stroke-linejoin="round" />
                             <line x1="18" y1="26" x2="52" y2="26" stroke="#1d2d5c" stroke-width="3" />
                             <line x1="18" y1="35" x2="40" y2="35" stroke="#1d2d5c" stroke-width="3" />
                             <circle cx="92" cy="49" r="12" fill="#c4e1b2" stroke="#1d2d5c" stroke-width="3" />

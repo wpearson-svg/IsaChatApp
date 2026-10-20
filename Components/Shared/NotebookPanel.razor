@@ -75,6 +75,11 @@
                 <span>@PrivacyLine</span>
             </p>
 
+            @* The outgoing president's handoff checklist (only shown to a
+               president in the last 30 days of their term, or for 30 days
+               after it ends). *@
+            <HandoffChecklist OnAddToNotebook="StartNote" CanAddToNotebook="@_access.CanWrite" OnChanged="OnChecklistChanged" />
+
             @if (_access.CanWrite)
             {
                 @* ---- Add a note ---- *@
@@ -87,7 +92,7 @@
                                     class="isa-nb__kind @(_category == cat ? "is-on" : "")" @onclick="() => _category = cat">@CategoryLabel(cat)</button>
                         }
                     </div>
-                    <textarea class="isa-nb__text" rows="3" maxlength="1000" aria-label="Your note"
+                    <textarea @ref="_noteBox" class="isa-nb__text" rows="3" maxlength="1000" aria-label="Your note"
                               placeholder="@Placeholder(_category)" @bind="_draft" @bind:event="oninput" disabled="@_saving"></textarea>
                     <div class="isa-nb__addRow">
                         <label class="isa-nb__share">
@@ -192,6 +197,9 @@
     /// <summary>True while this panel is enlarged (the button shows "Make smaller").</summary>
     [Parameter] public bool Enlarged { get; set; }
 
+    /// <summary>Called when a handoff checklist item is marked, so the chat's Today note can update.</summary>
+    [Parameter] public EventCallback OnChecklistChanged { get; set; }
+
     /// <summary>Goes up when something is saved to the notebook from the chat, so this panel reads its entries again.</summary>
     [Parameter] public int Version { get; set; }
 
@@ -213,6 +221,19 @@
     private bool _justSaved;
     private string? _problem;
     private long? _confirmRemove;
+    private ElementReference _noteBox;
+
+    // "Add to the notebook" on the handoff checklist: choose the note kind
+    // (e.g. "unfinished" for the open items) and move to the note box.
+    private async Task StartNote(string kind)
+    {
+        _category = kind;
+        _justSaved = false;
+        _problem = null;
+        StateHasChanged();
+        await Task.Yield();
+        await _noteBox.FocusAsync();
+    }
 
     protected override async Task OnParametersSetAsync()
     {

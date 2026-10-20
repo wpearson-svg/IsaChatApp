@@ -198,9 +198,11 @@
 
 /* Today or the notebook is open beside the chat. How far the chat
    slides, and how wide it is, come from ChatWidget.razor
-   (ChatPanelStyle), so it can make room for one or two side panels. */
+   (ChatPanelStyle), so it can make room for one or two side panels.
+   Only its left corners stay rounded (facing the page); its right edge
+   meets the next window square, so the seam between windows is clean. */
 .isa-widget__panel.is-expanded.is-shifted {
-    border-radius: 12px;
+    border-radius: 12px 0 0 12px;
 }
 
 /* Narrower screens: don't let the panel get unusably thin. */
@@ -228,6 +230,11 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.9rem 1.1rem;
+    /* Same fixed height in all three windows (chat, Today, Notebook), so
+       the blue headers line up side by side (Matthew, 20 October 2026).
+       72px fits the chat's round Isa badge (42px) plus its padding. */
+    height: 72px;
+    box-sizing: border-box;
     background: #1d2d5c;
     color: #ffffff;
 }
@@ -357,8 +364,9 @@
        DOM child (the newest message) lands at the bottom of the
        container, which is also where a reversed flex container's
        default scroll position already sits. Net effect: the newest
-       message is on-screen the moment it's added, with zero JS
-       interop or scrollIntoView calls needed. */
+       message is on-screen the moment it's added. When one of Isa's
+       replies arrives, ChatWidget.razor.js then scrolls the question to
+       the top, so a long reply is read from its start. */
     flex-direction: column-reverse;
     gap: 0.75rem;
 }

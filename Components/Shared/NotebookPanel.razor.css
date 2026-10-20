@@ -32,6 +32,15 @@
     animation: isa-nb-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
+/* The notebook always sits beside another window, so its edges meet it
+   square, with a thin divider instead of a shadow (a shadow darkened the
+   edge of the window beside it). */
+.isa-nb {
+    border-radius: 0;
+    box-shadow: none;
+    border-left: 1px solid #cbd2d9;
+}
+
 @keyframes isa-nb-in {
     from { transform: translateX(24px); opacity: 0; }
     to   { transform: translateX(0); opacity: 1; }
@@ -61,6 +70,11 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.9rem 1.1rem;
+    /* Same fixed height in all three windows (chat, Today, Notebook), so
+       the blue headers line up side by side (Matthew, 20 October 2026).
+       72px fits the chat's round Isa badge (42px) plus its padding. */
+    height: 72px;
+    box-sizing: border-box;
     background: #1d2d5c;
     color: #ffffff;
 }

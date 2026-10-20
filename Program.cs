@@ -62,6 +62,9 @@ builder.Services.AddSingleton<ProgressService>();
 // NotebookService: each chapter's succession notebook (saved answers and
 // notes), kept in data/notebook.db, created on first run.
 builder.Services.AddSingleton<NotebookService>();
+// HandoffService: the outgoing president's handoff checklist (the President
+// Guidebook's turnover items), for the last 30 days of a term and 30 days after.
+builder.Services.AddSingleton<HandoffService>();
 
 // --- Working Foundation: event log, access control, pipeline stages ---
 builder.Services.AddHttpClient("keycloak");

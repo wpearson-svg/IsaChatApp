@@ -365,13 +365,17 @@
     margin-top: 2.5rem;
 }
 
-/* Dashed line joining the three step numbers. */
-.landing__steps::before {
+/* Dashed line joining the steps: one short connector after each
+   picture, running across the gap to the next step's number (the last
+   step has none). It never passes behind a picture, so it stays even.
+   It replaced one long line behind everything, which the pictures' white
+   boxes cut into uneven pieces (Matthew, 20 October 2026). */
+.landing__step:not(:last-child) .landing__stepTop::after {
     content: "";
-    position: absolute;
-    left: 8%;
-    right: 33%;
-    top: 30px;
+    flex: 1 1 auto;
+    align-self: center;
+    margin-right: calc(-2rem - 8px);   /* across the 2rem gap, up to the number's white ring */
+    margin-left: 0.25rem;
     border-top: 3px dashed #cbd2d9;
 }
 
@@ -678,7 +682,7 @@
     }
     .landing__headline { font-size: 2.3rem; }
     .landing__steps { grid-template-columns: 1fr; }
-    .landing__steps::before { display: none; }
+    .landing__step:not(:last-child) .landing__stepTop::after { display: none; }
     .landing__readGrid,
     .landing__tryGrid { grid-template-columns: 1fr; }
     .landing__tryBadge { display: none; }
