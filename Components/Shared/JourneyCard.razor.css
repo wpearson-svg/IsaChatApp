@@ -19,13 +19,14 @@
 
 .isa-journey__head {
     display: flex;
+    flex-wrap: wrap;             /* when the chat is narrow (a quarter of the screen), the buttons move to a second row */
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem 0.6rem;
     padding: 0.65rem 1.25rem 0.5rem;
 }
 
 .isa-journey__titles {
-    flex: 1 1 auto;
+    flex: 1 1 10rem;             /* never squeezed narrower than its title */
     min-width: 0;
     display: flex;
     flex-direction: column;

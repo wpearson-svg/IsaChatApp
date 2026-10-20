@@ -45,7 +45,16 @@ public class LeaderTermService
     public IReadOnlyList<LeaderTerm> GetAllCurrentTerms(DateOnly onDate)
         => Query(onDate, personId: null);
 
-    private IReadOnlyList<LeaderTerm> Query(DateOnly onDate, string? personId)
+    /// <summary>
+    /// Roles one person held that ended in the last <paramref name="days"/>
+    /// days before the given date (not counting roles still current).
+    /// Used by the succession notebook's handoff window: an outgoing
+    /// president can still add notes for 30 days after their term ends.
+    /// </summary>
+    public IReadOnlyList<LeaderTerm> GetRecentlyEndedTerms(string personId, DateOnly onDate, int days)
+        => Query(onDate, personId, endedWithinDays: days);
+
+    private IReadOnlyList<LeaderTerm> Query(DateOnly onDate, string? personId, int? endedWithinDays = null)
     {
         var list = new List<LeaderTerm>();
         if (!DirectoryExists) return list;
@@ -58,18 +67,23 @@ public class LeaderTermService
         // the date and ends on or after it. Dates are stored as
         // YYYY-MM-DD text, which sorts in date order, so plain text
         // comparison works. When personId is null, everyone is listed.
-        cmd.CommandText = """
+        // With endedWithinDays, it instead finds roles whose term ended
+        // before the date but no more than that many days before it.
+        var when = endedWithinDays is null
+            ? "r.term_start <= $date AND r.term_end >= $date"
+            : "r.term_end < $date AND r.term_end >= $since";
+        cmd.CommandText = $"""
             SELECT r.person_id, p.latin_name, r.role, r.chapter_id, c.chapter_name,
-                   r.term_start, r.term_end, p.time_zone
+                   r.term_start, r.term_end, p.time_zone, r.permission
             FROM role_assignments r
             JOIN people p   ON p.person_id  = r.person_id
             JOIN chapters c ON c.chapter_id = r.chapter_id
-            WHERE r.term_start <= $date
-              AND r.term_end   >= $date
+            WHERE {when}
               AND ($person IS NULL OR r.person_id = $person)
             ORDER BY r.person_id, r.role;
             """;
         cmd.Parameters.AddWithValue("$date", onDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        cmd.Parameters.AddWithValue("$since", onDate.AddDays(-(endedWithinDays ?? 0)).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         cmd.Parameters.AddWithValue("$person", (object?)personId ?? DBNull.Value);
 
         using var reader = cmd.ExecuteReader();
@@ -89,7 +103,8 @@ public class LeaderTermService
                 // DayNumber counts days since a fixed starting point, so the
                 // difference is the number of days between the two dates.
                 // Adding 1 makes the start date itself day 1.
-                DayOfTerm: onDate.DayNumber - start.DayNumber + 1));
+                DayOfTerm: onDate.DayNumber - start.DayNumber + 1,
+                Permission: reader.GetString(8)));
         }
         return list;
     }
@@ -108,4 +123,5 @@ public record LeaderTerm(
     DateOnly TermStart,
     DateOnly TermEnd,
     string TimeZone,
-    int DayOfTerm);
+    int DayOfTerm,
+    string Permission);   // Leadership (a board role) or Member

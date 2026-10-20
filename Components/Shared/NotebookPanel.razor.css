@@ -1,0 +1,343 @@
+/* ============================================================
+   NotebookPanel.razor.css
+
+   The succession notebook panel. Full height, always the rightmost
+   panel (chat, Today, Notebook, left to right). Its width and distance from the right edge come
+   from the chat widget (the Style parameter), so chat, Today and
+   Notebook always sit side by side; both glide with the same timing as
+   the chat's slide (ChatWidget.razor.css).
+
+   Colors from BRAND_GUIDELINES.md: ISACA Dark Blue (#1d2d5c), Medium
+   Blue (#07649d), Light Blue (#e7f0f5), Grey 9 (#323e48), and the
+   darkened green and grey used by "show the work" for readable small text.
+   ============================================================ */
+
+.isa-nb {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 33.333vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #323e48;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+    border-radius: 12px 0 0 12px;
+    overflow: hidden;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                right 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: isa-nb-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes isa-nb-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-nb { animation: none; transition: none; }
+}
+
+/* Narrow screens (phones, a future Android app): one panel at a time,
+   filling the screen; Close returns to the chat. */
+@media (max-width: 720px) {
+    .isa-nb {
+        width: 100vw !important;
+        right: 0 !important;
+        border-radius: 0;
+    }
+    .isa-nb__enlarge { display: none; }
+}
+
+/* ---- Header band ------------------------------------------------- */
+
+.isa-nb__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    background: #1d2d5c;
+    color: #ffffff;
+}
+
+.isa-nb__headText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.isa-nb__name {
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-size: 1.2rem;
+}
+
+.isa-nb__sub {
+    font-size: 0.78rem;
+    color: #e7f0f5;
+}
+
+.isa-nb__headBtns {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.isa-nb__iconBtn {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #e7f0f5;
+    cursor: pointer;
+}
+
+.isa-nb__close { font-size: 1.5rem; line-height: 1; }
+
+.isa-nb__iconBtn:hover,
+.isa-nb__iconBtn:focus-visible { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+.isa-nb__iconBtn:focus-visible { outline: 2px solid #ffffff; outline-offset: 1px; }
+
+/* ---- Body --------------------------------------------------------- */
+
+.isa-nb__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1rem 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.isa-nb__lede { margin: 0; color: #1d2d5c; font-weight: 500; }
+
+.isa-nb__privacy {
+    margin: -0.35rem 0 0;
+    display: flex;
+    gap: 0.45rem;
+    align-items: flex-start;
+    font-size: 0.78rem;
+    color: #5f6b7a;
+}
+
+/* A small padlock, drawn in CSS. */
+.isa-nb__lock {
+    position: relative;
+    flex: 0 0 auto;
+    width: 10px;
+    height: 8px;
+    margin-top: 0.35rem;
+    border-radius: 2px;
+    background: #5f6b7a;
+}
+
+.isa-nb__lock::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: -5px;
+    width: 6px;
+    height: 6px;
+    border: 1.5px solid #5f6b7a;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+}
+
+.isa-nb__empty { margin: 0; color: #5f6b7a; font-size: 0.85rem; }
+
+/* ---- Add a note --------------------------------------------------- */
+
+.isa-nb__add {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.85rem;
+    border-radius: 10px;
+    background: #e7f0f5;
+}
+
+.isa-nb__addTitle {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1d2d5c;
+}
+
+.isa-nb__kinds { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.isa-nb__kind {
+    min-height: 32px;
+    padding: 0.2rem 0.7rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.isa-nb__kind.is-on { background: #1d2d5c; border-color: #1d2d5c; color: #ffffff; }
+
+.isa-nb__kind:focus-visible,
+.isa-nb__text:focus-visible,
+.isa-nb__saveBtn:focus-visible,
+.isa-nb__linkBtn:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+.isa-nb__text {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.85rem;
+    color: #323e48;
+    resize: vertical;
+}
+
+.isa-nb__addRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.isa-nb__share {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 32px;
+    font-size: 0.8rem;
+    color: #1d2d5c;
+    cursor: pointer;
+}
+
+.isa-nb__share input { width: 16px; height: 16px; accent-color: #07649d; }
+
+.isa-nb__saveBtn {
+    min-height: 36px;
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-nb__saveBtn:hover:not(:disabled) { background: #07649d; }
+.isa-nb__saveBtn:disabled { background: #cbd2d9; color: #52606d; cursor: not-allowed; }
+
+/* A note that wasn't saved: blue, handled, never red (show-the-work rule). */
+.isa-nb__problem {
+    margin: 0;
+    padding: 0.5rem 0.65rem;
+    border-left: 3px solid #07649d;
+    border-radius: 4px;
+    background: #ffffff;
+    font-size: 0.8rem;
+    color: #1d2d5c;
+}
+
+.isa-nb__saved { margin: 0; font-size: 0.8rem; color: #3f7d20; font-weight: 500; }
+
+/* ---- Entries -------------------------------------------------------- */
+
+.isa-nb__entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.isa-nb__entry {
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #dde3e9;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.isa-nb__entryTop {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.4rem;
+}
+
+.isa-nb__tag,
+.isa-nb__sharedTag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+}
+
+.isa-nb__tag { background: #e7f0f5; color: #07649d; }
+.isa-nb__sharedTag { background: #edf6e8; color: #3f7d20; }
+
+.isa-nb__q { margin: 0 0 0.25rem; font-weight: 500; color: #1d2d5c; }
+.isa-nb__a { margin: 0; white-space: pre-line; }
+.isa-nb__note { margin: 0; white-space: pre-line; color: #1d2d5c; }
+
+.isa-nb__sources {
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.75rem;
+    color: #5f6b7a;
+}
+
+.isa-nb__decided {
+    margin: 0.5rem 0 0;
+    padding: 0.4rem 0.6rem;
+    border-left: 3px solid #3f7d20;
+    border-radius: 4px;
+    background: #edf6e8;
+    color: #1d2d5c;
+}
+
+.isa-nb__decided span { font-weight: 700; }
+
+.isa-nb__meta { margin: 0.5rem 0 0; font-size: 0.74rem; color: #5f6b7a; }
+
+.isa-nb__own {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid #eef2f5;
+}
+
+.isa-nb__confirm { font-size: 0.8rem; color: #1d2d5c; display: inline-flex; gap: 0.5rem; align-items: center; }
+
+.isa-nb__linkBtn {
+    border: none;
+    background: none;
+    padding: 0.2rem 0;
+    font: inherit;
+    font-size: 0.8rem;
+    color: #07649d;
+    text-decoration: underline;
+    cursor: pointer;
+}

@@ -42,6 +42,15 @@
                 </svg>
                 Today
             </button>
+            @* Opens the succession notebook beside the chat (ChatWidget.razor). *@
+            <button type="button" class="isa-journey__today @(NotebookOpen ? "is-active" : "")"
+                    @onclick="OnToggleNotebook" aria-pressed="@(NotebookOpen ? "true" : "false")"
+                    title="@(NotebookOpen ? "Close the notebook" : "Open the succession notebook")">
+                <svg class="isa-journey__todayIcon" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2Z M3 11.5a2 2 0 0 1 2-2h7.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                </svg>
+                Notebook
+            </button>
             <span class="isa-journey__badge">@_ctx.BadgeText</span>
         </div>
 
@@ -58,6 +67,12 @@
 
     /// <summary>Called when the Today button is clicked. The chat widget opens or closes the Today window.</summary>
     [Parameter] public EventCallback OnToggleToday { get; set; }
+
+    /// <summary>True while the succession notebook is open (its button shows as pressed).</summary>
+    [Parameter] public bool NotebookOpen { get; set; }
+
+    /// <summary>Called when the Notebook button is clicked. The chat widget opens or closes the notebook.</summary>
+    [Parameter] public EventCallback OnToggleNotebook { get; set; }
 
     // Who is signed in, from the sign-in cookie.
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }

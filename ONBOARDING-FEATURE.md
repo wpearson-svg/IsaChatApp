@@ -66,7 +66,7 @@ Design rules behind it:
 
 When Isa offers to save. These are simple rules designed ahead of time, not AI guesswork, so the reason for every offer is visible and checkable:
 1. Tagged source sections. ISACA content sections involving decisions or deadlines are tagged (election rules, quorum, compliance timeline, AGM-relative dates). If the answer cites a tagged section, that is a reason to offer.
-2. Question type label. The Input Compliance gate attaches one label to each question: "decision," "deadline," "how-to," or "general information." A small Ollama model can return this one word. Offer only for "decision" and "deadline."
+2. Question type label. Each question gets one label: "decision," "deadline," "how-to," or "general information." Offer only for "decision" and "deadline." Changed October 20, 2026: the label comes from fixed rules, not an AI model, because Isa's model only words answers from the passages found (see the ground rule in ISA-PROJECT-CONTEXT.md). The simplest rule: the label is the tag of the document section the answer cites, set ahead of time. How a stage passes those tags along is a question for Willis.
 3. Chapter-specific wording, such as "our chapter," "should we," or "we decided."
 4. Frequency cap: at most one offer per conversation, never twice on the same topic.
 
@@ -139,6 +139,10 @@ E. Day 30, 60 and 90 check-ins
 - Word for word means nothing is rewritten or summarized, so nothing can be wrong that isn't already in the approved document.
 - Limits to state honestly: the page has to stay open while it reads; voices and languages depend on what the leader's device has installed; some phones stop reading when the screen locks.
 - Only approved documents are listed. Any sample chapter documents made for the sandbox must be labeled as samples and kept separate from ISACA guidance.
+- Added October 20, 2026 (Matthew confirmed Feature 5 stays in the plan):
+  - Listen on journey steps: a step that points to an approved document (for example J-07, J-22, J-27) has its own Listen button for that document. Same browser read-aloud as the Library.
+  - Listen in the succession notebook: the new president can listen to the notes the previous president left. These are the chapter's own words, read word for word, so they need no ISACA approval.
+  - Documents we don't have yet, such as the Chapter Affiliation Agreement (ISACA question 4), are still listed, marked "Requested from ISACA," with no Listen button until the document arrives. This shows it is part of the solution without pretending we have it.
 
 === OPEN NOTEBOOK: WHERE IT FITS AND WHERE IT DOESN'T ===
 
@@ -180,9 +184,10 @@ If we fall behind, cut from the bottom of this list first:
 6. ISACA terms glossary
 7. "Meet your board" step
 8. Document library with "Listen" button
-9. Smart save offer (fallback: the plain save icon)
-10. Day 30/60/90 check-ins (fallback: roadmap slide)
-11. Full help section (fallback: a short static page)
+9. "Ask the outgoing president" (fallback: roadmap slide)
+10. Smart save offer (fallback: the plain save icon)
+11. Day 30/60/90 check-ins (fallback: roadmap slide)
+12. Full help section (fallback: a short static page)
 
 === DECIDED ===
 
@@ -214,10 +219,94 @@ If we fall behind, cut from the bottom of this list first:
      - The full explanation goes in the "How to use Isa" help section under "What happens to your information."
   - "Done" is the leader's own word, not proof: present it to ISACA as a guide for when to check in, not a compliance record.
 
+=== DECIDED OCTOBER 20, 2026 (PLANNING CONVERSATION) ===
+
+Journey phases for the full 90 days:
+- Week 1, Welcome: Day 1 welcome and "Get to know Isa"; Days 2-3 "Meet your Chapter Experience contact"; Days 3-5 "Read what your predecessor left you."
+- Week 2, Get set up (quick wins): tasks the leader can finish alone and quickly, so they see progress right away. Includes: send an introduction email to the board (with the optional profile form), log in to ISACA's systems, check that the chapter's information is correct, and "Meet Chapter 360," a short guided tour.
+- Weeks 3-4, Get set up (tasks that wait on others): bank signers, ISACA's records update, the handoff meeting with the outgoing president, and board members' profile replies arriving.
+- Weeks 5-8, Run the chapter: the board meeting rhythm and how committees work.
+- Weeks 9-13, Look ahead: the compliance requirements and the next dates on the annual checklist.
+- Why: chapter presidents are volunteers with limited time, and volunteer onboarding is a known weak spot for ISACA, so the journey is designed for quick wins early. (Keep survey figures out of this file, per the constraints above.)
+- Journey steps reviewed with Matthew and fitted to these phases (October 20, 2026). onboarding/journey_steps.csv now has 28 steps and every day from 1 to 90 has at least one. Step IDs never change once used, because saved progress refers to them; new steps start at J-19.
+  - Week 1: J-01 and J-02 (day 1), J-03 (days 2-3), J-04 (days 3-5), J-05 "Meet your board" moved to days 6-7, leading into the board introduction email.
+  - Week 2, quick wins: J-06 mission and history, J-19 introduce yourself to your board, J-20 log in to ISACA's chapter systems, J-21 check your chapter's leader listing, J-22 Meet Chapter 360.
+  - Weeks 3-4, waits on others: J-23 handoff meeting, J-24 bank signers (at least two, three is best), J-11 volunteer list to ISACA (the records update), J-10 signed volunteer agreements, J-25 board profile replies (days 22-28, about two weeks after the email).
+  - Weeks 5-8, run the chapter: J-26 board meeting rhythm, J-09 committees and meetings, J-07 bylaws and Chapter Affiliation Agreement (moved out of week 2 because it is not a quick win), J-08 strategic plan and financials, J-12 events on Engage, J-13 strategic planning session, J-14 plan the orientation.
+  - Weeks 9-13, look ahead: J-15 the 60-day goals deadline, J-27 compliance requirements, J-28 the year ahead.
+  - J-25 shows whatever profile replies have arrived so far and never waits for everyone, because the form is optional.
+  - J-20 says: "If you can't see your chapter leader tools yet, ISACA may not have your new role on record. Your Chapter Experience contact can help!" New leaders get access after the outgoing president notifies ISACA (guidebook p. 8), so access can lag. Question for ISACA added next to question 9.
+  - Demo check: on the demo date, Watanabe Kenji (day 3) sees J-03 and J-04; Ana Beatriz Souza (day 60) sees J-15, J-27 and J-17.
+  - Known gap: the President's Annual Checklist puts the orientation, volunteer list, strategic planning session and signed agreements in the 1 November to 31 December window, not on days of a term. The prototype counts days from the term start date. This ties to the open fixed-date question below and to ISACA questions 1 and 2.
+
+"Coming up" overview:
+- Shows the steps scheduled for the next two weeks, in order, with their days.
+- Steps the leader can do early (such as the board introduction email) have a "Start now" button.
+- Steps that wait on other people (such as bank signers) show their dates but no "Start now" button.
+
+Board introduction email and board roster (builds on piece C, "Meet your board"):
+- Isa offers to draft an introduction email from the new president to the board, written the leader's way, like the contact introduction. The leader reads, edits and sends it. Isa never sends it on her own. In the prototype it is saved in Isa, never emailed.
+- Scheduled as the first quick win of week 2, but the leader can start it any time from day 1 through the "Coming up" overview.
+- The email links to a short, optional profile form. Each board member fills it in only if they choose. Four questions: What are you good at? What would you enjoy helping with this year? About how much time can you give each month? How do you prefer to be contacted?
+- Answers fill a board roster, in layers:
+  - Basic board information: name, board role, term start and end dates (ISACA already keeps this).
+  - Certifications, years as an ISACA member, and years on the board: ISACA decides whether presidents may see these.
+  - Specialties and interests: only what each member chooses to share in the profile form.
+- Isa does not learn names or roles from conversations. The roster comes from ISACA's official records, so the promise that questions to Isa stay private holds. The prototype uses synthetic board members only.
+
+Chapter 360:
+- "Meet Chapter 360" is a week 2 step, because it is a large resource and leaders should meet it early.
+- A "Chapter 360" button sits next to the Today button at all times.
+- In the prototype, the real Chapter 360 is behind ISACA's login, so the button opens a sample page or ISACA's public description of it.
+
+Succession notebook reminders:
+- Isa prompts leaders to add notes for their successor in two ways: a weekly check-in ("Anything from this week your successor should know?") and a prompt right after each board meeting.
+- Each prompt has a one-line answer box, a "Nothing this week" button, an "Ask me later" button (Isa brings it back after a short delay), and a dismiss button (closes it until the next scheduled reminder).
+- If the leader already saved something to the notebook that week, the weekly check-in is skipped.
+- The leader can switch the weekly check-in to every two weeks or monthly.
+- In the last few months of a term, Isa prompts a little more often (this fits the handoff checklist, piece A).
+- Prompts appear inside Isa only, never by email or notification, the same rule as the Today note.
+
+Chapter 360 audio briefings (ROADMAP ONLY, not built or played in the demo):
+- ISACA staff use Open Notebook to turn the Chapter 360 documents into short audio briefings (about 5 minutes each), approve each one, and publish them in Isa.
+- Leaders play them from the Chapter 360 button or the week 2 tour, with one tap and no need to look at the screen. Each briefing shows the date it was approved.
+
+Chapter Experience staff view (expands step 2 of "Progress record and sharing with ISACA"):
+- Each leader: where they are in the 90 days, steps completed, when they last used Isa, and any step they have been stuck on for a while. Used for reaching out to a leader who may be struggling.
+- All leaders together: which steps many leaders get stuck on or skip, and how many finish each phase. Used to see whether the Today journey itself is working and which steps need fixing.
+- Guardrails: show progress, never questions; tell leaders up front (the privacy line and one-time note); flag gently, as a friendly check-in, not an alert.
+- The all-leaders view may overlap with the client health dashboard. Check with whoever builds that so the two fit together.
+
+Presentation (15 minutes for the whole team, over Teams):
+- Sort every feature into one of three places: show it live (the demo), name it on one slide, or put it in writing.
+- A supplement document covering the entire Isa solution is shared at the START of the presentation so ISACA can follow along. This is a team item to raise with Willis and Eliyas.
+
+Still open:
+- Fixed-date deadlines: proposed two layers (journey steps follow the leader's own day count; a fixed-date deadline such as the November 1 compliance window appears as an alert only if it falls inside that leader's 90 days). Not decided yet.
+- AGM timing: ask ISACA whether AGMs fall early in the year, before the compliance window.
+
+Succession notebook: who can do what (decided October 20, 2026):
+- Write: the chapter's president, and the outgoing president for 30 days after their term ends (the handoff window, matching the guidebook's turnover duties). So on the demo date Sato Yumiko, whose term ended 30 June 2026, can still save a decision, until 30 July 2026.
+- Read: only the chapter's president by default (plus the outgoing president during the 30-day handoff window). A saved answer includes the leader's own question, so it is not shown more widely by default.
+- "Share with the board": a switch on each entry. The writer chooses entry by entry; other current board members (Leadership roles) see only shared entries. Nothing is shared unless the writer says yes, the same rule as the day 30/60/90 check-ins.
+- After the 30 days, a former president who is still on the board (for example Sato Yumiko as Immediate Past President until June 2027) sees only entries shared with the board, like any other board member, and can no longer share or remove their old entries. Anyone who has left the board sees nothing.
+- Planned: "Ask the outgoing president". A button at the top of the notebook, and "Ask about this" on each entry. The question waits inside Isa (never emailed) until the former president opens Isa; the answer is saved as a notebook entry, so the next president has it too. Private between the two presidents unless shared. Open while the former president holds any board role; after that it becomes "Ask your Chapter Experience contact". Build after the notebook view and the save icon; cut list: just above the smart save offer, falling back to the roadmap slide.
+- Typed notes pass Isa's Input Compliance check before they are saved, so a note can't become a side door around the pipeline.
+- Stored in its own database, data/notebook.db, so resetting journey progress (data/progress.db) never wipes the notebook, and the other way round.
+- Entries are never erased: "Remove" hides an entry and records the date; the row stays, like the step history.
+- Built October 20, 2026 (step 1 of the notebook: storage only): Services/Onboarding/NotebookService.cs.
+- Built October 20, 2026 (step 2: the notebook panel): the notebook opens as a third panel (Components/Shared/NotebookPanel.razor) with "Add a note" (five kinds: decision, contact, what worked, unfinished, other), "Share with the board", and the entries. Typed notes go through Orchestrator.CheckTextAsync (the sign-in check and the Input Compliance gate, logged like every other check) before they are saved. - Built October 20, 2026 (step 3: the save button): "Save to notebook" under every answered question (Components/Shared/SaveToNotebook.razor), shown only to someone who can write to their chapter's notebook, never on a stopped or passed-to-a-person reply. It saves the question, Isa's answer, its sources and the date, with an optional "What did you decide?" line (checked by the sign-in check and Input Compliance, purpose=notebook_decision) and "Share with the board" (off by default). This covers demo step 1. Next: "Ask the outgoing president", then the smart save offer.
+
+Panels (decided by Matthew, October 20, 2026):
+- Chat, Today and Notebook sit side by side, left to right, a third of the screen each, so all three fill the screen. Opening a panel slides the ones to its left over.
+- With two panels open, each is still a third.
+- "Enlarge" on Today or the notebook widens that panel to half the screen; only one is enlarged at a time. With all three open, the other two shrink to a quarter each so everything fits; with two open, the chat keeps its third.
+- Ways in: a Notebook button next to Today in the "Your first 90 days" strip, "Open the notebook" on the "Read what your predecessor left you" step (J-04), and, for someone with no strip (like the outgoing president), a notebook icon in the chat header.
+- On narrow screens (phones, a future Android app) each panel fills the screen, one at a time; Close returns to the chat.
+
 === MATTHEW'S TO-DO ===
 
-- Review the draft journey steps in onboarding/journey_steps.csv: titles, "What to do" wording, and day ranges. Only the 60-day deadline comes from the guidebook; the other day ranges are suggestions. Things to look at:
-  - Days 6-7 and days 61-89 have no steps. Fine as quiet days, or add something?
+- Journey steps: phases and day ranges reviewed October 20, 2026 (see "Decided October 20, 2026"). Still worth a read: the "What to do" wording of each step. Notes:
   - The guidebook has no orientation checklist for a new president. Steps J-06 to J-09 use the topics the president must cover when orienting incoming leaders (guidebook p. 13).
   - The prototype counts AGM-based deadlines from the term start date, because the test data has no AGM dates.
   After any change, run: python onboarding\build_onboarding_db.py

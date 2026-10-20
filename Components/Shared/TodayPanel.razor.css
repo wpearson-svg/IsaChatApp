@@ -32,7 +32,16 @@
        Matthew asked for smoother and slower, then a bit slower and
        softer again, 19 October 2026 (0.25s, then 0.35s, now 0.5s). */
     animation: isa-today-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    /* Width and position come from the chat widget (the Style
+       parameter), so it can make room for the notebook or be enlarged;
+       both glide with the same timing as the chat's slide. */
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                right 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* The notebook is open to its right: no edge to sit flush against. */
+.isa-today.is-inner { border-radius: 12px; }
 
 @keyframes isa-today-in {
     from { transform: translateX(24px); opacity: 0; }
@@ -40,15 +49,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .isa-today { animation: none; }
+    .isa-today { animation: none; transition: none; }
 }
 
 /* Narrow screens: the chat can't move aside, so Today covers it. */
 @media (max-width: 720px) {
     .isa-today {
-        width: 100vw;
+        width: 100vw !important;
+        right: 0 !important;
         border-radius: 0;
     }
+    .isa-today__enlarge { display: none; }
 }
 
 /* ---- Header band ------------------------------------------------- */
@@ -94,6 +105,45 @@
 .isa-today__close:focus-visible {
     color: #ffffff;
 }
+
+.isa-today__headBtns {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.isa-today__iconBtn {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #e7f0f5;
+    cursor: pointer;
+}
+
+.isa-today__iconBtn:hover,
+.isa-today__iconBtn:focus-visible { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+/* "Open the notebook" on the "Read what your predecessor left you" step. */
+.isa-today__notebookBtn {
+    align-self: flex-start;
+    margin-right: 0.5rem;        /* space before "Mark as done" beside it */
+    min-height: 40px;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid #1d2d5c;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-today__notebookBtn:hover { background: #e7f0f5; }
 
 .isa-today__empty {
     margin: 0;

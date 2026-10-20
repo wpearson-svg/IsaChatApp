@@ -34,6 +34,16 @@ public class WidgetSettings
     public bool ShowResponseTime { get; set; } = true;
 
     /// <summary>
+    /// "Show the work" (Willis's request): when true, every reply from the
+    /// pipeline has a quiet "Worked for 1.2s" line above it that opens into
+    /// the steps Isa took (see Components/Shared/ShowTheWork.razor). While a
+    /// question is running, the same line reads "Working..." with the step
+    /// just finished. Defaults on. Unlike the response-time label, this is
+    /// for chapter leaders too, not only developers.
+    /// </summary>
+    public bool ShowTheWork { get; set; } = true;
+
+    /// <summary>
     /// ISACA's full brand palette (Primary + Secondary + Tertiary --
     /// 10 named colors), straight off brand.isaca.org/visual-style.
     /// These are the "100%" base colors; TintPercents below are the

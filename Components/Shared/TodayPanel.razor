@@ -45,7 +45,7 @@
 @inject ContactService Contacts
 @inject ProgressService Progress
 
-<aside class="isa-today" aria-label="Today">
+<aside class="isa-today @(Rightmost ? "" : "is-inner")" style="@Style" aria-label="Today">
 
     @* Header band: ISACA Dark Blue, like the chat's header. *@
     <div class="isa-today__header">
@@ -53,7 +53,25 @@
             <span class="isa-today__name">Today</span>
             <span class="isa-today__date">@DateLabel</span>
         </div>
-        <button type="button" class="isa-today__close" @onclick="OnClose" aria-label="Close Today" title="Close Today">&times;</button>
+        <div class="isa-today__headBtns">
+            @* Enlarge: widens this window to half the screen (the chat
+               widget works out the sizes; see ChatWidget.razor). *@
+            <button type="button" class="isa-today__iconBtn isa-today__enlarge" @onclick="OnToggleEnlarge"
+                    aria-pressed="@(Enlarged ? "true" : "false")"
+                    title="@(Enlarged ? "Make smaller" : "Enlarge")" aria-label="@(Enlarged ? "Make Today smaller" : "Enlarge Today")">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    @if (Enlarged)
+                    {
+                        <path d="M6.5 2.5v4h-4M9.5 13.5v-4h4M6.5 6.5L2 2M9.5 9.5L14 14" />
+                    }
+                    else
+                    {
+                        <path d="M10 2h4v4M6 14H2v-4M14 2L9 7M2 14l5-5" />
+                    }
+                </svg>
+            </button>
+            <button type="button" class="isa-today__close" @onclick="OnClose" aria-label="Close Today" title="Close Today">&times;</button>
+        </div>
     </div>
 
     @if (_ctx is null)
@@ -274,6 +292,13 @@
                     </div>
                 }
 
+                @if (_selected.StepId == NotebookStepId)
+                {
+                    @* "Read what your predecessor left you": opens the
+                       succession notebook beside this window. *@
+                    <button type="button" class="isa-today__notebookBtn" @onclick="OnOpenNotebook">Open the notebook</button>
+                }
+
                 @if (_done.ContainsKey(_selected.StepId))
                 {
                     <div class="isa-today__doneBox">
@@ -295,6 +320,24 @@
 @code {
     /// <summary>Called by the close button. The chat widget closes this window and slides the chat back.</summary>
     [Parameter] public EventCallback OnClose { get; set; }
+
+    /// <summary>Called by the Enlarge button. The chat widget widens this window to half the screen, or back.</summary>
+    [Parameter] public EventCallback OnToggleEnlarge { get; set; }
+
+    /// <summary>True while this window is enlarged (the button shows "Make smaller").</summary>
+    [Parameter] public bool Enlarged { get; set; }
+
+    /// <summary>Width and position, worked out by the chat widget so the panels sit side by side.</summary>
+    [Parameter] public string Style { get; set; } = "";
+
+    /// <summary>False when the notebook is open to its right, so all four corners round.</summary>
+    [Parameter] public bool Rightmost { get; set; } = true;
+
+    /// <summary>Called by "Open the notebook" on the "Read what your predecessor left you" step.</summary>
+    [Parameter] public EventCallback OnOpenNotebook { get; set; }
+
+    // The journey step that leads to the succession notebook.
+    private const string NotebookStepId = "J-04";
 
     // Who is signed in, from the sign-in cookie.
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }

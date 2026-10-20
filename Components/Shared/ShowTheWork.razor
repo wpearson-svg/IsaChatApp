@@ -1,0 +1,176 @@
+@using IsaChatApp.Services.Orchestrator
+@using IsaChatApp.Services.ShowTheWork
+@using static IsaChatApp.Services.ShowTheWork.WorkStepText
+@*
+    "Show the work" (requested by Willis), designed from the approved mockup
+    (Claude outputs/Show the work mockups.html). Drawn for narrow screens
+    first, so it also suits a future Android app or Chrome extension.
+
+    - While Isa is working (Live = true): a small spinner, the stage running
+      now ("Searching ISACA's approved content..."), and a row of dots that
+      fill in as each stage finishes, with "Step 5 of 9".
+    - When the reply arrives: one tinted line above the answer that says how
+      it went, e.g. a green check and "Answered from approved content".
+      It starts closed. Tapping it opens the steps; tapping again closes them.
+
+    Colors (each with its own icon, so color is never the only signal):
+    green = passed; blue = handled (stopped, passed to a person, or
+    something went wrong on our side). Gray (skipped) and red (a real
+    error) show only in developer mode (Developer = true), which also adds
+    each stage's name, time and exact event-log data text.
+
+    Every sentence comes from Services/ShowTheWork/WorkStepText.cs, built
+    from what the pipeline stages reported. Nothing here comes from the AI
+    model.
+*@
+
+@if (Live)
+{
+    var stepNo = Math.Min(Steps.Count + 1, TotalStages(Steps));
+    var total = TotalStages(Steps);
+    <div class="isa-work isa-work--live" role="status" aria-live="polite">
+        <div class="isa-work__liveRow">
+            <span class="isa-work__spinner" aria-hidden="true"></span>
+            <span class="isa-work__shimmer">@Running(Steps)&hellip;</span>
+        </div>
+        <div class="isa-work__dots" aria-label="Step @stepNo of @total">
+            @for (var i = 0; i < total; i++)
+            {
+                <i class="@DotClass(i)" aria-hidden="true"></i>
+            }
+            <small aria-hidden="true">Step @stepNo of @total</small>
+        </div>
+    </div>
+}
+else
+{
+    var outcome = Summarize(Steps, TotalMs, Developer);
+    <div class="isa-work @(_open ? "isa-work--open" : "")">
+        <button type="button" class="isa-work__toggle isa-work__toggle--@ToneOf(outcome.State)"
+                aria-expanded="@(_open ? "true" : "false")"
+                @onclick="() => _open = !_open">
+            @Icon(outcome.State, 20)
+            <span class="isa-work__summary">@outcome.Text</span>
+            @if (!string.IsNullOrEmpty(outcome.Meta))
+            {
+                <span class="isa-work__meta">@outcome.Meta</span>
+            }
+            <span class="isa-work__chevron" aria-hidden="true"></span>
+            <span class="visually-hidden">@(_open ? "Hide the steps Isa took" : "Show the steps Isa took")</span>
+        </button>
+
+        @if (_open)
+        {
+            <ol class="isa-work__steps" aria-label="Steps Isa took">
+                @foreach (var line in Lines(Steps, Developer))
+                {
+                    <li class="isa-work__step isa-work__step--@ToneOf(line.State)">
+                        @Icon(line.State, 16)
+                        <span class="isa-work__body">
+                            <span class="isa-work__text">@line.Text<span class="visually-hidden"> (@StateLabel(line.State))</span></span>
+                            @if (!string.IsNullOrEmpty(line.Detail))
+                            {
+                                <span class="isa-work__detail">@line.Detail</span>
+                            }
+                            @if (Developer)
+                            {
+                                var s = line.Step;
+                                <span class="isa-work__raw @(line.State == StepState.Problem ? "isa-work__raw--error" : "")">@s.Stage &middot; @s.Outcome@(s.Skipped ? " (skipped)" : "") &middot; @FormatMs(s.ElapsedMs)@(string.IsNullOrEmpty(s.DataText) ? "" : " · " + s.DataText)</span>
+                            }
+                        </span>
+                    </li>
+                }
+            </ol>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>The steps recorded so far (QueryContext.WorkSteps).</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<WorkStep> Steps { get; set; } = Array.Empty<WorkStep>();
+
+    /// <summary>How long the whole run took (shown in developer mode).</summary>
+    [Parameter] public double TotalMs { get; set; }
+
+    /// <summary>True while Isa is still working on this question.</summary>
+    [Parameter] public bool Live { get; set; }
+
+    /// <summary>Developer mode: show every stage, gray skipped steps, red errors and the raw data text.</summary>
+    [Parameter] public bool Developer { get; set; }
+
+    private bool _open;
+
+    // The color family for a state. A real error is blue ("handled") for
+    // leaders and red only in developer mode; skipped is gray.
+    private string ToneOf(StepState state) => state switch
+    {
+        StepState.Passed => "pass",
+        StepState.Skipped => "skip",
+        StepState.Problem when Developer => "error",
+        _ => "handled",
+    };
+
+    // One dot per stage: filled as each one finishes, ringed for the one running now.
+    private string DotClass(int i)
+    {
+        if (i == Steps.Count) return "now";
+        if (i > Steps.Count) return "";
+        var state = StateOf(Steps[i]);
+        return state switch
+        {
+            StepState.Passed => "pass",
+            // A skipped stage is simply finished, so leaders see it as done.
+            StepState.Skipped => Developer ? "skip" : "pass",
+            StepState.Problem when Developer => "error",
+            _ => "handled",
+        };
+    }
+
+    private string StateLabel(StepState state) => state switch
+    {
+        StepState.Passed => "passed",
+        StepState.Stopped => "stopped here",
+        StepState.ToPerson => "passed to a person",
+        StepState.Problem => Developer ? "error" : "something went wrong",
+        _ => "skipped",
+    };
+
+    // The icons, one shape per state (drawn inline so each one stands alone).
+    private RenderFragment Icon(StepState state, int size) => __builder =>
+    {
+        var tone = ToneOf(state);
+        <svg class="isa-work__icon isa-work__icon--@tone" width="@size" height="@size" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            @switch (state)
+            {
+                case StepState.Passed:
+                    <circle cx="10" cy="10" r="10" fill="currentColor" />
+                    <path d="M5.5 10.3l3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    break;
+                case StepState.Stopped:
+                    <circle cx="10" cy="10" r="10" fill="currentColor" />
+                    <rect x="5" y="8.8" width="10" height="2.4" rx="1.2" fill="#fff" />
+                    break;
+                case StepState.ToPerson:
+                    <circle cx="10" cy="10" r="10" fill="currentColor" />
+                    <circle cx="8" cy="7" r="2.4" fill="#fff" />
+                    <path d="M3.8 14.6c.6-2.4 2.3-3.6 4.2-3.6s3.6 1.2 4.2 3.6z" fill="#fff" />
+                    <path d="M12.5 9.5h4m-1.6-1.7l1.7 1.7-1.7 1.7" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                    break;
+                case StepState.Problem when Developer:
+                    <path d="M10 1.5l9 16H1z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                    <path d="M10 7.5v4.5" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                    <circle cx="10" cy="14.8" r="1.2" fill="#fff" />
+                    break;
+                case StepState.Problem:
+                    <circle cx="10" cy="10" r="10" fill="currentColor" />
+                    <path d="M14.6 9.2A4.7 4.7 0 1 0 13 13.6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                    <path d="M15.4 5.6v3.9h-3.9" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    break;
+                default:
+                    <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+                    <path d="M6 10h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    break;
+            }
+        </svg>
+    };
+}

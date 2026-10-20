@@ -65,6 +65,24 @@
     this only controls what shows up in the chat window itself.
 </p>
 
+<div class="form-check form-switch mt-3">
+    <input class="form-check-input" type="checkbox" role="switch" id="showTheWork"
+           checked="@Settings.ShowTheWork"
+           @onchange="@(e => Settings.ShowTheWork = (bool)e.Value!)" />
+    <label class="form-check-label" for="showTheWork">
+        Show the work: a &ldquo;Worked for &hellip;&rdquo; line above each reply that opens into the steps Isa took
+    </label>
+</div>
+
+<p class="mt-3">
+    Currently, replies
+    <strong>@(Settings.ShowTheWork ? "show" : "don't show")</strong>
+    the steps Isa took: checking the question, searching approved content,
+    checking the answer, and so on, each in one plain sentence. With the
+    Developer role, each step also shows its stage name and the exact data
+    text written to the event log.
+</p>
+
 <hr class="mt-4" />
 
 <h2 class="h4">Bubble colors</h2>

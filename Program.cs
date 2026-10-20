@@ -59,6 +59,9 @@ builder.Services.AddSingleton<JourneyService>();
 builder.Services.AddSingleton<JourneyContextService>();
 builder.Services.AddSingleton<ContactService>();
 builder.Services.AddSingleton<ProgressService>();
+// NotebookService: each chapter's succession notebook (saved answers and
+// notes), kept in data/notebook.db, created on first run.
+builder.Services.AddSingleton<NotebookService>();
 
 // --- Working Foundation: event log, access control, pipeline stages ---
 builder.Services.AddHttpClient("keycloak");

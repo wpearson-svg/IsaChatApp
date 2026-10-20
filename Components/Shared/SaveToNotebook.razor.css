@@ -1,0 +1,127 @@
+/* "Save to notebook" under each of Isa's answers: quiet until tapped.
+   Colors from BRAND_GUIDELINES.md (ISACA Dark Blue, Medium Blue, Light
+   Blue) and the darkened green and grey from "show the work". */
+
+.isa-save { margin-top: 0.6rem; font-size: 0.82rem; }
+
+.isa-save__icon { flex: 0 0 auto; }
+
+/* The closed button: a small bookmark and a few words, no box. */
+.isa-save__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    padding: 0.2rem 0.5rem;
+    margin-left: -0.5rem;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #07649d;
+    font: inherit;
+    cursor: pointer;
+}
+
+.isa-save__btn:hover { background: #e7f0f5; }
+
+.isa-save__btn:focus-visible,
+.isa-save__link:focus-visible,
+.isa-save__input:focus-visible,
+.isa-save__primary:focus-visible,
+.isa-save__cancel:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+/* After saving: a filled bookmark in green. */
+.isa-save__done {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    color: #3f7d20;
+    font-weight: 500;
+}
+
+.isa-save__link {
+    border: none;
+    background: none;
+    padding: 0.2rem 0;
+    margin-left: 0.25rem;
+    font: inherit;
+    color: #07649d;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* The open box. */
+.isa-save__box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+}
+
+.isa-save__title { margin: 0; font-weight: 700; }
+.isa-save__who { margin: -0.2rem 0 0.1rem; font-size: 0.78rem; color: #323e48; }
+
+.isa-save__label { font-size: 0.78rem; font-weight: 500; }
+.isa-save__label span { font-weight: 400; color: #5f6b7a; }
+
+.isa-save__input {
+    width: 100%;
+    min-height: 36px;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 8px;
+    background: #ffffff;
+    font: inherit;
+    color: #323e48;
+}
+
+.isa-save__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.isa-save__share {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 32px;
+    cursor: pointer;
+}
+
+.isa-save__share input { width: 16px; height: 16px; accent-color: #07649d; }
+
+.isa-save__btns { display: inline-flex; gap: 0.4rem; }
+
+.isa-save__primary,
+.isa-save__cancel {
+    min-height: 36px;
+    padding: 0.35rem 0.9rem;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-save__primary { border: none; background: #1d2d5c; color: #ffffff; }
+.isa-save__primary:hover:not(:disabled) { background: #07649d; }
+.isa-save__cancel { border: 1px solid #9fb3c8; background: #ffffff; color: #1d2d5c; }
+.isa-save__primary:disabled,
+.isa-save__cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Not saved: blue, handled, never red (show-the-work rule). */
+.isa-save__problem {
+    margin: 0;
+    padding: 0.45rem 0.6rem;
+    border-left: 3px solid #07649d;
+    border-radius: 4px;
+    background: #ffffff;
+    font-size: 0.78rem;
+}
