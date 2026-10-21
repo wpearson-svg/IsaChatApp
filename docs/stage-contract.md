@@ -218,7 +218,9 @@ Every answer passes through `output_compliance`, including direct hits. Which se
 
 A failure on any AI-side check returns Escalate with `reason=ai check failed: <check name>`, and the run goes to `ticketing`. Result shapes are fixed now so the real checks can be added later without changing the contract.
 
-**Forcing a failure (Should):** a setting in the dev dashboard forces a chosen AI-side check to fail, so the demo and the tests can show a bad response being caught.
+**Forcing a failure (Should):** a setting forces a chosen AI-side check to fail, so the demo and the tests can show a bad response being caught. Built (21 Oct 2026) as the config value `OutputCompliance:ForceFail` = `source`, `nli`, `rule` or `confidence` (for example, set the environment variable `OutputCompliance__ForceFail=source` before starting the app). A dev dashboard control for it is not built yet. The confidence threshold is `OutputCompliance:ConfidenceThreshold` (default 0.70).
+
+**Failure reasons (exact):** `ai check failed: source not retrieved`, `ai check failed: nli check`, `ai check failed: rule recheck`, `ai check failed: confidence score`. No approved source: `answer has no approved source`. Nothing found at all: `no approved content found`.
 
 ## 9. Errors
 

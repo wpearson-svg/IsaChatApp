@@ -1,0 +1,26 @@
+.isa-fb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.isa-fb__btn {
+    background: none;
+    border: 1px solid #07649d;
+    border-radius: 999px;
+    padding: 2px 10px;
+    color: #07649d;
+    font: inherit;
+    cursor: pointer;
+}
+
+.isa-fb__btn:hover,
+.isa-fb__btn:focus-visible {
+    background: #e7f0f5;
+}
+
+.isa-fb__thanks {
+    opacity: 0.7;
+}

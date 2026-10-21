@@ -291,11 +291,12 @@
                    the FIRST element so it sits at the bottom, below the
                    question (see the column-reverse note above). It goes
                    away the moment the real reply is added. *@
-                @if (_liveSteps is not null && Settings.ShowTheWork)
+                @if (_liveFeed is { } live && Settings.ShowTheWork)
                 {
                     <div class="isa-widget__message isa-widget__message--ai" style="@BubbleStyle("ai")">
                         <div class="isa-widget__who">@(Settings.UseIsaLabel ? "Isa" : "pipeline")</div>
-                        <ShowTheWork Steps="@_liveSteps" Live="true" Developer="@ShowDeveloperTools" />
+                        <ShowTheWork Steps="@live.View.Steps" Current="@live.View.Current" Live="true" Developer="@(ShowDeveloperTools && !Settings.PanelUserView)"
+                                     CanToggle="@ShowDeveloperTools" OnToggle="@TogglePanelView" />
                     </div>
                 }
 
@@ -312,7 +313,8 @@
                         @if (msg.Steps is { Count: > 0 } && Settings.ShowTheWork)
                         {
                             @* "Show the work": closed to one line until clicked. *@
-                            <ShowTheWork Steps="@msg.Steps" TotalMs="@(msg.WorkMs ?? 0)" Developer="@ShowDeveloperTools" />
+                            <ShowTheWork Steps="@msg.Steps" TotalMs="@(msg.WorkMs ?? 0)" Developer="@(ShowDeveloperTools && !Settings.PanelUserView)"
+                                         CanToggle="@ShowDeveloperTools" OnToggle="@TogglePanelView" />
                         }
                         <div class="isa-widget__text">@msg.Text</div>
                         @if (msg.Sources is { Count: > 0 })
@@ -345,12 +347,16 @@
                             <SaveToNotebook @key="msg.TraceId" Question="@msg.Question" Answer="@msg.Text"
                                             Sources="@(msg.Sources ?? new())"
                                             OnSaved="NotebookChanged" OnOpenNotebook="OpenNotebook" />
+                            @* Content Health Dashboard: "Yes, this answered my
+                               question" / "Not quite", logged by trace ID. *@
+                            <AnswerFeedback @key="@("fb-" + msg.TraceId)" TraceId="@(msg.TraceId ?? "")" />
                         }
-                        @if (!string.IsNullOrEmpty(msg.TraceId))
+                        @if (msg.ShowReference && !string.IsNullOrEmpty(msg.TraceId))
                         {
                             @* The trace ID, shown to leaders as a "Reference #"
-                               they can quote to a person. Full ID kept, since
-                               the event log is searched by the full ID. *@
+                               they can quote to a person. Shown on hand-offs
+                               only (stage contract, section 5). Full ID kept,
+                               since the event log is searched by the full ID. *@
                             <div class="isa-widget__trace">Reference # @msg.TraceId</div>
                         }
                     </div>
@@ -461,6 +467,9 @@
     /// only the conversation.
     /// </summary>
     private bool ShowDeveloperTools => Settings.CurrentRole == WidgetSettings.UserRole.Developer;
+
+    // T10W: the Developer role can look at "show the work" the way a leader sees it.
+    private void TogglePanelView() => Settings.PanelUserView = !Settings.PanelUserView;
 
     // ---- Welcome message: suggested questions ---------------------------
     //
@@ -609,7 +618,7 @@
     // "Show the work", live: the steps of the question that is running
     // right now (the same list the orchestrator fills, ctx.WorkSteps), or
     // null when nothing is running. See RunPipeline below.
-    private IReadOnlyList<IsaChatApp.Services.Orchestrator.WorkStep>? _liveSteps;
+    private IsaChatApp.Services.ShowTheWork.PacedStageFeed? _liveFeed;
 
     // Messages, in actual chronological order, walked backwards for
     // display — see the comment on .isa-widget__messages in the markup
@@ -1005,7 +1014,7 @@
         }
         catch (Exception ex) when (UsePipeline)
         {
-            Messages.Add(new ChatEntry("error", "Error", "Something went wrong. Please try again."));
+            Messages.Add(new ChatEntry("error", "Isa", IsaChatApp.Services.ShowTheWork.Wording.WentWrong));
             Console.Error.WriteLine($"Pipeline error: {ex}");
         }
         catch (Exception ex)
@@ -1076,20 +1085,40 @@
             IncomingToken = await GetBearerTokenAsync()
         };
 
-        // "Show the work": the live bubble shows ctx.WorkSteps as the
-        // orchestrator fills it. After each stage, the orchestrator calls
-        // back here so the bubble updates right away.
-        _liveSteps = ctx.WorkSteps;
+        // "Show the work", live (tasks T3W, T9W, T12W). The pipeline reports each
+        // stage as StageProgress messages (docs/stage-contract.md, section 6). The
+        // feed applies them in order, holds each stage on screen for at least
+        // Settings.MinStageMs (0 = no pacing), and redraws this widget. The run
+        // itself is never slowed: Post only queues, and the reply waits only for
+        // the feed to finish showing the last steps.
+        var feed = new IsaChatApp.Services.ShowTheWork.PacedStageFeed(Settings.MinStageMs, () => InvokeAsync(StateHasChanged));
+        _liveFeed = feed;
+
+        // TODAY the orchestrator reports a finished step at a time, so this adapter
+        // turns each one into the contract's "finished" message and adds the final
+        // "done". WHEN the orchestrator sends StageProgress itself (it adds
+        // "started" and "done"), delete the adapter and call:
+        //     Pipeline.RunAsync(ctx, feed.Post)
+        var seq = 0;
+        Func<IsaChatApp.Services.Orchestrator.WorkStep, Task> adapter = step =>
+            feed.Post(new IsaChatApp.Services.Orchestrator.StageProgress(
+                ctx.TraceId, ++seq, IsaChatApp.Services.Orchestrator.StagePhase.Finished, step.Stage, step));
+
         IsaChatApp.Services.Orchestrator.AskResponse result;
+        DateTime runEnd;
         try
         {
-            result = await Pipeline.RunAsync(ctx, _ => InvokeAsync(StateHasChanged));
+            result = await Pipeline.RunAsync(ctx, adapter);
+            runEnd = DateTime.UtcNow;   // how long the run really took, before any pacing wait
+            await feed.Post(new IsaChatApp.Services.Orchestrator.StageProgress(
+                ctx.TraceId, ++seq, IsaChatApp.Services.Orchestrator.StagePhase.Done, Status: result.Status));
         }
         finally
         {
-            _liveSteps = null;   // the reply (added below) takes over
+            await feed.CompleteAsync();   // show the last steps first
+            _liveFeed = null;             // the reply (added below) takes over
         }
-        var elapsedMs = (DateTime.UtcNow - _sendStartedAt).TotalMilliseconds;
+        var elapsedMs = (runEnd - _sendStartedAt).TotalMilliseconds;
         UsageLog.Record("pipeline", "local", null, null, elapsedMs);
 
         // A copy of the steps travels with the reply, so the reply can
@@ -1098,7 +1127,7 @@
 
         if (ctx.AuthFailed)
         {
-            Messages.Add(new ChatEntry("error", "Not signed in", "Please sign in to ask a question. Use the Sign in button at the top of the Isa home page.", TraceId: result.TraceId));
+            Messages.Add(new ChatEntry("error", "Not signed in", IsaChatApp.Services.ShowTheWork.Wording.NotSignedIn, TraceId: result.TraceId));
             return;
         }
 
@@ -1115,10 +1144,10 @@
                 // only add it here when the message doesn't (no doubled line).
                 var ticket = string.IsNullOrEmpty(result.TicketReference) || result.Message.Contains(result.TicketReference)
                     ? "" : $" Your reference number is {result.TicketReference}.";
-                Messages.Add(new ChatEntry("ai", $"{name} \u00b7 Passed to a person", result.Message + ticket, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs));
+                Messages.Add(new ChatEntry("ai", $"{name} \u00b7 Passed to a person", result.Message + ticket, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, ShowReference: true));
                 break;
             default: // stopped
-                Messages.Add(new ChatEntry("error", "Unable to answer", result.Message, TraceId: result.TraceId, Steps: steps, WorkMs: elapsedMs));
+                Messages.Add(new ChatEntry("error", name, result.Message, TraceId: result.TraceId, Steps: steps, WorkMs: elapsedMs));
                 break;
         }
     }
@@ -1159,7 +1188,8 @@
 
     private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null, List<IsaChatApp.Services.Orchestrator.SourceRef>? Sources = null, string? TraceId = null,
         List<IsaChatApp.Services.Orchestrator.WorkStep>? Steps = null, double? WorkMs = null,
-        string? Question = null)    // set only on answered pipeline replies: the question asked, for "Save to notebook"
+        string? Question = null,    // set only on answered pipeline replies: the question asked, for "Save to notebook"
+        bool ShowReference = false) // true only on a hand-off: show the "Reference #" line (wording table, section 5)
     {
         // A unique id for the message's element on the page, so the chat
         // can scroll to it (and two messages with the same text never

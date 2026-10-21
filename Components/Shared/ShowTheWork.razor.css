@@ -218,6 +218,20 @@
 
 .isa-work__liveToggle:hover { text-decoration: underline; }
 
+.isa-work__viewToggle {
+    display: inline-block;
+    margin: 0.3rem 0 0.2rem;
+    padding: 0.1rem 0.5rem;
+    border: 1px dashed var(--work-skip);
+    border-radius: 999px;
+    background: none;
+    color: var(--work-skip);
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.isa-work__viewToggle:hover { color: var(--work-ink); border-color: var(--work-ink); }
+
 @media (prefers-reduced-motion: reduce) {
     .isa-work__spinner, .isa-work__steps { animation: none; }
     .isa-work__shimmer { animation: none; background: none; color: var(--work-ink); }

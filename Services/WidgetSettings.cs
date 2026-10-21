@@ -44,6 +44,26 @@ public class WidgetSettings
     public bool ShowTheWork { get; set; } = true;
 
     /// <summary>
+    /// "Show the work" pacing for demos (task T9W): the least time, in
+    /// milliseconds, each stage stays on screen before the next one
+    /// shows. 0 (the default) means no pacing: steps show the moment they
+    /// finish. The pacing happens only in the chat; the run and the event
+    /// log are never slowed down (stage contract, section 6). Set on the
+    /// /isa-config page. 0 to 3000.
+    /// </summary>
+    public int MinStageMs { get; set; } = 0;
+
+    /// <summary>
+    /// "Show the work" view switch (task T10W, for the team only): when true,
+    /// the Developer role sees the panel exactly as a chapter leader does
+    /// (no gray skipped steps, no red errors, no raw data text). Lets us
+    /// check the leader view without switching roles. Only the Developer
+    /// role is offered the switch. Defaults to false (developers see the
+    /// debug view).
+    /// </summary>
+    public bool PanelUserView { get; set; } = false;
+
+    /// <summary>
     /// ISACA's full brand palette (Primary + Secondary + Tertiary --
     /// 10 named colors), straight off brand.isaca.org/visual-style.
     /// These are the "100%" base colors; TintPercents below are the

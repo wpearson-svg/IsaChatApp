@@ -186,7 +186,7 @@ public class AccessControlStage : Orchestrator.IStage
             ctx.AccessDenied = true;
             return new Orchestrator.StageResult(
                 Orchestrator.StageOutcome.Stop,
-                "Your account does not have access to this assistant.",
+                IsaChatApp.Services.ShowTheWork.Wording.NoAccess,
                 $"user={identity.UserId}; roles=[{string.Join(",", identity.Roles)}]; reason=no_chat_user_role"
             );
         }

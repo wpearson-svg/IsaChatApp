@@ -69,6 +69,8 @@ builder.Services.AddSingleton<HandoffService>();
 // --- Working Foundation: event log, access control, pipeline stages ---
 builder.Services.AddHttpClient("keycloak");
 builder.Services.AddSingleton<EventLogService>();
+builder.Services.AddSingleton<UsageSummaryService>();
+builder.Services.AddSingleton<UsageReportService>();
 // Reads/writes dev-keys.json (Dev Dashboard > Models, RAG, access & ticketing).
 builder.Services.AddSingleton<DevKeysStore>();
 builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapter>();

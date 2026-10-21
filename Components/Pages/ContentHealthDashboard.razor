@@ -62,10 +62,12 @@ else
         </div>
 
         <div class="chd__notice">
-            Real telemetry, not mock data &mdash; every row below comes from
-            ChatWidget's own request log (model, tokens, response time).
-            Nothing is persisted to disk; it resets when the app restarts,
-            same as the rest of this demo.
+            Real telemetry, not mock data. The SUPPORT, DATA and TRAINING
+            sections come from the saved question summary (data/usage.db):
+            totals and rates only, no question text, people counted
+            anonymously, and they survive an app restart. The model usage log
+            further down comes from ChatWidget's own request log and resets
+            when the app restarts.
         </div>
 
         <div class="chd__statsRow">
@@ -90,7 +92,11 @@ else
             </div>
         }
 
-        <div class="chd__sectionLabel">USAGE</div>
+        @* Saved usage numbers (data/usage.db): SUPPORT / DATA / TRAINING, added 2026-10-21.
+           Everything below this component is the original in-memory model log. *@
+        <ContentHealthSections CutoffUtc="RangeCutoffUtc" RangeLabel="@RangeLabel" />
+
+        <div class="chd__sectionLabel">MODEL USAGE LOG (resets when the app restarts)</div>
         <div class="chd__grid">
             <div class="chd__card chd__card--wide">
                 <div class="chd__cardHeader">

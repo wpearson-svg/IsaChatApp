@@ -90,6 +90,12 @@ else
     /// <summary>Developer mode: show every stage, gray skipped steps, red errors and the raw data text.</summary>
     [Parameter] public bool Developer { get; set; }
 
+    /// <summary>Show the "user view / debug view" switch (the Developer role only, task T10W).</summary>
+    [Parameter] public bool CanToggle { get; set; }
+
+    /// <summary>Called when the switch is pressed. The parent flips its setting and passes a new Developer value.</summary>
+    [Parameter] public EventCallback OnToggle { get; set; }
+
     /// <summary>Live only: the stage running right now, from the latest "started" update (empty = work it out from the finished steps).</summary>
     [Parameter] public string? Current { get; set; }
 
@@ -98,6 +104,13 @@ else
     // The list of steps, used both while working and after the reply.
     private RenderFragment StepList(IReadOnlyList<StepLine> lines) => __builder =>
     {
+        if (CanToggle)
+        {
+            @* For the team only: switch between the leader's view and the debug view. *@
+            <button type="button" class="isa-work__viewToggle" @onclick="OnToggle">
+                @(Developer ? "Debug view (switch to user view)" : "User view (switch to debug view)")
+            </button>
+        }
         <ol class="isa-work__steps" aria-label="Steps Isa took">
             @foreach (var line in lines)
             {
