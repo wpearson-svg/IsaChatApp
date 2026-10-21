@@ -1,0 +1,259 @@
+@* ============================================================
+   ContentHealthSections.razor
+
+   The SUPPORT / DATA / TRAINING sections of the Content Health Dashboard,
+   as laid out in "Content Health Dashboard: Logging Metrics and Data
+   Sources" (added 2026-10-21). Reads data/usage.db through
+   UsageReportService, so unlike the model-usage tiles lower on the page
+   these numbers are saved: they survive an app restart.
+
+   - Every tile is a total or a rate. No tile can show one person's
+     questions (none are stored, and people are only hashed and counted).
+   - Metrics that can't be measured yet are shown as grey "Not collecting
+     yet" tiles that say what they are waiting on, so the plan is visible
+     and each tile switches on by itself when its data starts to arrive.
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@inject UsageReportService Report
+
+<div class="chs">
+    <div class="chs__statsRow">
+        <div class="chs__stat"><div class="chs__statValue">@S.Total</div><div class="chs__statLabel">Questions asked</div></div>
+        <div class="chs__stat"><div class="chs__statValue">@S.Answered</div><div class="chs__statLabel">Answered</div></div>
+        <div class="chs__stat"><div class="chs__statValue">@S.Stopped</div><div class="chs__statLabel">Stopped (outside scope)</div></div>
+        <div class="chs__stat"><div class="chs__statValue">@S.Escalated</div><div class="chs__statLabel">Passed to a person</div></div>
+        <div class="chs__stat"><div class="chs__statValue">@S.ZeroMatch</div><div class="chs__statLabel">Found nothing (zero-match)</div></div>
+    </div>
+
+    @* ---------------- SUPPORT ---------------- *@
+    <div class="chs__sectionLabel">SUPPORT &mdash; where people needed a person</div>
+    <div class="chs__grid">
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Escalations by reason</h3><span class="chs__tag chs__tag--green">SUPPORT</span></div>
+            <p class="chs__hint">@RangeLabel. Why Isa handed the question to a person.</p>
+            <CountBars Items="S.EscalationsByReason" EmptyText="No escalations in this range." />
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Escalations by topic</h3><span class="chs__tag chs__tag--green">SUPPORT</span></div>
+            <p class="chs__hint">Topic comes from the document Isa cited. Questions where nothing was found have no topic.</p>
+            <CountBars Items="S.EscalationsByTopic" EmptyText="No escalations in this range." />
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Peak escalation times</h3><span class="chs__tag chs__tag--green">SUPPORT</span></div>
+            <p class="chs__hint">Hour of day (this computer's time) when questions were passed to a person.</p>
+            <CountBars Items="S.EscalationsByHour" EmptyText="No escalations in this range." />
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Escalations by chapter</h3><span class="chs__tag chs__tag--green">SUPPORT</span></div>
+            <p class="chs__hint">By chapter ID. Region is blank until the directory has a region field.</p>
+            <CountBars Items="S.EscalationsByChapter" EmptyText="No escalations in this range." />
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Repeat escalation</h3><span class="chs__tag chs__tag--green">SUPPORT</span></div>
+            <p class="chs__hint">People who were passed to a person more than once. Counted anonymously.</p>
+            <div class="chs__big">@S.UsersWhoEscalatedAgain <span>of @S.UsersWhoEscalated people</span></div>
+        </div>
+        @if (S.TicketsClosed == 0)
+        {
+            <div class="chs__card chs__card--pending">
+                <div class="chs__cardHeader"><h3>Time to resolution</h3><span class="chs__tag chs__tag--grey">NOT COLLECTING YET</span></div>
+                <p class="chs__hint">@S.TicketsOpened ticket(s) opened, none closed. Switches on when the ticketing step reports a closed date
+                    (hook: <code>CloseTicketAsync</code>).</p>
+            </div>
+        }
+        else
+        {
+            <div class="chs__card">
+                <div class="chs__cardHeader"><h3>Time to resolution</h3><span class="chs__tag chs__tag--green">SUPPORT</span></div>
+                <p class="chs__hint">Average time from a question being passed on to its ticket closing.</p>
+                <div class="chs__big">@($"{S.AvgHoursToClose:0.0}") <span>hours (@S.TicketsClosed of @S.TicketsOpened closed)</span></div>
+            </div>
+        }
+    </div>
+
+    @* ---------------- DATA ---------------- *@
+    <div class="chs__sectionLabel">DATA &mdash; what the approved content is doing</div>
+    <div class="chs__grid">
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>How questions were handled</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+            <p class="chs__hint">Found in approved text, built by the model, nothing found, or stopped before the search.</p>
+            <CountBars Items="RouteBars" EmptyText="No questions in this range." />
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Zero-match questions</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+            <p class="chs__hint">Questions where the search found nothing. Each one is a gap in the content or a question outside it.</p>
+            <div class="chs__big">@S.ZeroMatch <span>of @S.Total (@Pct(S.ZeroMatch, S.Total))</span></div>
+        </div>
+        <div class="chs__card chs__card--wide">
+            <div class="chs__cardHeader"><h3>Most-retrieved passages</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+            <p class="chs__hint">What people are actually using. &ldquo;Cited&rdquo; means the answer came from that passage.</p>
+            @if (S.MostRetrieved.Count == 0)
+            {
+                <p class="chs__empty">Nothing retrieved in this range.</p>
+            }
+            else
+            {
+                <table class="chs__table">
+                    <thead><tr><th>Passage</th><th>Retrieved</th><th>Cited</th></tr></thead>
+                    <tbody>
+                        @foreach (var p in S.MostRetrieved)
+                        {
+                            <tr><td>@p.Passage</td><td>@p.Retrieved</td><td>@p.Cited</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+        <div class="chs__card chs__card--wide">
+            <div class="chs__cardHeader"><h3>Least-retrieved passages</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+            <p class="chs__hint">Passages nobody has been sent to in this range: candidates to trim, or to check they can be found.</p>
+            <div class="chs__big">@S.NeverRetrieved <span>of @S.TotalPassages passages never retrieved</span></div>
+            @if (S.NeverRetrievedSample.Count > 0)
+            {
+                <ul class="chs__list">
+                    @foreach (var p in S.NeverRetrievedSample)
+                    {
+                        <li>@p</li>
+                    }
+                </ul>
+                @if (S.NeverRetrieved > S.NeverRetrievedSample.Count)
+                {
+                    <p class="chs__hint">&hellip;and @(S.NeverRetrieved - S.NeverRetrievedSample.Count) more.</p>
+                }
+            }
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Coverage by category</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+            <p class="chs__hint">Passages in each category, how many were used, and total retrievals. Categories come from <code>data/content_categories.csv</code>.</p>
+            <table class="chs__table">
+                <thead><tr><th>Category</th><th>Passages</th><th>Used</th><th>Retrievals</th></tr></thead>
+                <tbody>
+                    @foreach (var c in S.Coverage)
+                    {
+                        <tr><td>@c.Category</td><td>@c.Passages</td><td>@c.PassagesUsed</td><td>@c.Retrievals</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Search vs. generation, by topic</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+            <p class="chs__hint">Answered questions: found directly in approved text, or needing the model to build an answer.</p>
+            @if (S.SearchVsGeneration.Count == 0)
+            {
+                <p class="chs__empty">No answered questions in this range.</p>
+            }
+            else
+            {
+                <table class="chs__table">
+                    <thead><tr><th>Topic</th><th>Direct</th><th>Model</th></tr></thead>
+                    <tbody>
+                        @foreach (var r in S.SearchVsGeneration)
+                        {
+                            <tr><td>@r.Category</td><td>@r.Direct</td><td>@r.Ai</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Conflicting-answer flags</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+            <p class="chs__hint">Pairs of passages marked as disagreeing. Flagged by hand today; the NLI recheck can fill this later.</p>
+            <div class="chs__big">@S.OpenConflicts <span>open</span></div>
+        </div>
+        @if (S.QuestionsWithTokens == 0)
+        {
+            <div class="chs__card chs__card--pending">
+                <div class="chs__cardHeader"><h3>Tokens per query</h3><span class="chs__tag chs__tag--grey">NOT COLLECTING YET</span></div>
+                <p class="chs__hint">Waits on the real model. The real complex_ai step sets <code>PromptTokens</code> and <code>CompletionTokens</code> and this fills in.</p>
+            </div>
+        }
+        else
+        {
+            <div class="chs__card">
+                <div class="chs__cardHeader"><h3>Tokens per query</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+                <p class="chs__hint">Average over questions where the model reported tokens.</p>
+                <div class="chs__big">@((S.PromptTokens + S.CompletionTokens) / S.QuestionsWithTokens) <span>tokens (@S.QuestionsWithTokens questions)</span></div>
+            </div>
+        }
+        <div class="chs__card chs__card--pending">
+            <div class="chs__cardHeader"><h3>Content age</h3><span class="chs__tag chs__tag--grey">NOT COLLECTING YET</span></div>
+            <p class="chs__hint">The content table has no last-updated date on its documents. Add one and the retrieval log can flag what is overdue for review.</p>
+        </div>
+    </div>
+
+    @* ---------------- TRAINING ---------------- *@
+    <div class="chs__sectionLabel">TRAINING &mdash; what people don't know how to find yet</div>
+    <div class="chs__grid">
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Self-resolution</h3><span class="chs__tag chs__tag--purple">TRAINING</span></div>
+            <p class="chs__hint">&ldquo;Yes, this answered my question&rdquo; out of all answers rated.</p>
+            <div class="chs__big">@Pct(S.Resolved, S.Resolved + S.NotQuite) <span>(@S.Resolved yes, @S.NotQuite not quite)</span></div>
+            @if (S.FeedbackByDay.Count > 0)
+            {
+                <table class="chs__table">
+                    <thead><tr><th>Day</th><th>Yes</th><th>Not quite</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in S.FeedbackByDay)
+                        {
+                            <tr><td>@d.Day</td><td>@d.Resolved</td><td>@d.NotQuite</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>New vs. returning leaders</h3><span class="chs__tag chs__tag--purple">TRAINING</span></div>
+            <p class="chs__hint">From years as a leader in the sign-in profile. Totals only.</p>
+            @if (S.Tenure.Count == 0)
+            {
+                <p class="chs__empty">No questions in this range.</p>
+            }
+            else
+            {
+                <table class="chs__table">
+                    <thead><tr><th>Group</th><th>Questions</th><th>Passed on</th><th>Yes</th><th>Not quite</th></tr></thead>
+                    <tbody>
+                        @foreach (var g in S.Tenure)
+                        {
+                            <tr><td>@g.Name</td><td>@g.Questions</td><td>@g.Escalated</td><td>@g.Resolved</td><td>@g.NotQuite</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Questions that keep coming back</h3><span class="chs__tag chs__tag--purple">TRAINING</span></div>
+            <p class="chs__hint">The same question asked again (exact wording, ignoring case and punctuation). Questions are never stored, only a scrambled fingerprint.</p>
+            <div class="chs__big">@S.RepeatedQuestions <span>asked more than once, @S.RepeatedAcrossPeople by 2+ different people</span></div>
+        </div>
+        <div class="chs__card chs__card--pending">
+            <div class="chs__cardHeader"><h3>Question clusters</h3><span class="chs__tag chs__tag--grey">NOT COLLECTING YET</span></div>
+            <p class="chs__hint">Grouping questions by meaning waits on the real search's embeddings. The exact-repeat count above is the stand-in until then.</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Earliest time to include (UTC).</summary>
+    [Parameter] public DateTime CutoffUtc { get; set; } = DateTime.MinValue;
+
+    /// <summary>Plain words for the range, for the card hints.</summary>
+    [Parameter] public string RangeLabel { get; set; } = "all time";
+
+    private UsageReportService.Snapshot S = UsageReportService.Snapshot.Empty;
+
+    protected override void OnParametersSet() => S = Report.Get(CutoffUtc);
+
+    private static string Pct(int a, int b) => b == 0 ? "–" : $"{100.0 * a / b:0}%";
+
+    private IReadOnlyList<UsageReportService.Count> RouteBars =>
+        S.Routes.Select(r => new UsageReportService.Count(r.Label switch
+        {
+            "direct" => "Found in approved text",
+            "ai" => "Built by the model",
+            "none" => "Nothing found",
+            "blocked" => "Stopped before search",
+            _ => r.Label
+        }, r.N)).ToList();
+}

@@ -83,6 +83,20 @@
     text written to the event log.
 </p>
 
+<div class="mt-3" style="max-width: 420px;">
+    <label class="form-label" for="minStageMs">
+        Minimum time each stage stays on screen (for demos):
+        <strong>@(Settings.MinStageMs == 0 ? "off" : $"{Settings.MinStageMs / 1000.0:0.0}s")</strong>
+    </label>
+    <input type="range" class="form-range" id="minStageMs" min="0" max="3000" step="100"
+           value="@Settings.MinStageMs"
+           @oninput="@(e => Settings.MinStageMs = int.Parse((string)e.Value!))" />
+    <div class="form-text">
+        Slows only what the chat shows, so the steps can be followed live. The
+        answer and the event log are never delayed. Leave it off for normal use.
+    </div>
+</div>
+
 <hr class="mt-4" />
 
 <h2 class="h4">Bubble colors</h2>

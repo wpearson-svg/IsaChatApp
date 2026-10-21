@@ -1,0 +1,7 @@
+.cb { display: flex; flex-direction: column; gap: 0.55rem; }
+.cb__row { display: grid; grid-template-columns: minmax(90px, 40%) 1fr 36px; align-items: center; gap: 0.6rem; }
+.cb__label { font-size: 0.78rem; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb__track { background: #f0f2f5; border-radius: 5px; height: 12px; overflow: hidden; }
+.cb__fill { height: 100%; background: #e57524; border-radius: 5px; }
+.cb__value { font-size: 0.78rem; font-weight: 600; color: #1d2d5c; text-align: right; }
+.cb__empty { color: #6a7078; font-size: 0.85rem; margin: 0; }

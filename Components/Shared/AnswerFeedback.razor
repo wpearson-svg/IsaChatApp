@@ -1,0 +1,42 @@
+@* ============================================================
+   AnswerFeedback.razor
+
+   Content Health Dashboard, step 1 (added 2026-10-21): two quiet buttons
+   under each answered question -- "Yes, this answered my question" and
+   "Not quite". Each click writes one row to the feedback table in
+   data/usage.db (UsageSummaryService.RecordFeedbackAsync), linked to the
+   answer by its trace ID. Nothing is stored about the question text, and
+   the dashboard only ever shows totals.
+
+   Feeds the "self-resolution trend" and the "Not quite" escalation reason.
+   One click per answer; afterwards it just says "Thanks".
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@inject UsageSummaryService Usage
+
+<div class="isa-fb" role="group" aria-label="Was this helpful?">
+    @if (_kind is null)
+    {
+        <button type="button" class="isa-fb__btn" @onclick='() => Send("resolved")'>Yes, this answered my question</button>
+        <button type="button" class="isa-fb__btn" @onclick='() => Send("not_quite")'>Not quite</button>
+    }
+    else
+    {
+        <span class="isa-fb__thanks" role="status">Thanks for letting us know.</span>
+    }
+</div>
+
+@code {
+    /// <summary>The answer's trace ID, so the click is tied to the right question.</summary>
+    [Parameter, EditorRequired] public string TraceId { get; set; } = "";
+
+    private string? _kind;
+
+    private async Task Send(string kind)
+    {
+        if (_kind is not null) return;
+        _kind = kind;
+        await Usage.RecordFeedbackAsync(TraceId, kind);
+    }
+}

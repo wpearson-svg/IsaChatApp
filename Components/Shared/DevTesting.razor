@@ -1,0 +1,218 @@
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Orchestrator
+@using IsaChatApp.Services.ShowTheWork
+@inject IAccessControlAdapter Access
+@inject KeycloakSignInService SignInService
+@inject IsaChatApp.Services.Orchestrator.Orchestrator Pipeline
+@inject EventLogService EventLog
+@*
+    Dev dashboard > Testing (task T5W).
+
+    - Runs a question through the REAL pipeline (the same orchestrator the chat
+      uses, as the person signed in here) and ALWAYS shows the developer view:
+      every stage with its tag (pass / not_found / stop / escalate, skipped),
+      its reason, its data text and its time. Nothing here hides skipped stages
+      or errors, unlike the leader view in the chat.
+    - Trace lookup: type a trace ID to read its event log rows. After a run, the
+      run's trace ID is filled in for you.
+    - Limited to the dashboard dev role: the signed-in person's Keycloak token
+      must carry the "dashboard_dev" role. Anyone else sees only a notice, and no
+      run or lookup is possible. (With AccessControl:DevBypass on and nobody
+      signed in, the role is not there, so sign in as a dashboard_dev account.)
+
+    A run is real: it writes event-log rows and, on an escalation, creates a
+    ticket reference. The question text itself is never written to the event log.
+*@
+
+@if (_allowed is null)
+{
+    <p class="dt__note">Checking your access&hellip;</p>
+}
+else if (_allowed == false)
+{
+    <div class="dt__locked" role="alert">
+        <strong>Testing is for the dashboard developer role.</strong>
+        <p>Sign in with an account that has the <code>dashboard_dev</code> role to run questions and look up traces here.</p>
+    </div>
+}
+else
+{
+    <section class="dt">
+        <h3 class="dt__h">Run a question</h3>
+        <p class="dt__note">Runs through the real pipeline as the account you are signed in with. Event-log rows and tickets are real.</p>
+
+        <div class="dt__chips">
+            @foreach (var c in MockStageFeed.Cases.Take(5))
+            {
+                <button type="button" class="dt__chip" @onclick="() => _question = c.Question" title="@c.Expect">Test @c.Number</button>
+            }
+        </div>
+        <div class="dt__row">
+            <input type="text" class="dt__input" placeholder="Type a test question..." @bind="_question" @bind:event="oninput"
+                   @onkeydown="OnKey" aria-label="Test question" />
+            <button type="button" class="dt__btn" @onclick="RunAsync" disabled="@(_running || string.IsNullOrWhiteSpace(_question))">@(_running ? "Running..." : "Run")</button>
+        </div>
+
+        @if (_steps is not null)
+        {
+            <div class="dt__summary">
+                @if (_running)
+                {
+                    <span>Running&hellip; @_steps.Count stage(s) so far</span>
+                }
+                else if (_response is not null)
+                {
+                    <span class="dt__tag dt__tag--@_response.Status">@_response.Status</span>
+                    <span>language <b>@_language</b></span>
+                    <span>total <b>@WorkStepText.FormatMs(_steps.Sum(s => s.ElapsedMs))</b></span>
+                    @if (_response.TicketReference is not null) { <span>ticket <b>@_response.TicketReference</b></span> }
+                    <span>trace <code>@_response.TraceId</code></span>
+                }
+            </div>
+
+            <div class="dt__scroll">
+                <table class="dt__table">
+                    <thead>
+                        <tr><th>Stage</th><th>Tag</th><th>Reason</th><th>Data</th><th>ms</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in _steps)
+                        {
+                            <tr class="@(s.Skipped ? "is-skipped" : "")">
+                                <td><code>@s.Stage</code></td>
+                                <td>
+                                    <span class="dt__tag dt__tag--@s.Outcome">@s.Outcome</span>
+                                    @if (s.Skipped) { <span class="dt__tag dt__tag--skipped">skipped</span> }
+                                    @if (s.DataText.StartsWith("error=")) { <span class="dt__tag dt__tag--error">error</span> }
+                                </td>
+                                <td>@(s.Reason ?? "none")</td>
+                                <td class="dt__data">@s.DataText</td>
+                                <td class="dt__num">@s.ElapsedMs.ToString("0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!_running && _response is not null)
+            {
+                <details class="dt__reply" open>
+                    <summary>What the person would see</summary>
+                    <ShowTheWork Steps="@_steps" TotalMs="@_steps.Sum(s => s.ElapsedMs)" Developer="true" />
+                    <p class="dt__msg">@_response.Message</p>
+                    @if (_response.Sources.Count > 0)
+                    {
+                        <ul class="dt__sources">
+                            @foreach (var src in _response.Sources)
+                            {
+                                <li>@src.Document &middot; @src.Section@(string.IsNullOrEmpty(src.Page) ? "" : " · p. " + src.Page)</li>
+                            }
+                        </ul>
+                    }
+                </details>
+            }
+        }
+
+        <h3 class="dt__h dt__h--gap">Trace lookup</h3>
+        <p class="dt__note">Reads the event log for one trace ID (the question text is never in it).</p>
+        <div class="dt__row">
+            <input type="text" class="dt__input" placeholder="Trace ID" @bind="_trace" @bind:event="oninput"
+                   @onkeydown="OnTraceKey" aria-label="Trace ID" />
+            <button type="button" class="dt__btn dt__btn--ghost" @onclick="LookupAsync" disabled="@string.IsNullOrWhiteSpace(_trace)">Look up</button>
+        </div>
+        @if (_events is not null)
+        {
+            @if (_events.Count == 0)
+            {
+                <p class="dt__note">No events found for that trace ID.</p>
+            }
+            else
+            {
+                <div class="dt__scroll">
+                    <table class="dt__table">
+                        <thead><tr><th>Time</th><th>Stage</th><th>Event data</th></tr></thead>
+                        <tbody>
+                            @foreach (var e in _events)
+                            {
+                                <tr>
+                                    <td class="dt__num">@e.Timestamp</td>
+                                    <td><code>@e.Stage</code></td>
+                                    <td class="dt__data">@e.Data</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </section>
+}
+
+@code {
+    [CascadingParameter] private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthState { get; set; }
+
+    /// <summary>The Keycloak client role that unlocks this section.</summary>
+    private const string DevRole = "dashboard_dev";
+
+    private bool? _allowed;
+    private string? _token;
+    private string _question = "";
+    private string _trace = "";
+    private string _language = "";
+    private bool _running;
+    private List<WorkStep>? _steps;
+    private AskResponse? _response;
+    private IReadOnlyList<EventRow>? _events;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _token = await GetBearerTokenAsync();
+        var identity = await Access.ValidateAsync(_token);
+        _allowed = identity is not null && identity.Roles.Contains(DevRole);
+    }
+
+    private async Task<string?> GetBearerTokenAsync()
+    {
+        if (AuthState is null) return null;
+        var user = (await AuthState).User;
+        var sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+        var accessToken = await SignInService.GetAccessTokenAsync(sessionId);
+        return accessToken is null ? null : $"Bearer {accessToken}";
+    }
+
+    private async Task OnKey(KeyboardEventArgs e) { if (e.Key == "Enter") await RunAsync(); }
+    private async Task OnTraceKey(KeyboardEventArgs e) { if (e.Key == "Enter") await LookupAsync(); }
+
+    private async Task RunAsync()
+    {
+        if (_allowed != true || _running || string.IsNullOrWhiteSpace(_question)) return;
+
+        var ctx = new QueryContext
+        {
+            TraceId = Guid.NewGuid().ToString(),
+            Question = _question.Trim(),
+            IncomingToken = _token,
+        };
+        _steps = ctx.WorkSteps;     // fills in as each stage finishes
+        _response = null;
+        _events = null;
+        _running = true;
+        try
+        {
+            _response = await Pipeline.RunAsync(ctx, _ => InvokeAsync(StateHasChanged));
+            _language = ctx.Language;
+            _steps = ctx.WorkSteps.ToList();
+            _trace = _response.TraceId;
+        }
+        finally { _running = false; }
+
+        await LookupAsync();
+    }
+
+    private async Task LookupAsync()
+    {
+        if (_allowed != true || string.IsNullOrWhiteSpace(_trace)) return;
+        _events = await EventLog.GetByTraceIdAsync(_trace.Trim());
+        await InvokeAsync(StateHasChanged);
+    }
+}

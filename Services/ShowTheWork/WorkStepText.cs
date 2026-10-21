@@ -74,60 +74,35 @@ public static class WorkStepText
         var time = FormatMs(totalMs);
 
         if (steps.Any(IsError))
-            return new(StepState.Problem, "Something went wrong on our side", developer ? time : null);
+            return new(StepState.Problem, Wording.ClosedWentWrong, developer ? time : null);
 
         if (steps.Any(s => s.Outcome == "escalate"))
         {
             var ticket = steps.Select(s => Match(s.DataText, @"\bticket=(TKT-\d+)")).FirstOrDefault(t => t is not null);
-            return new(StepState.ToPerson, "Passed to a person", developer ? time : ticket);
+            return new(StepState.ToPerson, Wording.ClosedHandoff, developer ? time : ticket);
         }
 
         var stop = steps.FirstOrDefault(s => s.Outcome == "stop");
         if (stop is not null)
             return new(StepState.Stopped,
-                stop.Stage == "access_control" ? "Couldn't confirm you can use Isa" : "Outside what Isa covers",
+                stop.Stage == "access_control" ? Wording.ClosedNoSignIn : Wording.ClosedOutsideScope,
                 developer ? time : null);
 
         var checks = Lines(steps, developer: false).Count;
-        return new(StepState.Passed, "Answered from approved content", developer ? time : $"{checks} checks");
+        return new(StepState.Passed, Wording.ClosedAnswered, developer ? time : $"{checks} checks");
     }
 
     /// <summary>What Isa is doing right now, for the live status line, e.g. "Searching ISACA's approved content".</summary>
     public static string Running(IReadOnlyList<WorkStep> finished)
     {
-        if (finished.Any(s => s.Outcome == "escalate")) return "Passing your question to a person";
+        if (finished.Any(s => s.Outcome == "escalate")) return Wording.Running("ticketing");
         var last = finished.LastOrDefault();
         var next = last is null ? 0 : Array.IndexOf(Order, last.Stage) + 1;
-        return next switch
-        {
-            0 => "Reading your question",
-            1 => "Checking you can use Isa",
-            2 => "Checking the language",
-            3 => "Checking your question",
-            4 => "Searching ISACA's approved content",
-            5 => "Looking for related topics",
-            6 => "Gathering passages",
-            7 => "Writing the answer",
-            8 => "Checking the answer against its sources",
-            _ => "Finishing up",
-        };
+        return next < Order.Length ? Wording.Running(Order[next]) : Wording.RunningFinishing;
     }
 
     /// <summary>What Isa is doing right now, from the stage a "started" update names.</summary>
-    public static string RunningStage(string stage) => stage switch
-    {
-        "front_end" => "Reading your question",
-        "access_control" => "Checking you can use Isa",
-        "translation" => "Checking the language",
-        "input_compliance" => "Checking your question",
-        "database_search" => "Searching ISACA's approved content",
-        "knowledge_graph" => "Looking for related topics",
-        "rag" => "Gathering passages",
-        "complex_ai" => "Writing the answer",
-        "output_compliance" => "Checking the answer against its sources",
-        "ticketing" => "Passing your question to a person",
-        _ => "Working on your question",
-    };
+    public static string RunningStage(string stage) => Wording.Running(stage);
 
     /// <summary>How many stages this run will have, for "Step 5 of 9".</summary>
     public static int TotalStages(IReadOnlyList<WorkStep> finished) =>
@@ -149,69 +124,77 @@ public static class WorkStepText
 
         // A stage that crashed (the orchestrator records error=<type>).
         if (state == StepState.Problem)
-            return L(Doing(step.Stage), "Something went wrong here");
+            return L(Wording.Doing(step.Stage), Wording.WentWrongHere);
 
-        // Developer mode only: a stage passed over after an escalation.
-        if (step.Skipped && step.DataText == "escalated")
-            return L($"Skipped {SkippedName(step.Stage)}", "Not needed, because the question is going to a person");
+        // Developer mode only: a stage passed over, with why.
+        if (state == StepState.Skipped && step.Skipped)
+        {
+            var why = step.DataText == "escalated" ? Wording.NotNeededEscalated
+                : step.Stage == "translation" ? Wording.NotNeededEnglish
+                : Wording.NotNeededDirectHit;
+            return L(Wording.Skipped(step.Stage), why);
+        }
 
         switch (step.Stage)
         {
             case "front_end":
-                return L("Received your question");
+                return L(Wording.StepFrontEnd);
 
             case "access_control":
                 return state == StepState.Stopped
-                    ? L("Couldn't confirm you can use Isa", step.Reason)
-                    : L("Checked that you can use Isa");
+                    ? L(Wording.StepAccessStopped,
+                        step.DataText.Contains("no_chat_user_role") ? Wording.SignInStoppedNoAccess : Wording.SignInStoppedNotSignedIn)
+                    : L(Wording.StepAccess);
 
             case "translation":
-                return L("Checked the language of your question");
+                return L(Wording.StepTranslation);
 
             case "input_compliance":
                 return state switch
                 {
-                    StepState.Stopped => L("Checked your question against Isa's rules", "It's outside chapter support, so Isa stopped here and didn't search"),
-                    StepState.ToPerson => L("Checked your question against Isa's rules", "This needs a person, so Isa won't answer it herself"),
-                    _ => L("Checked your question against Isa's rules"),
+                    StepState.Stopped => L(Wording.StepRules, Wording.RulesStopped),
+                    StepState.ToPerson => L(Wording.StepRules, Wording.RulesToPerson),
+                    _ => L(Wording.StepRules),
                 };
 
             case "database_search":
             {
                 var count = Number(step.DataText, "count");
-                return L("Searched ISACA's approved content",
-                    step.DataText.StartsWith("direct_hit") ? "Found the answer in ISACA's approved text"
-                    : step.DataText.StartsWith("meaning_map") ? $"Found {Passages(count)} on the same topic"
-                    : step.DataText.StartsWith("no content db") ? "The approved content isn't loaded yet"
-                    : "Found nothing that matches");
+                return L(Wording.StepSearch,
+                    step.DataText.StartsWith("direct_hit") ? Wording.FoundAnswer
+                    : step.DataText.StartsWith("meaning_map") ? Wording.FoundTopic(count ?? 0)
+                    : step.DataText.StartsWith("no content db") ? Wording.ContentNotLoaded
+                    : Wording.FoundNothing);
             }
 
             case "knowledge_graph":
-                return L("Looked for related topics");
+                return L(Wording.StepRelated);
 
             case "rag":
-                if (step.Skipped) return L("Skipped gathering passages", "Direct hit: the exact text answers it");
-                if (state == StepState.ToPerson) return L("Gathered the passages to answer from", "Nothing approved to answer from, so it's going to a person");
-                if (step.DataText.StartsWith("no_context")) return L("Gathered the passages to answer from", "There was nothing to gather");
-                return L("Gathered the passages to answer from", Number(step.DataText, "passages") is int p ? Passages(p) : null);
+                if (state == StepState.ToPerson) return L(Wording.StepPassages, Wording.AnswerToPersonNoContent);
+                if (step.DataText.StartsWith("no_context")) return L(Wording.StepPassages, Wording.NothingToGather);
+                return L(Wording.StepPassages, Number(step.DataText, "passages") is int p ? Wording.Passages(p) : null);
 
             case "complex_ai":
-                if (step.Skipped) return L("Skipped the AI model", "Direct hit: the exact text answers it");
-                if (Number(step.DataText, "passages") == 0) return L("Wrote an answer", "There was nothing approved to write from");
-                return L("Wrote the answer using only those passages");
+                if (state == StepState.ToPerson) return L(Wording.StepDivingDeeper, Wording.AnswerToPersonCheckFailed);
+                if (Number(step.DataText, "passages") == 0) return L(Wording.StepDivingDeeper, Wording.DivingDeeperNothing);
+                return L(Wording.StepDivingDeeper, Wording.DivingDeeperDone);
 
             case "output_compliance":
             {
                 if (state == StepState.ToPerson)
-                    return L("Checked the answer against its sources", Capitalize(step.Reason) + ", so it's going to a person");
-                var backed = Number(step.DataText, "sources") is int s ? $"backed by {s} {(s == 1 ? "source" : "sources")}" : null;
-                return L("Checked the answer against its sources",
-                    directHit ? "Answer uses ISACA's exact wording" + (backed is null ? "" : " · " + backed)
+                    return L(Wording.StepAnswerCheck,
+                        step.Reason == "no approved content found" ? Wording.AnswerToPersonNoContent
+                        : step.Reason == "answer has no approved source" ? Wording.AnswerToPersonNoSource
+                        : Wording.AnswerToPersonCheckFailed);
+                var backed = Number(step.DataText, "sources") is int s ? Wording.BackedBy(s) : null;
+                return L(Wording.StepAnswerCheck,
+                    directHit ? Wording.ExactWording + (backed is null ? "" : " · " + backed)
                     : Capitalize(backed));
             }
 
             case "ticketing":
-                return L("Created your ticket", Match(step.DataText, @"\bticket=(TKT-\d+)") is string t ? $"Reference {t}" : null);
+                return L(Wording.StepTicket, Match(step.DataText, @"\bticket=(TKT-\d+)") is string t ? Wording.Reference(t) : null);
 
             default:
                 // A stage this file doesn't know yet: still show it, honestly.
@@ -233,38 +216,9 @@ public static class WorkStepText
     private static bool IsDirectHit(IReadOnlyList<WorkStep> steps) =>
         steps.Any(s => s.Stage == "database_search" && s.DataText.StartsWith("direct_hit"));
 
-    // What a stage does, for a stage that crashed.
-    private static string Doing(string stage) => stage switch
-    {
-        "access_control" => "Checking that you can use Isa",
-        "translation" => "Checking the language",
-        "input_compliance" => "Checking your question",
-        "database_search" => "Searching ISACA's approved content",
-        "knowledge_graph" => "Looking for related topics",
-        "rag" => "Gathering passages",
-        "complex_ai" => "Writing the answer",
-        "output_compliance" => "Checking the answer",
-        "ticketing" => "Creating your ticket",
-        _ => $"The {ShortName(stage)} step",
-    };
-
-    private static string SkippedName(string stage) => stage switch
-    {
-        "translation" => "checking the language",
-        "input_compliance" => "checking the question",
-        "database_search" => "searching approved content",
-        "knowledge_graph" => "looking for related topics",
-        "rag" => "gathering passages",
-        "complex_ai" => "the AI model",
-        "output_compliance" => "checking an answer",
-        _ => "the " + ShortName(stage) + " step",
-    };
-
     public static string FormatMs(double ms) => ms < 1000 ? $"{ms:0}ms" : $"{ms / 1000:0.0}s";
 
     private static string ShortName(string stage) => stage.Replace('_', ' ');
-
-    private static string Passages(int? n) => n == 1 ? "1 passage" : $"{n ?? 0} passages";
 
     private static string? Capitalize(string? s) =>
         string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s[1..];

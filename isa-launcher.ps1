@@ -140,7 +140,7 @@ Add-Btn $pKc 'Reset + rebuild realm' 'reset-keycloak-rebuild.bat: rebuilds the r
 Add-Btn $pKc 'Keycloak logs' 'docker compose logs keycloak (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f keycloak' }
 
 $pTest = New-Group $left 'Tests (the app must be running)' 1
-Add-Btn $pTest 'Run test paths' 'test-paths.ps1: the five test questions, signed in as d.whitfield.' { Run-Script 'test-paths.ps1' '' }
+Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks and the test paths (five questions, Spanish, English), signed in as d.whitfield.' { Run-Script 'test-paths.ps1' '' }
 Add-Btn $pTest 'Run test paths (no token)' 'test-paths.ps1 -NoToken: sends no token, only works while DevBypass is on.' { Run-Script 'test-paths.ps1' '-NoToken' }
 Add-Btn $pTest 'Test Salesforce' 'test-salesforce.ps1: creates one test Case using dev-keys.json.' { Run-Script 'test-salesforce.ps1' '' }
 

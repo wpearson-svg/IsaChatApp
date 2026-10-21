@@ -90,6 +90,7 @@ public class DatabaseSearchStage : IStage
             ctx.Passages = passages;
             ctx.DirectHit = true;
             ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
+            ctx.CitedSource = ctx.Sources[0];   // the passage the answer comes from (contract: cited_source)
             return new StageResult(StageOutcome.Pass, null, $"direct_hit; count={passages.Count}");
         }
 
@@ -206,13 +207,14 @@ public class InputComplianceStage : IStage
         {
             return Task.FromResult(new StageResult(
                 StageOutcome.Stop,
-                "This question is outside the scope of chapter support.",
+                IsaChatApp.Services.ShowTheWork.Wording.OutsideScope,
                 "out_of_scope"
             ));
         }
 
         if (q.Contains("harass") || q.Contains("harassment"))
         {
+            ctx.SafetyTopic = true;   // a safety topic: the hand-off adds the emergency-services line
             return Task.FromResult(new StageResult(
                 StageOutcome.Escalate,
                 "Sensitive topic — escalating to a person",

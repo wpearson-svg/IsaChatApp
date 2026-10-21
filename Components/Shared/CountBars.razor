@@ -1,0 +1,27 @@
+@* A small list of horizontal bars (label, bar, number) for the Content Health
+   Dashboard sections. Shows a short note when there is nothing to show yet. *@
+@using IsaChatApp.Services
+
+@if (Items.Count == 0)
+{
+    <p class="cb__empty">@EmptyText</p>
+}
+else
+{
+    var max = Math.Max(1, Items.Max(i => i.N));
+    <div class="cb">
+        @foreach (var item in Items)
+        {
+            <div class="cb__row">
+                <span class="cb__label" title="@item.Label">@item.Label</span>
+                <div class="cb__track"><div class="cb__fill" style="width:@(100.0 * item.N / max)%;"></div></div>
+                <span class="cb__value">@item.N</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<UsageReportService.Count> Items { get; set; } = Array.Empty<UsageReportService.Count>();
+    [Parameter] public string EmptyText { get; set; } = "Nothing yet in this range.";
+}

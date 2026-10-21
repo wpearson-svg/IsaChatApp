@@ -9,14 +9,17 @@ public class Orchestrator
     private readonly IReadOnlyList<IStage> _stages;
     private readonly EventLogService _eventLog;
     private readonly ILogger<Orchestrator> _log;
+    private readonly UsageSummaryService _usage;
 
     // Stage order from Part B section 4
     // ticketing runs only on Escalate (handled inside the loop)
     public Orchestrator(
         IEnumerable<IStage> stages,
         EventLogService eventLog,
-        ILogger<Orchestrator> log)
+        ILogger<Orchestrator> log,
+        UsageSummaryService usage)
     {
+        _usage = usage;
         _stages = stages.ToList();
         _eventLog = eventLog;
         _log = log;
@@ -40,6 +43,8 @@ public class Orchestrator
         // The question text is never logged. user_id does not exist yet (access_control sets it).
         // The quick language check (T4W) runs here, before any stage, so the
         // whole pipeline sees the language. English skips translation.
+        var runClock = System.Diagnostics.Stopwatch.StartNew();
+        var originalQuestion = ctx.Question;   // translation may change ctx.Question; the usage summary hashes the original
         ctx.Language = LanguageCheck.Detect(ctx.Question);
         var frontEndData = $"question_chars={ctx.Question.Length}; language={ctx.Language}";
         await _eventLog.WriteAsync(ctx.TraceId, "front_end",
@@ -72,7 +77,7 @@ public class Orchestrator
             catch (Exception ex)
             {
                 _log.LogError(ex, "Stage {Stage} threw", stage.Name);
-                result = new StageResult(StageOutcome.Stop, "Something went wrong. Please try again.", $"error={ex.GetType().Name}");
+                result = new StageResult(StageOutcome.Stop, IsaChatApp.Services.ShowTheWork.Wording.WentWrong, $"error={ex.GetType().Name}");
             }
             stageClock.Stop();   // time the stage only, not the event-log write below
 
@@ -115,6 +120,9 @@ public class Orchestrator
             message = ctx.AnswerText ?? "No answer produced.";
         }
 
+        // Content Health Dashboard: one summary row per run (no question text, person hashed).
+        await _usage.RecordRunAsync(ctx, finalStatus, runClock.Elapsed.TotalMilliseconds, originalQuestion);
+
         return new AskResponse(
             Status: finalStatus,
             Message: message ?? "",
@@ -152,7 +160,7 @@ public class Orchestrator
             catch (Exception ex)
             {
                 _log.LogError(ex, "Stage {Stage} threw during a text check", stage.Name);
-                result = new StageResult(StageOutcome.Stop, "Something went wrong. Please try again.", $"error={ex.GetType().Name}");
+                result = new StageResult(StageOutcome.Stop, IsaChatApp.Services.ShowTheWork.Wording.WentWrong, $"error={ex.GetType().Name}");
             }
 
             await _eventLog.WriteAsync(ctx.TraceId, stage.Name,

@@ -39,11 +39,27 @@ public class QueryContext
     public bool DirectHit { get; set; }
     public string? AnswerText { get; set; }
     public List<SourceRef> Sources { get; set; } = new();
+    /// <summary>The one passage the answer says it came from (contract: cited_source). For the model: the passage it named. Set by database_search or complex_ai.</summary>
+    public SourceRef? CitedSource { get; set; }
+    /// <summary>Which section of output compliance ran: "database" or "ai" (contract: output_section).</summary>
+    public string? OutputSection { get; set; }
     public string? TicketReference { get; set; }
     public string? StopReason { get; set; }
     /// <summary>Set by the orchestrator when a stage returns Escalate: which stage, and why.</summary>
     public string? EscalatedBy { get; set; }
     public string? EscalationReason { get; set; }
+    /// <summary>Set by input_compliance for a safety topic (today: harassment), so the hand-off message adds the emergency-services line.</summary>
+    public bool SafetyTopic { get; set; }
+
+    // ---- Hooks for the Content Health Dashboard (added 2026-10-21). ----
+    // Nothing sets these today. The real stages fill them in when they exist, and
+    // the usage summary (Services/UsageSummaryService.cs) picks them up with no further change.
+    /// <summary>Set by the real complex_ai stage: tokens the model reported for the prompt (Ollama prompt_eval_count).</summary>
+    public int? PromptTokens { get; set; }
+    /// <summary>Set by the real complex_ai stage: tokens the model generated (Ollama eval_count).</summary>
+    public int? CompletionTokens { get; set; }
+    /// <summary>Set by the real database_search: the best match score (0-1), for the "search vs. generation" view.</summary>
+    public double? SearchScore { get; set; }
 
     /// <summary>
     /// "Show the work": one entry per stage, added by the orchestrator in the
