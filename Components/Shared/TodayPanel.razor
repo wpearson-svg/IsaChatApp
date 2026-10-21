@@ -344,6 +344,16 @@
     /// <summary>Called by "Open the notebook" on the "Read what your predecessor left you" step.</summary>
     [Parameter] public EventCallback OnOpenNotebook { get; set; }
 
+    /// <summary>Called after a step is marked done or not done, so the rail's Today number updates.</summary>
+    [Parameter] public EventCallback OnProgressChanged { get; set; }
+
+    // After a step's progress changes: read this window again, then tell the chat widget.
+    private async Task ProgressChanged()
+    {
+        Reload();
+        await OnProgressChanged.InvokeAsync();
+    }
+
     // The journey step that leads to the succession notebook.
     private const string NotebookStepId = "J-04";
 
@@ -494,23 +504,23 @@
 
     // ---- Plain steps ----
 
-    private void MarkDone()
+    private async Task MarkDone()
     {
         if (_ctx is null || _selected is null) return;
         Progress.CompleteStep(_ctx.PersonId, _selected.StepId, "done", _ctx.Today);
-        Reload();
+        await ProgressChanged();
     }
 
-    private void MarkNotDone()
+    private async Task MarkNotDone()
     {
         if (_ctx is null || _selected is null) return;
         Progress.UndoStep(_ctx.PersonId, _selected.StepId, _ctx.Today);
-        Reload();
+        await ProgressChanged();
     }
 
     // ---- Contact step ----
 
-    private void BookCall(DateTime slotUtc)
+    private async Task BookCall(DateTime slotUtc)
     {
         if (_ctx is null || _contact is null) return;
         if (!Progress.BookCall(_contact.ContactId, ContactService.ToKey(slotUtc), _ctx.PersonId))
@@ -521,7 +531,7 @@
         }
         Progress.CompleteStep(_ctx.PersonId, JourneyContextService.ContactStepId, "call", _ctx.Today);
         _notice = null;
-        Reload();
+        await ProgressChanged();
     }
 
     private void StartWriting()
@@ -543,33 +553,33 @@
         _draft = "";
     }
 
-    private void SendIntroduction()
+    private async Task SendIntroduction()
     {
         if (_ctx is null || _contact is null || string.IsNullOrWhiteSpace(_draft)) return;
         Progress.SaveIntroduction(_ctx.PersonId, _contact.ContactId, _draft.Trim());
         Progress.CompleteStep(_ctx.PersonId, JourneyContextService.ContactStepId, "introduction", _ctx.Today);
         _writing = false;
         _draft = "";
-        Reload();
+        await ProgressChanged();
     }
 
     private void ShowSession() => _showSession = true;
 
-    private void SaveSeat()
+    private async Task SaveSeat()
     {
         if (_ctx is null || _contact is null) return;
         Progress.SaveSeat(_ctx.PersonId, ContactService.ToKey(_sessionUtc));
         Progress.CompleteStep(_ctx.PersonId, JourneyContextService.ContactStepId, "group", _ctx.Today);
         _showSession = false;
-        Reload();
+        await ProgressChanged();
     }
 
-    private void ChangeContactChoice()
+    private async Task ChangeContactChoice()
     {
         if (_ctx is null) return;
         Progress.ClearContactChoice(_ctx.PersonId, JourneyContextService.ContactStepId, _ctx.Today);
         _notice = null;
-        Reload();
+        await ProgressChanged();
     }
 
     // What the "Step complete" box says on the contact step.

@@ -54,7 +54,7 @@
    filling the screen; Close returns to the chat. */
 @media (max-width: 720px) {
     .isa-nb {
-        width: 100vw !important;
+        width: calc(100vw - var(--isa-rail-w, 0px)) !important;   /* leaves the rail its room */
         right: 0 !important;
         border-radius: 0;
     }

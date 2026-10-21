@@ -2,23 +2,19 @@
    JourneyCard.razor
 
    Onboarding feature, week 9 (see ONBOARDING-FEATURE.md, Feature 1).
-   The slim "Your first 90 days" strip at the top of the chat widget
+   The slim "Your first 90 days" line at the top of the chat widget
    (Matthew's choice, 19 October 2026: the steps themselves live in
    the Today window, not here).
 
    What it shows: "Your first 90 days", the week and day of term, the
-   Today button, the role badge ("Chapter president"), and a thin
-   progress bar through the 90 days.
-
-   The Today button doesn't open anything itself. It tells the chat
-   widget (OnToggleToday), and the widget slides the chat to the left
-   and opens the Today window beside it (TodayPanel.razor). Clicking
-   Today again closes it.
+   role ("Chapter president"), and a thin progress bar through the 90
+   days. Its Today and Notebook buttons moved to the rail on the left
+   of the chat (IsaRail.razor, 21 October 2026); Matthew kept this line
+   itself.
 
    Where the data comes from: JourneyContextService (who is signed in,
-   their role and day of term, and today's steps). Nothing here comes
-   from the AI model. The strip shows nothing for anyone without a
-   journey on today's date.
+   their role and day of term). Nothing here comes from the AI model.
+   The line shows nothing for anyone without a journey on today's date.
    ============================================================ *@
 
 @using IsaChatApp.Services
@@ -36,24 +32,6 @@
                    band beside it. *@
                 <span class="isa-journey__when">Week @_ctx.Week &middot; Day @_ctx.Term.DayOfTerm &middot; @_ctx.BadgeText</span>
             </span>
-            <button type="button" class="isa-journey__today @(TodayOpen ? "is-active" : "")"
-                    @onclick="OnToggleToday" aria-pressed="@(TodayOpen ? "true" : "false")"
-                    title="@(TodayOpen ? "Close Today" : "Open Today")" aria-label="Today">
-                <svg class="isa-journey__todayIcon" viewBox="0 0 16 16" aria-hidden="true">
-                    <rect x="1.5" y="2.5" width="13" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
-                    <path d="M1.5 6 H14.5 M5 1 V4 M11 1 V4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                </svg>
-                <span class="isa-journey__btnText">Today</span>
-            </button>
-            @* Opens the succession notebook beside the chat (ChatWidget.razor). *@
-            <button type="button" class="isa-journey__today @(NotebookOpen ? "is-active" : "")"
-                    @onclick="OnToggleNotebook" aria-pressed="@(NotebookOpen ? "true" : "false")"
-                    title="@(NotebookOpen ? "Close the notebook" : "Open the succession notebook")" aria-label="Notebook">
-                <svg class="isa-journey__todayIcon" viewBox="0 0 16 16" aria-hidden="true">
-                    <path d="M3 2.5h7.5a2 2 0 0 1 2 2v9H5a2 2 0 0 1-2-2Z M3 11.5a2 2 0 0 1 2-2h7.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
-                </svg>
-                <span class="isa-journey__btnText">Notebook</span>
-            </button>
         </div>
 
         <div class="isa-journey__bar" role="progressbar" aria-valuemin="0" aria-valuemax="90"
@@ -64,18 +42,6 @@
 }
 
 @code {
-    /// <summary>True while the Today window is open (the button shows as pressed).</summary>
-    [Parameter] public bool TodayOpen { get; set; }
-
-    /// <summary>Called when the Today button is clicked. The chat widget opens or closes the Today window.</summary>
-    [Parameter] public EventCallback OnToggleToday { get; set; }
-
-    /// <summary>True while the succession notebook is open (its button shows as pressed).</summary>
-    [Parameter] public bool NotebookOpen { get; set; }
-
-    /// <summary>Called when the Notebook button is clicked. The chat widget opens or closes the notebook.</summary>
-    [Parameter] public EventCallback OnToggleNotebook { get; set; }
-
     // Who is signed in, from the sign-in cookie.
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 

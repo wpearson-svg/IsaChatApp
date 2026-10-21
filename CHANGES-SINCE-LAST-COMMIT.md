@@ -1,119 +1,77 @@
 # Changes since the last commit
 
-A running list of every change made since Matthew's last commit (merge of main into Matthew's-Branch, 20 October 2026). Use it to write the Git commit message and to tell Willis what changed. When Matthew commits, this list is cleared and starts again.
+A running list of every change made since Matthew's last commit (October 20, 2026: "Made changes for tasks 1-3 for Matt and other stuff" and "Other stuff", then main pulled in at 44d3920). Use it to write the Git commit message and to tell Willis what changed. When Matthew commits, this list is cleared and starts again.
 
-## Greeting in the leader's own language (20 October 2026)
+## Session handoff and wording draft (October 21, 2026)
 
-- **Services/WelcomeWords.cs** (new): the word "Welcome" in each test leader's language, from a fixed list (never written by an AI model): English, Japanese, Arabic, Indonesian, Spanish, Icelandic, German, French and Portuguese, with English for anything else. Where the usual word changes with gender (Spanish, Portuguese, Icelandic), a form that doesn't is used, because the directory doesn't record gender. Not yet checked by native speakers.
-- **Components/Pages/Home.razor**: the greeting at the top of the landing page now uses that word, from the person's language at sign-in (the locale claim, from the Language column in directory/people.csv). The name is unchanged: the form of address exactly as in the directory. Only this word is translated; the rest of Isa stays in English (Matthew's decision, to show ISACA that Isa can greet each person in their own language).
-- Tested signed in: Watanabe Kenji sees "ようこそ, Watanabe-san", Fahad Al-Harbi "أهلاً وسهلاً, Ustadh Fahad" (the Arabic sits correctly beside the English name), and Ana Beatriz Souza "Boas-vindas, Ana Beatriz".
+No code changed. Documents only.
 
-## Chat: a reply now opens at its start (20 October 2026)
+- **docs/Session_Handoff.md** (new): the master document for the next session: first steps, the current state (Git, Willis's latest changes, Docker and Keycloak, test sign-ins, local databases and their test data), everything built October 19 to 21, key decisions, what is waiting on Willis, Eliyas and ISACA, open questions for Matthew, cut-list status, suggestions not yet acted on, gotchas, and the rules.
+- **docs/Show_the_Work_Wording.md** (still a DRAFT): new section 7, the suggested warmer wording (principles, today versus suggested for every label and message, and two open choices), so the wording review can continue in the next session.
+- **CLAUDE.md**: points new sessions to docs/Session_Handoff.md.
+- **docs/Session_Handoff.md**: now clearly scoped as Matthew's own file: a notice at the top tells Willis's and Eliyas's AI assistants it is not instructions for them; items about their work are marked as Matthew's requests, not assignments; and a rule tells Matthew's sessions to treat other people's planning files as information only.
+- **docs/Session_Handoff.md**: records the messages to Willis and Eliyas about personal CLAUDE.local.md files (waiting for replies) and where the email draft is kept.
+- **docs/ISACA_RFP_AI_Chapter_Support_Agent.md** (new): the updated RFP, saved word for word.
+- **ISA-PROJECT-CONTEXT.md**: new section "What the RFP means for Isa's design": Isa serves all chapter leaders; hand off only when out of scope; the AI-use register must include work with Claude Code; frame the presentation in the RFP's phases; a "what a pilot would measure" slide; present onboarding in the RFP's terms; onboarding is a surprise for ISACA.
+- **docs/Session_Handoff.md**: new section 6b: the RFP points, the surprise rule (the email draft must be revised before sending), and the reworded list of 20 ISACA questions (not yet saved over the 16 in ISA-PROJECT-CONTEXT.md).
+- **ISA-PROJECT-CONTEXT.md**: the ISACA questions are final: 11 questions replace the earlier 16 (the AGM and term-timing questions reworded, the access questions merged into one, nothing that hints at the onboarding feature), with a list of what was dropped and why. Two hand-off questions became Matthew's decisions instead: every hand-off goes to the Chapter Experience team, and suspected fraud too, with a rarely used "potential fraud" flag.
+- **docs/Session_Handoff.md**: points to the final list; the working list of 20 is marked as superseded; notes that the email draft is revised (general progress only, no new features, all 11 final questions).
+- **docs/Session_Handoff.md**: two plans for later: a left-hand panel listing Engage, Chapter 360, Today and Notebook; and a thorough QA test of all of Isa with a report for Camille and her team on presentation day.
+- **docs/Show_the_Work_Wording.md**: agreed with Willis (his review, task T11W), so the DRAFT header is gone. Added his three additions: two leader lines for when the answer check fails on the AI side (developer mode still shows the exact reason); a third hand-off message, "I couldn't check this answer well enough to share it...", for failed answer checks and failed model calls; and the emergency-services line on harassment only until the hand-off topic file exists. Section 7 (warmer wording) is marked as not agreed.
+- **docs/Session_Handoff.md**: records that the wording is agreed, where the panel styles are, and what Willis does next. It also records Matthew's standing request: when Willis's Wording.cs appears, Claude checks every state in the browser against the wording table and lists anything that doesn't match.
+- **Claude outputs/Left sidebar mockups.html** (new, mockup only, not built): moves Today, Notebook, Chapter 360 and Engage out of the crowded chat header into a slim rail on the left, as Matthew chose: always visible, with a "Hide" button; a menu button in the header brings it back. The "Your first 90 days" line stays. Config and the dashboards move into one button at the bottom named "Backstage", shown only for the Developer, Executive and Manager roles (on the User role, Config is reached by typing /isa-config). Button colors: Today in Isa's teal, Notebook in ISACA Green, Chapter 360 in ISACA Blue from isaca.org (Chapter 360 has no public site), Engage in ISACA Dark Blue from engage.isaca.org. Desktop and phone views; every frame is clickable.
+- **docs/Session_Handoff.md**: plan 7 (the left panel) now points to the mockup and lists what Matthew still has to decide.
+- The draft email to Camille is NOT part of this commit: it is kept in private/ on Matthew's computer, which Git ignores locally (.git/info/exclude), so it is never shared.
+- Checked: Isa builds with no errors and no warnings, including Willis's "Changed contract and added stage feed" (fb84fcd). Not yet tested in the browser together with the onboarding screens.
 
-Matthew noticed that a long reply (the "show the work" line, the answer, the source cards, the save button and the reference number) landed at its END, so the reader had to scroll back up to find where it starts.
+## Warmer wording approved (October 21, 2026)
 
-- **Components/Layout/ChatWidget.razor.js** (new): a small script that scrolls the chat so the question sits at the top of the message area, with the start of the answer right under it. Short replies that already fit don't move. Respects "reduce motion".
-- **Components/Layout/ChatWidget.razor**: calls it once a reply has arrived. Each message now has its own id on the page, so the chat can find the question (and two messages with the same text never count as the same message). **ChatWidget.razor.css**: comment updated.
-- Tested with a short window: a 503px answer in a 391px chat area now opens with the question 8px from the top and the answer right under it.
+- **docs/Show_the_Work_Wording.md**: section 7, the warmer wording, is now approved by Matthew (all of it) and waiting for Willis; it notes where the final list differs from the section's tables.
+- **Claude outputs/Wording changes for Willis - October 21.md** (new): the file for Willis, listing all 37 wording changes against the agreed table, the rules behind them, and what Matthew needs back. It also changes "your Chapter Experience contact" to "ISACA's Chapter Experience team" in the hand-off messages, from Camille's answers. Willis makes the code changes and commits them; nothing in the code changed here.
 
-## Onboarding feature, Feature 4: the "Today" note (20 October 2026)
+## Camille's answers (October 21, 2026)
 
-- **Components/Shared/TodayNote.razor** and **.razor.css** (new): the note at the very top of the chat (above Isa's welcome message), shown to a signed-in leader in their first 90 days. Full note the first time each day: "Day 3 of your first 90 days", the date, "For today" (steps not done yet, or "You're up to date for today"), "Coming up" (steps starting in the next 7 days, with their days), and "Key date" when one is open or starts within 30 days. "Open Today" opens the Today panel; "Got it" shrinks the note to one line for the rest of the day, with "Show" and "Open Today". Every fact comes from the database, never from the AI model.
-- **onboarding/key_dates.csv** (new): key calendar dates from ISACA documents, with their source. First entry: the annual compliance window, 1 November to 31 December (Compliance Framework; President Guidebook p. 13). **onboarding/build_onboarding_db.py**: checks it and builds it into data/onboarding.db (new key_dates table). Run `python onboarding\build_onboarding_db.py` again.
-- **Services/Onboarding/JourneyService.cs**: `GetKeyDates` places each yearly date around today: open now (with days left) or starting in a number of days.
-- **Services/Onboarding/ProgressService.cs**: new today_note_seen table in data/progress.db, so "Got it" is remembered for the day.
-- **Components/Layout/ChatWidget.razor**: shows the note; "Open Today" opens the Today panel.
-- **ONBOARDING-FEATURE.md**: Feature 4 marked as built, with how it behaves.
-- Tested as Watanabe Kenji on the demo date (day 3): the note listed his two steps for today and four coming up (Meet your board on days 6 to 7, then three week-2 steps on day 8); "Got it" shrank it and was still remembered after reloading; "Open Today" opened the Today panel. The key-date arithmetic was checked on six dates outside the project: hidden on 3 July (121 days away), shown from 30 days out, "opens tomorrow" on 31 October, open with 46 days left on 15 November, "closes today" on 31 December, hidden again in January.
-- data/progress.db (not in Git) now records that Kenji tapped "Got it" on 3 July, so his note opens as one line on that date. Deleting data/progress.db brings the full note back (it also resets journey progress).
+- **ISA-PROJECT-CONTEXT.md**: records that all 11 ISACA questions went out on October 21, Camille's inline answers, and what they mean for the design (most chapters have no assigned contact; outside governance sources would need to become approved content; AGM and term dates come from each chapter's bylaws). No code changed.
 
-## Onboarding feature, piece A: the outgoing president's handoff checklist (20 October 2026)
+## Chapter Affiliation Agreement (October 21, 2026)
 
-- **onboarding/handoff_steps.csv** (new): the 13 handover items from the President Guidebook (August 2026), word for word: p. 8 (notify the Chapter Experience team of the new leaders) and the Turnover Procedures on pp. 12-13, including Recognition and Appreciation. Each has a short title in Isa's words (Matthew's choice) and its page. Every sentence was checked against the guidebook text. "List the open items" is marked to offer "Add to the notebook".
-- **onboarding/build_onboarding_db.py**: checks the file and builds it into data/onboarding.db (new handoff_steps table). Run `python onboarding\build_onboarding_db.py` again.
-- **Services/Onboarding/HandoffService.cs** (new): decides who sees the checklist and when: a president in the last 30 days of their term, or a former president for the 30 days after it ends. **Services/Onboarding/JourneyService.cs**: reads the handoff items. **Program.cs**: registers HandoffService.
-- **Components/Shared/HandoffChecklist.razor** and **.razor.css** (new): the checklist at the top of the notebook panel: progress ("2 of 13 done") with a bar, how much time is left, and the 13 titles. Tapping one shows the guidebook's words (the examples under "List the open items" as a list), its page, "Mark as done" or "Mark as not done", and its history. "Add to the notebook" opens "Add a note" with "Unfinished" chosen.
-- **Components/Shared/NotebookPanel.razor**: shows the checklist; "Add to the notebook" moves to the note box.
-- **Components/Shared/TodayNote.razor**: for the outgoing president (who has no 90-day journey), the note shows their handoff progress, the time left and the next item, with "Open the checklist" (opens the notebook). It now updates as soon as an item is marked in the notebook. **Components/Layout/ChatWidget.razor**: passes those changes along.
-- **ONBOARDING-FEATURE.md**: piece A marked as decided and built.
-- Tested as Sato Yumiko on the demo date: her Today note showed "0 of 13", 27 days left and the next item; "Open the checklist" opened the notebook with the checklist on top; "List the open items" showed the guidebook's text and examples; "Mark as done" updated the count, the history and the Today note; "Add to the notebook" opened the note box with "Unfinished" chosen.
-- data/progress.db (not in Git) now has two of Sato's items marked done (notify ISACA, list the open items). Delete data/progress.db before a rehearsal to start her checklist empty (it also resets journey progress).
+- **content/Chapter Affiliation Agreement-2024-template.docx** (new): ISACA's 2024 template of the Chapter Affiliation Agreement, sent by Camille on October 21, saved beside the other ISACA documents. Not yet in Isa's search: adding it means rebuilding the content database (Willis's content pipeline), so check with Willis first. Journey steps J-07 and J-14 and the planned Library can point to it once it is.
 
-## Landing page: the "How Isa answers" icons tidied (20 October 2026)
+## The left rail, built (October 21, 2026)
 
-Matthew noticed three things in the three step pictures.
+Built from Matthew's approved mockup (Claude outputs/Left sidebar mockups.html).
 
-- **Components/Pages/Home.razor**: the two papers (steps 1 and 2) are now drawn at the same size and the same position, so they read as the same page (before, one sat higher and further right, so they looked like different sizes). The magnifying glass and the check mark moved with them. The chat bubble's tail in step 3 is 40% smaller, still attached at the same corner.
-- **Components/Pages/Home.razor.css**: the dotted line is now one short connector after each picture, running across to the next step's number. Before, one long line ran behind all three pictures, and their white boxes cut it into uneven pieces (a stray dash after "2", then a gap). On phones, where the steps stack, the connectors are hidden as before.
-- Checked in the browser at laptop size (1440 pixels wide).
-
-## Today window: smooth moves between its screens (20 October 2026)
-
-Matthew noticed that opening the Today window glides in smoothly, but moving inside it (for example from today's steps to "Meet your Chapter Experience contact") just switched instantly.
-
-- **Components/Shared/TodayPanel.razor**: each screen (today's steps, My progress, a step) is now drawn fresh when it changes, so it glides in. Going into a step or My progress, it comes from the right; "Back" brings it in from the left, so the direction is felt. The first screen doesn't glide, because the window itself is already sliding in. Each new screen also starts at the top (before, opening a step from far down My progress kept the old scroll position).
-- **Components/Shared/TodayPanel.razor.css**: the glide, a short 16px move with a fade over 0.35s, with the same gentle start and finish as the window's own opening (a little quicker, because the move is smaller). Turned off for anyone who asks their device to reduce motion.
-- Checked in the browser as Watanabe Kenji: into the contact step uses the forward glide, Back uses the glide from the left, and the first screen has none.
-
-## Side-by-side windows: headers and edges line up (20 October 2026)
-
-Matthew noticed that, with the chat, Today and Notebook open side by side, the bottoms of the blue headers didn't line up, and the edges between the windows didn't meet cleanly.
-
-- **ChatWidget.razor.css**, **TodayPanel.razor.css**, **NotebookPanel.razor.css**: all three blue headers now have the same fixed height (72px, enough for the chat's round Isa badge), so the line where blue meets white runs straight across. Before, each header grew to fit what was inside it, and the chat's badge made its header taller.
-- The seams: only the chat keeps rounded corners, on its outer left side. Where windows meet, the edges are square. Today and Notebook no longer cast a shadow onto the window beside them (it darkened that window's edge); a thin light divider line separates them instead.
-- Measured in the browser at 1440 pixels wide with all three open: every header ends at the same height, and the windows meet edge to edge with no gaps.
-- The band under the headers now matches too. **JourneyCard.razor** and **.razor.css**: the chat's "Your first 90 days" strip and the Today window's band (**TodayPanel.razor.css**) have the same fixed height (70px), the same spacing, and the progress bar pinned to the bottom, so the bars line up. In the chat strip, the role moved into the second line ("Week 1 · Day 3 · Chapter president") instead of a separate badge, so the strip stays one row (before, the Today and Notebook buttons pushed the badge onto a second row and made the strip taller). The Today window keeps its badge, as in the approved mockup. When the chat is squeezed to a quarter of the screen (another window enlarged), the Today and Notebook buttons show only their icons, so the strip still doesn't wrap; screen readers still hear their names. Measured at a third and at a quarter of the screen: both bands end, and both bars sit, at exactly the same height.
-
-## Sign-in page: build warning BL0008 fixed (20 October 2026)
-
-- **Components/Pages/SignIn.razor**: the form's `Input` (what the person types) no longer has its own starting value (`= new()`). Blazor fills it when the form is sent, and a starting value could be overwritten with nothing on a form post, which is what warning BL0008 was about. It is now created in `OnInitialized` only if Blazor hasn't already filled it (`Input ??= new()`), the pattern Microsoft recommends. The form is wrapped in a check that `Input` is there, so the compiler is satisfied too.
-- Nothing about security changed: Keycloak still checks the password, the anti-forgery token, the safe return address, the vague error message and the cleared password field all work as before.
-- The build now has no warnings at all. Tested in the browser: a wrong password shows the same error, keeps the email and clears the password; the right password signs in (greeting "ようこそ, Watanabe-san"); an empty form shows "Enter your email address." and "Enter your password."
-
-## Proposal for Willis: hand-off and refusal rules (20 October 2026)
-
-No code changed.
-
-- **Claude outputs/Isa hand-off and refusal rules - proposal for review.pdf** (new, 7 pages): which questions Isa answers, passes to a person, or declines, for the real Input Compliance gate (Willis and Matthew's stage). Covers the four outcomes (answer; answer, then point to a person; pass to a person; stop), the "always to a person" topic groups A to H with suggested routes, the requests Isa stops, ways people may try to get around Isa and what protects against each, other considerations, and next steps with decisions for Willis. Also kept as an editable doc: https://claude.ai/artifact/UcHZZuoo2quuEV7JwDzSfW
-- **docs/Handoff_and_Refusal_Rules_Proposal.md** (new): the same proposal as a Markdown file in the docs folder, so it lives with the code and shows up in Git.
-- **docs/Show_the_Work_Wording.md** (new): the wording table for review with Willis: the plain label and message for each of the 10 pipeline stages in each state (running, passed, stopped, passed to a person, something went wrong, skipped in developer mode), the closed line above each reply, the reply bubble labels and messages, and the two hand-off messages with the ticket reference (plus the safety line). The AI step is shown as "Diving Deeper". Its last section lists the 8 changes from today's code, with the file and owner for each. No code changed yet. Marked as a DRAFT: the wording is still to be reviewed by Matthew and Willis.
-
-## Project instructions
-
-- **CLAUDE.md**: the Git rule is now explicit: Claude never commits, merges or pushes, under any circumstances; those are Matthew's job only. Claude prepares the work (builds it, keeps this list and the commit message ready) and may use read-only Git commands.
-
-The last two commits, for reference:
-- "Add show the work, succession notebook and three-panel layout; fit journey to five phases" (afc89d7): everything from 20 October.
-- The merge of main into Matthew's-Branch: brought in Willis's launcher scripts, Salesforce and developer-keys settings on the Dev Dashboard, and Keycloak reset scripts. main now keeps the Keycloak sign-in setup in Git (keycloak/import/isa-realm.json and keycloak/dev-passwords.local.csv); main's copy had only the 5 original accounts, so the realm was rebuilt from directory/keycloak_accounts.csv with python directory\build_keycloak_realm.py (Willis said this was fine). It now has all 16 accounts, including the 11 chapter leaders; every other setting is identical to main's, and the 5 original passwords are unchanged. .gitignore follows main's version.
+- **Components/Shared/IsaRail.razor and IsaRail.razor.css** (new): the slim rail on the left of the chat. Top to bottom: Hide; Today (leaders in their first 90 days, with a green number for today's steps not yet done); Notebook (anyone who may read their chapter's notebook); a line; Chapter 360 and Engage (open sample pages in a new tab); and Backstage at the bottom, which opens a small menu with Config and the dashboards that role may open. Backstage shows only for the Developer, Executive and Manager roles; a chapter leader (the User role) never sees it and reaches Config by typing /isa-config.
+- **Components/Layout/ChatWidget.razor and .css**: shows the rail against the chat's left edge, gliding with it. The chat, Today and the notebook now share the screen left over after the rail, so all four still fit side by side. "Hide" removes the rail and a menu button (with a green dot while steps are due) appears in the header to bring it back; this is remembered while Isa stays open. The header now has only New conversation and Close: the notebook icon, Config and the two dashboard icons moved to the rail. On phones the rail is narrower and stays on the left.
+- **The rail's motion** (Matthew's request after trying it): opening and closing now use the Today window's glide, half a second with a gentle start and stop (IsaRail.razor.css). "Hide" lets the rail glide away before it is removed, while the chat and its panels widen into its space with the same timing (ChatWidget.razor, HideRail).
+- **Components/Shared/JourneyCard.razor and .css**: the "Your first 90 days" line keeps the week, day, role and progress bar; its Today and Notebook buttons moved to the rail.
+- **Components/Shared/TodayPanel.razor**: tells the chat widget when a step is marked done or not done, so the number on Today stays right.
+- **Components/Shared/TodayPanel.razor.css and NotebookPanel.razor.css**: on phones, leave room for the rail.
+- **Components/Pages/SampleChapter360.razor and SampleEngage.razor** (new): placeholder pages at /sample/chapter-360 and /sample/engage, labeled as samples and "still being built", until the real sample pages are made.
+- Checked: Isa builds with no errors and no warnings. Tested in the browser on a test copy (port 5068) as Watanabe Kenji on the demo date: the rail and its "2" (matching the Today note); Today and the notebook open beside the chat and all four fit the screen exactly; Hide and the menu button; no Backstage on the User role; Backstage on the Executive role lists Config, Developer Dashboard and Content Health Dashboard, and opens the Developer Dashboard; the phone size; the Chapter 360 sample page. Not tested: marking a step done (to keep the test data unchanged), the outgoing president's view (Notebook only, no Today), and the Developer and Manager roles.
 
 ## Suggested commit message
 
 ```
-Greet leaders in their own language; add the Today note; open replies at their start
+Add the left rail; agree the wording table; add session handoff document
 
-- Landing page: "Welcome" in each leader's own language (WelcomeWords, a fixed
-  list with gender-neutral forms where needed, English otherwise); names unchanged
-- Onboarding: the "Today" note at the top of the chat, shown in full once a
-  day (day of term, today's steps, coming up, key dates within 30 days);
-  "Got it" shrinks it to one line for the day; key dates in
-  onboarding/key_dates.csv (the compliance window), built into onboarding.db
-- Chat: when a reply arrives, scroll the question to the top so the reply is
-  read from its start (ChatWidget.razor.js)
-- Onboarding: the outgoing president's handoff checklist, the President
-  Guidebook's 13 handover items word for word (onboarding/handoff_steps.csv),
-  shown at the top of the notebook from 30 days before the term ends to 30 days
-  after; Mark as done with history; "Add to the notebook" for the open items;
-  handoff progress in the Today note
-- Landing page: "How Isa answers" icons tidied (papers the same size and
-  position, smaller chat tail, an even dotted connector between steps)
-- Today window: screens glide in when moving between them (forward from the
-  right, back from the left); each new screen starts at the top
-- Side-by-side windows: the same header height in all three, square seams
-  with a thin divider, rounded corners only on the chat's outer edge; the
-  "Your first 90 days" bands match in height with the progress bars aligned
-- Sign-in page: fix build warning BL0008 (the form input is created in
-  OnInitialized instead of with a starting value); the build has no warnings
-- Docs for review with Willis: docs/Handoff_and_Refusal_Rules_Proposal.md
-  (plus a PDF in Claude outputs/) and docs/Show_the_Work_Wording.md (DRAFT)
-- CLAUDE.md: Claude never commits, merges or pushes; Matthew does
+- Left rail beside the chat (IsaRail.razor): Hide, Today, Notebook,
+  Chapter 360, Engage, and Backstage (Config and dashboards, staff roles
+  only); header and "Your first 90 days" line lose their buttons
+- Sample placeholder pages for Chapter 360 and Engage
+- Claude outputs/Left sidebar mockups.html: the approved mockup
+- content/: the Chapter Affiliation Agreement (2024 template) from ISACA,
+  not yet in Isa's search
+- ISA-PROJECT-CONTEXT.md: Camille's answers to the 11 questions
+
+- docs/Session_Handoff.md: state, decisions, open questions and next steps
+- docs/Show_the_Work_Wording.md (DRAFT): section 7, suggested warmer wording
+- CLAUDE.md: point new sessions to the handoff document
+- docs/ISACA_RFP_AI_Chapter_Support_Agent.md: the updated RFP;
+  ISA-PROJECT-CONTEXT.md: what it means for Isa's design
+- ISA-PROJECT-CONTEXT.md: final list of 11 ISACA questions; hand-offs go
+  to the Chapter Experience team, with a rare "potential fraud" flag
+- docs/Show_the_Work_Wording.md: agreed with Willis (no longer a draft);
+  adds his three additions (answer check lines, "couldn't be checked"
+  hand-off message, safety line on harassment for now)
 ```

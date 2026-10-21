@@ -17,13 +17,12 @@
     flex-direction: column;
     height: 70px;
     box-sizing: border-box;
-    container-type: inline-size; /* lets the buttons shrink to icons when the chat is narrow */
     background: #ffffff;
     border-bottom: 1px solid #cbd2d9;   /* ISACA Grey 3 */
     font-family: 'Roboto', Arial, sans-serif;
 }
 
-/* ---- Title, week and day, Today button, role badge ---------------- */
+/* ---- Title, and the week, day and role ----------------------------- */
 
 .isa-journey__head {
     display: flex;
@@ -54,53 +53,8 @@
     text-overflow: ellipsis;
 }
 
-/* When the chat is narrow (a quarter of the screen, with another window
-   enlarged), the Today and Notebook buttons show only their icons, so the
-   strip never wraps to a second row. Screen readers still hear the
-   buttons' names (aria-label). */
-@container (max-width: 400px) {
-    .isa-journey__btnText { display: none; }
-    .isa-journey__today { padding: 0.3rem 0.5rem; }
-}
-
-/* The Today button: outlined in ISACA Medium Blue; filled while the
-   Today window is open, so it reads as "on". */
-.isa-journey__today {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.7rem;
-    border: 1px solid #07649d;
-    border-radius: 999px;
-    background: #ffffff;
-    color: #07649d;
-    font: inherit;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.isa-journey__today:hover {
-    background: #e7f0f5;
-}
-
-.isa-journey__today:focus-visible {
-    outline: 2px solid #1d2d5c;
-    outline-offset: 2px;
-}
-
-.isa-journey__today.is-active {
-    background: #07649d;
-    color: #ffffff;
-}
-
-.isa-journey__todayIcon {
-    width: 13px;
-    height: 13px;
-}
-
+/* The Today and Notebook buttons that sat here moved to the rail
+   (IsaRail.razor.css, 21 October 2026). */
 
 /* ---- Progress bar --------------------------------------------------- */
 
