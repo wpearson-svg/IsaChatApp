@@ -26,11 +26,12 @@
 @using IsaChatApp.Services
 @inject WidgetSettings Settings
 @inject DevKeysStore DevKeys
+@inject DevAccessService DevAccess
 @rendermode InteractiveServer
 
 <PageTitle>Developer Dashboard</PageTitle>
 
-@if (!Settings.CanAccessDevDashboard)
+@if (!Settings.CanAccessDevDashboard && !_isDev)
 {
     <h1>Access restricted</h1>
     <p class="text-muted">
@@ -317,7 +318,14 @@ else
     private string _sfMessage = "";
     private bool _sfMessageIsError;
 
-    protected override void OnInitialized() => LoadSalesforce();
+    [CascadingParameter] private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthState { get; set; }
+    private bool _isDev;   // holds the Keycloak role dashboard_dev
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isDev = await DevAccess.HasDevRoleAsync(AuthState);
+        LoadSalesforce();
+    }
 
     private void LoadSalesforce()
     {
@@ -338,7 +346,7 @@ else
 
     private void SaveSalesforce()
     {
-        if (!Settings.CanAccessDevDashboard) return;
+        if (!Settings.CanAccessDevDashboard && !_isDev) return;
         try
         {
             DevKeys.SaveSalesforce(_sfOrgUrl, _sfApiVersion, _sfClientId, _sfSecret);

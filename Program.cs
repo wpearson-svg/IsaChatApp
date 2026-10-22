@@ -75,6 +75,7 @@ builder.Services.AddSingleton<EventLogService>();
 builder.Services.AddSingleton<UsageSummaryService>();
 builder.Services.AddSingleton<UsageReportService>();
 builder.Services.AddSingleton<ContentImportService>();
+builder.Services.AddSingleton<DevAccessService>();
 // Reads/writes dev-keys.json (Dev Dashboard > Models, RAG, access & ticketing).
 builder.Services.AddSingleton<DevKeysStore>();
 builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapter>();
