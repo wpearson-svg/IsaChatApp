@@ -32,16 +32,18 @@
     font-family: 'Roboto', Arial, sans-serif;
     /* Glides with the chat when Today or the notebook opens. */
     transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Opening and closing: the same soft 24px glide with a fade, over
-       0.5s, starting gently and settling gently, as the Today window
-       (TodayPanel.razor.css). Matthew asked for it, 21 October 2026. */
-    animation: isa-rail-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    /* Opening and closing: a soft 24px glide with a fade, starting gently
+       and settling gently, like the Today window (TodayPanel.razor.css).
+       Matthew asked for it, 21 October 2026; slowed from 0.5s to 0.7s on
+       22 October 2026, with the header's menu button and the chat moving
+       on the same glide (RailGlideMs in ChatWidget.razor). */
+    animation: isa-rail-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 /* While "Hide" closes it: the same glide in reverse. The chat widget
    removes the rail once this has finished (ChatWidget.razor, HideRail). */
 .isa-rail.is-closing {
-    animation: isa-rail-out 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: isa-rail-out 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
     pointer-events: none;
 }
 
@@ -156,14 +158,18 @@
     color: #323e48;   /* ISACA Grey 9 */
 }
 
-/* Today's steps not done yet: a small ISACA Green number. */
+/* Today's steps not done yet: a small ISACA Green number.
+   A circle for one digit (the 3px side padding keeps it 18px wide), widening into a
+   pill for two. line-height: 1 keeps the number's line inside the 14px between the
+   borders; the inherited line height was taller, which pushed the number down. */
 .isa-rail__count {
     position: absolute;
     top: -5px;
     right: -6px;
     min-width: 18px;
     height: 18px;
-    padding: 0 5px;
+    padding: 0 3px;
+    line-height: 1;
     box-sizing: border-box;
     display: grid;
     place-items: center;

@@ -122,7 +122,11 @@ public class OutputComplianceStage : IStage
             if (!confOk) return Task.FromResult(Escalate("ai check failed: confidence score", data));
         }
 
-        ctx.AnswerText = IsaChatApp.Services.ShowTheWork.Wording.AnswerOpening + Tidy(ctx.AnswerText!, ctx.Passages[0].Page);
+        // An answer from a best-practice guide says so, instead of "ISACA's guidance says".
+        var opening = IsaChatApp.Services.ShowTheWork.Wording.IsBestPractice(ctx.Passages[0].Document)
+            ? IsaChatApp.Services.ShowTheWork.Wording.BestPracticeOpening
+            : IsaChatApp.Services.ShowTheWork.Wording.AnswerOpening;
+        ctx.AnswerText = opening + Tidy(ctx.AnswerText!, ctx.Passages[0].Page);
         return Task.FromResult(new StageResult(StageOutcome.Pass, null, $"section={section}; {data}"));
     }
 

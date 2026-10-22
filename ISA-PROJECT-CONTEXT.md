@@ -56,6 +56,7 @@ Camille's answers (October 21, 2026):
 What this means for the design (for Matthew to decide; nothing changed yet):
 - The "Meet your Chapter Experience contact" step assumes every chapter has its own contact. Most don't. The step may need two versions: the chapter's Chapter Success Manager where one is assigned, and the Chapter Experience Operations Team for everyone else. Isa must never say why a chapter has a CSM.
 - Outside governance sources would have to become approved documents in Isa's content before she could answer from them (the ground rule above still holds: approved documents only). A decision for the whole team.
+  - Done October 22, 2026 (Matthew): all four sites forbid copying their pages, so the team wrote nine governance best-practice guides in its own words from 20 of their free pages (content/Governance Best Practice/). Isa answers from them only when ISACA's documents have nothing, and labels every such answer "general governance best practice (not ISACA policy)". They still need ISACA's approval as Isa content.
 - AGM and term dates come from each chapter's bylaws, so the open fixed-date question stays open; the prototype keeps counting from each leader's term start date.
 
 Dropped on October 21, 2026, and why:

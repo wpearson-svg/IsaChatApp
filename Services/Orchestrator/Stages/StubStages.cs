@@ -52,38 +52,10 @@ public class DatabaseSearchStage : IStage
         await using var conn = new SqliteConnection($"Data Source={_contentDbPath};Mode=ReadOnly");
         await conn.OpenAsync();
 
-        // Try FTS if a passages/content table exists (A'keyrah T8 will define schema)
-        var passages = new List<Passage>();
-        try
-        {
-            await using var cmd = conn.CreateCommand();
-            // Adjust table/column names to match A'keyrah's T8 schema when ready
-            cmd.CommandText = """
-                SELECT document, section, page, text
-                FROM passages
-                WHERE passages MATCH $q
-                ORDER BY rank
-                LIMIT 5;
-                """;
-            var ftsQuery = BuildFtsQuery(ctx.Question);
-            if (ftsQuery == null) throw new InvalidOperationException("no searchable terms");
-            cmd.Parameters.AddWithValue("$q", ftsQuery);
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                passages.Add(new Passage(
-                    reader.GetString(0),
-                    reader.GetString(1),
-                    reader.GetString(2),
-                    reader.GetString(3)
-                ));
-            }
-        }
-        catch
-        {
-            // Table may not exist yet — fall through to meaning map
-        }
+        // Try FTS if a passages/content table exists (A'keyrah T8 will define schema).
+        // ISACA's own documents only: the best-practice guides are searched last (below).
+        var ftsQuery = BuildFtsQuery(ctx.Question);
+        var passages = await SearchAsync(conn, ftsQuery, bestPractice: false);
 
         if (passages.Count > 0)
         {
@@ -131,7 +103,63 @@ public class DatabaseSearchStage : IStage
             return new StageResult(StageOutcome.Pass, null, $"meaning_map; count={passages.Count}");
         }
 
+        // Last: the governance best-practice guides (content/Governance Best Practice,
+        // Matthew, 22 October 2026). General guidance written by the Isa team, not ISACA
+        // policy, so they answer only when ISACA's documents and the meaning map have
+        // nothing. Answered like a direct hit (the guide's own sentence, no AI), but
+        // tagged "best_practice" so the chat labels it as best practice, not ISACA's guidance.
+        passages = await SearchAsync(conn, ftsQuery, bestPractice: true);
+        if (passages.Count > 0)
+        {
+            ctx.Passages = passages;
+            ctx.DirectHit = true;
+            ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
+            ctx.CitedSource = ctx.Sources[0];
+            return new StageResult(StageOutcome.Pass, null, $"best_practice; count={passages.Count}");
+        }
+
         return new StageResult(StageOutcome.Pass, null, "no_passages");
+    }
+
+    /// <summary>
+    /// Full-text search over ISACA's documents (bestPractice false) or over the
+    /// best-practice guides only (true). The guides' titles all start with
+    /// Wording.BestPracticePrefix. Empty when there is nothing to search for.
+    /// </summary>
+    private static async Task<List<Passage>> SearchAsync(SqliteConnection conn, string? ftsQuery, bool bestPractice)
+    {
+        var found = new List<Passage>();
+        if (ftsQuery == null) return found;
+        try
+        {
+            await using var cmd = conn.CreateCommand();
+            // Adjust table/column names to match A'keyrah's T8 schema when ready
+            cmd.CommandText = $"""
+                SELECT document, section, page, text
+                FROM passages
+                WHERE passages MATCH $q AND document {(bestPractice ? "LIKE" : "NOT LIKE")} $prefix
+                ORDER BY rank
+                LIMIT 5;
+                """;
+            cmd.Parameters.AddWithValue("$q", ftsQuery);
+            cmd.Parameters.AddWithValue("$prefix", IsaChatApp.Services.ShowTheWork.Wording.BestPracticePrefix + "%");
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                found.Add(new Passage(
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3)
+                ));
+            }
+        }
+        catch
+        {
+            // Table may not exist yet — fall through to meaning map
+        }
+        return found;
     }
 }
 

@@ -91,9 +91,11 @@
 @inject IsaChatApp.Services.Onboarding.JourneyContextService JourneyContexts
 @inject IsaChatApp.Services.Onboarding.ProgressService Progress
 
-@* has-rail sets --isa-rail-w, the rail's width, which the chat and its
-   side panels leave free on the left (see ChatWidget.razor.css). *@
-<div class="isa-widget @(RailTakesRoom ? "has-rail" : "")">
+@* keeps-rail-room (and, on phones, has-rail) sets --isa-rail-w, the rail's
+   width, which the chat and its side panels leave free on the left (see
+   ChatWidget.razor.css). On wider screens the room stays while the rail is
+   hidden, so hiding or showing it never resizes a window. *@
+<div class="isa-widget @(IsExpanded ? "keeps-rail-room" : "") @(RailTakesRoom ? "has-rail" : "")">
 
     @* Embedded dashboard, if one has been opened from the header icons
        below. Deliberately OUTSIDE the @if (!IsExpanded) branch so it
@@ -132,7 +134,7 @@
         @* is-shifted rounds the chat's right corners while Today or the
            notebook is open beside it. Its width and position come from
            ChatPanelStyle (see "Onboarding: the side panels" below). *@
-        <div class="isa-widget__panel is-expanded @(IsTodayOpen || IsNotebookOpen ? "is-shifted" : "") @(RailTakesRoom ? "has-rail" : "")" style="@ChatPanelStyle">
+        <div class="isa-widget__panel is-expanded @(IsTodayOpen || IsNotebookOpen ? "is-shifted" : "") @(RailTakesRoom ? "has-rail" : "") @(_railGliding ? "is-railGlide" : "")" style="@ChatPanelStyle">
 
             @* Header: ISACA Dark Blue band with the Isa ring, name and
                role, and a cropped "C" brand graphic behind it (same
@@ -144,24 +146,29 @@
                 </svg>
                 <div class="isa-widget__identity">
                     @* Only while the rail is hidden: brings it back. The green
-                       dot says there are steps for today. *@
-                    @if (IsRailHidden)
-                    {
-                        <button type="button" class="isa-widget__headerLink isa-widget__menuBtn" @onclick="ShowRailAgain"
-                                title="Show the menu" aria-label="@(StepsLeftToday > 0 ? "Show the menu, steps for today" : "Show the menu")">
-                            <svg viewBox="0 0 24 24" class="isa-widget__menuIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                                <path d="M4 7h16M4 12h16M4 17h16" />
-                            </svg>
-                            @if (StepsLeftToday > 0)
-                            {
-                                <span class="isa-widget__menuDot" aria-hidden="true"></span>
-                            }
-                        </button>
-                    }
-                    <span class="isa-widget__badge" aria-hidden="true"><Throbber Spinning="false" /></span>
-                    <span class="isa-widget__identityText">
-                        <span class="isa-widget__name">Isa</span>
-                        <span class="isa-widget__role"><span class="isa-widget__statusDot" aria-hidden="true"></span>Chapter Support Assistant</span>
+                       dot says there are steps for today. Always in the page,
+                       faded out while the rail shows, so it can fade in as the
+                       rail glides away (and out as it comes back). The ring and
+                       name make room for it by sliding (a transform, so the
+                       move stays smooth to the last fraction of a pixel),
+                       instead of being shoved over (Matthew, 22 October 2026). *@
+                    <button type="button" class="isa-widget__headerLink isa-widget__menuBtn @(MenuBtnShown ? "is-shown" : "")" @onclick="ShowRailAgain"
+                            tabindex="@(MenuBtnShown ? 0 : -1)" aria-hidden="@(MenuBtnShown ? "false" : "true")"
+                            title="Show the menu" aria-label="@(StepsLeftToday > 0 ? "Show the menu, steps for today" : "Show the menu")">
+                        <svg viewBox="0 0 24 24" class="isa-widget__menuIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 7h16M4 12h16M4 17h16" />
+                        </svg>
+                        @if (StepsLeftToday > 0)
+                        {
+                            <span class="isa-widget__menuDot" aria-hidden="true"></span>
+                        }
+                    </button>
+                    <span class="isa-widget__identityMove @MenuSlideClass">
+                        <span class="isa-widget__badge" aria-hidden="true"><Throbber Spinning="false" /></span>
+                        <span class="isa-widget__identityText">
+                            <span class="isa-widget__name">Isa</span>
+                            <span class="isa-widget__role"><span class="isa-widget__statusDot" aria-hidden="true"></span>Chapter Support Assistant</span>
+                        </span>
                     </span>
                 </div>
                 @* Header icons: only New conversation and Close. Today, the
@@ -325,12 +332,14 @@
                                question" / "Not quite", logged by trace ID. *@
                             <AnswerFeedback @key="@("fb-" + msg.TraceId)" TraceId="@(msg.TraceId ?? "")" />
                         }
-                        @if (msg.ShowReference && !string.IsNullOrEmpty(msg.TraceId))
+                        @if (msg.ShowReference && ShowDeveloperTools && !string.IsNullOrEmpty(msg.TraceId))
                         {
-                            @* The trace ID, shown to leaders as a "Reference #"
-                               they can quote to a person. Shown on hand-offs
-                               only (stage contract, section 5). Full ID kept,
-                               since the event log is searched by the full ID. *@
+                            @* The trace ID, on hand-offs only (stage contract, section 5).
+                               Developer role only (Matthew, October 22, 2026): leaders
+                               already get the TKT reference number in the hand-off
+                               message, and two different "reference" numbers under one
+                               reply left them unsure which to quote. Full ID kept, since
+                               the event log is searched by the full ID. *@
                             <div class="isa-widget__trace">Reference # @msg.TraceId</div>
                         }
                     </div>
@@ -686,7 +695,21 @@
         await LoadModels();
     }
 
-    private void Expand() => IsExpanded = true;
+    private void Expand()
+    {
+        IsExpanded = true;
+        KeepAtTopBeforeFirstQuestion();
+    }
+
+    // Before the first question, the chat shows from the top (the Today note
+    // and the welcome), not pinned to the bottom. Used when the chat opens,
+    // and when the rail hides or shows, since the chat's text rewraps as it
+    // changes width and would otherwise push the top line out of view
+    // (Matthew, 22 October 2026). See OnAfterRenderAsync.
+    private void KeepAtTopBeforeFirstQuestion()
+    {
+        if (!Messages.Any(m => m.Role == "you")) _showFromTop = true;
+    }
 
     // Closing the chat also closes Today and the notebook, so the next
     // time the chat opens it is back in its usual place.
@@ -753,23 +776,54 @@
     private bool IsRailHidden { get; set; }
     private bool ShowRail => IsExpanded && !IsRailHidden;
 
-    // True for the half second while the rail glides away. During it the
-    // chat and its panels already widen into the rail's space (has-rail is
-    // off), with the same 0.5s glide, and the rail is removed afterwards.
+    // True while the rail glides away. During it the header's menu button
+    // fades in and the Isa ring slides over, on the same glide, and the rail
+    // is removed afterwards. The windows keep their size (keeps-rail-room;
+    // on phones they still widen into the rail's space).
     private bool _railClosing;
     private bool RailTakesRoom => ShowRail && !_railClosing;
+
+    // True while the rail glides away or back in: the chat panel uses the
+    // rail's slower glide (is-railGlide in ChatWidget.razor.css), so the
+    // chat, the rail and the menu button all move together.
+    private bool _railGliding;
+
+    // The header's menu button shows while the rail is hidden, and starts
+    // growing in as soon as the rail starts to leave.
+    private bool MenuBtnShown => IsRailHidden || _railClosing;
+
+    // Plays the ring-and-name slide once, only while the rail glides (a
+    // chat opened later shows them already in place, with no slide).
+    private string MenuSlideClass => !_railGliding ? "" : MenuBtnShown ? "is-slidingRight" : "is-slidingLeft";
+
+    // The length of the rail's glide, in IsaRail.razor.css and
+    // ChatWidget.razor.css. Matthew asked for it slower and smoother than
+    // the first 0.5s (22 October 2026).
+    private const int RailGlideMs = 700;
 
     private async Task HideRail()
     {
         if (_railClosing) return;
         _railClosing = true;
+        _railGliding = true;
+        KeepAtTopBeforeFirstQuestion();
         StateHasChanged();
-        await Task.Delay(500);   // the length of the glide in IsaRail.razor.css
+        await Task.Delay(RailGlideMs);
         _railClosing = false;
+        _railGliding = false;
         IsRailHidden = true;
     }
 
-    private void ShowRailAgain() => IsRailHidden = false;
+    private async Task ShowRailAgain()
+    {
+        if (!IsRailHidden) return;
+        _railGliding = true;
+        IsRailHidden = false;
+        KeepAtTopBeforeFirstQuestion();
+        StateHasChanged();
+        await Task.Delay(RailGlideMs);
+        _railGliding = false;
+    }
 
     // Today's journey steps not done yet: the green number on Today and the
     // dot on the header's menu button. Read from the databases only when
@@ -1107,9 +1161,23 @@
     private ElementReference _messagesEl;
     private string? _scrollToId;
     private IJSObjectReference? _chatJs;
+    private bool _showFromTop;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (_showFromTop)
+        {
+            _showFromTop = false;
+            try
+            {
+                _chatJs ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/ChatWidget.razor.js");
+                await _chatJs.InvokeVoidAsync("showFromTop", _messagesEl);
+            }
+            catch (JSDisconnectedException)
+            {
+                // The page went away; nothing to scroll.
+            }
+        }
         if (_scrollToId is null) return;
         var id = _scrollToId;
         _scrollToId = null;

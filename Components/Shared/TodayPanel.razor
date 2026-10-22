@@ -44,6 +44,7 @@
 @inject JourneyContextService JourneyContexts
 @inject ContactService Contacts
 @inject ProgressService Progress
+@inject IJSRuntime JS
 
 <aside class="isa-today @(Rightmost ? "" : "is-inner")" style="@Style" aria-label="Today">
 
@@ -231,8 +232,9 @@
                                 </div>
                             </div>
 
-                            @* Option 2: send an introduction. Spans the full width while writing. *@
-                            <div class="isa-today__option @(_writing ? "is-wide" : "")">
+                            @* Option 2: send an introduction. Spans the full width while writing,
+                               and scrolls fully into view when it opens (see StartWriting). *@
+                            <div class="isa-today__option @(_writing ? "is-wide" : "")" @ref="_introOption">
                                 <div class="isa-today__optionTitle">Send an introduction</div>
                                 <div class="isa-today__optionSub">A short hello by email, written your way.</div>
                                 @if (!_writing)
@@ -545,6 +547,28 @@
             "I'm looking forward to working with you.\n\n" +
             $"Best regards,\n{t.Name}";
         _writing = true;
+        _revealIntro = true;
+    }
+
+    // Bring the open introduction form fully into view, so the leader
+    // doesn't have to scroll to find it (Matthew, 22 October 2026).
+    private ElementReference _introOption;
+    private bool _revealIntro;
+    private IJSObjectReference? _js;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_revealIntro) return;
+        _revealIntro = false;
+        try
+        {
+            _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/TodayPanel.razor.js");
+            await _js.InvokeVoidAsync("revealElement", _introOption);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page went away; nothing to scroll.
+        }
     }
 
     private void CancelWriting()

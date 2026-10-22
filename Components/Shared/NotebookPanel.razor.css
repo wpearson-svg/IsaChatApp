@@ -269,34 +269,230 @@
 
 .isa-nb__saved { margin: 0; font-size: 0.8rem; color: #3f7d20; font-weight: 500; }
 
-/* ---- Entries -------------------------------------------------------- */
+.isa-nb__bar { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
-.isa-nb__entries {
+/* A button with an outline: Print, Email. */
+.isa-nb__ghostBtn {
+    min-height: 36px;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid #1d2d5c;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.isa-nb__ghostBtn:hover { background: #e7f0f5; }
+.isa-nb__ghostBtn:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+.isa-nb__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+
+/* ---- Print and email sheets ---------------------------------------- */
+
+.isa-nb__shade {
+    position: absolute;
+    inset: 0;
+    background: rgba(29, 45, 92, 0.35);
+}
+
+.isa-nb__sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 85%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1rem 1.25rem 1.25rem;
+    border-radius: 14px 14px 0 0;
+    background: #ffffff;
+    box-shadow: 0 -8px 24px rgba(29, 45, 92, 0.18);
+    font-size: 0.85rem;
+    animation: isa-nb-sheet-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes isa-nb-sheet-in {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-nb__sheet { animation: none; }
+}
+
+.isa-nb__sheetTitle {
+    margin: 0;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: #1d2d5c;
+}
+
+.isa-nb__sheetText { margin: 0; color: #52606d; font-size: 0.8rem; }
+
+.isa-nb__choices { display: flex; flex-direction: column; gap: 0.45rem; }
+
+.isa-nb__choice {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    min-height: 44px;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #cbd2d9;
+    border-radius: 10px;
+    background: #ffffff;
+    font: inherit;
+    font-size: 0.8rem;
+    text-align: left;
+    color: #323e48;
+    cursor: pointer;
+}
+
+.isa-nb__choice b { display: block; color: #1d2d5c; }
+.isa-nb__choice.is-on { border: 2px solid #1d2d5c; background: #e7f0f5; }
+.isa-nb__choice:disabled { cursor: not-allowed; color: #52606d; background: #f6f7f8; }
+.isa-nb__choice:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+.isa-nb__radio {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    border: 2px solid #1d2d5c;
+    border-radius: 50%;
+}
+
+.isa-nb__choice.is-on .isa-nb__radio { background: radial-gradient(circle, #1d2d5c 45%, transparent 50%); }
+
+.isa-nb__sheetBtns { display: flex; align-items: center; gap: 1rem; margin-top: 0.2rem; }
+
+/* "Open print page" is a link styled as the main button. */
+a.isa-nb__saveBtn,
+span.isa-nb__saveBtn { display: inline-flex; align-items: center; text-decoration: none; }
+.isa-nb__saveBtn.is-disabled { background: #cbd2d9; color: #52606d; cursor: not-allowed; }
+
+.isa-nb__fieldLabel { font-size: 0.8rem; font-weight: 500; color: #1d2d5c; margin-bottom: -0.3rem; }
+
+.isa-nb__hint {
+    margin: 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    background: #f6f7f8;
+    font-size: 0.76rem;
+    color: #52606d;
+}
+.isa-nb__btnPair { display: inline-flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+
+/* ---- The index (Matthew's approved mockup, 22 October 2026) ---------- */
+
+.isa-nb__search {
+    width: 100%;
+    min-height: 40px;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 0.85rem;
+    color: #323e48;
+    background: #ffffff;
+}
+
+.isa-nb__search:focus-visible,
+.isa-nb__row:focus-visible,
+.isa-nb__back:focus-visible,
+.isa-nb__select:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+.isa-nb__chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: -0.35rem; }
+.isa-nb__chipCount { opacity: 0.75; margin-left: 0.15rem; }
+
+.isa-nb__month {
+    margin: 0.2rem 0 -0.45rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5f6b7a;
+}
+
+.isa-nb__index {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: 0.4rem;
 }
 
-.isa-nb__entry {
-    padding: 0.75rem 0.85rem;
+/* One entry: a button, 44px or more tall, the whole line taps. */
+.isa-nb__row {
+    width: 100%;
+    min-height: 56px;
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.45rem 0.65rem;
     border: 1px solid #dde3e9;
     border-radius: 10px;
     background: #ffffff;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
 }
 
-.isa-nb__entryTop {
+.isa-nb__row:hover { border-color: #9fb3c8; }
+
+.isa-nb__date {
+    text-align: center;
+    color: #5f6b7a;
+    font-size: 0.68rem;
+    line-height: 1.1;
+}
+
+.isa-nb__date b { display: block; color: #1d2d5c; font-size: 1.05rem; }
+
+.isa-nb__rowMain { min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+
+.isa-nb__rowTitle {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1d2d5c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.isa-nb__rowMeta {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.35rem;
-    margin-bottom: 0.4rem;
+    font-size: 0.72rem;
+    color: #5f6b7a;
+}
+
+.isa-nb__chev { color: #9aa5b1; font-size: 1.15rem; }
+
+/* For screen readers only: the full date of each line. */
+.isa-nb__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
 }
 
 .isa-nb__tag,
-.isa-nb__sharedTag {
-    font-size: 0.68rem;
+.isa-nb__sharedTag,
+.isa-nb__privateTag {
+    font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -305,32 +501,99 @@
 }
 
 .isa-nb__tag { background: #e7f0f5; color: #07649d; }
+.isa-nb__tag.is-decision { background: #1d2d5c; color: #ffffff; }
+.isa-nb__tag.is-unfinished { background: #fdf3dd; color: #7a4f00; }
 .isa-nb__sharedTag { background: #edf6e8; color: #3f7d20; }
+.isa-nb__privateTag { background: #eef0f2; color: #52606d; }
 
-.isa-nb__q { margin: 0 0 0.25rem; font-weight: 500; color: #1d2d5c; }
+/* ---- An entry on its own page --------------------------------------- */
+
+.isa-nb__back {
+    align-self: flex-start;
+    min-height: 36px;
+    padding: 0 0.25rem;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    color: #07649d;
+    cursor: pointer;
+}
+
+.isa-nb__card {
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #dde3e9;
+    border-radius: 10px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.isa-nb__cardKicker {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5f6b7a;
+}
+
+.isa-nb__headline {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #1d2d5c;
+    white-space: pre-line;
+}
+
+.isa-nb__facts {
+    margin: 0.2rem 0 0;
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+}
+
+.isa-nb__facts dt { color: #5f6b7a; }
+.isa-nb__facts dd { margin: 0; color: #323e48; }
+
+.isa-nb__select {
+    min-height: 32px;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.8rem;
+    color: #1d2d5c;
+    background: #ffffff;
+}
+
+.isa-nb__q { margin: 0; font-weight: 500; color: #1d2d5c; }
 .isa-nb__a { margin: 0; white-space: pre-line; }
 .isa-nb__note { margin: 0; white-space: pre-line; color: #1d2d5c; }
 
 .isa-nb__sources {
-    margin: 0.4rem 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
     font-size: 0.75rem;
-    color: #5f6b7a;
+    color: #07649d;
 }
 
-.isa-nb__decided {
-    margin: 0.5rem 0 0;
-    padding: 0.4rem 0.6rem;
-    border-left: 3px solid #3f7d20;
-    border-radius: 4px;
-    background: #edf6e8;
-    color: #1d2d5c;
+/* Follow-ups: a thin line down the left, oldest first. */
+.isa-nb__thread {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 0.75rem;
+    border-left: 2px solid #dde3e9;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
 }
 
-.isa-nb__decided span { font-weight: 700; }
-
-.isa-nb__meta { margin: 0.5rem 0 0; font-size: 0.74rem; color: #5f6b7a; }
+.isa-nb__meta { margin: 0.15rem 0 0; font-size: 0.72rem; color: #5f6b7a; }
 
 .isa-nb__own {
     display: flex;

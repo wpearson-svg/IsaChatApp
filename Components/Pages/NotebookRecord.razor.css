@@ -1,0 +1,132 @@
+/* Printed decision records (NotebookRecord.razor). On screen: sheets of
+   paper on a grey background, with a toolbar. In print: just the sheets,
+   one decision per page. Colours follow the notebook panel. */
+
+.nbr {
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+    background: #eef2f5;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #222;
+}
+
+.nbr__toolbar {
+    max-width: 720px;
+    margin: 0 auto 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: #52606d;
+}
+
+.nbr__print {
+    min-height: 44px;
+    padding: 0 1.1rem;
+    border: none;
+    border-radius: 8px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nbr__print:hover { background: #07649d; }
+.nbr__print:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+.nbr__paper {
+    max-width: 720px;
+    margin: 0 auto 1.25rem;
+    padding: 2.25rem 2.5rem;
+    background: #ffffff;
+    border: 1px solid #cbd2d9;
+    box-shadow: 0 6px 18px rgba(29, 45, 92, 0.1);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.nbr__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 0.65rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #1d2d5c;
+}
+
+.nbr__kicker {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #52606d;
+}
+
+.nbr__title {
+    margin: 0.15rem 0 0;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 500;
+    font-size: 1.4rem;
+    color: #1d2d5c;
+}
+
+.nbr__copy {
+    flex: 0 0 auto;
+    padding: 0.2rem 0.55rem;
+    border: 1.5px solid #3f7d20;
+    border-radius: 4px;
+    color: #3f7d20;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.nbr__facts { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; }
+.nbr__facts th { width: 9.5rem; padding: 0.2rem 0.75rem 0.2rem 0; text-align: left; vertical-align: top; font-weight: 500; color: #52606d; }
+.nbr__facts td { padding: 0.2rem 0; vertical-align: top; }
+
+.nbr__h {
+    margin: 1.1rem 0 0.4rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid #dde3e9;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+}
+
+.nbr__decision { margin: 0; font-size: 1.05rem; font-weight: 500; color: #1d2d5c; white-space: pre-line; }
+.nbr__paper p { margin: 0 0 0.4rem; white-space: pre-line; }
+.nbr__muted { color: #52606d; }
+.nbr__follow { margin: 0; padding-left: 1.2rem; }
+.nbr__follow li { margin-bottom: 0.3rem; }
+
+.nbr__sum { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.82rem; }
+.nbr__sum th, .nbr__sum td { padding: 0.4rem 0.5rem 0.4rem 0; border-bottom: 1px solid #dde3e9; text-align: left; vertical-align: top; }
+.nbr__sum th { color: #1d2d5c; font-weight: 700; }
+
+.nbr__foot {
+    margin-top: 1.25rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #dde3e9;
+    font-size: 0.72rem;
+    color: #52606d;
+}
+
+@media (max-width: 520px) {
+    .nbr__paper { padding: 1.25rem 1rem; }
+    .nbr__facts th { width: 7.5rem; }
+}
+
+/* Printing: no toolbar, no background, each decision on a new page. */
+@media print {
+    .nbr { padding: 0; background: none; min-height: 0; }
+    .nbr__toolbar { display: none; }
+    .nbr__paper { max-width: none; margin: 0; border: none; box-shadow: none; padding: 0; }
+    .nbr__paper.is-newPage { break-before: page; }
+    .nbr__h { break-after: avoid; }
+}

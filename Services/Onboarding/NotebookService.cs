@@ -88,6 +88,73 @@ public class NotebookService
             CREATE INDEX IF NOT EXISTS notebook_by_chapter ON notebook_entries(chapter_id);
             """;
         cmd.ExecuteNonQuery();
+
+        // Added 22 October 2026 for the notebook index, entry pages and printed
+        // decision records (Matthew's approved mockup, Claude outputs/Notebook
+        // records mockups.html). Added to an existing file without touching
+        // the entries already in it:
+        //   topic      Elections, Finances, Meetings, Compliance, Membership, Events or Other
+        //   shared_on  the writer's "today" when they shared the entry with the board
+        //   parent_id  for a follow-up: the entry it follows up on
+        AddColumnIfMissing(conn, "topic", "TEXT");
+        AddColumnIfMissing(conn, "shared_on", "TEXT");
+        AddColumnIfMissing(conn, "parent_id", "INTEGER");
+        FillInOlderEntries(conn);
+
+        // "Email this record": in the prototype nothing is emailed; each
+        // request is kept here instead, like the introduction on the contact
+        // step. A real version would hand these to ISACA's mail system.
+        using var emails = conn.CreateCommand();
+        emails.CommandText = """
+            CREATE TABLE IF NOT EXISTS notebook_emails(
+              email_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+              entry_id     INTEGER NOT NULL,  -- the record that would be sent
+              sender_id    TEXT NOT NULL,     -- person_id of the leader who asked
+              to_address   TEXT NOT NULL,
+              copy         TEXT NOT NULL,     -- board or mine
+              message      TEXT,              -- optional, checked like a note
+              on_date      TEXT NOT NULL,     -- the leader's "today", YYYY-MM-DD
+              recorded_at  TEXT NOT NULL);    -- real time, UTC
+            """;
+        emails.ExecuteNonQuery();
+    }
+
+    // Entries saved before 22 October 2026 have no topic or shared date.
+    // Give them a topic by the same word rule, and take the day an older
+    // shared entry was saved as the day it was shared (the closest we know).
+    // Runs only on entries still missing them, so it does nothing after the first start.
+    private static void FillInOlderEntries(SqliteConnection conn)
+    {
+        var missing = new List<(long Id, string? Question, string? Note)>();
+        using (var read = conn.CreateCommand())
+        {
+            read.CommandText = "SELECT entry_id, question, note FROM notebook_entries WHERE topic IS NULL;";
+            using var r = read.ExecuteReader();
+            while (r.Read())
+                missing.Add((r.GetInt64(0), r.IsDBNull(1) ? null : r.GetString(1), r.IsDBNull(2) ? null : r.GetString(2)));
+        }
+        foreach (var (id, question, note) in missing)
+        {
+            using var set = conn.CreateCommand();
+            set.CommandText = "UPDATE notebook_entries SET topic = $t WHERE entry_id = $e;";
+            set.Parameters.AddWithValue("$t", TopicFor(question, note));
+            set.Parameters.AddWithValue("$e", id);
+            set.ExecuteNonQuery();
+        }
+        using var shared = conn.CreateCommand();
+        shared.CommandText = "UPDATE notebook_entries SET shared_on = on_date WHERE shared = 1 AND shared_on IS NULL;";
+        shared.ExecuteNonQuery();
+    }
+
+    private static void AddColumnIfMissing(SqliteConnection conn, string column, string type)
+    {
+        using var check = conn.CreateCommand();
+        check.CommandText = "SELECT COUNT(*) FROM pragma_table_info('notebook_entries') WHERE name = $n;";
+        check.Parameters.AddWithValue("$n", column);
+        if ((long)check.ExecuteScalar()! > 0) return;
+        using var add = conn.CreateCommand();
+        add.CommandText = $"ALTER TABLE notebook_entries ADD COLUMN {column} {type};";
+        add.ExecuteNonQuery();
     }
 
     private SqliteConnection Open()
@@ -114,17 +181,19 @@ public class NotebookService
 
         var president = current.FirstOrDefault(t => t.Role == "President");
         if (president is not null)
-            return new NotebookAccess(president.ChapterId, president.ChapterName, president.Name, "President", CanWrite: true, SeesAll: true);
+            return new NotebookAccess(president.ChapterId, president.ChapterName, president.Name, "President", CanWrite: true, SeesAll: true,
+                TimeZone: president.TimeZone);
 
         var outgoing = _terms.GetRecentlyEndedTerms(personId, onDate, HandoffDays)
             .FirstOrDefault(t => t.Role == "President");
         if (outgoing is not null)
             return new NotebookAccess(outgoing.ChapterId, outgoing.ChapterName, outgoing.Name, "Outgoing president", CanWrite: true, SeesAll: true,
-                HandoffEnds: outgoing.TermEnd.AddDays(HandoffDays));
+                HandoffEnds: outgoing.TermEnd.AddDays(HandoffDays), TimeZone: outgoing.TimeZone);
 
         var board = current.FirstOrDefault(t => t.Permission == "Leadership");
         if (board is not null)
-            return new NotebookAccess(board.ChapterId, board.ChapterName, board.Name, board.Role, CanWrite: false, SeesAll: false);
+            return new NotebookAccess(board.ChapterId, board.ChapterName, board.Name, board.Role, CanWrite: false, SeesAll: false,
+                TimeZone: board.TimeZone);
 
         return NotebookAccess.None;
     }
@@ -144,20 +213,32 @@ public class NotebookService
         using var conn = Open();
         using var cmd = conn.CreateCommand();
         // Presidents see every entry; other board members see only shared
-        // entries. ($all is 1 or 0.)
+        // entries. ($all is 1 or 0.) Follow-ups come back too, with their
+        // ParentId set; the panel shows them under the entry they follow.
+        // A follow-up whose entry was removed goes with it.
         cmd.CommandText = """
-            SELECT entry_id, chapter_id, author_id, author_name, author_role, kind, category,
-                   question, answer, sources_json, note, shared, on_date
-            FROM notebook_entries
-            WHERE chapter_id = $c
-              AND removed_on IS NULL
-              AND ($all = 1 OR shared = 1)
-            ORDER BY on_date DESC, entry_id DESC;
+            SELECT e.entry_id, e.chapter_id, e.author_id, e.author_name, e.author_role, e.kind, e.category,
+                   e.question, e.answer, e.sources_json, e.note, e.shared, e.on_date,
+                   e.topic, e.shared_on, e.parent_id, e.recorded_at
+            FROM notebook_entries e
+            LEFT JOIN notebook_entries p ON p.entry_id = e.parent_id
+            WHERE e.chapter_id = $c
+              AND e.removed_on IS NULL
+              AND (e.parent_id IS NULL OR p.removed_on IS NULL)
+              AND ($all = 1 OR e.shared = 1)
+            ORDER BY e.on_date DESC, e.entry_id DESC;
             """;
         cmd.Parameters.AddWithValue("$c", access.ChapterId);
         cmd.Parameters.AddWithValue("$all", access.SeesAll ? 1 : 0);
         using var r = cmd.ExecuteReader();
-        while (r.Read()) list.Add(ReadEntry(r));
+        while (r.Read())
+        {
+            var entry = ReadEntry(r);
+            // A saved answer includes the president's own question, which is
+            // private. Other board members see a shared entry without it
+            // (the "Board copy" rule, Matthew's approved mockup, 22 October 2026).
+            list.Add(access.SeesAll ? entry : entry with { Question = null });
+        }
         return list;
     }
 
@@ -174,7 +255,64 @@ public class NotebookService
         Sources: r.IsDBNull(9) ? Array.Empty<SourceRef>() : JsonSerializer.Deserialize<List<SourceRef>>(r.GetString(9)) ?? new(),
         Note: r.IsDBNull(10) ? null : r.GetString(10),
         Shared: r.GetInt64(11) == 1,
-        OnDate: DateOnly.ParseExact(r.GetString(12), "yyyy-MM-dd", CultureInfo.InvariantCulture));
+        OnDate: DateOnly.ParseExact(r.GetString(12), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+        Topic: r.IsDBNull(13) ? "Other" : r.GetString(13),
+        SharedOn: r.IsDBNull(14) ? null : DateOnly.ParseExact(r.GetString(14), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+        ParentId: r.IsDBNull(15) ? null : r.GetInt64(15),
+        RecordedAtUtc: DateTime.SpecifyKind(DateTime.Parse(r.GetString(16), CultureInfo.InvariantCulture,
+            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal), DateTimeKind.Utc));
+
+    // ---- Topics --------------------------------------------------------------
+
+    /// <summary>The topics an entry can have, in the order the notebook shows them.</summary>
+    public static readonly IReadOnlyList<string> Topics =
+        new[] { "Elections", "Finances", "Meetings", "Compliance", "Membership", "Events", "Other" };
+
+    // The words that pick a topic. A fixed, visible rule (not AI judgment),
+    // like the save-offer rules: the first topic whose word appears wins.
+    // The writer can change the topic on the entry page.
+    private static readonly (string Topic, string[] Words)[] TopicWords =
+    {
+        ("Elections",  new[] { "election", " vote", "voting", "ballot", "nominat", "candidate" }),
+        ("Finances",   new[] { "budget", "bank", "money", "finance", "financial", "treasur", "spend", "spent", " dues", " fees", "sponsor", "invoice", "audit" }),
+        ("Compliance", new[] { "compliance", "comply", "requirement", "affiliation", "bylaw" }),
+        ("Meetings",   new[] { "meeting", "agenda", "minutes", "quorum" }),
+        ("Membership", new[] { "membership", "new member", "volunteer", "recruit", "renewal" }),
+        ("Events",     new[] { "event", "webinar", "conference", " cpe", "venue", "speaker", "workshop" }),
+    };
+
+    /// <summary>The topic the fixed word rule gives this text, or "Other".</summary>
+    public static string TopicFor(params string?[] texts)
+    {
+        // A leading space makes " vote", " dues" and the like match only at the start of a word.
+        var all = " " + string.Join(" ", texts.Where(t => t is not null)).ToLowerInvariant();
+        foreach (var (topic, words) in TopicWords)
+            if (words.Any(w => all.Contains(w))) return topic;
+        return "Other";
+    }
+
+    /// <summary>
+    /// When an entry was recorded, as the leader reads it: the entry's day
+    /// (the demo date while it is on) and the time of day it was really
+    /// saved, in the reader's time zone, e.g. "28 June 2026, 14:32 (Asia/Tokyo)".
+    /// </summary>
+    public static string RecordedLabel(NotebookEntry e, string? timeZone)
+    {
+        var zone = FindZone(timeZone);
+        var local = TimeZoneInfo.ConvertTimeFromUtc(e.RecordedAtUtc, zone);
+        return $"{e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}, {local:HH:mm} ({(zone == TimeZoneInfo.Utc ? "UTC" : timeZone)})";
+    }
+
+    private static TimeZoneInfo FindZone(string? timeZone)
+    {
+        if (string.IsNullOrEmpty(timeZone)) return TimeZoneInfo.Utc;
+        try { return TimeZoneInfo.FindSystemTimeZoneById(timeZone); }
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException) { return TimeZoneInfo.Utc; }
+    }
+
+    /// <summary>The number printed on a decision record, e.g. "NB-C001-0007".</summary>
+    public static string RecordNumber(NotebookEntry e) =>
+        $"NB-{e.ChapterId.Replace("-", "")}-{e.EntryId:0000}";
 
     // ---- Writing -----------------------------------------------------------
 
@@ -202,7 +340,8 @@ public class NotebookService
         }
 
         return NoteResult.Saved(Insert(access, personId, onDate, "saved_answer", category: null,
-            question, answer, JsonSerializer.Serialize(sources), line, shareWithBoard));
+            question, answer, JsonSerializer.Serialize(sources), line, shareWithBoard,
+            topic: TopicFor(question, line), parentId: null));
     }
 
     /// <summary>
@@ -211,8 +350,14 @@ public class NotebookService
     /// check and Input Compliance gate. <paramref name="bearerToken"/> is the
     /// signed-in leader's token, as the chat sends it to the pipeline.
     /// </summary>
+    /// <remarks>
+    /// With <paramref name="parentId"/>, the note is a follow-up on an earlier
+    /// entry in the same chapter's notebook (for example "the venue is now
+    /// booked" under a decision). A follow-up takes its entry's topic and is
+    /// shown under that entry, not as a line of its own in the index.
+    /// </remarks>
     public async Task<NoteResult> AddNoteAsync(string personId, DateOnly onDate, string category, string text,
-        bool shareWithBoard, string? bearerToken)
+        bool shareWithBoard, string? bearerToken, long? parentId = null)
     {
         var access = GetAccess(personId, onDate);
         var note = Clean(text);
@@ -220,12 +365,25 @@ public class NotebookService
         if (note is null) return NoteResult.Refused("Write a note first.");
         if (!Categories.Contains(category)) return NoteResult.Refused("Pick what kind of note this is.");
 
+        string topic;
+        if (parentId is long pid)
+        {
+            var parent = GetEntries(personId, onDate).FirstOrDefault(e => e.EntryId == pid && e.ParentId is null);
+            if (parent is null) return NoteResult.Refused("That entry isn't in the notebook any more.");
+            topic = parent.Topic;
+        }
+        else
+        {
+            topic = TopicFor(note);
+        }
+
         var problem = await CheckAsync(note, "notebook_note", bearerToken,
             "This sounds like something to talk through with a person, so it wasn't saved. Your Chapter Experience contact can help.",
             "This note is outside what the notebook is for, so it wasn't saved. Notes are for running your chapter.");
         if (problem is not null) return NoteResult.Refused(problem);
 
-        return NoteResult.Saved(Insert(access, personId, onDate, "note", category, null, null, null, note, shareWithBoard));
+        return NoteResult.Saved(Insert(access, personId, onDate, "note", category, null, null, null, note, shareWithBoard,
+            topic, parentId));
     }
 
     // Checks typed text with Isa's sign-in check and Input Compliance gate
@@ -254,16 +412,20 @@ public class NotebookService
     public static readonly IReadOnlyList<string> Categories = new[] { "decision", "contact", "worked", "unfinished", "other" };
 
     private long Insert(NotebookAccess access, string personId, DateOnly onDate, string kind, string? category,
-        string? question, string? answer, string? sourcesJson, string? note, bool shared)
+        string? question, string? answer, string? sourcesJson, string? note, bool shared, string topic, long? parentId)
     {
         using var conn = Open();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = """
             INSERT INTO notebook_entries(chapter_id, author_id, author_name, author_role, kind, category,
-                                         question, answer, sources_json, note, shared, on_date, recorded_at)
-            VALUES($c, $p, $n, $r, $k, $cat, $q, $a, $s, $note, $sh, $d, $t);
+                                         question, answer, sources_json, note, shared, on_date, recorded_at,
+                                         topic, shared_on, parent_id)
+            VALUES($c, $p, $n, $r, $k, $cat, $q, $a, $s, $note, $sh, $d, $t, $topic, $sharedOn, $parent);
             SELECT last_insert_rowid();
             """;
+        cmd.Parameters.AddWithValue("$topic", topic);
+        cmd.Parameters.AddWithValue("$sharedOn", shared ? Day(onDate) : DBNull.Value);
+        cmd.Parameters.AddWithValue("$parent", (object?)parentId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$c", access.ChapterId);
         cmd.Parameters.AddWithValue("$p", personId);
         cmd.Parameters.AddWithValue("$n", access.PersonName);
@@ -290,11 +452,37 @@ public class NotebookService
         if (!GetAccess(personId, onDate).CanWrite) return false;
         using var conn = Open();
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "UPDATE notebook_entries SET shared = $sh WHERE entry_id = $e AND author_id = $p AND removed_on IS NULL;";
+        // shared_on records the day it was shared, for the decision record.
+        cmd.CommandText = """
+            UPDATE notebook_entries SET shared = $sh, shared_on = $on
+            WHERE entry_id = $e AND author_id = $p AND removed_on IS NULL;
+            """;
         cmd.Parameters.AddWithValue("$sh", share ? 1 : 0);
+        cmd.Parameters.AddWithValue("$on", share ? Day(onDate) : DBNull.Value);
         cmd.Parameters.AddWithValue("$e", entryId);
         cmd.Parameters.AddWithValue("$p", personId);
         return cmd.ExecuteNonQuery() == 1;
+    }
+
+    /// <summary>
+    /// The writer changes the topic of one of their own entries, while they
+    /// can still write to the notebook. Its follow-ups move with it.
+    /// </summary>
+    public bool SetTopic(string personId, long entryId, string topic, DateOnly onDate)
+    {
+        if (!Topics.Contains(topic) || !GetAccess(personId, onDate).CanWrite) return false;
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            UPDATE notebook_entries SET topic = $t
+            WHERE removed_on IS NULL
+              AND (entry_id = $e AND author_id = $p
+                   OR parent_id = $e AND EXISTS (SELECT 1 FROM notebook_entries WHERE entry_id = $e AND author_id = $p));
+            """;
+        cmd.Parameters.AddWithValue("$t", topic);
+        cmd.Parameters.AddWithValue("$e", entryId);
+        cmd.Parameters.AddWithValue("$p", personId);
+        return cmd.ExecuteNonQuery() > 0;
     }
 
     /// <summary>
@@ -314,6 +502,53 @@ public class NotebookService
         return cmd.ExecuteNonQuery() == 1;
     }
 
+    /// <summary>
+    /// "Email this record". The leader chooses to send one decision record,
+    /// as a Board copy (without their own question) or My copy (everything).
+    /// In the prototype nothing is emailed: the request is saved in Isa,
+    /// like the introduction on the contact step. An optional message is new
+    /// typed text, so it is checked like a note first. Only presidents may
+    /// send My copy, and a Board copy only exists for a shared entry.
+    /// </summary>
+    public async Task<NoteResult> SaveEmailRequestAsync(string personId, DateOnly onDate, long entryId, string to,
+        string copy, string? message, string? bearerToken)
+    {
+        var access = GetAccess(personId, onDate);
+        var entry = GetEntries(personId, onDate).FirstOrDefault(e => e.EntryId == entryId && e.ParentId is null);
+        var address = Clean(to);
+        if (entry is null) return NoteResult.Refused("That entry isn't in the notebook any more.");
+        if (copy == "mine" && !access.SeesAll) return NoteResult.Refused("Only a president can send the full record.");
+        if (copy == "board" && !entry.Shared) return NoteResult.Refused("This entry isn't shared with the board, so it has no Board copy.");
+        if (copy is not ("board" or "mine")) return NoteResult.Refused("Choose Board copy or My copy.");
+        if (address is null || !System.Text.RegularExpressions.Regex.IsMatch(address, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            return NoteResult.Refused("Enter an email address, like name@example.org.");
+
+        var text = Clean(message);
+        if (text is not null)
+        {
+            var problem = await CheckAsync(text, "notebook_email", bearerToken,
+                "This sounds like something to talk through with a person, so nothing was saved. Your Chapter Experience contact can help.",
+                "That message is outside what the notebook is for, so nothing was saved. Try a short note about the record.");
+            if (problem is not null) return NoteResult.Refused(problem);
+        }
+
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO notebook_emails(entry_id, sender_id, to_address, copy, message, on_date, recorded_at)
+            VALUES($e, $p, $to, $copy, $m, $d, $t);
+            SELECT last_insert_rowid();
+            """;
+        cmd.Parameters.AddWithValue("$e", entryId);
+        cmd.Parameters.AddWithValue("$p", personId);
+        cmd.Parameters.AddWithValue("$to", address);
+        cmd.Parameters.AddWithValue("$copy", copy);
+        cmd.Parameters.AddWithValue("$m", (object?)text ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$d", Day(onDate));
+        cmd.Parameters.AddWithValue("$t", Now());
+        return NoteResult.Saved((long)cmd.ExecuteScalar()!);
+    }
+
     // Trims a note; an empty one counts as no note.
     private static string? Clean(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
 }
@@ -330,8 +565,9 @@ public record NoteResult(long? EntryId, string? Problem)
 /// <param name="RoleLabel">How the notebook names their role, e.g. "President" or "Outgoing president".</param>
 /// <param name="SeesAll">True for presidents: every entry. False for other board members: shared entries only.</param>
 /// <param name="HandoffEnds">For an outgoing president: the last day they can still add notes.</param>
+/// <param name="TimeZone">Their time zone from the directory, e.g. "Asia/Tokyo", for showing when entries were recorded.</param>
 public record NotebookAccess(string? ChapterId, string? ChapterName, string? PersonName, string? RoleLabel,
-    bool CanWrite, bool SeesAll, DateOnly? HandoffEnds = null)
+    bool CanWrite, bool SeesAll, DateOnly? HandoffEnds = null, string? TimeZone = null)
 {
     public static readonly NotebookAccess None = new(null, null, null, null, false, false);
     public bool CanRead => ChapterId is not null;
@@ -351,4 +587,27 @@ public record NotebookEntry(
     IReadOnlyList<SourceRef> Sources,
     string? Note,           // a typed note, or the "what we decided" line
     bool Shared,
-    DateOnly OnDate);
+    DateOnly OnDate,
+    string Topic,           // Elections, Finances, Meetings, Compliance, Membership, Events or Other
+    DateOnly? SharedOn,     // the day it was shared with the board, if it is
+    long? ParentId,         // for a follow-up: the entry it follows up on
+    DateTime RecordedAtUtc) // the real time it was saved
+{
+    /// <summary>
+    /// How the notebook names this entry: a saved answer with a "what we
+    /// decided" line counts as a decision, like a typed decision note.
+    /// </summary>
+    public string KindLabel => Kind == "saved_answer"
+        ? (string.IsNullOrEmpty(Note) ? "Saved answer" : "Decision")
+        : Category switch
+        {
+            "decision" => "Decision",
+            "contact" => "Contact",
+            "worked" => "What worked",
+            "unfinished" => "Unfinished",
+            _ => "Other",
+        };
+
+    /// <summary>The line the index shows: the decision or note, or the question for a saved answer without one.</summary>
+    public string Title => !string.IsNullOrEmpty(Note) ? Note! : Question ?? Answer ?? "";
+}
