@@ -36,6 +36,20 @@ public static class Wording
     /// <summary>How an answer from ISACA's guidance opens (the chat message text).</summary>
     public const string AnswerOpening = "Here's what ISACA's guidance says: ";
 
+    // ---------- Governance best-practice guides (Matthew, 22 October 2026) ----------
+    // General guidance the Isa team wrote from public pages by BoardSource, BoardEffect,
+    // ASAE and Association Forum (content/Governance Best Practice). Not ISACA policy,
+    // so an answer from them always says so.
+
+    /// <summary>Every guide's document title starts with this (content/add_best_practice.py).</summary>
+    public const string BestPracticePrefix = "Best Practice Guide:";
+
+    public static bool IsBestPractice(string? document) =>
+        document?.StartsWith(BestPracticePrefix, StringComparison.Ordinal) == true;
+
+    /// <summary>How an answer from a best-practice guide opens.</summary>
+    public const string BestPracticeOpening = "Here's what general governance best practice suggests (not ISACA policy): ";
+
     public const string WentWrong =
         "Sorry, something went wrong on my side. Please try again in a moment. If it keeps happening, you can talk to a person.";
 
@@ -79,6 +93,7 @@ public static class Wording
     // ---------- Panel: the closed line above each reply (section 3) ----------
 
     public const string ClosedAnswered = "Answered from ISACA's guidance";
+    public const string ClosedAnsweredBestPractice = "Answered from governance best practice";
     public const string ClosedOutsideScope = "Not something Isa can help with";
     public const string ClosedNoSignIn = "Please sign in";
     public const string ClosedHandoff = "Passed to a person";
@@ -119,6 +134,7 @@ public static class Wording
 
     // second lines
     public const string FoundAnswer = "Found the answer in ISACA's own words";
+    public const string FoundBestPractice = "Not in ISACA's guidance; found general best practice";
     public const string FoundNothing = "Couldn't find this in ISACA's guidance";
     public const string ContentNotLoaded = "The approved content isn't loaded yet";
     public static string FoundTopic(int n) => $"Found {Sections(n)} on this topic";

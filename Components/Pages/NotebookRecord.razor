@@ -1,0 +1,221 @@
+@page "/notebook/record/{EntryId:long}"
+@page "/notebook/decisions"
+@layout AuthLayout
+@using System.Globalization
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject NotebookService Notebook
+@inject WidgetSettings Settings
+
+@* ============================================================
+   NotebookRecord.razor
+
+   Onboarding feature, Feature 2: printing from the succession notebook
+   (Matthew's approved mockup, 22 October 2026, Claude outputs/Notebook
+   records mockups.html). A clean page, with no chat bubble, that the
+   leader prints or saves as a PDF from the browser's own print window.
+   The notebook panel opens it in a new tab.
+
+     /notebook/record/{id}?copy=board|mine   one decision record
+     /notebook/decisions?copy=board|mine     every decision in the
+                                             notebook: a summary table,
+                                             then one record per page
+
+   Two versions:
+     - Board copy: only entries (and follow-ups) shared with the board,
+       and never the leader's own question to Isa, which is private.
+     - My copy: everything this leader may see. Presidents only.
+
+   Filled in from the notebook's own data (NotebookService) by this fixed
+   template; nothing here is written by the AI model. The page uses the
+   same rules as the panel, so it can't show anything the notebook
+   wouldn't.
+   ============================================================ *@
+
+<PageTitle>@(EntryId is null ? "Decisions" : "Decision record") | Isa</PageTitle>
+
+<div class="nbr">
+    <div class="nbr__toolbar">
+        <button type="button" class="nbr__print" onclick="window.print()">Print or save as PDF</button>
+        <span>In the print window, choose a printer, or "Save as PDF" to keep a file.</span>
+    </div>
+
+    @if (_problem is not null)
+    {
+        <div class="nbr__paper"><p class="nbr__muted">@_problem</p></div>
+    }
+    else if (EntryId is not null && _single is not null)
+    {
+        @Record(_single, standalone: true)
+    }
+    else if (EntryId is null)
+    {
+        <div class="nbr__paper">
+            @Top($"Decisions, {RangeLabel}")
+            <p class="nbr__muted">
+                @(_decisions.Count == 1 ? "1 decision" : $"{_decisions.Count} decisions")
+                @(Board ? $"shared with the board." : "recorded in the notebook.")
+                @if (Board && _privateLeftOut > 0)
+                {
+                    <span> @(_privateLeftOut == 1 ? "1 private decision is" : $"{_privateLeftOut} private decisions are") left out of this copy.</span>
+                }
+            </p>
+            @if (_decisions.Count > 0)
+            {
+                <table class="nbr__sum">
+                    <thead><tr><th>Date</th><th>Topic</th><th>Decision</th><th>Shared</th><th>Record</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in _decisions)
+                        {
+                            <tr>
+                                <td>@d.OnDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                <td>@d.Topic</td>
+                                <td>@d.Note</td>
+                                <td>@(d.Shared ? (d.SharedOn?.ToString("d MMM", CultureInfo.InvariantCulture) ?? "Yes") : "No")</td>
+                                <td>@NotebookService.RecordNumber(d)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            @Foot()
+        </div>
+        @foreach (var d in _decisions)
+        {
+            @Record(d, standalone: false)
+        }
+    }
+</div>
+
+@code {
+    /// <summary>One record, or null for the decisions pack.</summary>
+    [Parameter] public long? EntryId { get; set; }
+
+    /// <summary>"board" (the default) or "mine".</summary>
+    [SupplyParameterFromQuery(Name = "copy")] public string? Copy { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private NotebookAccess _access = NotebookAccess.None;
+    private IReadOnlyList<NotebookEntry> _entries = Array.Empty<NotebookEntry>();
+    private NotebookEntry? _single;
+    private List<NotebookEntry> _decisions = new();
+    private int _privateLeftOut;
+    private string? _problem;
+
+    // My copy only for someone who sees everything (a president); everyone else gets the Board copy.
+    private bool Board => Copy != "mine" || !_access.SeesAll;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var user = AuthState is null ? null : (await AuthState).User;
+        var personId = user?.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
+        _access = personId is null ? NotebookAccess.None : Notebook.GetAccess(personId, Settings.Today);
+        if (personId is null || !_access.CanRead)
+        {
+            _problem = "Sign in as a chapter leader to print from the succession notebook.";
+            return;
+        }
+        _entries = Notebook.GetEntries(personId, Settings.Today);
+
+        if (EntryId is long id)
+        {
+            _single = _entries.FirstOrDefault(e => e.EntryId == id && e.ParentId is null);
+            if (_single is null) _problem = "That entry isn't in the notebook.";
+            else if (Board && !_single.Shared) _problem = "This entry isn't shared with the board, so it has no Board copy. Print My copy instead.";
+        }
+        else
+        {
+            var all = _entries.Where(e => e.ParentId is null && e.KindLabel == "Decision")
+                .OrderBy(e => e.OnDate).ThenBy(e => e.RecordedAtUtc).ToList();
+            _decisions = Board ? all.Where(e => e.Shared).ToList() : all;
+            _privateLeftOut = all.Count - _decisions.Count;
+        }
+    }
+
+    private string RangeLabel => _decisions.Count == 0 ? "none yet"
+        : $"{_decisions.First().OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)} to {_decisions.Last().OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}";
+
+    private List<NotebookEntry> FollowUpsOf(NotebookEntry e) =>
+        _entries.Where(f => f.ParentId == e.EntryId && (!Board || f.Shared)).OrderBy(f => f.RecordedAtUtc).ToList();
+
+    private RenderFragment Top(string title) => __builder =>
+    {
+        <div class="nbr__top">
+            <div>
+                <div class="nbr__kicker">@_access.ChapterName · Succession notebook</div>
+                <h1 class="nbr__title">@title</h1>
+            </div>
+            <span class="nbr__copy">@(Board ? "Board copy" : "My copy")</span>
+        </div>
+    };
+
+    private RenderFragment Foot() => __builder =>
+    {
+        <div class="nbr__foot">
+            Printed from Isa on @Settings.Today.ToString("d MMMM yyyy", CultureInfo.InvariantCulture).
+            This record shows what the chapter's leaders recorded; it is not an official ISACA document.
+            Isa's answers quote approved documents; check the cited source for the full text.
+            Answers marked "not ISACA policy" come from general governance best practice.
+        </div>
+    };
+
+    private RenderFragment Record(NotebookEntry e, bool standalone) => __builder =>
+    {
+        var followUps = FollowUpsOf(e);
+        <div class="nbr__paper @(standalone ? "" : "is-newPage")">
+            @Top(e.KindLabel == "Decision" ? "Decision record" : $"{e.KindLabel} record")
+            <table class="nbr__facts">
+                <tr><th>Topic</th><td>@e.Topic</td></tr>
+                <tr><th>Recorded</th><td>@NotebookService.RecordedLabel(e, _access.TimeZone)</td></tr>
+                <tr><th>Recorded by</th><td>@e.AuthorName, @e.AuthorRole</td></tr>
+                <tr><th>Shared with board</th><td>@(e.Shared ? $"Yes{(e.SharedOn is DateOnly day ? ", on " + day.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) : "")}" : "No (private)")</td></tr>
+                <tr><th>Record number</th><td>@NotebookService.RecordNumber(e)</td></tr>
+            </table>
+
+            @if (!string.IsNullOrEmpty(e.Note))
+            {
+                <h2 class="nbr__h">@(e.KindLabel == "Decision" ? "Decision" : "Note")</h2>
+                <p class="nbr__decision">@e.Note</p>
+            }
+
+            @if (e.Kind == "saved_answer")
+            {
+                @if (!Board && e.Question is not null)
+                {
+                    <h2 class="nbr__h">What was asked</h2>
+                    <p>@e.Question</p>
+                }
+                <h2 class="nbr__h">Isa's answer it relies on</h2>
+                <p>@e.Answer</p>
+                @if (e.Sources.Count > 0)
+                {
+                    <p class="nbr__muted">
+                        Source@(e.Sources.Count == 1 ? "" : "s"):
+                        @string.Join("; ", e.Sources.Select(s => $"{s.Document}, \"{s.Section}\"{(s.Page is "" or "n/a" ? "" : $", p. {s.Page}")}"))
+                    </p>
+                }
+                @if (Board)
+                {
+                    <p class="nbr__muted">The question asked is in My copy only.</p>
+                }
+            }
+
+            <h2 class="nbr__h">Follow-ups</h2>
+            @if (followUps.Count == 0)
+            {
+                <p class="nbr__muted">None@(Board ? " shared" : "").</p>
+            }
+            else
+            {
+                <ol class="nbr__follow">
+                    @foreach (var f in followUps)
+                    {
+                        <li>@NotebookService.RecordedLabel(f, _access.TimeZone) · @f.AuthorName, @f.AuthorRole: @f.Note</li>
+                    }
+                </ol>
+            }
+            @Foot()
+        </div>
+    };
+}

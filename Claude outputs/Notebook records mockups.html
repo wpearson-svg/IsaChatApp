@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notebook Records Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup only: not used by the app. The succession notebook as an index
+     with entry pages, plus printing and emailing a decision record.
+     Sample people, the chapter and all entries are invented. */
+  :root {
+    --ink: #1d2d5c;          /* ISACA Dark Blue */
+    --text: #323e48;         /* Grey 9 */
+    --muted: #5f6b7a;
+    --page: #eef2f5;
+    --panel: #ffffff;
+    --soft: #f6f7f8;         /* ISACA Grey 1 */
+    --line: #dde3e9;
+    --light-blue: #e7f0f5;   /* ISACA Light Blue */
+    --blue: #07649d;
+    --green: #3f7d20;        /* ISACA Green, darkened */
+    --green-bg: #edf6e8;
+    --amber: #8a5a00;
+    --amber-bg: #fdf3dd;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 56px; background: var(--page); color: var(--text); font-family: Roboto, Arial, sans-serif; }
+  h1 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.6rem; margin: 0 0 6px; }
+  h2 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.2rem; margin: 40px 0 4px; }
+  .intro { max-width: 860px; line-height: 1.5; margin: 0 0 8px; }
+  .intro ul { margin: 6px 0 0; padding-left: 20px; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+  figure { margin: 0; max-width: 100%; }
+  figcaption { font-weight: 700; color: var(--ink); margin: 0 0 4px; }
+  figcaption + p { margin: 0 0 10px; font-size: 0.85rem; line-height: 1.45; max-width: 400px; }
+
+  /* ---------- The notebook panel ---------- */
+  .nb { width: 380px; max-width: 100%; height: 640px; display: flex; flex-direction: column; background: var(--panel); border: 1px solid #cbd2d9; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 18px rgba(29,45,92,.08); }
+  .nb__head { flex: 0 0 72px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .nb__title { font-family: 'Roboto Slab', Georgia, serif; font-size: 1.1rem; line-height: 1.2; }
+  .nb__sub { font-size: 0.75rem; color: #e7f0f5; }
+  .nb__icons { display: flex; gap: 4px; color: #e7f0f5; font-size: 1.1rem; }
+  .nb__icons span { width: 32px; height: 32px; display: grid; place-items: center; }
+  .nb__body { flex: 1 1 auto; overflow: auto; padding: 14px 16px 16px; background: var(--soft); }
+
+  .bar { display: flex; gap: 8px; margin-bottom: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 8px; font: 500 0.85rem Roboto, Arial, sans-serif; border: 1px solid var(--ink); background: #fff; color: var(--ink); cursor: default; white-space: nowrap; }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.small { min-height: 34px; padding: 0 10px; font-size: 0.8rem; }
+  .btn.link { border: none; background: none; padding: 0 4px; color: var(--blue); }
+  .search { flex: 1; min-height: 40px; border: 1px solid #cbd2d9; border-radius: 8px; padding: 0 12px; display: flex; align-items: center; gap: 8px; color: var(--muted); background: #fff; font-size: 0.85rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chip { min-height: 32px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: 999px; border: 1px solid #cbd2d9; background: #fff; color: var(--ink); font-size: 0.78rem; }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .chip b { font-weight: 500; opacity: .75; }
+
+  .month { font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 12px 0 6px; }
+  .entry { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; min-height: 56px; padding: 8px 10px; background: #fff; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 6px; }
+  .entry.hl { outline: 2px solid var(--blue); outline-offset: -1px; }
+  .date { text-align: center; color: var(--ink); line-height: 1.05; }
+  .date b { display: block; font-size: 1.05rem; }
+  .date span { font-size: 0.68rem; color: var(--muted); }
+  .entry__main { min-width: 0; }
+  .entry__title { font-size: 0.85rem; color: var(--ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry__meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 0.68rem; padding: 2px 7px; border-radius: 999px; background: var(--light-blue); color: var(--blue); font-weight: 500; }
+  .tag.decision { background: var(--ink); color: #fff; }
+  .tag.shared { background: var(--green-bg); color: var(--green); }
+  .tag.private { background: #eef0f2; color: var(--muted); }
+  .tag.unfinished { background: var(--amber-bg); color: var(--amber); }
+  .chev { color: #9aa5b1; font-size: 1.1rem; }
+  .count { font-size: 0.72rem; color: var(--muted); }
+
+  /* ---------- Entry page ---------- */
+  .back { font-size: 0.82rem; color: var(--blue); margin-bottom: 10px; display: inline-flex; min-height: 32px; align-items: center; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .card h3 { margin: 0 0 6px; font-size: 0.72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .decText { font-size: 1rem; color: var(--ink); font-weight: 500; line-height: 1.4; margin: 4px 0 8px; }
+  .facts { display: grid; grid-template-columns: 96px 1fr; gap: 4px 10px; font-size: 0.8rem; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; color: var(--text); }
+  .qa q { display: block; font-weight: 500; color: var(--ink); font-size: 0.85rem; quotes: none; margin-bottom: 4px; }
+  .qa p { margin: 0 0 6px; font-size: 0.83rem; line-height: 1.45; }
+  .src { font-size: 0.74rem; color: var(--blue); }
+  .thread { border-left: 2px solid var(--line); margin-left: 6px; padding-left: 12px; }
+  .follow { font-size: 0.8rem; line-height: 1.4; margin-bottom: 8px; }
+  .follow small { display: block; color: var(--muted); font-size: 0.72rem; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .lock { font-size: 0.74rem; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+
+  /* ---------- Dialogs ---------- */
+  .dim { position: relative; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 14px 14px 0 0; box-shadow: 0 -8px 24px rgba(29,45,92,.18); padding: 16px; }
+  .sheet h4 { margin: 0 0 4px; font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.05rem; }
+  .sheet p { margin: 0 0 12px; font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+  .choice { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #cbd2d9; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 0.82rem; line-height: 1.4; }
+  .choice.on { border: 2px solid var(--ink); background: var(--light-blue); }
+  .choice b { color: var(--ink); display: block; }
+  .radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--ink); flex: 0 0 auto; margin-top: 2px; }
+  .choice.on .radio { background: radial-gradient(circle, var(--ink) 45%, transparent 50%); }
+  .shade { position: absolute; inset: 0; background: rgba(29,45,92,.35); }
+  .field { margin-bottom: 10px; font-size: 0.8rem; }
+  .field label { display: block; color: var(--ink); font-weight: 500; margin-bottom: 4px; }
+  .input { border: 1px solid #cbd2d9; border-radius: 8px; padding: 9px 10px; font-size: 0.82rem; color: var(--text); background: #fff; }
+  .hint { font-size: 0.74rem; color: var(--muted); background: var(--soft); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.4; }
+
+  /* ---------- Printed page ---------- */
+  .paper { width: 560px; max-width: 100%; background: #fff; border: 1px solid #cbd2d9; box-shadow: 0 6px 18px rgba(29,45,92,.10); padding: 34px 38px; font-size: 0.82rem; line-height: 1.5; color: #222; }
+  .paper .top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 14px; }
+  .paper .kicker { font-size: 0.68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .paper h5 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; font-size: 1.3rem; color: var(--ink); margin: 2px 0 0; }
+  .copy { font-size: 0.7rem; font-weight: 700; border: 1.5px solid var(--green); color: var(--green); border-radius: 4px; padding: 3px 8px; text-transform: uppercase; letter-spacing: .05em; }
+  .paper table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  .paper th { text-align: left; width: 130px; color: var(--muted); font-weight: 500; vertical-align: top; padding: 4px 8px 4px 0; }
+  .paper td { padding: 4px 0; vertical-align: top; }
+  .paper h6 { font-size: 0.72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); margin: 14px 0 6px; border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+  .paper .dec { font-size: 0.95rem; font-weight: 500; color: var(--ink); margin: 0 0 6px; }
+  .paper .muted { color: var(--muted); }
+  .paper .foot { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 8px; font-size: 0.7rem; color: var(--muted); }
+  .paper ol { margin: 0; padding-left: 18px; }
+  .paper li { margin-bottom: 4px; }
+  .sum th, .sum td { border-bottom: 1px solid var(--line); padding: 6px 6px 6px 0 !important; font-size: 0.76rem; }
+  .sum th { width: auto !important; color: var(--ink) !important; }
+
+  .note { max-width: 860px; font-size: 0.85rem; line-height: 1.5; background: #fff; border-radius: 10px; padding: 14px 16px; margin-top: 10px; }
+  .note b { color: var(--ink); }
+  @media (max-width: 420px) { .paper { padding: 22px 18px; } }
+</style>
+</head>
+<body>
+
+<h1>Succession notebook: index, entry pages and decision records</h1>
+<p class="intro">Mockup for Matthew, 22 October 2026. Not built yet. The notebook stops listing every entry in full: it becomes a short index, and each entry opens on its own page inside the panel. From an entry, the president can print the decision, save it as a PDF, or email it. Records are filled in from the notebook's own data by a fixed template, never written by the AI model. Sample: Sakura Bay Chapter, with Sato Yumiko (outgoing president) and Watanabe Kenji (new president, day 3). Everything is invented.</p>
+
+<h2>1. The notebook as an index</h2>
+<div class="row">
+  <figure>
+    <figcaption>Index: one short line per entry</figcaption>
+    <p>Search and filters at the top; entries grouped by month, newest first. Each line shows only the date, a title, the kind, the topic and whether it's shared. Tap a line to open it.</p>
+    <div class="nb">
+      <div class="nb__head">
+        <div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div>
+        <div class="nb__icons"><span>⤢</span><span>×</span></div>
+      </div>
+      <div class="nb__body">
+        <div class="bar">
+          <span class="btn primary">+ Add a note</span>
+          <span class="btn">Print the term</span>
+        </div>
+        <div class="bar"><div class="search">⌕ Search the notebook</div></div>
+        <div class="chips">
+          <span class="chip on">All <b>6</b></span>
+          <span class="chip">Decisions <b>3</b></span>
+          <span class="chip">Unfinished <b>1</b></span>
+          <span class="chip">Contacts <b>1</b></span>
+          <span class="chip">What worked <b>1</b></span>
+          <span class="chip">Shared <b>3</b></span>
+        </div>
+
+        <div class="month">July 2026</div>
+        <div class="entry">
+          <div class="date"><b>1</b><span>Jul</span></div>
+          <div class="entry__main"><div class="entry__title">Community centre: book 6 weeks ahead</div>
+            <div class="entry__meta"><span class="tag">Contact</span><span>Events</span><span class="tag private">Private</span></div></div>
+          <span class="chev">›</span>
+        </div>
+
+        <div class="month">June 2026</div>
+        <div class="entry hl">
+          <div class="date"><b>28</b><span>Jun</span></div>
+          <div class="entry__main"><div class="entry__title">Four educational events: two in person, two online</div>
+            <div class="entry__meta"><span class="tag decision">Decision</span><span>Events</span><span class="tag shared">Shared</span><span class="count">· 2 follow-ups</span></div></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="entry">
+          <div class="date"><b>20</b><span>Jun</span></div>
+          <div class="entry__main"><div class="entry__title">Add the new treasurer as a bank signer</div>
+            <div class="entry__meta"><span class="tag unfinished">Unfinished</span><span>Finances</span><span class="tag private">Private</span></div></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="entry">
+          <div class="date"><b>12</b><span>Jun</span></div>
+          <div class="entry__main"><div class="entry__title">Board meets six times a year</div>
+            <div class="entry__meta"><span class="tag decision">Decision</span><span>Meetings</span><span class="tag shared">Shared</span></div></div>
+          <span class="chev">›</span>
+        </div>
+
+        <div class="month">May 2026</div>
+        <div class="entry">
+          <div class="date"><b>30</b><span>May</span></div>
+          <div class="entry__main"><div class="entry__title">Welcome calls kept new members active</div>
+            <div class="entry__meta"><span class="tag">What worked</span><span>Membership</span><span class="tag shared">Shared</span></div></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="entry">
+          <div class="date"><b>15</b><span>May</span></div>
+          <div class="entry__main"><div class="entry__title">Start the compliance report in October</div>
+            <div class="entry__meta"><span class="tag decision">Decision</span><span>Compliance</span><span class="tag private">Private</span></div></div>
+          <span class="chev">›</span>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Filtered: Decisions, searching "events"</figcaption>
+    <p>The same index after tapping "Decisions" and typing in the search box. Search looks in titles, decisions, notes, questions and follow-ups.</p>
+    <div class="nb">
+      <div class="nb__head">
+        <div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div>
+        <div class="nb__icons"><span>⤢</span><span>×</span></div>
+      </div>
+      <div class="nb__body">
+        <div class="bar">
+          <span class="btn primary">+ Add a note</span>
+          <span class="btn">Print the term</span>
+        </div>
+        <div class="bar"><div class="search" style="color:var(--text)">⌕ events <span style="margin-left:auto;color:var(--muted)">×</span></div></div>
+        <div class="chips">
+          <span class="chip">All <b>6</b></span>
+          <span class="chip on">Decisions <b>3</b></span>
+          <span class="chip">Unfinished <b>1</b></span>
+          <span class="chip">Contacts <b>1</b></span>
+          <span class="chip">What worked <b>1</b></span>
+          <span class="chip">Shared <b>3</b></span>
+        </div>
+        <div class="month">1 result</div>
+        <div class="entry">
+          <div class="date"><b>28</b><span>Jun</span></div>
+          <div class="entry__main"><div class="entry__title">Four educational events: two in person, two online</div>
+            <div class="entry__meta"><span class="tag decision">Decision</span><span>Events</span><span class="tag shared">Shared</span><span class="count">· 2 follow-ups</span></div></div>
+          <span class="chev">›</span>
+        </div>
+      </div>
+    </div>
+  </figure>
+</div>
+
+<h2>2. An entry on its own page</h2>
+<div class="row">
+  <figure>
+    <figcaption>Entry page: the whole record, with its follow-ups</figcaption>
+    <p>The decision, when and by whom it was recorded, whether and when it was shared, the question and Isa's cited answer, and the follow-ups linked to it. Print and Email sit at the bottom with the other actions.</p>
+    <div class="nb">
+      <div class="nb__head">
+        <div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div>
+        <div class="nb__icons"><span>⤢</span><span>×</span></div>
+      </div>
+      <div class="nb__body">
+        <span class="back">‹ All entries</span>
+        <div class="card">
+          <h3>Decision · Events</h3>
+          <div class="decText">Four educational events this year: two in person, two online.</div>
+          <dl class="facts">
+            <dt>Recorded</dt><dd>28 June 2026, 14:32 (Asia/Tokyo)</dd>
+            <dt>By</dt><dd>Sato Yumiko, President</dd>
+            <dt>Shared</dt><dd><span class="tag shared">With the board</span> on 29 June 2026</dd>
+          </dl>
+        </div>
+        <div class="card qa">
+          <h3>What was asked</h3>
+          <q>How many educational events must a chapter hold?</q>
+          <p>Here's what ISACA's guidance says: Chapters must conduct at least four educational events and post them on Engage and/or your chapter website.</p>
+          <div class="src">Common Tasks and Navigation Guide · Access Compliance Information</div>
+        </div>
+        <div class="card">
+          <h3>Follow-ups (2)</h3>
+          <div class="thread">
+            <div class="follow">Venues for the two in-person events are booked: September and November.<small>1 July 2026, 09:10 · Sato Yumiko, Outgoing president · note</small></div>
+            <div class="follow">Asked Isa where to post the events: on Engage, as each one is confirmed.<small>3 July 2026, 11:05 · Watanabe Kenji, President · saved answer</small></div>
+          </div>
+          <span class="btn small link">+ Add a follow-up</span>
+        </div>
+        <div class="actions">
+          <span class="btn">Print or save PDF</span>
+          <span class="btn">Email this record</span>
+          <span class="btn">Ask about this</span>
+          <span class="btn">Remove</span>
+        </div>
+        <p class="lock">🔒 Shared with the board: other board members see this entry, without the question you asked.</p>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Print: choose My copy or Board copy</figcaption>
+    <p>A saved answer includes the leader's own question, which is private. So printing asks which version. Board copy is chosen first when the entry is shared.</p>
+    <div class="nb dim">
+      <div class="nb__head">
+        <div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div>
+        <div class="nb__icons"><span>⤢</span><span>×</span></div>
+      </div>
+      <div class="nb__body">
+        <span class="back">‹ All entries</span>
+        <div class="card"><h3>Decision · Events</h3><div class="decText">Four educational events this year: two in person, two online.</div></div>
+      </div>
+      <div class="shade"></div>
+      <div class="sheet">
+        <h4>Print this decision</h4>
+        <p>Opens a clean page you can print, or save as a PDF from the print window.</p>
+        <div class="choice on"><span class="radio"></span><div><b>Board copy</b>The decision, dates, Isa's cited answer and follow-ups that are shared. Your own question is left out.</div></div>
+        <div class="choice"><span class="radio"></span><div><b>My copy</b>Everything, including the question you asked Isa and private follow-ups. For your own records.</div></div>
+        <div class="bar" style="margin:4px 0 0"><span class="btn primary" style="flex:1">Open print page</span><span class="btn">Cancel</span></div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Email this record</figcaption>
+    <p>The leader chooses to send it, like the introduction email on the contact step. In the prototype nothing is sent; a real version would use ISACA's mail system.</p>
+    <div class="nb dim">
+      <div class="nb__head">
+        <div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div>
+        <div class="nb__icons"><span>⤢</span><span>×</span></div>
+      </div>
+      <div class="nb__body"><span class="back">‹ All entries</span></div>
+      <div class="shade"></div>
+      <div class="sheet">
+        <h4>Email this record</h4>
+        <div class="field"><label>To</label><div class="input">k.watanabe@example.org</div></div>
+        <div class="field"><label>Version</label>
+          <div class="choice on" style="margin-bottom:6px"><span class="radio"></span><div><b>Board copy</b>Without your question to Isa</div></div>
+          <div class="choice"><span class="radio"></span><div><b>My copy</b>Everything</div></div>
+        </div>
+        <div class="field"><label>Add a message (optional)</label><div class="input" style="color:var(--muted)">For our board files.</div></div>
+        <div class="hint">Prototype: the record is saved in Isa. Nothing is sent by email.</div>
+        <div class="bar" style="margin:0"><span class="btn primary" style="flex:1">Send</span><span class="btn">Cancel</span></div>
+      </div>
+    </div>
+  </figure>
+</div>
+
+<h2>3. The printed decision record</h2>
+<div class="row">
+  <figure>
+    <figcaption>Board copy, as printed or saved as a PDF</figcaption>
+    <p>Filled in from the notebook by a fixed template: every date, name and word comes from the record. Isa's answer is quoted with its source, so it can be traced to ISACA's documents.</p>
+    <div class="paper">
+      <div class="top">
+        <div><div class="kicker">Sakura Bay Chapter · Succession notebook</div><h5>Decision record</h5></div>
+        <span class="copy">Board copy</span>
+      </div>
+      <table>
+        <tr><th>Topic</th><td>Events</td></tr>
+        <tr><th>Recorded</th><td>28 June 2026, 14:32 (Asia/Tokyo)</td></tr>
+        <tr><th>Recorded by</th><td>Sato Yumiko, President</td></tr>
+        <tr><th>Shared with board</th><td>Yes, on 29 June 2026</td></tr>
+        <tr><th>Record number</th><td>NB-C001-0007</td></tr>
+      </table>
+      <h6>Decision</h6>
+      <p class="dec">Four educational events this year: two in person, two online.</p>
+      <h6>ISACA guidance it relies on</h6>
+      <p>Chapters must conduct at least four educational events and post them on Engage and/or your chapter website.</p>
+      <p class="muted">Source: Common Tasks and Navigation Guide, "Access Compliance Information". The question asked is in My copy only.</p>
+      <h6>Follow-ups</h6>
+      <ol>
+        <li>1 July 2026, 09:10 · Sato Yumiko, Outgoing president: Venues for the two in-person events are booked: September and November.</li>
+        <li>3 July 2026, 11:05 · Watanabe Kenji, President: Asked Isa where to post the events: on Engage, as each one is confirmed.</li>
+      </ol>
+      <div class="foot">Printed from Isa on 3 July 2026. This record shows what the chapter's leaders recorded; it is not an official ISACA document. ISACA's guidance is quoted from its approved documents; check the cited source for the full text.</div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Print the term: the handover pack</figcaption>
+    <p>From the index, one document for a whole term: a summary table of every decision, then one record per page. A ready-made pack for the next president.</p>
+    <div class="paper">
+      <div class="top">
+        <div><div class="kicker">Sakura Bay Chapter · Succession notebook</div><h5>Decisions, 1 July 2025 to 30 June 2026</h5></div>
+        <span class="copy">Board copy</span>
+      </div>
+      <p class="muted" style="margin-top:0">President: Sato Yumiko. 3 decisions recorded, 2 shared with the board. Private entries are left out of this copy.</p>
+      <table class="sum">
+        <tr><th>Date</th><th>Topic</th><th>Decision</th><th>Shared</th></tr>
+        <tr><td>28 Jun 2026</td><td>Events</td><td>Four educational events: two in person, two online</td><td>29 Jun</td></tr>
+        <tr><td>12 Jun 2026</td><td>Meetings</td><td>Board meets six times a year</td><td>12 Jun</td></tr>
+        <tr><td colspan="4" class="muted">1 private decision not included (Board copy)</td></tr>
+      </table>
+      <h6>Also in the pack</h6>
+      <ol>
+        <li>One page per decision, as in the record on the left</li>
+        <li>Open items marked "Unfinished" that were shared</li>
+        <li>Shared contacts and "What worked" notes</li>
+      </ol>
+      <div class="foot">Printed from Isa on 3 July 2026. Not an official ISACA document.</div>
+    </div>
+  </figure>
+</div>
+
+<div class="note">
+  <b>What's new behind this (for the build):</b> a topic on each entry (a short fixed list: Elections, Finances, Meetings, Compliance, Membership, Events, Other), the date an entry was shared, follow-ups linked to an entry, and a record number. The notebook already stores the rest (who, role, question, answer, sources, decision line, shared yes/no, the date and the exact time). Printing uses the browser's own print window, so "Save as PDF" works with no extra software. Times show in the leader's time zone from the directory.
+</div>
+
+</body>
+</html>

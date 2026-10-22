@@ -89,7 +89,9 @@ public static class WorkStepText
                 developer ? time : null);
 
         var checks = Lines(steps, developer: false).Count;
-        return new(StepState.Passed, Wording.ClosedAnswered, developer ? time : $"{checks} checks");
+        var bestPractice = steps.Any(s => s.Stage == "database_search" && s.DataText.StartsWith("best_practice"));
+        return new(StepState.Passed, bestPractice ? Wording.ClosedAnsweredBestPractice : Wording.ClosedAnswered,
+            developer ? time : $"{checks} checks");
     }
 
     /// <summary>What Isa is doing right now, for the live status line, e.g. "Searching ISACA's approved content".</summary>
@@ -162,6 +164,7 @@ public static class WorkStepText
                 var count = Number(step.DataText, "count");
                 return L(Wording.StepSearch,
                     step.DataText.StartsWith("direct_hit") ? Wording.FoundAnswer
+                    : step.DataText.StartsWith("best_practice") ? Wording.FoundBestPractice
                     : step.DataText.StartsWith("meaning_map") ? Wording.FoundTopic(count ?? 0)
                     : step.DataText.StartsWith("no content db") ? Wording.ContentNotLoaded
                     : Wording.FoundNothing);

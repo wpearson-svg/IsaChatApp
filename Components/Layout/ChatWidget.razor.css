@@ -39,12 +39,22 @@
 
 /* The rail's width (Components/Shared/IsaRail.razor). The chat, Today and
    the notebook leave this much room on the left (ChatWidget.razor, Pct).
-   Without has-rail (the rail is hidden) it is 0, so they fill the screen. */
-.isa-widget.has-rail {
+   Kept whenever the chat is open, even while the rail is hidden
+   (keeps-rail-room), so hiding or showing the rail never changes any
+   window's size: the rail just slides out of the chat's left edge.
+   Resizing the windows during the glide made the header shiver (Matthew
+   chose this, 22 October 2026). The cost: with all three windows open and
+   the rail hidden, a 76px strip at the far left stays empty. */
+.isa-widget.keeps-rail-room {
     --isa-rail-w: 76px;
 }
 
+/* Phones: each window fills the screen one at a time, so the room is
+   left only while the rail actually shows (has-rail), as before. */
 @media (max-width: 720px) {
+    .isa-widget.keeps-rail-room {
+        --isa-rail-w: 0px;
+    }
     .isa-widget.has-rail {
         --isa-rail-w: 62px;
     }
@@ -354,14 +364,79 @@
     height: 18px;
 }
 
-/* The menu button, only while the rail is hidden. 44px to tap. */
+/* The menu button, only while the rail is hidden. 44px to tap.
+   It sits at the left of the header on its own (position: absolute), so
+   showing or hiding it never changes the layout around it: the icon only
+   fades. Fades in a little after the rail starts to leave; fades out
+   quickly when the rail comes back (Matthew, 22 October 2026). */
 .isa-widget__menuBtn {
-    position: relative;
-    flex: 0 0 auto;
+    position: absolute;
+    left: -0.5rem;
+    top: 50%;
     width: 44px;
     height: 44px;
-    margin-left: -0.5rem;
+    margin-top: -22px;
     border-radius: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.isa-widget__menuBtn.is-shown {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.45s ease 0.25s, visibility 0s;
+}
+
+/* Isa's ring and name, together, so they can slide as one. */
+.isa-widget__identityMove {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+/* With the menu button showing, the ring and name start after it (the
+   button's 44px, less the 0.5rem it overhangs, plus the usual gap). */
+.isa-widget__menuBtn.is-shown + .isa-widget__identityMove {
+    margin-left: calc(44px - 0.5rem + 0.7rem);
+}
+
+/* The slide itself. The layout jumps to its new place at once, and the
+   ring and name start drawn where they were and glide to it with a
+   transform, which the browser moves smoothly to the last fraction of a
+   pixel. (Animating the width, as first built, moved them a whole pixel
+   at a time near the end, which looked like a stutter.) Same 0.7s glide
+   as the rail and the chat. */
+.isa-widget__identityMove.is-slidingRight {
+    animation: isa-identity-from-left 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.isa-widget__identityMove.is-slidingLeft {
+    animation: isa-identity-from-right 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes isa-identity-from-left {
+    from { transform: translateX(calc(-44px + 0.5rem - 0.7rem)); }
+    to   { transform: translateX(0); }
+}
+
+@keyframes isa-identity-from-right {
+    from { transform: translateX(calc(44px - 0.5rem + 0.7rem)); }
+    to   { transform: translateX(0); }
+}
+
+/* While the rail glides away or back: the chat uses the rail's slower
+   glide, so the chat, the rail and the menu button move together. */
+.isa-widget__panel.is-expanded.is-railGlide {
+    transition-duration: 0.7s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-widget__menuBtn,
+    .isa-widget__menuBtn.is-shown { transition: none; }
+    .isa-widget__identityMove.is-slidingRight,
+    .isa-widget__identityMove.is-slidingLeft { animation: none; }
 }
 
 .isa-widget__menuBtn:hover { background: rgba(255, 255, 255, 0.12); }

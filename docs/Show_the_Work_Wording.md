@@ -94,7 +94,7 @@ These are the only replies that show a reference: the ticket number in the messa
 
 Until the hand-off topic file exists, the line shows on the one group A topic Isa has today: harassment (test path 5). When the topic file lands, the line follows the file.
 
-Under the message: **Reference # 3f2b8c1e-...** (the full trace ID, which the event log is searched by).
+Under the message: **Reference # 3f2b8c1e-...** (the full trace ID, which the event log is searched by). Changed by Matthew on October 22, 2026: this line shows in developer mode only. Leaders see just the TKT reference number in the message, so there is only one number to quote.
 
 ## 6. What would change from today's code
 
