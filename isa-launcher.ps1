@@ -124,9 +124,10 @@ function Add-Btn($panel, $text, $tip, [scriptblock]$onClick) {
 
 # ---- LEFT: app, keycloak, tests, open -----------------------------------
 
-$pApp = New-Group $left 'App' 2
+$pApp = New-Group $left 'App' 3
 Add-Btn $pApp 'Start Isa' 'start-isa.bat: checks prerequisites, starts the app in the background.' { Run-Bat 'start-isa.bat' }
 Add-Btn $pApp 'Start Isa (debug window)' 'start-isa-debug.bat: runs the app in a visible window, errors show there.' { Run-Bat 'start-isa-debug.bat' }
+Add-Btn $pApp 'Start Isa (force AI-check failure)' 'Stop Isa first. Starts Isa with OutputCompliance__ForceFail=source, so a model answer fails the source check. Use it for the Forced failure test, then Stop Isa and Start Isa normally.' { Run-Cmd 'set "OutputCompliance__ForceFail=source" && start-isa.bat' }
 Add-Btn $pApp 'Stop Isa' 'stop-isa.bat: stops the background app and frees port 5067.' { Run-Bat 'stop-isa.bat' }
 Add-Btn $pApp 'Stop Isa (debug)' 'stop-isa-debug.bat' { Run-Bat 'stop-isa-debug.bat' }
 Add-Btn $pApp 'Watch problems' 'watch-isa.bat: shows warnings and errors from the running app.' { Run-Bat 'watch-isa.bat' }
@@ -139,10 +140,35 @@ Add-Btn $pKc 'Reset Keycloak' 'reset-keycloak.bat: wipes Keycloak data and re-im
 Add-Btn $pKc 'Reset + rebuild realm' 'reset-keycloak-rebuild.bat: rebuilds the realm file with Python first, then resets.' { Run-Bat 'reset-keycloak-rebuild.bat' }
 Add-Btn $pKc 'Keycloak logs' 'docker compose logs keycloak (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f keycloak' }
 
-$pTest = New-Group $left 'Tests (the app must be running)' 1
+$pTest = New-Group $left 'Tests (the app must be running)' 3
 Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks and the test paths (five questions, Spanish, English), signed in as d.whitfield.' { Run-Script 'test-paths.ps1' '' }
 Add-Btn $pTest 'Run test paths (no token)' 'test-paths.ps1 -NoToken: sends no token, only works while DevBypass is on.' { Run-Script 'test-paths.ps1' '-NoToken' }
+Add-Btn $pTest 'Run test paths (model off)' 'test-paths.ps1 -ModelOff: sends the model call to a dead address (no need to quit Ollama). Checks a failed model call gives an error and a ticket, not a hang.' { Run-Script 'test-paths.ps1' '-ModelOff' }
+Add-Btn $pTest 'Run test paths (forced failure)' 'test-paths.ps1 -ForcedFailure: start Isa with the button Start Isa (force AI-check failure) first. Checks a source that was not retrieved is escalated.' { Run-Script 'test-paths.ps1' '-ForcedFailure' }
+Add-Btn $pTest 'Run failure tests' 'test-failures.ps1: system errors and fail states (bad requests, odd questions, bad tokens, load, a stage crashing), NOT step pass/fail. Signed in as d.whitfield.' { Run-Script 'test-failures.ps1' '' }
+Add-Btn $pTest 'Test the model (timing)' 'test-model.ps1: checks Ollama and phi4-mini, times the miss-path question (1 cold + 5 warm), checks memory with Isa and Keycloak up, suggests a time limit. Start Isa and Keycloak first.' { Run-Script 'test-model.ps1' '' }
 Add-Btn $pTest 'Test Salesforce' 'test-salesforce.ps1: creates one test Case using dev-keys.json.' { Run-Script 'test-salesforce.ps1' '' }
+
+$pContent = New-Group $left 'Content database (stop Isa first)' 1
+Add-Btn $pContent 'Import files...' 'Pick .docx, .pptx or .pdf files to add to the content database (import_content.py).' {
+    if (Test-Port 5067) { Show-Problem 'Isa is running. Click Stop Isa first, then import (the import replaces data\content.db).'; return }
+    $dlg = New-Object System.Windows.Forms.OpenFileDialog
+    $dlg.Multiselect = $true
+    $dlg.Filter = 'Documents (*.docx;*.pptx;*.pdf)|*.docx;*.pptx;*.pdf'
+    $dlg.InitialDirectory = Join-Path $script:root 'content'
+    if ($dlg.ShowDialog() -eq 'OK') {
+        $q = [char]39
+        $list = ($dlg.FileNames | ForEach-Object { $q + ($_ -replace $q, ($q + $q)) + $q }) -join ' '
+        Run-Ps ("python content\import_content.py " + $list)
+    }
+}
+Add-Btn $pContent 'Import folder...' 'Pick a folder; every .docx, .pptx and .pdf inside it (subfolders too) is added.' {
+    if (Test-Port 5067) { Show-Problem 'Isa is running. Click Stop Isa first, then import (the import replaces data\content.db).'; return }
+    $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dlg.SelectedPath = Join-Path $script:root 'content'
+    if ($dlg.ShowDialog() -eq 'OK') { $q = [char]39; Run-Ps ("python content\import_content.py " + $q + ($dlg.SelectedPath -replace $q, ($q + $q)) + $q) }
+}
+Add-Btn $pContent 'Rebuild content database' 'Rebuilds data\content.db from content\content.json (no new files).' { if (Test-Port 5067) { Show-Problem 'Isa is running. Click Stop Isa first.' } else { Run-Ps 'python content\build_content_db.py' } }
 
 $pOpen = New-Group $left 'Open' 2
 Add-Btn $pOpen 'Open Isa in browser' 'http://localhost:5067' { Start-Process $script:appUrl }

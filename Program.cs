@@ -68,9 +68,13 @@ builder.Services.AddSingleton<HandoffService>();
 
 // --- Working Foundation: event log, access control, pipeline stages ---
 builder.Services.AddHttpClient("keycloak");
+// The local model for complex_ai (phi4-mini through Ollama). No client-level timeout: OllamaChatService enforces Ollama:TimeoutSeconds itself.
+builder.Services.AddHttpClient("ollama", client => client.Timeout = Timeout.InfiniteTimeSpan);
+builder.Services.AddSingleton<IsaChatApp.Services.Orchestrator.OllamaChatService>();
 builder.Services.AddSingleton<EventLogService>();
 builder.Services.AddSingleton<UsageSummaryService>();
 builder.Services.AddSingleton<UsageReportService>();
+builder.Services.AddSingleton<ContentImportService>();
 // Reads/writes dev-keys.json (Dev Dashboard > Models, RAG, access & ticketing).
 builder.Services.AddSingleton<DevKeysStore>();
 builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapter>();
@@ -125,7 +129,7 @@ app.MapPost("/account/sign-out", async (HttpContext http, KeycloakSignInService 
 
 // POST /api/ask -- the one entry point to the pipeline.
 // 401 when the token is missing/invalid; otherwise 200 with status answered / stopped / escalated.
-app.MapPost("/api/ask", async (AskRequest req, HttpRequest http, OrchestratorService orchestrator) =>
+app.MapPost("/api/ask", async (AskRequest req, HttpRequest http, OrchestratorService orchestrator, IConfiguration config) =>
 {
     if (req is null || string.IsNullOrWhiteSpace(req.Question))
         return Results.BadRequest(new { error = "question is required" });
@@ -137,6 +141,14 @@ app.MapPost("/api/ask", async (AskRequest req, HttpRequest http, OrchestratorSer
         // Language is not taken from the caller: the front end works it out (LanguageCheck).
         IncomingToken = http.Headers.Authorization.FirstOrDefault(),
     };
+
+    // Test only: "X-Isa-Test-Fail: <stage>" makes that stage crash, so test-failures.ps1 can check
+    // what a leader sees. Ignored unless Testing:AllowForcedFailures is true (Development only).
+    if (config.GetValue<bool>("Testing:AllowForcedFailures"))
+    {
+        ctx.TestFailStage = http.Headers["X-Isa-Test-Fail"].FirstOrDefault();
+        ctx.TestModelOff = string.Equals(http.Headers["X-Isa-Test-Model"].FirstOrDefault(), "off", StringComparison.OrdinalIgnoreCase);
+    }
 
     var result = await orchestrator.RunAsync(ctx);
     if (ctx.AuthFailed) return Results.Unauthorized();

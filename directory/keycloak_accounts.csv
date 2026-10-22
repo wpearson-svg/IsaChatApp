@@ -4,7 +4,7 @@ staff.dev,,Dev,Staff,chat_user;dashboard_dev
 staff.content,,Content,Staff,chat_user;dashboard_content_health
 staff.audit,,Audit,Staff,chat_user;auditor
 norole.test,,NoRole,Test,
-k.watanabe,P-0001,,,chat_user
+k.watanabe,P-0001,,,chat_user;dashboard_dev
 sutrisno,P-0002,,,chat_user
 m.fernandez,P-0003,,,chat_user
 g.jonsdottir,P-0004,,,chat_user

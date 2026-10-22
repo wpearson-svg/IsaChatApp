@@ -39,7 +39,11 @@ public class UsageSummaryService
         _log = log;
         _dbPath = config["Usage:Path"] ?? Path.Combine("data", "usage.db");
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
-        _salt = config["Usage:HashSalt"] ?? "isa-dev-salt-change-me";
+        // A new random salt every time Isa starts. It lives only in memory: it is not read from
+        // or written to config, logs, the database or any file, so nobody can look it up or
+        // test guesses against the hashes. Trade-off: the same person or question hashes
+        // differently after a restart, so repeats are counted only within one run.
+        _salt = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
         var dir = Path.GetDirectoryName(Path.GetFullPath(_dbPath));
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
         try { EnsureSchema(); } catch (Exception ex) { _log.LogWarning(ex, "usage.db schema failed"); }

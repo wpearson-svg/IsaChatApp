@@ -1,0 +1,13 @@
+date,run,kind,model,elapsed_seconds,load_seconds,tokens,success,grounded,source_line,free_memory_gb,isa_up,keycloak_up,postgres_up
+2026-10-22 14:08,0,cold,phi4-mini:3.8b,27.35,16.04,42,True,True,True,0.5,True,True,False
+2026-10-22 14:08,1,warm,phi4-mini:3.8b,7.93,0.04,50,True,True,True,0.5,True,True,False
+2026-10-22 14:08,2,warm,phi4-mini:3.8b,8.54,0.01,50,True,True,True,0.5,True,True,False
+2026-10-22 14:08,3,warm,phi4-mini:3.8b,9.32,0.02,50,True,True,True,0.5,True,True,False
+2026-10-22 14:08,4,warm,phi4-mini:3.8b,10.27,0.02,50,True,True,True,0.5,True,True,False
+2026-10-22 14:08,5,warm,phi4-mini:3.8b,9.62,0.01,50,True,True,True,0.5,True,True,False
+2026-10-22 14:21,0,cold,phi4-mini:3.8b,20.28,10.85,42,True,True,True,0.8,True,True
+2026-10-22 14:21,1,warm,phi4-mini:3.8b,7.26,0.03,50,True,True,True,0.8,True,True
+2026-10-22 14:21,2,warm,phi4-mini:3.8b,7.14,0.01,50,True,True,True,0.8,True,True
+2026-10-22 14:21,3,warm,phi4-mini:3.8b,7.17,0.01,50,True,True,True,0.8,True,True
+2026-10-22 14:21,4,warm,phi4-mini:3.8b,6.69,0.01,50,True,True,True,0.8,True,True
+2026-10-22 14:21,5,warm,phi4-mini:3.8b,7.88,0.01,50,True,True,True,0.8,True,True

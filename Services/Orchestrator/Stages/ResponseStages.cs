@@ -8,35 +8,129 @@ namespace IsaChatApp.Services.Orchestrator.Stages;
 // and stages never write to the event log (the orchestrator does that from what they return).
 
 /// <summary>
-/// Stage 8. Builds an answer when the search did not find a direct text match (test path 2).
-/// STUB: no model is called. The real version sends the question + passages to the chosen model.
+/// Stage 8. The real model (phi4-mini through Ollama). Runs only after a miss, and is always sent the
+/// question WITH the passages rag handed over, never the bare question (contract section 1).
+/// Ported from Eliyas's Pipeline Built package (22 Oct 2026) and changed to fit the contract:
+///   - passages are numbered and the model names the NUMBER it used (a small model is far more reliable
+///     at that than at copying document, section and page word for word);
+///   - a failed, timed-out or empty model call is Escalate with reason "model call failed" and
+///     error=unavailable|timeout|empty (section 9), so the run gets a ticket and never hangs;
+///   - "the passages don't answer it" escalates as "no approved content found";
+///   - the named passage goes to ctx.CitedSource, and output_compliance's AI side does the real
+///     source check (it must be one of the retrieved passages);
+///   - the event data carries model_called, model, model_ms, passages and source; Ollama's token
+///     counts go to ctx.PromptTokens / ctx.CompletionTokens for the dashboard.
 /// </summary>
 public class ComplexAiStage : IStage
 {
+    private readonly OllamaChatService _ollama;
     public string Name => "complex_ai";
 
-    public Task<StageResult> RunAsync(QueryContext ctx)
+    public ComplexAiStage(OllamaChatService ollama) => _ollama = ollama;
+
+    public async Task<StageResult> RunAsync(QueryContext ctx)
     {
-        // Direct hit: the answer is already the matching passage. Pass with the note "skipped".
+        // Direct hit: the answer is already the matching passage, no model. Logged so a demo can show it.
         if (ctx.DirectHit)
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "direct hit", Skipped: true));
+            return new StageResult(StageOutcome.Pass, null, "model_called=no; direct hit", Skipped: true);
 
-        // Nothing was found, so there is nothing to build from. output_compliance will escalate.
+        // Never send the bare question. No passages means no model call and an escalation.
         if (ctx.Passages.Count == 0)
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "stub; passages=0; nothing to build from"));
+            return new StageResult(StageOutcome.Escalate, "no approved content found", "model_called=no; passages=0");
 
-        // Stand-in for the model: use the top passages (no duplicates) as the answer text.
-        var used = ctx.Passages.Select(p => p.Text).Distinct().Take(1).ToList();
-        ctx.AnswerText = string.Join("\n\n", used);
-        ctx.Sources = ctx.Sources.Distinct().ToList();
+        // ctx.TestModelOff is test-only: aim the call at a dead address to test the failure path without quitting Ollama.
+        var result = await _ollama.GenerateAsync(BuildPrompt(ctx.Question, ctx.Passages), ctx.TestModelOff ? "http://127.0.0.1:1" : null);
+        ctx.PromptTokens = result.PromptTokens;
+        ctx.CompletionTokens = result.CompletionTokens;
+        var ran = $"model_called=yes; model={result.Model}; model_ms={result.ElapsedMs}; passages={ctx.Passages.Count}";
 
-        // The real model names the passage it used (contract: cited_source). The stand-in
-        // "names" the first passage, so output_compliance's AI side has a source to check.
-        var first = ctx.Passages[0];
-        ctx.CitedSource = new SourceRef(first.Document, first.Section, first.Page);
+        var error = result.Error ?? (string.IsNullOrWhiteSpace(result.Text) ? "empty" : null);
+        if (error is not null)
+            return new StageResult(StageOutcome.Escalate, "model call failed",
+                $"error={error}; {ran}" + (result.Detail is null ? "" : $"; detail={result.Detail}"));
 
-        return Task.FromResult(new StageResult(StageOutcome.Pass, null,
-            $"stub; model=none; built_from={used.Count}; passages={ctx.Passages.Count}; source={first.Document} {first.Section}"));
+        if (result.Text.Contains("NOT_ANSWERED_BY_PASSAGES", StringComparison.OrdinalIgnoreCase))
+            return new StageResult(StageOutcome.Escalate, "no approved content found", $"{ran}; answer_found=no");
+
+        var (body, sourceLine) = Split(result.Text);
+        if (sourceLine is null)
+            return new StageResult(StageOutcome.Escalate, "model did not name a source", $"{ran}; source=none");
+        if (string.IsNullOrWhiteSpace(body))
+            return new StageResult(StageOutcome.Escalate, "model call failed", $"error=empty; {ran}");
+
+        var matched = Resolve(sourceLine, ctx.Passages);
+        ctx.AnswerText = body;
+        if (matched is null)
+        {
+            // Named something that was not handed over. output_compliance's source check escalates it.
+            ctx.CitedSource = new SourceRef(Clean(sourceLine), "", "");
+            return new StageResult(StageOutcome.Pass, null, $"{ran}; source={Clean(sourceLine)}");
+        }
+
+        ctx.CitedSource = new SourceRef(matched.Document, matched.Section, matched.Page);
+        ctx.Sources = new List<SourceRef> { ctx.CitedSource };
+        var named = $"{matched.Document} {matched.Section}".Replace(';', ',');
+        return new StageResult(StageOutcome.Pass, null, $"{ran}; source={named}");
+    }
+
+    internal static string BuildPrompt(string question, IReadOnlyList<Passage> passages)
+    {
+        var block = string.Join("\n\n", passages.Select((p, i) =>
+            $"[{i + 1}] (document: {p.Document}; section: {p.Section}; page: {p.Page})\n{p.Text}"));
+        return $"""
+            You are Isa, a chapter-support assistant. Answer the QUESTION using only the numbered PASSAGES below.
+            Rules:
+            - Use no outside knowledge. Do not invent policies, names, dates or requirements.
+            - If the passages do not answer the question, reply with exactly: NOT_ANSWERED_BY_PASSAGES
+            - Otherwise answer in one to three plain sentences. Then, on a new last line, write SOURCE: PASSAGE <number> naming the one passage you used.
+
+            PASSAGES:
+            {block}
+
+            QUESTION:
+            {question}
+            """;
+    }
+
+    // Splits the reply into the answer and the (last) SOURCE line. The SOURCE label may sit on its own
+    // line or at the end of the answer, with or without bold marks.
+    private static (string Body, string? Source) Split(string text)
+    {
+        string? source = null;
+        var kept = new List<string>();
+        foreach (var line in text.Replace("\r", "").Split('\n'))
+        {
+            var m = Regex.Match(line, @"\*{0,2}\bSOURCES?\s*:\s*\*{0,2}\s*(.*)$", RegexOptions.IgnoreCase);
+            if (!m.Success) { kept.Add(line); continue; }
+            var found = m.Groups[1].Value.Trim().Trim('*').Trim();
+            if (found.Length > 0) source = found;
+            var before = line[..m.Index].TrimEnd();
+            if (before.Length > 0) kept.Add(before);
+        }
+        return (string.Join("\n", kept).Trim(), source);
+    }
+
+    // Which handed-over passage did the source line name? By number first, then by document and page.
+    private static Passage? Resolve(string sourceLine, IReadOnlyList<Passage> passages)
+    {
+        var n = Regex.Match(sourceLine, @"(?:PASSAGE\s*#?\s*\[?|\[)(\d+)", RegexOptions.IgnoreCase);
+        if (!n.Success && Regex.IsMatch(sourceLine.Trim(), @"^\d+\W*$")) n = Regex.Match(sourceLine, @"\d+");
+        if (n.Success)
+        {
+            var idx = int.Parse(n.Groups[n.Groups.Count > 1 ? 1 : 0].Value);
+            return idx >= 1 && idx <= passages.Count ? passages[idx - 1] : null;
+        }
+        var byDoc = passages.Where(p => sourceLine.Contains(p.Document, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (byDoc.Count > 1)
+            byDoc = byDoc.Where(p => Regex.IsMatch(sourceLine, $@"\b{Regex.Escape(p.Page)}\b") ||
+                                     sourceLine.Contains(p.Section, StringComparison.OrdinalIgnoreCase)).ToList();
+        return byDoc.Count == 1 ? byDoc[0] : null;
+    }
+
+    private static string Clean(string s)
+    {
+        s = s.Replace(';', ',').Trim();
+        return s.Length > 80 ? s[..80] : s;
     }
 }
 

@@ -1,0 +1,17 @@
+.ci { font-size: 0.85rem; color: #1d2d5c; }
+.ci__h { margin: 0 0 0.25rem; font-size: 1rem; }
+.ci__note { margin: 0 0 0.75rem; color: #4a5a78; font-size: 0.8rem; }
+.ci__locked { border: 1px solid #07649d; background: #e7f0f5; border-radius: 8px; padding: 0.75rem 1rem; }
+.ci__locked p { margin: 0.25rem 0 0; }
+.ci__row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 0.75rem; }
+.ci__pick { display: inline-block; border: 1px dashed #1d2d5c; border-radius: 8px; padding: 0.6rem 1rem; cursor: pointer; font-weight: 600; }
+.ci__pick ::deep input[type=file] { display: block; margin-top: 0.4rem; font-weight: 400; font-size: 0.78rem; }
+.ci__select { margin-left: 0.4rem; border: 1px solid #d7dae0; border-radius: 6px; padding: 0.3rem 0.5rem; }
+.ci__table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.ci__table th, .ci__table td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid #e3e8ee; vertical-align: top; }
+.ci__table th { color: #4a5a78; font-weight: 600; }
+.ci__num { text-align: right; white-space: nowrap; }
+.ci__ok { color: #2f6b13; }
+.ci__bad { color: #a1221a; }
+.ci__newcat { width: 14rem; margin-left: 0; }
+.ci__newcat:disabled { background: #f1f3f6; color: #9aa4b2; }

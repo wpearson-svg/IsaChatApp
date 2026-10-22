@@ -229,7 +229,7 @@ A **real error** is different from a Stop and from a NotFound. It is shown red i
 - If the model call fails (turned off, unreachable, empty reply) or takes longer than the time limit, `complex_ai` returns Escalate with `reason=model call failed` and `error=unavailable` or `error=timeout` or `error=empty` in the data text.
 - The orchestrator copies the value into `work_steps[].error`, and the panel shows the step red.
 - The run then goes to `ticketing`. A model that is turned off produces an error and a ticket, never a hang.
-- The time limit for a model call is set after Eliyas measures phi4-mini on the 16 GB machine; until then it is 30 seconds.
+- The time limit for a model call is **45 seconds** (`Ollama:TimeoutSeconds`), set from timing on 22 Oct 2026 (phi4-mini:3.8b on a 7.8 GB machine, 0.5 to 0.8 GB free): cold start 20 to 27 s, warm answers 7 to 10 s. When the call fails, the event data also carries `detail=` (the HTTP status or error type) to help find the cause.
 
 ## 10. Stub rules
 

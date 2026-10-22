@@ -651,7 +651,8 @@
       "requiredActions": [],
       "clientRoles": {
         "isa-chat": [
-          "chat_user"
+          "chat_user",
+          "dashboard_dev"
         ]
       }
     },

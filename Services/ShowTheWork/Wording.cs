@@ -141,34 +141,44 @@ public static class Wording
     public const string AnswerToPersonCheckFailed = "The answer couldn't be fully checked, so a person will help";
     public const string WentWrongHere = "Something didn't work on our side";
 
-    // Developer mode only: skipped steps.
+    // Developer mode only: skipped steps. Same words as the panel's running lines.
     public static string Skipped(string stage) => "Skipped " + stage switch
     {
         "translation" => "checking the language",
-        "input_compliance" => "checking the question",
-        "database_search" => "searching approved content",
+        "input_compliance" => "checking your question",
+        "database_search" => "searching ISACA's guidance",
         "knowledge_graph" => "looking for related topics",
-        "rag" => "gathering passages",
-        "complex_ai" => "Diving deeper",
-        "output_compliance" => "checking an answer",
+        "rag" => "gathering the right sections",
+        "complex_ai" => "diving deeper",
+        "output_compliance" => "double-checking the answer",
         _ => "the " + stage.Replace('_', ' ') + " step",
     };
     public const string NotNeededDirectHit = "Not needed: the exact text answers it";
     public const string NotNeededEnglish = "Not needed: your question is in English";
     public const string NotNeededEscalated = "Not needed, because the question is going to a person";
 
-    /// <summary>What a stage was doing, for a stage that crashed.</summary>
+    /// <summary>What a stage was doing, for a stage that crashed. Same words as the panel's running lines.</summary>
     public static string Doing(string stage) => stage switch
     {
-        "access_control" => "Checking that you can use Isa",
+        "access_control" => "Checking your sign-in",
         "translation" => "Checking the language",
         "input_compliance" => "Checking your question",
-        "database_search" => "Searching ISACA's approved content",
+        "database_search" => "Searching ISACA's guidance",
         "knowledge_graph" => "Looking for related topics",
-        "rag" => "Gathering passages",
+        "rag" => "Gathering the right sections",
         "complex_ai" => "Diving deeper",
-        "output_compliance" => "Checking the answer",
-        "ticketing" => "Creating your ticket",
+        "output_compliance" => "Double-checking the answer against ISACA's guidance",
+        "ticketing" => "Finding the right person to help",
         _ => $"The {stage.Replace('_', ' ')} step",
     };
+
+    // ---------- Panel: hidden text for screen readers after each step ----------
+
+    public const string StateLabelPassed = "passed";
+    public const string StateLabelNothingFound = "nothing found";
+    public const string StateLabelStopped = "stopped here";
+    public const string StateLabelToPerson = "passed to a person";
+    public const string StateLabelProblem = "something went wrong";
+    public const string StateLabelProblemDeveloper = "error";
+    public const string StateLabelSkipped = "skipped";
 }
