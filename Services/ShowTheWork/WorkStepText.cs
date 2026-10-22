@@ -173,7 +173,7 @@ public static class WorkStepText
             case "rag":
                 if (state == StepState.ToPerson) return L(Wording.StepPassages, Wording.AnswerToPersonNoContent);
                 if (step.DataText.StartsWith("no_context")) return L(Wording.StepPassages, Wording.NothingToGather);
-                return L(Wording.StepPassages, Number(step.DataText, "passages") is int p ? Wording.Passages(p) : null);
+                return L(Wording.StepPassages, Number(step.DataText, "passages") is int p ? Wording.Sections(p) : null);
 
             case "complex_ai":
                 if (state == StepState.ToPerson) return L(Wording.StepDivingDeeper, Wording.AnswerToPersonCheckFailed);

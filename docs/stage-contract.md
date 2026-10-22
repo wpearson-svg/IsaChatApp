@@ -185,7 +185,7 @@ Request:
 Response (always the same shape):
 ```json
 { "status": "answered",
-  "message": "Based on the approved content: ...",
+  "message": "Here's what ISACA's guidance says: ...",
   "sources": [ { "document": "Reimbursement Policy", "section": "3.2", "page": 4 } ],
   "ticketReference": null,
   "traceId": "3f2b8c1e-5d4a-4a7e-9b1c-0d2e6f7a8b90" }

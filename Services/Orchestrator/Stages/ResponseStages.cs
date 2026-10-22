@@ -122,7 +122,7 @@ public class OutputComplianceStage : IStage
             if (!confOk) return Task.FromResult(Escalate("ai check failed: confidence score", data));
         }
 
-        ctx.AnswerText = "Based on the approved content: " + Tidy(ctx.AnswerText!, ctx.Passages[0].Page);
+        ctx.AnswerText = IsaChatApp.Services.ShowTheWork.Wording.AnswerOpening + Tidy(ctx.AnswerText!, ctx.Passages[0].Page);
         return Task.FromResult(new StageResult(StageOutcome.Pass, null, $"section={section}; {data}"));
     }
 
