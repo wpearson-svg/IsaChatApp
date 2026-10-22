@@ -1,0 +1,236 @@
+/* ============================================================
+   IsaRail.razor.css
+
+   The slim rail on the left of the chat. Scoped to IsaRail.razor by
+   Blazor's CSS isolation. Every button is at least 44px tall to tap.
+
+   Button colors (approved mockup, 21 October 2026), each a tile behind
+   a white icon, and each button keeps its name, so color never carries
+   the meaning alone. The ISACA swatches are darkened where needed so a
+   white icon stays readable (3:1 or better), the same rule as the
+   darkened green in "show the work":
+   - Today:       ISACA Teal, darkened (#1b7a66, 5.2:1)
+   - Notebook:    ISACA Green, darkened (#3f7d20, 5.0:1)
+   - Chapter 360: ISACA Blue as isaca.org uses it (#017dc2, 4.5:1)
+   - Engage:      ISACA Dark Blue, as engage.isaca.org uses it (#1d2d5c)
+   ============================================================ */
+
+.isa-rail {
+    position: fixed;
+    top: 0;
+    width: var(--isa-rail-w, 76px);
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 6px 10px;
+    background: #ffffff;
+    border-right: 1px solid #cbd2d9;   /* ISACA Grey 3 */
+    border-radius: 12px 0 0 12px;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+    font-family: 'Roboto', Arial, sans-serif;
+    /* Glides with the chat when Today or the notebook opens. */
+    transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Opening and closing: the same soft 24px glide with a fade, over
+       0.5s, starting gently and settling gently, as the Today window
+       (TodayPanel.razor.css). Matthew asked for it, 21 October 2026. */
+    animation: isa-rail-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* While "Hide" closes it: the same glide in reverse. The chat widget
+   removes the rail once this has finished (ChatWidget.razor, HideRail). */
+.isa-rail.is-closing {
+    animation: isa-rail-out 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    pointer-events: none;
+}
+
+@keyframes isa-rail-in {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes isa-rail-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-rail { animation: none; transition: none; }
+    .isa-rail.is-closing { animation: none; opacity: 0; }
+}
+
+/* Phones: the rail sits on the left edge, a little narrower. */
+@media (max-width: 720px) {
+    .isa-rail {
+        left: 0;
+        right: auto !important;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 8px 4px;
+    }
+    .isa-rail__tile { width: 36px; height: 36px; }
+    .isa-rail__label { font-size: 0.62rem; }
+}
+
+.isa-rail__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.isa-rail__divider {
+    border: 0;
+    border-top: 1px solid #cbd2d9;
+    margin: 6px 10px;
+    opacity: 1;
+}
+
+/* Every button: icon tile with its short name underneath. */
+.isa-rail__btn {
+    position: relative;
+    width: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 2px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #1d2d5c;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.isa-rail__btn:hover { background: #f6f7f8; }   /* ISACA Grey 1 */
+
+.isa-rail__btn:focus-visible {
+    outline: 2px solid #1d2d5c;
+    outline-offset: -2px;
+}
+
+/* Pressed (its window is open): light blue, with a colored bar on the left. */
+.isa-rail__btn[aria-pressed="true"] { background: #e7f0f5; }
+.isa-rail__btn[aria-pressed="true"]::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 10px;
+    bottom: 10px;
+    width: 4px;
+    border-radius: 2px;
+    background: var(--rail-color);
+}
+
+.isa-rail__hide { min-height: 48px; color: #52606d; }   /* ISACA Grey 7 */
+.isa-rail__hideIcon { width: 20px; height: 20px; }
+
+.isa-rail__tile {
+    position: relative;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--rail-color);
+    color: #ffffff;
+}
+
+.isa-rail__tile svg { width: 22px; height: 22px; }
+
+.isa-rail__label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 500;
+    line-height: 1.1;
+    text-align: center;
+    color: #323e48;   /* ISACA Grey 9 */
+}
+
+/* Today's steps not done yet: a small ISACA Green number. */
+.isa-rail__count {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    border: 2px solid #ffffff;
+    background: #6cb33f;
+    color: #1f2933;   /* ISACA Grey 10, readable on the green */
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+/* The "opens outside Isa" arrow on Chapter 360 and Engage. */
+.isa-rail__ext {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    width: 12px;
+    height: 12px;
+    color: #52606d;
+}
+
+.isa-rail__btn--today     { --rail-color: #1b7a66; }
+.isa-rail__btn--notebook  { --rail-color: #3f7d20; }
+.isa-rail__btn--c360      { --rail-color: #017dc2; }
+.isa-rail__btn--engage    { --rail-color: #1d2d5c; }
+
+/* Backstage, pinned to the bottom: a white tile with a grey icon, so it
+   reads as staff tools rather than one of the four main buttons. */
+.isa-rail__backstage {
+    position: relative;
+    margin-top: auto;
+}
+
+.isa-rail__btn--backstage .isa-rail__tile {
+    background: #ffffff;
+    color: #52606d;
+    border: 1px solid #cbd2d9;
+}
+
+/* The small menu that opens beside the Backstage button. */
+.isa-rail__menu {
+    position: absolute;
+    left: calc(100% + 8px);
+    bottom: 0;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    background: #ffffff;
+    border: 1px solid #cbd2d9;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(29, 45, 92, 0.18);
+    z-index: 2;
+}
+
+.isa-rail__menuItem {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.88rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.isa-rail__menuItem:hover,
+.isa-rail__menuItem:focus-visible { background: #e7f0f5; }

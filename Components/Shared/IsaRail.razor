@@ -1,0 +1,202 @@
+@* ============================================================
+   IsaRail.razor
+
+   The slim rail on the left of the chat (Matthew's approved mockup,
+   21 October 2026: Claude outputs/Left sidebar mockups.html). It takes
+   the buttons that used to crowd the chat header and the "Your first
+   90 days" strip, top to bottom:
+
+     Hide         tucks the rail away; a menu button in the chat
+                  header brings it back
+     Today        opens the Today window (leaders in their first 90
+                  days only), with a green number for today's steps
+                  that aren't done yet
+     Notebook     opens the succession notebook (only for someone who
+                  may read their chapter's notebook)
+     ----         a line between Isa's own tools and ISACA's sites
+     Chapter 360  opens the sample Chapter 360 page in a new tab
+     Engage       opens the sample Engage page in a new tab
+     Backstage    at the bottom: Config and the dashboards, for the
+                  Developer, Executive and Manager roles only
+
+   The rail decides nothing itself. The chat widget (ChatWidget.razor)
+   tells it which buttons to show and what is open, and does the work
+   when a button is clicked. Nothing here comes from the AI model.
+   ============================================================ *@
+
+<nav class="isa-rail @(Closing ? "is-closing" : "")" style="@Style" aria-label="Isa menu">
+    <button type="button" class="isa-rail__btn isa-rail__hide" @onclick="OnHide"
+            title="Hide the menu" aria-label="Hide the menu">
+        <svg viewBox="0 0 24 24" class="isa-rail__hideIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 6l-6 6 6 6M19 5v14" />
+        </svg>
+        <span class="isa-rail__label">Hide</span>
+    </button>
+
+    <ul class="isa-rail__list">
+        @if (ShowToday)
+        {
+            <li>
+                <button type="button" class="isa-rail__btn isa-rail__btn--today" @onclick="OnToggleToday"
+                        aria-pressed="@(TodayOpen ? "true" : "false")"
+                        title="@(TodayOpen ? "Close Today" : "Open Today")"
+                        aria-label="@TodayLabel">
+                    <span class="isa-rail__tile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <rect x="3" y="4.5" width="18" height="16" rx="2.5" />
+                            <path d="M3 9.5h18M8 2.5v4M16 2.5v4" />
+                        </svg>
+                        @if (StepsLeftToday > 0)
+                        {
+                            <span class="isa-rail__count" aria-hidden="true">@StepsLeftToday</span>
+                        }
+                    </span>
+                    <span class="isa-rail__label">Today</span>
+                </button>
+            </li>
+        }
+        @if (ShowNotebook)
+        {
+            <li>
+                <button type="button" class="isa-rail__btn isa-rail__btn--notebook" @onclick="OnToggleNotebook"
+                        aria-pressed="@(NotebookOpen ? "true" : "false")"
+                        title="@(NotebookOpen ? "Close the notebook" : "Open the succession notebook")"
+                        aria-label="Notebook">
+                    <span class="isa-rail__tile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z" />
+                            <path d="M5 17a3 3 0 0 1 3-3h11" />
+                            <path d="M9 8h6" />
+                        </svg>
+                    </span>
+                    <span class="isa-rail__label">Notebook</span>
+                </button>
+            </li>
+        }
+        @if (ShowToday || ShowNotebook)
+        {
+            <li aria-hidden="true"><hr class="isa-rail__divider" /></li>
+        }
+        @* Chapter 360 and Engage are behind ISACA's login, so in the
+           prototype they open sample pages, in a new tab so the chat
+           stays where it was. The small arrow says "opens outside Isa". *@
+        <li>
+            <a class="isa-rail__btn isa-rail__btn--c360" href="/sample/chapter-360" target="_blank" rel="noopener"
+               title="Chapter 360 (sample page, opens in a new tab)" aria-label="Chapter 360, sample page, opens in a new tab">
+                <svg class="isa-rail__ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <path d="M9 3h4v4M13 3L7 9M11 9.5V13H3V5h3.5" />
+                </svg>
+                <span class="isa-rail__tile">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                        <path d="M20 4v4.5h-4.5" />
+                        <circle cx="12" cy="12" r="2.5" />
+                    </svg>
+                </span>
+                <span class="isa-rail__label">Chapter 360</span>
+            </a>
+        </li>
+        <li>
+            <a class="isa-rail__btn isa-rail__btn--engage" href="/sample/engage" target="_blank" rel="noopener"
+               title="Engage (sample page, opens in a new tab)" aria-label="Engage, sample page, opens in a new tab">
+                <svg class="isa-rail__ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <path d="M9 3h4v4M13 3L7 9M11 9.5V13H3V5h3.5" />
+                </svg>
+                <span class="isa-rail__tile">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="9" cy="8.5" r="3" />
+                        <circle cx="17" cy="9.5" r="2.3" />
+                        <path d="M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15.2A4.5 4.5 0 0 1 21 19" />
+                    </svg>
+                </span>
+                <span class="isa-rail__label">Engage</span>
+            </a>
+        </li>
+    </ul>
+
+    @* Backstage: Config and the dashboards, for the Developer, Executive
+       and Manager roles only (decided 21 October 2026). It opens a small
+       menu beside the rail listing what this role may open. On the User
+       role (a chapter leader) the button isn't there at all; Config is
+       still reachable by typing /isa-config. *@
+    @if (Backstage.Count > 0)
+    {
+        <div class="isa-rail__backstage">
+            <button type="button" class="isa-rail__btn isa-rail__btn--backstage" @onclick="ToggleBackstage"
+                    aria-expanded="@(_backstageOpen ? "true" : "false")" aria-haspopup="menu"
+                    title="Backstage: Config and dashboards" aria-label="Backstage: Config and dashboards">
+                <span class="isa-rail__tile">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3.5" y="3.5" width="7" height="9" rx="1.5" />
+                        <rect x="13.5" y="3.5" width="7" height="5" rx="1.5" />
+                        <rect x="13.5" y="11.5" width="7" height="9" rx="1.5" />
+                        <rect x="3.5" y="15.5" width="7" height="5" rx="1.5" />
+                    </svg>
+                </span>
+                <span class="isa-rail__label">Backstage</span>
+            </button>
+            @if (_backstageOpen)
+            {
+                <div class="isa-rail__menu" role="menu" aria-label="Backstage">
+                    @foreach (var item in Backstage)
+                    {
+                        <button type="button" class="isa-rail__menuItem" role="menuitem" @onclick="() => PickBackstage(item.Path)">@item.Name</button>
+                    }
+                </div>
+            }
+        </div>
+    }
+</nav>
+
+@code {
+    /// <summary>One entry in the Backstage menu: its name and the page it opens.</summary>
+    public record BackstageItem(string Name, string Path);
+
+    /// <summary>Width and position, from the chat widget, so the rail sits against the chat's left edge.</summary>
+    [Parameter] public string? Style { get; set; }
+
+    /// <summary>True while "Hide" is closing the rail, so it glides away.</summary>
+    [Parameter] public bool Closing { get; set; }
+
+    /// <summary>Show the Today button (a leader in their first 90 days).</summary>
+    [Parameter] public bool ShowToday { get; set; }
+
+    /// <summary>Show the Notebook button (someone who may read their chapter's notebook).</summary>
+    [Parameter] public bool ShowNotebook { get; set; }
+
+    /// <summary>Today's steps that aren't done yet, shown as a small green number on Today.</summary>
+    [Parameter] public int StepsLeftToday { get; set; }
+
+    /// <summary>True while the Today window is open (the button shows as pressed).</summary>
+    [Parameter] public bool TodayOpen { get; set; }
+
+    /// <summary>True while the notebook is open (the button shows as pressed).</summary>
+    [Parameter] public bool NotebookOpen { get; set; }
+
+    /// <summary>What this role may open from Backstage. Empty means no Backstage button.</summary>
+    [Parameter] public IReadOnlyList<BackstageItem> Backstage { get; set; } = Array.Empty<BackstageItem>();
+
+    [Parameter] public EventCallback OnHide { get; set; }
+    [Parameter] public EventCallback OnToggleToday { get; set; }
+    [Parameter] public EventCallback OnToggleNotebook { get; set; }
+
+    /// <summary>Called with the page to open when a Backstage item is picked.</summary>
+    [Parameter] public EventCallback<string> OnOpenBackstage { get; set; }
+
+    // Screen readers hear the number of steps too, not just "Today".
+    private string TodayLabel => StepsLeftToday switch
+    {
+        0 => "Today",
+        1 => "Today, 1 step for today",
+        _ => $"Today, {StepsLeftToday} steps for today"
+    };
+
+    private bool _backstageOpen;
+    private void ToggleBackstage() => _backstageOpen = !_backstageOpen;
+
+    private async Task PickBackstage(string path)
+    {
+        _backstageOpen = false;
+        await OnOpenBackstage.InvokeAsync(path);
+    }
+}

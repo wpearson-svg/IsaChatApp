@@ -15,33 +15,57 @@ Never design anything that assumes Isa can do more than this:
 
 === QUESTIONS FOR ISACA ===
 
-No questions have been sent to ISACA yet. Matthew's first email that includes questions goes out Wednesday, October 21, 2026, as part of his weekly Wednesday updates. Sixteen questions is a lot for one email, so Matthew may pick the most important ones and save the rest for later updates.
+No questions have been sent to ISACA yet. Final list of 11 questions, decided with Matthew on October 21, 2026 (it replaces the earlier 16). Matthew picks which ones go in each weekly Wednesday update; when an email is sent, note here which questions went out. The wording never describes the onboarding feature, which is a surprise for the presentation.
 
 Chapter calendar and deadlines
-1. When do chapters usually hold their Annual General Meeting (AGM)? Do all chapters hold it before the November 1 to December 31 compliance window?
-2. When do new chapter presidents usually start their terms? How often does a president start mid-term?
+1. To make sure Isa gives accurate answers about the chapter year and its deadlines: when do most chapters hold their Annual General Meeting, and when do newly elected officers usually take office? Is there a common pattern, or does it vary a lot by chapter or region?
+2. Is it common for a newly elected president to take office shortly before the November 1 to December 31 compliance window, or do most have several months in office before it?
+3. How often does a president take office partway through a term, for example after a resignation?
 
 Documents
-3. Could you share the guidebooks for the other board roles: Vice President, Secretary, Treasurer, Membership Director, and Immediate Past President?
-4. Could you share the Chapter Affiliation Agreement itself?
-5. Is the President Guidebook available as a Word document? The text in the PDF version runs words together when we try to read it into Isa.
-6. Some tools in Chapter 360 have asterisks next to them. What do the asterisks mean?
-7. The documents give different numbers for total members and total chapters. Which numbers should Isa use?
+4. When it's convenient, and there's no rush: could you share the guidebooks for the other board roles (Vice President, Secretary, Treasurer, Membership Director, and Immediate Past President)? They would help Isa answer questions from leaders in those roles, too. (Low priority.)
+5. Could you share the Chapter Affiliation Agreement itself?
 
-New leader onboarding
-8. Does each chapter have an assigned Chapter Experience contact? Does ISACA hold group welcome sessions for new presidents?
-9. How does ISACA learn that a chapter has elected a new president, and how soon after the election?
-10. When does a new president get access to the Chapter Leader Portal and their chapter's Engage site?
-11. What do you most want new presidents to accomplish in their first 90 days?
+New leaders
+6. Does each chapter have an assigned Chapter Experience contact?
+7. After a chapter elects a new president, how soon does ISACA's record show the change, and when does the new president get access to the Chapter Leader Portal and their chapter's Engage site? (Why it matters: Isa sets what each person can see from the role ISACA has on record, so a delay means a new president is treated as a member until the record changes.)
+8. What do you see as the most important things a new chapter president should get done early in their term?
 
-Board information and privacy
-12. What board information does ISACA keep for each chapter, such as names, roles, and term dates?
-13. Would chapter presidents be allowed to see their board members' ISACA certifications and years of membership?
+Board information
+9. What information does ISACA keep about each chapter's board, such as names, roles, and term dates?
+10. Which information about board members, such as their certifications or years of membership, would a chapter president normally be allowed to see?
 
-Data use and scope
-14. ISACA has said they are comfortable with the team using Claude with the documents they sent. Does that also cover other outside AI services, or should anything else run only on the team's own computers?
-15. Should Isa also draw on the outside governance sources Camille mentioned (ASAE, BoardSource, BoardEffect, and Association Forum)? Or should she stay with ISACA's own materials?
-16. Would it help if the team created made-up restricted content to show how Isa handles different permission levels?
+Scope
+11. Should Isa also draw on the outside governance sources Camille mentioned (ASAE, BoardSource, BoardEffect, and Association Forum), or stay with ISACA's own materials?
+
+Sent: all 11 questions went out in the weekly update of October 21, 2026 (to Camille, Michelle Phillips, Joshua Belz and James Ross). Camille answered inline the same day; her answers are below.
+
+Camille's answers (October 21, 2026):
+1. AGMs: no set timeframe; it varies greatly by chapter and region and is set by each chapter's bylaws.
+2. Taking office: chapters are independently affiliated, so ISACA's compliance season doesn't set when officers take office; the chapter's governing documents do. Most chapters open voting before their AGM and announce or ratify the results at the AGM.
+3. Mid-term presidents: rare. Only when a president resigns or can no longer serve (for example illness, death, or board action to remove them); the process is in the chapter's bylaws and varies.
+4. Other role guidebooks: already in Dropbox (uploaded one to two weeks before October 21); for roles with no guidebook, Camille pasted the role descriptions into Word documents there. Check the team's Dropbox.
+5. Chapter Affiliation Agreement: attached to her reply. Once saved into the project, the Library entry can change from "Requested from ISACA" to a real document.
+6. Chapter Experience contacts: NOT assigned to every chapter. About 65 chapters have an assigned Chapter Success Manager (CSM), as the RFP notes; the other 165 (as of October 21) are supported by the Chapter Experience Operations Team as needed. Never put why a chapter has a CSM (its selection profile) into Isa, her content or her sample data.
+7. Roster changes: the chapter submits an updated leader roster through ISACA's support ticketing system, and the ISACA Customer Support Center makes the change, typically within 10 business days. (This supports the J-20 note that access can lag.)
+8. What a new president should do early: "Please reference the guidebook."
+9. Board information: ISACA keeps names, roles and term dates, and every board member is an ISACA member with a full member account and membership history.
+10. What a president may see: everything on the member roster. A member of Camille's team will send a sample header of that report separately.
+11. Outside sources: for ISACA process and policy, use ISACA's documentation only. For broader governance questions (for example, what to cover in a new board member's orientation), drawing on established best practice from ASAE, BoardSource, BoardEffect and Association Forum is fine, even ideal.
+
+What this means for the design (for Matthew to decide; nothing changed yet):
+- The "Meet your Chapter Experience contact" step assumes every chapter has its own contact. Most don't. The step may need two versions: the chapter's Chapter Success Manager where one is assigned, and the Chapter Experience Operations Team for everyone else. Isa must never say why a chapter has a CSM.
+- Outside governance sources would have to become approved documents in Isa's content before she could answer from them (the ground rule above still holds: approved documents only). A decision for the whole team.
+- AGM and term dates come from each chapter's bylaws, so the open fixed-date question stays open; the prototype keeps counting from each leader's term start date.
+
+Dropped on October 21, 2026, and why:
+- President Guidebook as a Word document; the outside AI services question; made-up restricted content; approved wording for the local-law and emergency lines: Matthew's choice not to ask.
+- The Chapter 360 asterisks: the team will try to answer it from the material it has.
+- Differing member and chapter numbers: this is a mock scenario, so exact numbers don't matter; Isa uses the numbers in the documents the team has.
+
+Decided instead of asked (Matthew, October 21, 2026; his position for Willis's review of docs/Handoff_and_Refusal_Rules_Proposal.md):
+- Every question Isa passes to a person goes to the Chapter Experience team.
+- Suspected fraud also goes to the Chapter Experience team, with a special "potential fraud" flag. The flag is used very sparingly; when it is set needs a strict, fixed rule, still to be worked out.
 
 === WHAT NEW CHAPTER LEADERS STRUGGLE WITH ===
 
@@ -139,3 +163,16 @@ To design from the mockup: the collapsed line, the live status line for the curr
 - Only the word "Welcome" on the landing page is shown in the leader's language of preference (Services/WelcomeWords.cs), to show ISACA that Isa can greet each person in their own language. Names stay exactly as in the directory.
 - Everything else stays in English for now (Matthew: "leave the rest of it off the table"). Isa's answers stay in English because they come word for word from ISACA's English documents.
 - Have a native speaker check the words before showing them to ISACA.
+
+=== WHAT THE RFP MEANS FOR ISA'S DESIGN (OCTOBER 21, 2026) ===
+
+The updated RFP is saved in docs/ISACA_RFP_AI_Chapter_Support_Agent.md.
+
+- Scope: the RFP speaks of "chapter leaders" throughout, never only presidents. So Isa as a whole serves all chapter leaders; the onboarding feature's focus on presidents is one well-chosen use case inside it (a pilot normally starts with one group). Confirm the team's scope with Willis.
+- It confirms the design: approved content only (the ground rule above); staff kept for "judgment, interpretation, mediation, escalation, or exception handling" (almost exactly the hand-off proposal's topic groups); source transparency and "see uncertainty" (source cards, "show the work", the "not found" state); conflicting and current content (content health flags, approval dates); no premature technology lock-in and commercial clarity (local Ollama, SQLite, no paid services); language support "if required later" (the welcome word only); accessibility (reduced motion, contrast, 44px tap targets, screen-reader labels).
+- "Direct users to human support ONLY when questions are out of scope": a warning against handing off too much. Supports the hand-off proposal's "answer, then point to a person" outcome and "not blocking too much". Quote it to Willis.
+- The AI-use register is required and covers coding assistants: Matthew's work with Claude Code (code, documents, mockups, wording) must be entered: tool, provider and model, purpose, information submitted, the resulting artifact, and whether a person reviewed it. Matthew reviewed and approved each step, which is a strength to record.
+- Phases with approval gates (discovery, knowledge and governance design, prototype, testing and pilot, evaluation): the team's work is phase 3, the prototype. Frame the presentation and supplement document in those phases ("here is our prototype; here is what a pilot would measure").
+- Measurement for a go/no-go decision: a short "what a pilot would measure" slide (adoption, usefulness, answer quality, hand-offs by topic, knowledge currency) scores directly. Pieces already exist: hand-offs and save offers counted by category, the planned Chapter Experience staff view, the Content Health Dashboard.
+- Onboarding is not in the RFP. That is fine as a surprise, but present it in the RFP's terms: it reduces repetitive questions from new leaders ("Automate"), supports the Chapter Experience team rather than replacing it, and keeps knowledge through the yearly handover.
+- The onboarding feature is a SURPRISE for the presentation: never describe it to ISACA beforehand, in questions or updates.

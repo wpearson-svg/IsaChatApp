@@ -62,7 +62,7 @@
 /* Narrow screens: the chat can't move aside, so Today covers it. */
 @media (max-width: 720px) {
     .isa-today {
-        width: 100vw !important;
+        width: calc(100vw - var(--isa-rail-w, 0px)) !important;   /* leaves the rail its room */
         right: 0 !important;
         border-radius: 0;
     }

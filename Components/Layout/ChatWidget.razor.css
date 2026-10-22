@@ -37,6 +37,19 @@
     z-index: 2147483000; /* stay above ordinary page content */
 }
 
+/* The rail's width (Components/Shared/IsaRail.razor). The chat, Today and
+   the notebook leave this much room on the left (ChatWidget.razor, Pct).
+   Without has-rail (the rail is hidden) it is 0, so they fill the screen. */
+.isa-widget.has-rail {
+    --isa-rail-w: 76px;
+}
+
+@media (max-width: 720px) {
+    .isa-widget.has-rail {
+        --isa-rail-w: 62px;
+    }
+}
+
 /* ---- Backdrop (expanded state only) -------------------------- */
 
 .isa-widget__backdrop {
@@ -205,11 +218,18 @@
     border-radius: 12px 0 0 12px;
 }
 
+/* With the rail against its left edge, the chat's left corners are
+   square and the rail carries the rounded corners and the shadow. */
+.isa-widget__panel.is-expanded.has-rail {
+    border-radius: 0;
+    box-shadow: none;
+}
+
 /* Narrower screens: don't let the panel get unusably thin. */
 @media (max-width: 720px) {
     .isa-widget__panel.is-expanded,
     .isa-widget__panel.is-expanded.is-shifted {
-        width: 100vw !important;   /* beats the side-panel sizes set in ChatWidget.razor */
+        width: calc(100vw - var(--isa-rail-w, 0px)) !important;   /* beats the side-panel sizes set in ChatWidget.razor; leaves the rail its room */
         right: 0 !important;       /* no room to slide aside; Today and the notebook cover the chat instead */
         border-radius: 0;
     }
@@ -332,6 +352,35 @@
 .isa-widget__headerIcon {
     width: 18px;
     height: 18px;
+}
+
+/* The menu button, only while the rail is hidden. 44px to tap. */
+.isa-widget__menuBtn {
+    position: relative;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    margin-left: -0.5rem;
+    border-radius: 8px;
+}
+
+.isa-widget__menuBtn:hover { background: rgba(255, 255, 255, 0.12); }
+
+.isa-widget__menuIcon {
+    width: 22px;
+    height: 22px;
+}
+
+/* ISACA Green dot: there are steps for today. */
+.isa-widget__menuDot {
+    position: absolute;
+    top: 9px;
+    right: 8px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #6cb33f;
+    border: 2px solid #1d2d5c;
 }
 
 .isa-widget__close {

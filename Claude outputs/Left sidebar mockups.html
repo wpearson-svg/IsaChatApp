@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Left Sidebar Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup only: not used by the app. A slim rail on the left for Today,
+     Notebook, Chapter 360 and Engage, with an option to hide it.
+     Every frame is clickable. Sample people and chapters are invented. */
+  :root {
+    --ink: #1d2d5c;          /* ISACA Dark Blue */
+    --text: #323e48;         /* Grey 9 */
+    --muted: #52606d;
+    --page: #eef2f5;
+    --panel: #ffffff;
+    --chat-bg: #f6f7f8;      /* ISACA Grey 1 */
+    --line: #dde3e9;
+    --light-blue: #e7f0f5;   /* ISACA Light Blue */
+    --accent: #36ac91;       /* Isa's teal accent */
+
+    /* One color per button, each behind a white icon. */
+    --c-today: #1b7a66;      /* Isa's teal, darkened so it reads on white */
+    --c-notebook: #3f7d20;   /* ISACA Green, darkened */
+    --c-360: #017dc2;        /* ISACA Blue, from isaca.org */
+    --c-engage: #1d2d5c;     /* ISACA Dark Blue, from engage.isaca.org */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 56px;
+    background: var(--page); color: var(--text);
+    font-family: Roboto, Arial, sans-serif;
+  }
+  h1 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.6rem; margin: 0 0 6px; }
+  h2 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.2rem; margin: 40px 0 4px; }
+  .intro, .lead { max-width: 820px; line-height: 1.5; margin: 0 0 16px; }
+  .lead { font-size: 0.92rem; }
+  .tip { display: inline-block; font-size: 0.8rem; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; color: var(--muted); margin-bottom: 14px; }
+
+  /* Color legend */
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; max-width: 820px; margin: 0 0 8px; }
+  .swatch { background: #fff; border-radius: 10px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; font-size: 0.8rem; line-height: 1.35; }
+  .swatch b { display: block; color: var(--ink); font-size: 0.88rem; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+  figure { margin: 0; max-width: 100%; }
+  figcaption { font-weight: 700; color: var(--ink); margin: 0 0 4px; }
+  figcaption + p { margin: 0 0 10px; font-size: 0.85rem; line-height: 1.45; max-width: 640px; }
+
+  /* Choosing the label for the staff-only button */
+  .labels { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 16px; font-size: 0.85rem; }
+  .labels b { color: var(--ink); margin-right: 4px; }
+  .labels label { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #cbd2d9; border-radius: 999px; padding: 6px 12px; cursor: pointer; min-height: 36px; }
+  .labels input { accent-color: var(--ink); margin: 0; }
+
+  /* ---------- The app frame ---------- */
+  .app {
+    position: relative; display: flex; overflow: hidden;
+    width: 900px; max-width: 100%; height: 540px;
+    background: var(--panel); border: 1px solid #cbd2d9; border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(29,45,92,.08);
+  }
+  .app.phone { width: 360px; height: 640px; border-radius: 22px; }
+  .main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+
+  /* Header: ISACA Dark Blue band, like the real chat */
+  .head { background: var(--ink); color: #fff; display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: 60px; }
+  .logo { width: 34px; height: 34px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: 0 0 auto; }
+  .logo i { width: 18px; height: 18px; border-radius: 50%; border: 4px solid var(--accent); border-right-color: transparent; display: block; }
+  .who-isa b { display: block; font-size: 0.98rem; }
+  .who-isa small { font-size: 0.72rem; opacity: .85; }
+  .head .tools { margin-left: auto; display: flex; gap: 2px; }
+  .hbtn {
+    width: 40px; height: 40px; border: 0; border-radius: 8px; background: transparent; color: #e7f0f5;
+    display: grid; place-items: center; cursor: pointer; position: relative; font: inherit; flex: 0 0 auto;
+  }
+  .hbtn:hover { background: rgba(255,255,255,.12); }
+  .hbtn svg { width: 20px; height: 20px; }
+  .hbtn .dot { position: absolute; top: 7px; right: 7px; width: 9px; height: 9px; border-radius: 50%; background: #6cb33f; border: 2px solid var(--ink); }
+  /* The menu button only shows while the rail is hidden. */
+  .hbtn.menu { display: none; margin-right: -2px; }
+  .app.rail-hidden .hbtn.menu { display: grid; }
+
+  /* The "Your first 90 days" line */
+  .strip { border-bottom: 1px solid var(--line); padding: 8px 14px 0; background: #fff; }
+  .strip .top { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+  .strip .t { font-weight: 700; color: var(--ink); font-size: 0.86rem; }
+  .strip .w { font-size: 0.76rem; color: var(--muted); }
+  .strip .sbtn { margin-left: auto; display: flex; gap: 6px; }
+  .strip .sbtn span { border: 1px solid #cbd2d9; border-radius: 8px; padding: 6px 10px; font-size: 0.78rem; color: var(--ink); background: #fff; }
+  .bar { height: 4px; background: #e5e7eb; border-radius: 2px; margin: 6px 0 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 3.3%; background: #6cb33f; }
+
+  /* Chat + side panel (the existing "a third each" rule) */
+  .body { flex: 1 1 auto; display: flex; min-height: 0; }
+  .chat { flex: 1 1 0; min-width: 0; background: var(--chat-bg); padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .you { align-self: flex-end; max-width: 80%; background: var(--ink); color: #fff; padding: 9px 12px; border-radius: 14px 14px 4px 14px; font-size: 0.86rem; line-height: 1.4; }
+  .isa { align-self: flex-start; max-width: 88%; background: var(--light-blue); padding: 10px 12px; border-radius: 14px 14px 14px 4px; font-size: 0.86rem; line-height: 1.45; }
+  .isa .lab { font-size: 0.66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #07649d; margin-bottom: 4px; }
+  .src { margin-top: 8px; font-size: 0.74rem; background: #fff; border-left: 4px solid #07649d; padding: 6px 8px; border-radius: 4px; color: var(--muted); }
+  .compose { margin-top: auto; display: flex; gap: 8px; }
+  .compose span { flex: 1; background: #fff; border: 1px solid #cbd2d9; border-radius: 22px; padding: 11px 14px; font-size: 0.84rem; color: #7b8794; }
+  .compose b { width: 42px; height: 42px; border-radius: 50%; background: var(--ink); flex: 0 0 auto; }
+
+  .side { flex: 1 1 0; min-width: 0; border-left: 1px solid var(--line); display: none; flex-direction: column; background: #fff; }
+  .side.open { display: flex; }
+  .side .sh { color: #fff; padding: 10px 14px; display: flex; align-items: center; min-height: 48px; font-weight: 700; font-size: 0.9rem; }
+  .side .sh small { display: block; font-weight: 400; font-size: 0.72rem; opacity: .9; }
+  .side .sh button { margin-left: auto; width: 36px; height: 36px; border: 0; background: rgba(255,255,255,.15); color: #fff; border-radius: 8px; cursor: pointer; font-size: 1.1rem; flex: 0 0 auto; }
+  .side .sb { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; font-size: 0.82rem; line-height: 1.4; background: var(--chat-bg); flex: 1; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .card b { color: var(--ink); display: block; margin-bottom: 2px; }
+  .card small { color: var(--muted); }
+
+  /* ---------- The rail ---------- */
+  .rail {
+    flex: 0 0 auto; width: 76px; background: #fff; border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; padding: 8px 6px 10px; gap: 4px;
+    overflow: hidden; transition: width .25s ease, padding .25s ease;
+  }
+  .app.rail-hidden .rail { width: 0; padding-left: 0; padding-right: 0; border-right-width: 0; }
+  .phone .rail { width: 62px; padding: 8px 4px; }
+  .nav { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .nav hr { border: 0; border-top: 1px solid var(--line); margin: 6px 10px; }
+  .nbtn, .hide {
+    width: 100%; border: 0; background: transparent; cursor: pointer; font: inherit;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    padding: 6px 2px; min-height: 64px; border-radius: 10px; color: var(--ink); position: relative;
+  }
+  .hide { min-height: 48px; color: var(--muted); }
+  .hide svg { width: 20px; height: 20px; }
+  .nbtn:hover, .hide:hover { background: #f1f4f7; }
+  .nbtn[aria-pressed="true"] { background: var(--light-blue); }
+  .nbtn[aria-pressed="true"]::before { content: ""; position: absolute; left: -6px; top: 10px; bottom: 10px; width: 4px; border-radius: 2px; background: var(--c); }
+  .short { display: block; font-size: 0.68rem; color: var(--text); font-weight: 500; text-align: center; line-height: 1.1; }
+  .phone .short { font-size: 0.62rem; }
+  .tile { width: 40px; height: 40px; border-radius: 10px; background: var(--c); color: #fff; display: grid; place-items: center; flex: 0 0 auto; position: relative; }
+  .phone .tile { width: 36px; height: 36px; }
+  .tile svg { width: 22px; height: 22px; }
+  .tile .count { position: absolute; top: -5px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #6cb33f; color: #102a07; font-size: 0.68rem; font-weight: 700; display: grid; place-items: center; border: 2px solid #fff; }
+  .ext { position: absolute; top: 4px; right: 6px; width: 12px; height: 12px; color: var(--muted); }
+  .today { --c: var(--c-today); }
+  .notebook { --c: var(--c-notebook); }
+  .c360 { --c: var(--c-360); }
+  .engage { --c: var(--c-engage); }
+  .admin { margin-top: auto; }
+  .admin .tile { background: #fff; color: var(--muted); border: 1px solid #cbd2d9; }
+
+  /* Little message for Chapter 360, Engage and the staff-only button */
+  .toast {
+    position: absolute; left: 50%; bottom: 74px; transform: translate(-50%, 10px); z-index: 9;
+    background: var(--ink); color: #fff; font-size: 0.8rem; padding: 9px 14px; border-radius: 8px;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; width: max-content; max-width: 86%;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* Before: the crowded header */
+  .callout { outline: 2px dashed #d97706; outline-offset: 2px; border-radius: 8px; }
+  .crowd .hbtn { width: 34px; }
+
+  .decide { max-width: 820px; background: #fff; border-radius: 12px; padding: 14px 18px; line-height: 1.5; font-size: 0.9rem; }
+  .decide li { margin: 6px 0; }
+  .decide b { color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rail, .toast { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<h1>A left rail for Today, Notebook, Chapter 360 and Engage</h1>
+<p class="intro">The four buttons move out of the chat header into a slim rail on the left, so the chat has more room. A leader can hide the rail; a menu button in the header brings it back. Every frame below is clickable. Sample person: Watanabe Kenji (invented), president of C-001, day 3 of his term.</p>
+
+<div class="legend" aria-label="Button colors">
+  <div class="swatch today"><span class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><span><b>Today</b>Isa's teal, darkened · #1b7a66</span></div>
+  <div class="swatch notebook"><span class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></span><span><b>Notebook</b>ISACA Green, darkened · #3f7d20</span></div>
+  <div class="swatch c360"><span class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/><circle cx="12" cy="12" r="2.5"/></svg></span><span><b>Chapter 360</b>ISACA Blue, from isaca.org · #017dc2</span></div>
+  <div class="swatch engage"><span class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15.2A4.5 4.5 0 0 1 21 19"/></svg></span><span><b>Engage</b>ISACA Dark Blue, from engage.isaca.org · #1d2d5c</span></div>
+</div>
+<p class="lead">Engage's own buttons use ISACA Dark Blue. Chapter 360 has no public website (it is behind ISACA's login), so it takes ISACA Blue from isaca.org. Today and Notebook are Isa's own, so they take Isa's teal and ISACA Green, which also keeps them apart from the two blues. Each button keeps its icon and its name, so color never carries the meaning by itself.</p>
+
+<!-- ===================== BEFORE ===================== -->
+<h2>Today: what a leader sees now</h2>
+<p class="lead">The buttons are spread over two rows: the header and the "Your first 90 days" line (circled). For staff roles, the header also holds Config and two dashboards.</p>
+<div class="row">
+  <figure>
+    <div class="app crowd" aria-label="Today's layout">
+      <div class="main">
+        <div class="head">
+          <span class="logo"><i></i></span>
+          <span class="who-isa"><b>Isa</b><small>Chapter Support Assistant</small></span>
+          <span class="tools callout">
+            <span class="hbtn" title="Config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>
+            <span class="hbtn" title="Developer Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="7,9 10,12 7,15"/><line x1="12" y1="15" x2="16" y2="15"/></svg></span>
+            <span class="hbtn" title="Content Health Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h8l5 5v13H6Z"/><path d="M9 13h7M9 16.5h7"/></svg></span>
+            <span class="hbtn" title="New conversation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+            <span class="hbtn" title="Close">&times;</span>
+          </span>
+        </div>
+        <div class="strip">
+          <div class="top">
+            <span><span class="t">Your first 90 days</span><br><span class="w">Week 1 · Day 3 · Chapter president</span></span>
+            <span class="sbtn callout"><span>Today</span><span>Notebook</span></span>
+          </div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="body">
+          <div class="chat">
+            <div class="you">When is the compliance submission window?</div>
+            <div class="isa"><div class="lab">Isa</div>The compliance submission window runs from 1 November to 31 December each year.<div class="src">Compliance Framework · Q4 timeline</div></div>
+            <div class="compose"><span>Ask Isa a question</span><b></b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </figure>
+</div>
+
+<!-- ===================== THE RAIL ===================== -->
+<h2>New: the rail, with an option to hide it</h2>
+<p class="lead">The four buttons sit at the top of the rail, with a line between Isa's own tools and the two ISACA sites. Today shows a green number for the steps due today. "Hide" at the top tucks the rail away; the menu button that appears in the header (with a green dot while steps are due) brings it back. The header keeps only New conversation and Close. The "Your first 90 days" line stays, without its buttons. "Backstage" at the bottom holds Config and the two dashboards, and shows for the Developer, Executive and Manager roles only.</p>
+
+<span class="tip">Try: Hide, then the menu button · Today · Notebook · Chapter 360 · Backstage</span>
+
+<div class="row">
+  <figure>
+    <figcaption>Desktop</figcaption>
+    <p>Today and Notebook open beside the chat, as they do now. Chapter 360 and Engage open outside Isa, so they carry a small arrow.</p>
+    <div class="app" data-app>
+      <nav class="rail" aria-label="Isa menu" data-rail></nav>
+      <div class="main">
+        <div class="head" data-head></div>
+        <div class="strip"><div class="top"><span><span class="t">Your first 90 days</span><br><span class="w">Week 1 · Day 3 · Chapter president</span></span></div><div class="bar"><i></i></div></div>
+        <div class="body" data-body></div>
+      </div>
+      <div class="toast" role="status" data-toast></div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Phone (360 px wide)</figcaption>
+    <p>The same rail, a little narrower. Hiding it gives the chat the full width. Today and Notebook fill the screen, one at a time.</p>
+    <div class="app phone" data-app data-phone>
+      <nav class="rail" aria-label="Isa menu" data-rail></nav>
+      <div class="main">
+        <div class="head" data-head></div>
+        <div class="strip"><div class="top"><span><span class="t">Your first 90 days</span><br><span class="w">Week 1 · Day 3 · Chapter president</span></span></div><div class="bar"><i></i></div></div>
+        <div class="body" data-body></div>
+      </div>
+      <div class="toast" role="status" data-toast></div>
+    </div>
+  </figure>
+</div>
+
+<h2>Decided, and still to build</h2>
+<div class="decide">
+  <ol>
+    <li><b>Decided:</b> a rail that's always visible, with an option to hide it; the "Your first 90 days" line stays; Config and the dashboards move into one button at the bottom of the rail, named "Backstage", shown only for the Developer, Executive and Manager roles. On the User role (what a chapter leader sees) the button is gone; Config is still reachable by typing /isa-config after Isa's address, which is how to switch roles during the demo.</li>
+    <li><b>To build:</b> prototype pages for Chapter 360 and Engage, since the real sites are behind ISACA's login. Both clearly labeled as samples.</li>
+    <li><b>Suggestion:</b> Isa remembers whether each leader hid the rail, so it stays the way they left it.</li>
+  </ol>
+</div>
+
+<script>
+  // The buttons, written once and placed in every frame.
+  const ICONS = {
+    today: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>',
+    notebook: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z"/><path d="M5 17a3 3 0 0 1 3-3h11"/><path d="M9 8h6"/></svg>',
+    c360: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    engage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M14.5 15.2A4.5 4.5 0 0 1 21 19"/></svg>',
+    admin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>',
+    dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="9" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="5" rx="1.5"/><rect x="13.5" y="11.5" width="7" height="9" rx="1.5"/><rect x="3.5" y="15.5" width="7" height="5" rx="1.5"/></svg>',
+    hide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-6 6 6 6M19 5v14"/></svg>',
+    menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
+  };
+  const EXT = '<svg class="ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 3h4v4M13 3L7 9M11 9.5V13H3V5h3.5"/></svg>';
+  const ITEMS = [
+    { id: 'today', name: 'Today', count: 2 },
+    { id: 'notebook', name: 'Notebook' },
+    'divider',
+    { id: 'c360', name: 'Chapter 360', ext: true },
+    { id: 'engage', name: 'Engage', ext: true }
+  ];
+
+  function navButton(it) {
+    const label = it.ext ? `${it.name}, opens outside Isa` : it.name;
+    return `<li><button class="nbtn ${it.id}" data-go="${it.id}" ${it.ext ? '' : 'aria-pressed="false"'} aria-label="${label}" title="${label}">
+      ${it.ext ? EXT : ''}
+      <span class="tile">${ICONS[it.id]}${it.count ? `<span class="count">${it.count}</span>` : ''}</span>
+      <span class="short">${it.name}</span>
+    </button></li>`;
+  }
+
+  const RAIL = `<button class="hide" data-act="hide" aria-label="Hide the menu" title="Hide the menu">${ICONS.hide}<span class="short">Hide</span></button>
+    <ul class="nav">${ITEMS.map(it => it === 'divider' ? '<li><hr></li>' : navButton(it)).join('')}</ul>
+    <button class="nbtn admin" data-go="admin" aria-label="Backstage: Config and dashboards" title="Backstage: Config and dashboards">
+      <span class="tile">${ICONS.dash}</span><span class="short">Backstage</span>
+    </button>`;
+  const HEAD = `<button class="hbtn menu" data-act="show" aria-label="Show the menu" title="Show the menu">${ICONS.menu}<span class="dot"></span></button>
+    <span class="logo"><i></i></span>
+    <span class="who-isa"><b>Isa</b><small>Chapter Support Assistant</small></span>
+    <span class="tools">
+      <span class="hbtn" title="New conversation" aria-label="New conversation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+      <span class="hbtn" title="Close" aria-label="Close chat">&times;</span>
+    </span>`;
+  const CHAT = `<div class="chat">
+      <div class="you">When is the compliance submission window?</div>
+      <div class="isa"><div class="lab">Isa</div>The compliance submission window runs from 1 November to 31 December each year.<div class="src">Compliance Framework · Q4 timeline</div></div>
+      <div class="compose"><span>Ask Isa a question</span><b></b></div>
+    </div>`;
+  const PANELS = `<section class="side" data-side="today"><div class="sh" style="background:var(--c-today)"><span>Today<small>Week 1 · Day 3</small></span><button data-act="shut" aria-label="Close Today">&times;</button></div>
+      <div class="sb"><div class="card"><b>Meet your Chapter Experience contact</b><small>Days 2–3 · Book a call, send a hello, or join a group welcome</small></div>
+      <div class="card"><b>Read what your predecessor left you</b><small>Days 3–5 · Opens the notebook</small></div></div></section>
+    <section class="side" data-side="notebook"><div class="sh" style="background:var(--c-notebook)"><span>Succession notebook<small>Chapter C-001</small></span><button data-act="shut" aria-label="Close the notebook">&times;</button></div>
+      <div class="sb"><div class="card"><b>Decision · Online elections</b><small>Saved by Sato Yumiko, 2 July 2026 · from Isa’s answer with 2 sources</small></div>
+      <div class="card"><b>Unfinished · Bank signers</b><small>Two signers still to add. Saved 30 June 2026</small></div></div></section>`;
+
+  document.querySelectorAll('[data-app]').forEach(app => {
+    const phone = app.hasAttribute('data-phone');
+    app.querySelector('[data-rail]').innerHTML = RAIL;
+    app.querySelector('[data-head]').innerHTML = HEAD;
+    app.querySelector('[data-body]').innerHTML = CHAT + PANELS;
+    if (phone) app.querySelector('.who-isa small').textContent = 'Day 3 of 90';
+
+    const chat = app.querySelector('.chat');
+    const toast = app.querySelector('[data-toast]');
+    let toastTimer, open = null;
+    function say(msg) {
+      toast.textContent = msg; toast.classList.add('show');
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+    function show(which) {
+      app.querySelectorAll('[data-side]').forEach(s => s.classList.toggle('open', s.dataset.side === which));
+      app.querySelectorAll('.nbtn[aria-pressed]').forEach(b => b.setAttribute('aria-pressed', b.dataset.go === which));
+      // On a phone a panel fills the screen, one at a time.
+      if (phone) chat.style.display = which ? 'none' : '';
+    }
+
+    app.addEventListener('click', e => {
+      const act = e.target.closest('[data-act]');
+      const go = e.target.closest('[data-go]');
+      if (act) {
+        const a = act.dataset.act;
+        if (a === 'hide') app.classList.add('rail-hidden');
+        if (a === 'show') app.classList.remove('rail-hidden');
+        if (a === 'shut') { open = null; show(null); }
+        return;
+      }
+      if (!go) return;
+      const id = go.dataset.go;
+      if (id === 'c360') return say('Opens the sample Chapter 360 page (to be built)');
+      if (id === 'engage') return say('Opens the sample Engage page (to be built)');
+      if (id === 'admin') return say('Backstage: Config, Developer Dashboard, Content Health Dashboard');
+      open = open === id ? null : id;
+      show(open);
+    });
+  });
+
+</script>
+</body>
+</html>
