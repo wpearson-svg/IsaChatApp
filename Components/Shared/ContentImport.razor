@@ -1,0 +1,147 @@
+@using IsaChatApp.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject IAccessControlAdapter Access
+@inject KeycloakSignInService SignInService
+@inject ContentImportService Importer
+@*
+    Dev dashboard > Content import.
+    Pick files or a whole folder (.docx, .pptx, .pdf). They are split into passages and added to the
+    live content database, so questions can use them straight away (no restart). They are also added to
+    content/content.json so a later rebuild keeps them. Needs the dashboard_dev role, like Testing.
+*@
+
+<div class="ci">
+    @if (_allowed is null)
+    {
+        <p class="ci__note">Checking access...</p>
+    }
+    else if (_allowed == false)
+    {
+        <div class="ci__locked">
+            <strong>Content import is limited to the dashboard developer role.</strong>
+            <p>Sign in with an account that has the <code>dashboard_dev</code> role.</p>
+        </div>
+    }
+    else
+    {
+        <h3 class="ci__h">Add files to the content database</h3>
+        <p class="ci__note">
+            Word (.docx), PowerPoint (.pptx) and PDF files. New passages are searchable immediately.
+            This grows the fixed set of test passages, so the test question counts change.
+        </p>
+
+        <div class="ci__row">
+            <label class="ci__pick">Choose files
+                <InputFile OnChange="OnFiles" multiple accept=".docx,.pptx,.pdf" disabled="@_busy" />
+            </label>
+            <label class="ci__pick">Choose a folder
+                <InputFile OnChange="OnFiles" multiple webkitdirectory disabled="@_busy" />
+            </label>
+        </div>
+
+        <div class="ci__row">
+            <label>Category
+                <select class="ci__select" @bind="_category">
+                    @foreach (var c in ContentImportService.Categories) { <option value="@c">@c</option> }
+                    <option value="@AddNew">Add New...</option>
+                </select>
+            </label>
+            <input class="ci__select ci__newcat" type="text" maxlength="40" placeholder="New category name"
+                   disabled="@(_category != AddNew)" @bind="_newCategory" @bind:event="oninput" />
+            <label><input type="checkbox" @bind="_replace" /> Replace files that were already imported</label>
+        </div>
+
+        @if (_busy)
+        {
+            <p class="ci__note">Importing...</p>
+        }
+
+        @if (_results is not null)
+        {
+            <table class="ci__table">
+                <thead><tr><th>File</th><th>Result</th><th class="ci__num">Passages</th></tr></thead>
+                <tbody>
+                @foreach (var r in _results)
+                {
+                    <tr>
+                        <td>@r.File</td>
+                        <td>@if (r.Problem is null) { <span class="ci__ok">Added as "@r.Title"</span> } else { <span class="ci__bad">@r.Problem</span> }</td>
+                        <td class="ci__num">@r.Passages</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            @if (_results.Any(r => r.Problem is null))
+            {
+                <p class="ci__note">
+                    Documents are listed in <code>data\content_categories.csv</code> under "@_lastCategory". The dashboard picks up a category change after Isa restarts.
+                </p>
+            }
+        }
+    }
+</div>
+
+@code {
+    [CascadingParameter] private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthState { get; set; }
+    private const string DevRole = "dashboard_dev";
+    private const long MaxFile = 50L * 1024 * 1024;
+    private bool? _allowed;
+    private bool _busy, _replace;
+    private const string AddNew = "__add_new__";
+    private string _category = "Uncategorized", _lastCategory = "", _newCategory = "";
+    private List<ImportResult>? _results;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string? token = null;
+        if (AuthState is not null)
+        {
+            var user = (await AuthState).User;
+            var sid = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+            var at = await SignInService.GetAccessTokenAsync(sid);
+            token = at is null ? null : $"Bearer {at}";
+        }
+        var identity = await Access.ValidateAsync(token);
+        _allowed = identity is not null && identity.Roles.Contains(DevRole);
+    }
+
+    private async Task OnFiles(InputFileChangeEventArgs e)
+    {
+        if (_allowed != true || _busy) return;
+        var category = _category;
+        if (category == AddNew)
+        {
+            category = new string(_newCategory.Where(ch => char.IsLetterOrDigit(ch) || ch is ' ' or '-' or '&').ToArray()).Trim();
+            if (category.Length == 0)
+            {
+                _results = new() { new("(category)", "", 0, "Type a name for the new category first.") };
+                return;
+            }
+        }
+        _busy = true; _results = null; _lastCategory = category;
+        StateHasChanged();
+        var opened = new List<(string, Stream)>();
+        var problems = new List<ImportResult>();
+        try
+        {
+            foreach (var f in e.GetMultipleFiles(200))
+            {
+                var ext = Path.GetExtension(f.Name).ToLowerInvariant();
+                if (ext is not (".docx" or ".pptx" or ".pdf")) continue;       // folders hold other files; ignore quietly
+                if (f.Size > MaxFile) { problems.Add(new(f.Name, "", 0, "Larger than 50 MB.")); continue; }
+                var ms = new MemoryStream();
+                await using (var s = f.OpenReadStream(MaxFile)) await s.CopyToAsync(ms);
+                ms.Position = 0;
+                opened.Add((f.Name, ms));
+            }
+            var done = await Importer.ImportAsync(opened, category, _replace);
+            _results = problems.Concat(done).ToList();
+            if (_results.Count == 0) _results.Add(new("(nothing)", "", 0, "No .docx, .pptx or .pdf files were selected."));
+        }
+        catch (Exception ex)
+        {
+            _results = new() { new("(import)", "", 0, "The import stopped (" + ex.GetType().Name + ").") };
+        }
+        finally { _busy = false; }
+    }
+}

@@ -225,6 +225,15 @@ else
                     <DevTesting />
                 </div>
             }
+            else if (ActiveSection == "content")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Content import</h1>
+                </div>
+                <div class="dd__card">
+                    <ContentImport />
+                </div>
+            }
             else if (ActiveSection == "models")
             {
                 <div class="dd__topbar">
@@ -292,6 +301,7 @@ else
         new("models", "Models, RAG, access & ticketing"),
         new("frontend", "Front end (optional)"),
         new("testing", "Testing console"),
+        new("content", "Content import"),
         new("health", "Health alerts"),
     };
 

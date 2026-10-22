@@ -5,7 +5,16 @@ public enum StageOutcome
 {
     Pass,
     Stop,
-    Escalate
+    Escalate,
+    /// <summary>A search found nothing. Handled, did not pass. Not a Stop, not an error; the next stage runs (contract section 3). Only database_search returns it.</summary>
+    NotFound
+}
+
+public static class StageOutcomeExtensions
+{
+    /// <summary>The word used in the event log and the panel: pass, not_found, stop or escalate.</summary>
+    public static string Tag(this StageOutcome outcome) =>
+        outcome == StageOutcome.NotFound ? "not_found" : outcome.ToString().ToLowerInvariant();
 }
 
 public record StageResult(
@@ -60,6 +69,20 @@ public class QueryContext
     public int? CompletionTokens { get; set; }
     /// <summary>Set by the real database_search: the best match score (0-1), for the "search vs. generation" view.</summary>
     public double? SearchScore { get; set; }
+
+    /// <summary>
+    /// TEST ONLY (test-failures.ps1). When set, the orchestrator makes that stage throw, to
+    /// test what a leader sees when a stage crashes. Only ever set by /api/ask, and only when
+    /// Testing:AllowForcedFailures is true (Development only). Never set in a real run.
+    /// </summary>
+    public string? TestFailStage { get; set; }
+
+    /// <summary>
+    /// TEST ONLY (test-paths.ps1 -ModelOff). When true, complex_ai sends its model call to an address
+    /// where nothing is listening, so the real "model unavailable" handling runs without anyone
+    /// having to quit Ollama. Set from the X-Isa-Test-Model: off header, under the same rule as TestFailStage.
+    /// </summary>
+    public bool TestModelOff { get; set; }
 
     /// <summary>
     /// "Show the work": one entry per stage, added by the orchestrator in the

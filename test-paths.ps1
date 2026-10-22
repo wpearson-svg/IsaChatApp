@@ -4,7 +4,7 @@
 # Usage:  .\test-paths.ps1                    sign-in checks + the main paths
 #         .\test-paths.ps1 -NoToken          send no token for the paths (DevBypass ON); skips the sign-in checks
 #         .\test-paths.ps1 -SkipSignIn        skip the sign-in checks (use while AccessControl:DevBypass is ON)
-#         .\test-paths.ps1 -ModelOff          also run the "model turned off" path (stop Ollama first)
+#         .\test-paths.ps1 -ModelOff          also run the "model turned off" path (no need to stop Ollama)
 #         .\test-paths.ps1 -ForcedFailure     also run the "source not retrieved" path (start the app with
 #                                             set OutputCompliance__ForceFail=source first)
 # The app must be running. Needs Windows PowerShell 5.1 or newer.
@@ -131,7 +131,10 @@ $cases = @(
     @{ Id = "7";  Name = "7. English question";          Q = "How many board meetings must a chapter hold each year?";            Status = $null;       Lang = "en"; Ticket = $null  }
 )
 if ($ModelOff) {
-    $cases += @{ Id = "M"; Name = "Extra: model turned off";   Q = "Who writes down what the board decided?"; Status = "escalated"; Lang = "en"; Ticket = $true }
+    # No need to quit Ollama: the app is told (test header) to aim the model call at an address where
+    # nothing is listening, so the real "model unavailable" handling runs. Needs Isa running in
+    # Development with Testing:AllowForcedFailures=true (the default in appsettings.Development.json).
+    $cases += @{ Id = "M"; Name = "Extra: model turned off";   Q = "Who writes down what the board decided?"; Status = "escalated"; Lang = "en"; Ticket = $true; Extra = @{ "X-Isa-Test-Model" = "off" } }
 }
 if ($ForcedFailure) {
     $cases += @{ Id = "F"; Name = "Extra: source not retrieved"; Q = "Who writes down what the board decided?"; Status = "escalated"; Lang = "en"; Ticket = $true }
@@ -139,7 +142,10 @@ if ($ForcedFailure) {
 
 foreach ($c in $cases) {
     $problems = @()
-    $r = Send-Ask $c.Q $headers
+    $askHeaders = @{}
+    if ($headers) { foreach ($k in $headers.Keys) { $askHeaders[$k] = $headers[$k] } }
+    if ($c.Extra) { foreach ($k in $c.Extra.Keys) { $askHeaders[$k] = $c.Extra[$k] } }
+    $r = Send-Ask $c.Q $askHeaders
     $res = $r.Res; $trace = $r.Trace
     if (-not $res) { $problems += "request failed: HTTP $($r.Code)" }
     $ev = @()
@@ -251,6 +257,7 @@ foreach ($c in $cases) {
                 }
             }
             "M" {
+                if ($res.status -eq "answered") { $problems += "the test header had no effect (the model still answered). Isa must run in Development with Testing:AllowForcedFailures=true" }
                 if ($ai -notmatch 'error=(unavailable|timeout|empty)') { $problems += "complex_ai should log error=unavailable|timeout|empty (got: $ai)" }
                 if ($ai -notmatch '^result=escalate; reason=model call failed') { $problems += "complex_ai should escalate with 'model call failed' (got: $ai)" }
             }
@@ -263,7 +270,7 @@ foreach ($c in $cases) {
     if ($res) { Write-Host ("        message: " + (($res.message -replace '\s+', ' ').Substring(0, [Math]::Min(110, $res.message.Length)))) -ForegroundColor DarkGray }
 }
 
-if (-not $ModelOff)      { Write-Host "SKIP  Extra: model turned off     (run with -ModelOff after stopping Ollama)" -ForegroundColor Yellow }
+if (-not $ModelOff)      { Write-Host "SKIP  Extra: model turned off     (run with -ModelOff)" -ForegroundColor Yellow }
 if (-not $ForcedFailure) { Write-Host "SKIP  Extra: source not retrieved (run with -ForcedFailure after starting the app with OutputCompliance__ForceFail=source)" -ForegroundColor Yellow }
 Write-Host ""
 if ($fails -eq 0) { Write-Host "All $ran checks passed." -ForegroundColor Green } else { Write-Host "$fails of $ran check(s) failed." -ForegroundColor Red; exit 1 }

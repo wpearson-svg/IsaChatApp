@@ -161,12 +161,12 @@ else
 
     private string StateLabel(StepState state) => state switch
     {
-        StepState.Passed => "passed",
-        StepState.NotFound => "nothing found",
-        StepState.Stopped => "stopped here",
-        StepState.ToPerson => "passed to a person",
-        StepState.Problem => Developer ? "error" : "something went wrong",
-        _ => "skipped",
+        StepState.Passed => Wording.StateLabelPassed,
+        StepState.NotFound => Wording.StateLabelNothingFound,
+        StepState.Stopped => Wording.StateLabelStopped,
+        StepState.ToPerson => Wording.StateLabelToPerson,
+        StepState.Problem => Developer ? Wording.StateLabelProblemDeveloper : Wording.StateLabelProblem,
+        _ => Wording.StateLabelSkipped,
     };
 
     // The icons, one shape per state (drawn inline so each one stands alone).

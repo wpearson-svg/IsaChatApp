@@ -72,6 +72,8 @@ public class Orchestrator
             var stageClock = System.Diagnostics.Stopwatch.StartNew();
             try
             {
+                // Test only (test-failures.ps1): make this stage crash on purpose.
+                if (ctx.TestFailStage == stage.Name) throw new InvalidOperationException("forced test failure");
                 result = await stage.RunAsync(ctx);
             }
             catch (Exception ex)
@@ -85,10 +87,10 @@ public class Orchestrator
             // A stage that does not apply returns Pass with the note "skipped" (contract section 3)
             var dataText = result.Skipped
                 ? $"result=pass; reason=none; note=skipped, {result.DataText}"
-                : $"result={result.Outcome.ToString().ToLowerInvariant()}; reason={result.Reason ?? "none"}; {result.DataText}";
+                : $"result={result.Outcome.Tag()}; reason={result.Reason ?? "none"}; {result.DataText}";
 
             await _eventLog.WriteAsync(ctx.TraceId, stage.Name, dataText.Trim());
-            await AddStepAsync(new WorkStep(stage.Name, result.Outcome.ToString().ToLowerInvariant(),
+            await AddStepAsync(new WorkStep(stage.Name, result.Outcome.Tag(),
                 result.Skipped, result.Reason, result.DataText, stageClock.Elapsed.TotalMilliseconds));
 
             if (result.Outcome == StageOutcome.Stop)
@@ -96,7 +98,7 @@ public class Orchestrator
                 finalStatus = "stopped";
                 ctx.StopReason = result.Reason;
                 ctx.Sources = new();   // a stopped run shows no sources
-                message = result.Reason ?? "Request could not be completed.";
+                message = result.Reason ?? IsaChatApp.Services.ShowTheWork.Wording.WentWrong;
                 break;
             }
 
@@ -164,7 +166,7 @@ public class Orchestrator
             }
 
             await _eventLog.WriteAsync(ctx.TraceId, stage.Name,
-                $"result={result.Outcome.ToString().ToLowerInvariant()}; reason={result.Reason ?? "none"}; purpose={purpose}; {result.DataText}".Trim());
+                $"result={result.Outcome.Tag()}; reason={result.Reason ?? "none"}; purpose={purpose}; {result.DataText}".Trim());
 
             if (result.Outcome != StageOutcome.Pass) return result;
         }

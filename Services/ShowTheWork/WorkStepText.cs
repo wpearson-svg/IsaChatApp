@@ -176,7 +176,9 @@ public static class WorkStepText
                 return L(Wording.StepPassages, Number(step.DataText, "passages") is int p ? Wording.Sections(p) : null);
 
             case "complex_ai":
-                if (state == StepState.ToPerson) return L(Wording.StepDivingDeeper, Wording.AnswerToPersonCheckFailed);
+                if (state == StepState.ToPerson)
+                    return L(Wording.StepDivingDeeper,
+                        step.Reason == "no approved content found" ? Wording.AnswerToPersonNoContent : Wording.AnswerToPersonCheckFailed);
                 if (Number(step.DataText, "passages") == 0) return L(Wording.StepDivingDeeper, Wording.DivingDeeperNothing);
                 return L(Wording.StepDivingDeeper, Wording.DivingDeeperDone);
 
@@ -209,8 +211,9 @@ public static class WorkStepText
     // gather or write from). Like a skipped stage, Isa didn't really use it,
     // so leaders aren't told about it; developers see it in gray.
     private static bool DidNothing(WorkStep step) =>
-        (step.Stage == "rag" && step.DataText.StartsWith("no_context")) ||
-        (step.Stage == "complex_ai" && Number(step.DataText, "passages") == 0);
+        step.Outcome == "pass" &&
+        ((step.Stage == "rag" && step.DataText.StartsWith("no_context")) ||
+         (step.Stage == "complex_ai" && Number(step.DataText, "passages") == 0));
 
     // True when ISACA's own text answered the question word for word.
     private static bool IsDirectHit(IReadOnlyList<WorkStep> steps) =>
