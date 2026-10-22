@@ -12,16 +12,20 @@ public class PassThroughStage : IStage
         => Task.FromResult(new StageResult(StageOutcome.Pass, null, "placeholder"));
 }
 
-/// <summary>T11b — Database Search stub. FTS on content DB + meaning-map fallback.</summary>
+/// <summary>
+/// Stage 5. Full-text search only (contract section 1). Found = a direct hit. Nothing found = NotFound
+/// (handled, not a Stop and not an error), and the run goes on to the miss path. The meaning-map
+/// stand-in now lives in the rag stage, not here. A real database problem is NOT hidden: it
+/// throws, and the orchestrator turns it into a plain "something went wrong" stop.
+/// Sets ctx.SearchScore (0 to 1) from the best match for the Content Health dashboard.
+/// </summary>
 public class DatabaseSearchStage : IStage
 {
     public string Name => "database_search";
     private readonly string _contentDbPath;
-    private readonly IConfiguration _config;
 
     public DatabaseSearchStage(IConfiguration config)
     {
-        _config = config;
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
     }
 
@@ -31,179 +35,143 @@ public class DatabaseSearchStage : IStage
         "when","can","with","that","this","you","is","do","we","to","a","of","in","chapter","hold","policy","period","annual"
     };
 
-    // Raw question text breaks FTS5 syntax ("?" etc.), so keep letters/digits, drop filler, AND the rest.
+    // Raw question text breaks FTS5 syntax ("?" etc.), so keep letters/digits, drop filler, and AND the rest.
+    // Each term is quoted so a typed word like AND, OR or NOT is searched as a word, not read as an operator.
     private static string? BuildFtsQuery(string question)
     {
         var terms = System.Text.RegularExpressions.Regex.Matches(question ?? "", "[A-Za-z0-9]+")
             .Select(m => m.Value)
             .Where(w => !FtsStopWords.Contains(w))
             .ToList();
-        return terms.Count == 0 ? null : string.Join(" AND ", terms);
+        return terms.Count == 0 ? null : string.Join(" AND ", terms.Select(t => "\"" + t + "\""));
     }
 
     public async Task<StageResult> RunAsync(QueryContext ctx)
     {
-        // Open read-only
         if (!File.Exists(_contentDbPath))
-        {
-            return new StageResult(StageOutcome.Pass, null, "no content db yet");
-        }
+            return new StageResult(StageOutcome.NotFound, "no content db", "no content db yet; hit=no; passages=0");
+
+        var ftsQuery = BuildFtsQuery(ctx.Question);
+        if (ftsQuery == null)
+            return new StageResult(StageOutcome.NotFound, "no match", "hit=no; passages=0; note=no searchable terms");
 
         await using var conn = new SqliteConnection($"Data Source={_contentDbPath};Mode=ReadOnly");
         await conn.OpenAsync();
 
-        // Try FTS if a passages/content table exists (A'keyrah T8 will define schema).
-        // ISACA's own documents only: the best-practice guides are searched last (below).
-        var ftsQuery = BuildFtsQuery(ctx.Question);
-        var passages = await SearchAsync(conn, ftsQuery, bestPractice: false);
-
-        if (passages.Count > 0)
+        var passages = new List<Passage>();
+        double? best = null;
+        await using (var cmd = conn.CreateCommand())
         {
-            ctx.Passages = passages;
-            ctx.DirectHit = true;
-            ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
-            ctx.CitedSource = ctx.Sources[0];   // the passage the answer comes from (contract: cited_source)
-            return new StageResult(StageOutcome.Pass, null, $"direct_hit; count={passages.Count}");
-        }
-
-        // Meaning-map fallback (A'keyrah T7/T8) — stand-in for vector search
-        try
-        {
-            await using var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                SELECT p.document, p.section, p.page, p.text
-                FROM meaning_map m
-                JOIN passages p ON p.id = m.passage_id
-                WHERE lower(m.question) = lower($q)
-                LIMIT 5;
-                """;
-            cmd.Parameters.AddWithValue("$q", ctx.Question);
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                passages.Add(new Passage(
-                    reader.GetString(0),
-                    reader.GetString(1),
-                    reader.GetString(2),
-                    reader.GetString(3)
-                ));
-            }
-        }
-        catch
-        {
-            // meaning_map may not exist yet
-        }
-
-        if (passages.Count > 0)
-        {
-            ctx.Passages = passages;
-            ctx.DirectHit = false;
-            ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
-            return new StageResult(StageOutcome.Pass, null, $"meaning_map; count={passages.Count}");
-        }
-
-        // Last: the governance best-practice guides (content/Governance Best Practice,
-        // Matthew, 22 October 2026). General guidance written by the Isa team, not ISACA
-        // policy, so they answer only when ISACA's documents and the meaning map have
-        // nothing. Answered like a direct hit (the guide's own sentence, no AI), but
-        // tagged "best_practice" so the chat labels it as best practice, not ISACA's guidance.
-        passages = await SearchAsync(conn, ftsQuery, bestPractice: true);
-        if (passages.Count > 0)
-        {
-            ctx.Passages = passages;
-            ctx.DirectHit = true;
-            ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
-            ctx.CitedSource = ctx.Sources[0];
-            return new StageResult(StageOutcome.Pass, null, $"best_practice; count={passages.Count}");
-        }
-
-        return new StageResult(StageOutcome.Pass, null, "no_passages");
-    }
-
-    /// <summary>
-    /// Full-text search over ISACA's documents (bestPractice false) or over the
-    /// best-practice guides only (true). The guides' titles all start with
-    /// Wording.BestPracticePrefix. Empty when there is nothing to search for.
-    /// </summary>
-    private static async Task<List<Passage>> SearchAsync(SqliteConnection conn, string? ftsQuery, bool bestPractice)
-    {
-        var found = new List<Passage>();
-        if (ftsQuery == null) return found;
-        try
-        {
-            await using var cmd = conn.CreateCommand();
-            // Adjust table/column names to match A'keyrah's T8 schema when ready
-            cmd.CommandText = $"""
-                SELECT document, section, page, text
+                SELECT document, section, page, text, rank
                 FROM passages
-                WHERE passages MATCH $q AND document {(bestPractice ? "LIKE" : "NOT LIKE")} $prefix
+                WHERE passages MATCH $q
                 ORDER BY rank
                 LIMIT 5;
                 """;
             cmd.Parameters.AddWithValue("$q", ftsQuery);
-            cmd.Parameters.AddWithValue("$prefix", IsaChatApp.Services.ShowTheWork.Wording.BestPracticePrefix + "%");
-
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                found.Add(new Passage(
-                    reader.GetString(0),
-                    reader.GetString(1),
-                    reader.GetString(2),
-                    reader.GetString(3)
-                ));
+                passages.Add(new Passage(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+                if (best is null)
+                {
+                    // FTS5 rank is negative and more negative = better. Squash it into 0..1.
+                    var x = Math.Max(0, -reader.GetDouble(4));
+                    best = x / (1 + x);
+                }
             }
         }
-        catch
-        {
-            // Table may not exist yet — fall through to meaning map
-        }
-        return found;
+
+        if (passages.Count == 0)
+            return new StageResult(StageOutcome.NotFound, "no match", "hit=no; passages=0");
+
+        ctx.Passages = passages;
+        ctx.DirectHit = true;
+        ctx.SearchScore = best;
+        ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
+        ctx.CitedSource = ctx.Sources[0];   // the passage the answer comes from (contract: cited_source)
+        return new StageResult(StageOutcome.Pass, null, $"direct_hit; count={passages.Count}; hit=yes; passages={passages.Count}");
     }
 }
 
-/// <summary>T11b — Knowledge Graph stub. Returns empty related list for Foundation.</summary>
+/// <summary>T11b — Knowledge Graph stub (a stub inside the RAG step). Skipped on a direct hit.</summary>
 public class KnowledgeGraphStage : IStage
 {
     public string Name => "knowledge_graph";
 
     public Task<StageResult> RunAsync(QueryContext ctx)
-        => Task.FromResult(new StageResult(StageOutcome.Pass, null, "related=[]"));
+        => Task.FromResult(ctx.DirectHit
+            ? new StageResult(StageOutcome.Pass, null, "direct hit", Skipped: true)
+            : new StageResult(StageOutcome.Pass, null, "related=[]"));
 }
 
-/// <summary>T11b — RAG stub. Joins passages into context. Skips on direct hit.</summary>
+/// <summary>
+/// Stage 7. RAG STUB (contract section 1): on a miss, hands fixed stand-in passages to the AI step.
+/// It searches nothing real. The stand-in is the meaning map in content.db (a question mapped to a
+/// real passage), moved here from database_search (Pipeline Built). No passages = Escalate, which
+/// skips complex_ai and goes to ticketing. Skipped on a direct hit.
+/// </summary>
 public class RagStage : IStage
 {
     public string Name => "rag";
+    private readonly string _contentDbPath;
 
-    public Task<StageResult> RunAsync(QueryContext ctx)
+    public RagStage(IConfiguration config)
+    {
+        _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
+    }
+
+    public async Task<StageResult> RunAsync(QueryContext ctx)
     {
         if (ctx.DirectHit)
         {
-            // On direct hit, AI stages may be skipped
             if (ctx.Passages.Count > 0 && string.IsNullOrEmpty(ctx.AnswerText))
                 AnswerExtract.Apply(ctx);   // best-matching sentence, its source first
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "direct hit", Skipped: true));
+            return new StageResult(StageOutcome.Pass, null, "direct hit", Skipped: true);
         }
 
         if (ctx.Passages.Count == 0)
+            ctx.Passages = await StandInAsync(ctx.Question);
+
+        if (ctx.Passages.Count == 0)
+            return new StageResult(StageOutcome.Escalate, "no approved content found", "no_context; passages=0; retrieved=none");
+
+        ctx.Sources = ctx.Passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).Distinct().ToList();
+        var retrieved = string.Join(", ", ctx.Passages.Select(p => $"{p.Document} {p.Section}".Replace(';', ',')).Distinct());
+        return new StageResult(StageOutcome.Pass, null,
+            $"passages={ctx.Passages.Count}; retrieved={retrieved}; stub=meaning_map");
+    }
+
+    private static string Normalize(string value) =>
+        System.Text.RegularExpressions.Regex.Replace(value ?? "", "[^a-z0-9]+", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim().ToLowerInvariant();
+
+    // The meaning map: a plain-language question mapped to the passage that answers it.
+    private async Task<List<Passage>> StandInAsync(string question)
+    {
+        var found = new List<Passage>();
+        if (!File.Exists(_contentDbPath)) return found;
+        try
         {
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "no_context"));
+            await using var conn = new SqliteConnection($"Data Source={_contentDbPath};Mode=ReadOnly");
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT m.question, p.document, p.section, p.page, p.text
+                FROM meaning_map m
+                JOIN passages p ON p.id = m.passage_id;
+                """;
+            var wanted = Normalize(question);
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                if (Normalize(reader.GetString(0)) == wanted)
+                    found.Add(new Passage(reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4)));
         }
-
-        var contextText = string.Join("\n\n",
-            ctx.Passages.Select(p => $"[{p.Document} / {p.Section} / p.{p.Page}]\n{p.Text}"));
-
-        // Foundation: stub answer from first passage. Real AI comes in Pipeline Built.
-        ctx.AnswerText = ctx.Passages[0].Text;
-        ctx.Sources = ctx.Passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
-
-        return Task.FromResult(new StageResult(
-            StageOutcome.Pass,
-            null,
-            $"context_chars={contextText.Length}; passages={ctx.Passages.Count}"
-        ));
+        catch (SqliteException)
+        {
+            // No meaning map in this database: a normal miss. rag escalates.
+        }
+        return found.DistinctBy(p => (p.Document, p.Section, p.Page)).Take(5).ToList();
     }
 }
 

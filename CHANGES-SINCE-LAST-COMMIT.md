@@ -1,21 +1,24 @@
 # Changes since the last commit
 
-A running list of every change made since Matthew's last commit (October 22, 2026: 22d60ed "Notebook expansion"). Use it to write the Git commit message and to tell Willis what changed. When Matthew commits, this list is cleared and starts again.
+A running list of every change made since Matthew's last commit (October 22, 2026: e879e48 "fix"). Use it to write the Git commit message and to tell Willis what changed. When Matthew commits, this list is cleared and starts again.
 
-- **Merge of main (bb51ace) into Matthew's-Branch** (Matthew ran `git pull origin main` on October 22). This brings in Willis's and Eliyas's pipeline work (pull requests #22 and #23: the real AI model call, content import, developer access and more). Git combined most files by itself; two files conflicted because both branches had changed the same lines, and Claude resolved them:
-  - **Services/ShowTheWork/Wording.cs**: kept Willis's version of the skipped-step and crashed-stage wording (the same fix both branches had made, in slightly different words) and his new screen-reader labels. The best-practice wording from Matthew's branch is kept.
-  - **Services/Orchestrator/Stages/StubStages.cs**: kept Willis's new search stage (plain full-text search; a miss goes on to the meaning map in the rag stage and then the AI model) and fitted the best-practice guides into it: ISACA's documents are searched first; only if they have nothing, and the question is not in the meaning map, are the guides searched. The search helper now keeps Willis's match score and no longer hides database errors, like the rest of his stage.
-  - Rebuilt data/content.db (main brought a new meaning_map.json). Builds with no errors or warnings.
-  - Checked in the browser after the merge: "How many board meetings must a chapter hold each year?" answers from the President Guidebook; the orientation and conflict-of-interest questions answer from the guides, labelled as best practice; the cryptocurrency question goes to a person. "Who writes down what the board decided?" correctly goes down Willis's miss path to the AI model, but his answer check then hands it off ("ai check failed: source not retrieved": the model named its source "PASSAGE: ..."). That is in the new AI checks, not the merge; worth telling Willis, since it was a demo question.
+Purpose: let the pull request from Matthew's-Branch merge into main without conflicts, so everyone's work comes together. No merge was run; the two files that clashed with main now agree with it.
+
+- **Services/Orchestrator/Stages/StubStages.cs**: now exactly main's version (Willis's new search stage). This drops the "ISACA's documents first, best-practice guides last" search order from Matthew's branch, because Willis rewrote the same lines and the two can't be combined automatically. To be put back into Willis's new search after the merge.
+- **Services/ShowTheWork/Wording.cs**: now main's version (Willis's crashed-stage and skipped-step wording and screen-reader labels) plus the best-practice lines from Matthew's branch (BestPracticePrefix, IsBestPractice, BestPracticeOpening, ClosedAnsweredBestPractice, FoundBestPractice), which sit in parts of the file main didn't change.
+- **content/content.json**: the 50 best-practice guide passages are taken out (it now matches main). Without the search order above, the guides would compete with ISACA's documents and could push the President Guidebook out of answers. The guides themselves (content/Governance Best Practice/) and content/add_best_practice.py are unchanged, ready to switch back on.
+- **CHANGES-SINCE-LAST-COMMIT.md**: this list.
+- Checked without merging anything: every file both branches changed now merges with no conflicts (tested file by file with git merge-file), and main plus this branch builds with no errors or warnings. This branch on its own does NOT build until it is merged (StubStages.cs uses StageOutcome.NotFound, which only main has), so don't run Isa from it before the merge. Not checked in the browser.
+
+After the merge, starting from main: put the "ISACA first, guides last" order into Willis's new search stage, run `python content\add_best_practice.py` and `python content\build_content_db.py`, and retest the demo questions.
 
 ## Suggested commit message
 
 ```
-Merge main into Matthew's-Branch
+Line up with main so the pull request merges cleanly
 
-- Wording.cs: keep Willis's crashed-stage and skipped-step wording and
-  screen-reader labels; keep the best-practice wording
-- StubStages.cs: keep Willis's new search stage; search the
-  best-practice guides only when ISACA's documents and the meaning map
-  have nothing
+- StubStages.cs: take main's version (Willis's new search stage)
+- Wording.cs: main's version plus the best-practice wording
+- content.json: take the best-practice guides out for now; they go back
+  in, with ISACA-first search order, after the merge
 ```
