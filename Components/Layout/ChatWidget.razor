@@ -87,6 +87,7 @@
 @inject UsageLogService UsageLog
 @inject IsaChatApp.Services.Orchestrator.Orchestrator Pipeline
 @inject KeycloakSignInService SignInService
+@inject DevAccessService DevAccess
 @inject IsaChatApp.Services.Onboarding.NotebookService Notebook
 @inject IsaChatApp.Services.Onboarding.JourneyContextService JourneyContexts
 @inject IsaChatApp.Services.Onboarding.ProgressService Progress
@@ -730,12 +731,14 @@
     private bool CanOpenNotebook { get; set; }
     private bool HasJourney { get; set; }
     private string? _personId;
+    private bool _isDev;   // holds the Keycloak role dashboard_dev
 
     protected override async Task OnParametersSetAsync()
     {
         CanOpenNotebook = false;
         HasJourney = false;
         _personId = null;
+        _isDev = await DevAccess.HasDevRoleAsync(AuthState);
         if (AuthState is null) return;
         _personId = (await AuthState).User.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
         if (_personId is null) return;
@@ -796,9 +799,11 @@
         get
         {
             var items = new List<IsaRail.BackstageItem>();
-            if (Settings.CurrentRole == WidgetSettings.UserRole.User) return items;
+            // The team (Keycloak role dashboard_dev) always gets Backstage, whatever role
+            // is picked on /isa-config. Added 22 October 2026.
+            if (Settings.CurrentRole == WidgetSettings.UserRole.User && !_isDev) return items;
             items.Add(new("Config", "/isa-config"));
-            if (Settings.CanAccessDevDashboard) items.Add(new("Developer Dashboard", "/dev-dashboard"));
+            if (Settings.CanAccessDevDashboard || _isDev) items.Add(new("Developer Dashboard", "/dev-dashboard"));
             if (Settings.CanAccessContentHealthDashboard) items.Add(new("Content Health Dashboard", "/content-health-dashboard"));
             return items;
         }
