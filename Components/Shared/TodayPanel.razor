@@ -21,7 +21,11 @@
         introduction, join a group welcome), and the privacy line.
         Any one of the three completes the step.
      3. Any other step: its "What to do" text, its source if it comes
-        from an ISACA document, and a "Mark as done" button.
+        from an ISACA document, and a "Mark as done" button. "Meet your
+        board" (J-05) also lists the chapter's board (Matthew's approved
+        mockup, Claude outputs/Meet your board mockups.html, 23 October
+        2026): name, role, term dates, and each member's time zone with
+        the time there now. No emails or contact details.
    Views 2 and 3 also show the step's history. Every "done" and "not
    done" is kept as its own entry (ProgressService.step_history), so
    the record is never rewritten. Dates are the leader's "today": the
@@ -33,6 +37,8 @@
        fake calendar (call times and group sessions worked out from the
        demo date).
      - ProgressService: what the leader has done (data/progress.db).
+     - LeaderTermService.GetBoard: the chapter's board, from the team's
+       directory (data/directory.db; invented people only).
 
    Prototype limits, stated on screen where they matter: the calendar is
    made up, and introductions are saved in Isa but never emailed.
@@ -44,6 +50,8 @@
 @inject JourneyContextService JourneyContexts
 @inject ContactService Contacts
 @inject ProgressService Progress
+@inject LeaderTermService Terms
+@inject HelpGuideService Guide
 @inject IJSRuntime JS
 
 <aside class="isa-today @(Rightmost ? "" : "is-inner")" style="@Style" aria-label="Today">
@@ -301,6 +309,87 @@
                     </div>
                 }
 
+                @if (_selected.StepId == TourStepId)
+                {
+                    @* "Get to know Isa": the day-1 tour, one card at a time
+                       (onboarding/help.json). The last card opens the full guide. *@
+                    var tour = Guide.Load().Tour;
+                    if (tour.Count > 0)
+                    {
+                        var at = Math.Clamp(_tourIndex, 0, tour.Count - 1);
+                        var card = tour[at];
+                        <div class="isa-today__tour" aria-live="polite">
+                            <div class="isa-today__tourDots" aria-label="@($"Card {at + 1} of {tour.Count}")">
+                                @for (var d = 0; d < tour.Count; d++)
+                                {
+                                    <span class="@(d <= at ? "is-on" : "")"></span>
+                                }
+                            </div>
+                            <p class="isa-today__tourTitle">@card.Title</p>
+                            <p class="isa-today__tourText"><HelpText Text="@card.Text" /></p>
+                            <div class="isa-today__tourBtns">
+                                @if (at > 0)
+                                {
+                                    <button type="button" class="isa-today__tourBtn is-ghost" @onclick="() => _tourIndex = at - 1">Back</button>
+                                }
+                                @if (at < tour.Count - 1)
+                                {
+                                    <button type="button" class="isa-today__tourBtn" @onclick="() => _tourIndex = at + 1">Next</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="isa-today__tourBtn" @onclick="OnOpenHelp">Read the full guide</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (_selected.StepId == BoardStepId)
+                {
+                    @* "Meet your board": who is on the leader's chapter board. *@
+                    var board = Terms.GetBoard(_ctx.Term.ChapterId, _ctx.Today);
+                    <p class="isa-today__boardHead">
+                        @_ctx.Term.ChapterName
+                        <span>@(board.Count == 1 ? "1 board member" : $"{board.Count} board members")</span>
+                    </p>
+                    <ul class="isa-today__board">
+                        @foreach (var m in board)
+                        {
+                            var isYou = m.PersonId == _ctx.PersonId;
+                            var isPast = m.Role == "Immediate Past President";
+                            var diff = TimeDifference(m.TimeZone, _ctx.Term.TimeZone);
+                            <li class="isa-today__member">
+                                <span class="isa-today__avatar @(isYou ? "is-you" : isPast ? "is-past" : "")" aria-hidden="true">@Initials(m.Name)</span>
+                                <span class="isa-today__memberMain">
+                                    <span class="isa-today__memberName">@m.Name@if (isYou) {<em> (you)</em>}</span>
+                                    <span class="isa-today__memberRole">@m.Role@(isPast ? " · the president before you" : "")</span>
+                                    <span class="isa-today__memberTerm">@TermLabel(m)</span>
+                                </span>
+                                <span class="isa-today__memberTime">
+                                    <b>@LocalTime(m.TimeZone)</b>
+                                    @City(m.TimeZone)
+                                    @if (diff is not null)
+                                    {
+                                        <span class="isa-today__memberDiff">@diff</span>
+                                    }
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                    <p class="isa-today__boardPrivacy">
+                        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
+                        From ISACA's records: names, board roles, term dates and time zones only.
+                    </p>
+                    var nextStep = _ctx.AllSteps.FirstOrDefault(s => s.StepId == BoardIntroStepId);
+                    if (nextStep is not null)
+                    {
+                        <button type="button" class="isa-today__boardNext" @onclick="() => OpenStep(nextStep)">
+                            <b>Coming up, @DaysLabel(nextStep).ToLowerInvariant():</b> @nextStep.Title.ToLowerInvariant() &rsaquo;
+                        </button>
+                    }
+                }
+
                 @if (_selected.StepId == NotebookStepId)
                 {
                     @* "Read what your predecessor left you": opens the
@@ -358,6 +447,56 @@
 
     // The journey step that leads to the succession notebook.
     private const string NotebookStepId = "J-04";
+
+    // ---- "Get to know Isa" (J-02): the day-1 tour ----
+    private const string TourStepId = "J-02";
+    private int _tourIndex;   // the card showing; back to the first each time the step opens
+
+    /// <summary>"Read the full guide" at the end of the tour: the chat widget opens "How to use Isa".</summary>
+    [Parameter] public EventCallback OnOpenHelp { get; set; }
+
+    // ---- "Meet your board" (J-05) ----
+    private const string BoardStepId = "J-05";
+    private const string BoardIntroStepId = "J-19";   // "Introduce yourself to your board", the next step
+
+    private static string Initials(string name) =>
+        string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
+
+    private static string TermLabel(BoardMember m) =>
+        $"{m.TermStart.ToString("MMM yyyy", CultureInfo.InvariantCulture)} – {m.TermEnd.ToString("MMM yyyy", CultureInfo.InvariantCulture)}";
+
+    // "Australia/Sydney" becomes "Sydney".
+    private static string City(string timeZone) => timeZone.Split('/').Last().Replace('_', ' ');
+
+    private static TimeZoneInfo? Zone(string id)
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById(id); }
+        catch { return null; }
+    }
+
+    // The time it is now in that city (the real clock; only the day of term follows the demo date).
+    private static string LocalTime(string timeZone)
+    {
+        var zone = Zone(timeZone);
+        if (zone is null) return "";
+        var t = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone);
+        return t.ToString("h:mm tt", CultureInfo.InvariantCulture).ToLowerInvariant();
+    }
+
+    // "1 hour ahead of you", "2 hours 30 minutes behind you", or nothing when it's the same time.
+    private static string? TimeDifference(string theirs, string yours)
+    {
+        var a = Zone(theirs);
+        var b = Zone(yours);
+        if (a is null || b is null) return null;
+        var now = DateTime.UtcNow;
+        var minutes = (int)(a.GetUtcOffset(now) - b.GetUtcOffset(now)).TotalMinutes;
+        if (minutes == 0) return null;
+        var h = Math.Abs(minutes) / 60;
+        var m = Math.Abs(minutes) % 60;
+        var amount = (h > 0 ? (h == 1 ? "1 hour" : $"{h} hours") : "") + (h > 0 && m > 0 ? " " : "") + (m > 0 ? $"{m} minutes" : "");
+        return $"{amount} {(minutes > 0 ? "ahead of" : "behind")} you";
+    }
 
     // Who is signed in, from the sign-in cookie.
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
@@ -437,6 +576,7 @@
 
     private void OpenStep(JourneyStep step, bool fromProgress)
     {
+        _tourIndex = 0;
         _goingBack = false;
         _hasMoved = true;
         _selected = step;

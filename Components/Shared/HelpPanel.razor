@@ -1,0 +1,115 @@
+@* ============================================================
+   HelpPanel.razor
+
+   "How to use Isa" (Feature 3 in ONBOARDING-FEATURE.md; Matthew's
+   approved mockup, Claude outputs/How to use Isa mockups.html,
+   23 October 2026). Opened from the Help button at the bottom of the
+   rail, for anyone; it takes the right-hand place, like the Library
+   and the notebook (one of the three at a time), with the same sizes.
+
+   Six short sections, with links at the top to jump to each. "Ask
+   Isa" on an example question puts it in the question box, ready to
+   send. The words come from onboarding/help.json
+   (Services/Onboarding/HelpGuideService.cs), which must describe only
+   what Isa actually does today. Nothing here comes from the AI model.
+   ============================================================ *@
+
+@using IsaChatApp.Services.Onboarding
+@inject HelpGuideService Guide
+
+<aside class="isa-help" style="@Style" aria-label="How to use Isa">
+
+    <div class="isa-help__header">
+        <div class="isa-help__headText">
+            <span class="isa-help__name">How to use Isa</span>
+            <span class="isa-help__sub">A short guide</span>
+        </div>
+        <div class="isa-help__headBtns">
+            <button type="button" class="isa-help__iconBtn isa-help__enlarge" @onclick="OnToggleEnlarge"
+                    aria-pressed="@(Enlarged ? "true" : "false")"
+                    title="@(Enlarged ? "Make smaller" : "Enlarge")" aria-label="@(Enlarged ? "Make the guide smaller" : "Enlarge the guide")">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    @if (Enlarged)
+                    {
+                        <path d="M6.5 2.5v4h-4M9.5 13.5v-4h4M6.5 6.5L2 2M9.5 9.5L14 14" />
+                    }
+                    else
+                    {
+                        <path d="M10 2h4v4M6 14H2v-4M14 2L9 7M2 14l5-5" />
+                    }
+                </svg>
+            </button>
+            <button type="button" class="isa-help__iconBtn isa-help__close" @onclick="OnClose" aria-label="Close the guide" title="Close">&times;</button>
+        </div>
+    </div>
+
+    <div class="isa-help__body">
+        @if (_guide.Sections.Count == 0)
+        {
+            <p class="isa-help__empty">The guide isn't available right now.</p>
+        }
+        else
+        {
+            <nav class="isa-help__toc" aria-label="In this guide">
+                @foreach (var s in _guide.Sections)
+                {
+                    <button type="button" class="isa-help__tocLink" @onclick="() => Jump(s.Id)">@(s.Short ?? s.Title)</button>
+                }
+            </nav>
+
+            @for (var i = 0; i < _guide.Sections.Count; i++)
+            {
+                var s = _guide.Sections[i];
+                var number = i + 1;
+                <section class="isa-help__sec">
+                    @* tabindex -1: a link above moves focus here, which also scrolls it into view. *@
+                    <h3 class="isa-help__secTitle" tabindex="-1" @ref="_headings[s.Id]">
+                        <span class="isa-help__num" aria-hidden="true">@number</span>@s.Title
+                    </h3>
+                    @if (s.Points.Count > 0)
+                    {
+                        <ul class="isa-help__points">
+                            @foreach (var p in s.Points)
+                            {
+                                <li><HelpText Text="@p" /></li>
+                            }
+                        </ul>
+                    }
+                    @foreach (var q in s.Questions)
+                    {
+                        <div class="isa-help__ask">
+                            <span>@q</span>
+                            <button type="button" class="isa-help__askBtn" @onclick="() => OnAsk.InvokeAsync(q)"
+                                    aria-label="@($"Ask Isa: {q}")">Ask Isa</button>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(s.Text))
+                    {
+                        <p class="isa-help__tip"><HelpText Text="@s.Text" /></p>
+                    }
+                </section>
+            }
+        }
+    </div>
+</aside>
+
+@code {
+    /// <summary>Width and position, from the chat widget, so the panels sit side by side.</summary>
+    [Parameter] public string? Style { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnToggleEnlarge { get; set; }
+    [Parameter] public bool Enlarged { get; set; }
+
+    /// <summary>"Ask Isa" on an example question: the chat widget puts it in the question box.</summary>
+    [Parameter] public EventCallback<string> OnAsk { get; set; }
+
+    private HelpGuide _guide = new();
+    private readonly Dictionary<string, ElementReference> _headings = new();
+
+    protected override void OnInitialized() => _guide = Guide.Load();
+
+    private async Task Jump(string id)
+    {
+        if (_headings.TryGetValue(id, out var heading)) await heading.FocusAsync();
+    }
+}

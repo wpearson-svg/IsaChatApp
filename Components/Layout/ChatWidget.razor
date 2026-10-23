@@ -135,7 +135,7 @@
         @* is-shifted rounds the chat's right corners while Today or the
            notebook is open beside it. Its width and position come from
            ChatPanelStyle (see "Onboarding: the side panels" below). *@
-        <div class="isa-widget__panel is-expanded @(IsTodayOpen || IsNotebookOpen ? "is-shifted" : "") @(RailTakesRoom ? "has-rail" : "") @(_railGliding ? "is-railGlide" : "")" style="@ChatPanelStyle">
+        <div class="isa-widget__panel is-expanded @(IsTodayOpen || IsRightPanelOpen ? "is-shifted" : "") @(RailTakesRoom ? "has-rail" : "") @(_railGliding ? "is-railGlide" : "")" style="@ChatPanelStyle">
 
             @* Header: ISACA Dark Blue band with the Isa ring, name and
                role, and a cropped "C" brand graphic behind it (same
@@ -423,9 +423,11 @@
         if (ShowRail)
         {
             <IsaRail Style="@RailStyle" Closing="@_railClosing" Returning="@_railCameBack" ShowToday="@HasJourney" ShowNotebook="@CanOpenNotebook"
+                     ShowLibrary="@(_personId is not null)" LibraryOpen="@IsLibraryOpen"
                      StepsLeftToday="@StepsLeftToday" TodayOpen="@IsTodayOpen" NotebookOpen="@IsNotebookOpen"
                      Backstage="@BackstageItems" OnHide="HideRail" OnToggleToday="ToggleToday"
-                     OnToggleNotebook="ToggleNotebook" OnOpenBackstage="OpenDashboard" />
+                     OnToggleNotebook="ToggleNotebook" OnToggleLibrary="ToggleLibrary" OnOpenBackstage="OpenDashboard"
+                     HelpOpen="@IsHelpOpen" OnToggleHelp="ToggleHelp" />
         }
 
         @* Onboarding: the Today window, beside the chat (see
@@ -433,9 +435,9 @@
            page, so it is drawn on top of the dimmed backdrop too. *@
         if (IsTodayOpen)
         {
-            <TodayPanel OnClose="CloseToday" Style="@SidePanelStyle(SidePanel.Today)" Rightmost="@(!IsNotebookOpen)"
+            <TodayPanel OnClose="CloseToday" Style="@SidePanelStyle(SidePanel.Today)" Rightmost="@(!IsRightPanelOpen)"
                         Enlarged="@(Enlarged == SidePanel.Today)" OnToggleEnlarge="() => ToggleEnlarge(SidePanel.Today)"
-                        OnOpenNotebook="OpenNotebook" OnProgressChanged="RefreshStepsLeft" />
+                        OnOpenNotebook="OpenNotebook" OnProgressChanged="RefreshStepsLeft" OnOpenHelp="OpenHelp" />
         }
 
         @* Onboarding: the succession notebook, always the rightmost panel
@@ -444,6 +446,23 @@
         {
             <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion" OnChecklistChanged="NotebookChanged"
                            Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest" />
+        }
+
+        @* The Library (Feature 5; Components/Shared/LibraryPanel.razor). It
+           takes the notebook's place on the right, with the same sizes; only
+           one of the two is open at a time. *@
+        if (IsLibraryOpen)
+        {
+            <LibraryPanel OnClose="CloseLibrary" Style="@SidePanelStyle(SidePanel.Notebook)"
+                          Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" />
+        }
+
+        @* "How to use Isa" (Feature 3; Components/Shared/HelpPanel.razor), in
+           the same right-hand place as the notebook and the Library. *@
+        if (IsHelpOpen)
+        {
+            <HelpPanel OnClose="CloseHelp" Style="@SidePanelStyle(SidePanel.Notebook)"
+                       Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" OnAsk="AskFromHelp" />
         }
     }
 
@@ -738,6 +757,8 @@
         IsExpanded = false;
         IsTodayOpen = false;
         IsNotebookOpen = false;
+        IsLibraryOpen = false;
+        IsHelpOpen = false;
         Enlarged = null;
         _railCameBack = false;   // next time the chat opens, the rail opens with its slower glide
     }
@@ -763,14 +784,58 @@
     // someone with no journey strip, like the outgoing president) by the
     // notebook icon in the header. NotebookService decides who may open it.
     private bool IsNotebookOpen { get; set; } = false;
-    private void ToggleNotebook() { if (!IsNotebookOpen) _notebookSmall = false; IsNotebookOpen = !IsNotebookOpen; _checklistRequest = 0; if (!IsNotebookOpen) Unenlarge(SidePanel.Notebook); }
-    private void OpenNotebook() { if (!IsNotebookOpen) _notebookSmall = false; IsNotebookOpen = true; _checklistRequest = 0; }
+    private void ToggleNotebook() { if (!IsNotebookOpen) { _notebookSmall = false; IsLibraryOpen = false; IsHelpOpen = false; } IsNotebookOpen = !IsNotebookOpen; _checklistRequest = 0; if (!IsNotebookOpen) Unenlarge(SidePanel.Notebook); }
+    private void OpenNotebook() { if (!IsNotebookOpen) _notebookSmall = false; IsLibraryOpen = false; IsHelpOpen = false; IsNotebookOpen = true; _checklistRequest = 0; }
     private void CloseNotebook() { IsNotebookOpen = false; Unenlarge(SidePanel.Notebook); }
 
     // "Open the checklist" in the outgoing president's Today note: opens the
     // notebook on its handoff checklist page (NotebookPanel.ChecklistRequest).
     private int _checklistRequest;
-    private void OpenChecklist() { if (!IsNotebookOpen) _notebookSmall = false; IsNotebookOpen = true; _checklistRequest++; }
+    private void OpenChecklist() { if (!IsNotebookOpen) _notebookSmall = false; IsLibraryOpen = false; IsHelpOpen = false; IsNotebookOpen = true; _checklistRequest++; }
+
+    // ---- Onboarding: the Library (Feature 5) ---------------------------------
+    //
+    // Opened by the Library button on the rail, for anyone signed in. It
+    // shares the right-hand place with the notebook, so opening one closes
+    // the other, and it uses the notebook's sizes (SidePanel.Notebook below
+    // means "the right-hand panel"): half the screen beside the chat alone,
+    // a third with Today open.
+    private bool IsLibraryOpen { get; set; } = false;
+    private void ToggleLibrary()
+    {
+        if (!IsLibraryOpen) { _notebookSmall = false; IsNotebookOpen = false; IsHelpOpen = false; _checklistRequest = 0; }
+        IsLibraryOpen = !IsLibraryOpen;
+        if (!IsLibraryOpen) Unenlarge(SidePanel.Notebook);
+    }
+    private void CloseLibrary() { IsLibraryOpen = false; Unenlarge(SidePanel.Notebook); }
+
+    // ---- "How to use Isa" (Feature 3) ------------------------------------
+    //
+    // Opened by Help at the bottom of the rail (everyone), or by "Read the
+    // full guide" at the end of the day-1 tour. It shares the right-hand
+    // place with the notebook and the Library, one of the three at a time.
+    private bool IsHelpOpen { get; set; } = false;
+    private void ToggleHelp()
+    {
+        if (!IsHelpOpen) { _notebookSmall = false; IsNotebookOpen = false; IsLibraryOpen = false; _checklistRequest = 0; }
+        IsHelpOpen = !IsHelpOpen;
+        if (!IsHelpOpen) Unenlarge(SidePanel.Notebook);
+    }
+    private void OpenHelp() { if (!IsHelpOpen) ToggleHelp(); }
+    private void CloseHelp() { IsHelpOpen = false; Unenlarge(SidePanel.Notebook); }
+
+    // "Ask Isa" on an example question: it goes in the question box, ready
+    // to send (the leader still presses Send), and the guide closes so the
+    // chat is in view, on a phone too.
+    private void AskFromHelp(string question)
+    {
+        if (IsSending) return;
+        DraftText = question;
+        CloseHelp();
+    }
+
+    // The notebook, the Library or Help: whichever is on the right.
+    private bool IsRightPanelOpen => IsNotebookOpen || IsLibraryOpen || IsHelpOpen;
 
     // Goes up by one whenever something is saved to the notebook from the
     // chat, so an open notebook panel reads its entries again.
@@ -938,7 +1003,7 @@
     private void Unenlarge(SidePanel panel) { if (Enlarged == panel) Enlarged = null; }
 
     private const double Third = 100.0 / 3;
-    private bool AllThreeOpen => IsTodayOpen && IsNotebookOpen;
+    private bool AllThreeOpen => IsTodayOpen && IsRightPanelOpen;
 
     // Width of a side panel, as a percentage of the visible window. (A
     // percentage of a fixed panel leaves out the page's scrollbar, so the
@@ -953,9 +1018,9 @@
 
     // Distance from the right edge: the notebook is always rightmost,
     // Today sits to its left, and the chat to the left of both.
-    private double TodayRight => IsNotebookOpen ? SideWidth(SidePanel.Notebook) : 0;
+    private double TodayRight => IsRightPanelOpen ? SideWidth(SidePanel.Notebook) : 0;
     private double ChatRight =>
-        (IsTodayOpen ? SideWidth(SidePanel.Today) : 0) + (IsNotebookOpen ? SideWidth(SidePanel.Notebook) : 0);
+        (IsTodayOpen ? SideWidth(SidePanel.Today) : 0) + (IsRightPanelOpen ? SideWidth(SidePanel.Notebook) : 0);
 
     // A percentage of the screen left over once the rail has its width
     // (--isa-rail-w, set in ChatWidget.razor.css; 0 when the rail is hidden),

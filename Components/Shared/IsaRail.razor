@@ -13,9 +13,12 @@
                   that aren't done yet
      Notebook     opens the succession notebook (only for someone who
                   may read their chapter's notebook)
+     Library      opens the Library: ISACA's documents to read or
+                  listen to (anyone signed in)
      ----         a line between Isa's own tools and ISACA's sites
      Chapter 360  opens the sample Chapter 360 page in a new tab
      Engage       opens the sample Engage page in a new tab
+     Help         at the bottom: "How to use Isa" (everyone)
      Backstage    at the bottom: Config and the dashboards, for the
                   Developer, Executive and Manager roles only
 
@@ -73,7 +76,23 @@
                 </button>
             </li>
         }
-        @if (ShowToday || ShowNotebook)
+        @if (ShowLibrary)
+        {
+            <li>
+                <button type="button" class="isa-rail__btn isa-rail__btn--library" @onclick="OnToggleLibrary"
+                        aria-pressed="@(LibraryOpen ? "true" : "false")"
+                        title="@(LibraryOpen ? "Close the Library" : "Open the Library: read or listen to ISACA's documents")"
+                        aria-label="Library">
+                    <span class="isa-rail__tile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 4h3.5v16H4zM9.5 4H13v16H9.5zM15 5l3.4-.9 3.6 15-3.4.9z" />
+                        </svg>
+                    </span>
+                    <span class="isa-rail__label">Library</span>
+                </button>
+            </li>
+        }
+        @if (ShowToday || ShowNotebook || ShowLibrary)
         {
             <li aria-hidden="true"><hr class="isa-rail__divider" /></li>
         }
@@ -119,6 +138,21 @@
        menu beside the rail listing what this role may open. On the User
        role (a chapter leader) the button isn't there at all; Config is
        still reachable by typing /isa-config. *@
+    @* Help: "How to use Isa", for everyone, at the bottom of the rail
+       (Matthew's approved mockup, 23 October 2026). *@
+    <div class="isa-rail__bottom">
+    <button type="button" class="isa-rail__btn isa-rail__btn--help" @onclick="OnToggleHelp"
+            aria-pressed="@(HelpOpen ? "true" : "false")"
+            title="@(HelpOpen ? "Close the guide" : "How to use Isa")" aria-label="Help: how to use Isa">
+        <span class="isa-rail__tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9.2 9a3 3 0 0 1 5.8 1c0 2-3 2.6-3 4.5" />
+                <path d="M12 18h.01" />
+            </svg>
+        </span>
+        <span class="isa-rail__label">Help</span>
+    </button>
+
     @if (Backstage.Count > 0)
     {
         <div class="isa-rail__backstage">
@@ -146,6 +180,7 @@
             }
         </div>
     }
+    </div>
 </nav>
 
 @code {
@@ -167,6 +202,12 @@
     /// <summary>Show the Notebook button (someone who may read their chapter's notebook).</summary>
     [Parameter] public bool ShowNotebook { get; set; }
 
+    /// <summary>Show the Library button (anyone signed in).</summary>
+    [Parameter] public bool ShowLibrary { get; set; }
+
+    /// <summary>True while the Library is open (the button shows as pressed).</summary>
+    [Parameter] public bool LibraryOpen { get; set; }
+
     /// <summary>Today's steps that aren't done yet, shown as a small green number on Today.</summary>
     [Parameter] public int StepsLeftToday { get; set; }
 
@@ -182,6 +223,11 @@
     [Parameter] public EventCallback OnHide { get; set; }
     [Parameter] public EventCallback OnToggleToday { get; set; }
     [Parameter] public EventCallback OnToggleNotebook { get; set; }
+    [Parameter] public EventCallback OnToggleLibrary { get; set; }
+    [Parameter] public EventCallback OnToggleHelp { get; set; }
+
+    /// <summary>True while "How to use Isa" is open (the button shows as pressed).</summary>
+    [Parameter] public bool HelpOpen { get; set; }
 
     /// <summary>Called with the page to open when a Backstage item is picked.</summary>
     [Parameter] public EventCallback<string> OnOpenBackstage { get; set; }

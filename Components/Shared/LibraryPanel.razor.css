@@ -1,0 +1,304 @@
+/* ============================================================
+   LibraryPanel.razor.css
+
+   The Library panel. Full height, on the right, in the notebook's place
+   and with its sizes (the chat widget sets its width and position through
+   the Style parameter). Built from Matthew's approved mockup, Claude
+   outputs/Library mockups.html (23 October 2026).
+
+   Colours from BRAND_GUIDELINES.md: ISACA Purple (#6558b1, the Library's
+   colour on the rail; white text on it is 6:1), Dark Blue (#1d2d5c),
+   Medium Blue (#07649d), Light Blue (#e7f0f5) and the greys.
+   ============================================================ */
+
+.isa-lib {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 33.333vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #323e48;
+    border-left: 1px solid #cbd2d9;
+    overflow: hidden;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: isa-lib-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes isa-lib-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-lib { animation: none; transition: none; }
+}
+
+/* Phones: one panel at a time, filling the screen beside the rail. */
+@media (max-width: 720px) {
+    .isa-lib {
+        width: calc(100vw - var(--isa-rail-w, 0px)) !important;
+        right: 0 !important;
+    }
+    .isa-lib__iconBtn.isa-lib__enlarge { display: none; }
+}
+
+/* ---- Header band (same height as the chat's, Today's and the notebook's) ---- */
+
+.isa-lib__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    height: 72px;
+    box-sizing: border-box;
+    background: #6558b1;
+    color: #ffffff;
+}
+
+.isa-lib__headText { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.isa-lib__name { font-family: 'Roboto Slab', Georgia, serif; font-size: 1.2rem; }
+.isa-lib__sub { font-size: 0.78rem; color: #ffffff; opacity: 0.9; }
+.isa-lib__headBtns { display: flex; align-items: center; gap: 0.25rem; }
+
+.isa-lib__iconBtn {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.isa-lib__close { font-size: 1.5rem; line-height: 1; }
+.isa-lib__iconBtn:hover,
+.isa-lib__iconBtn:focus-visible { background: rgba(255, 255, 255, 0.14); }
+.isa-lib__iconBtn:focus-visible { outline: 2px solid #ffffff; outline-offset: 1px; }
+
+/* ---- Body ---- */
+
+.isa-lib__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1rem 1.25rem 1.5rem;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.isa-lib__intro { margin: 0 0 0.5rem; }
+.isa-lib__empty { color: #606e7c; }
+
+.isa-lib__group {
+    margin: 1.1rem 0 0.2rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #07649d;
+}
+
+.isa-lib__list { list-style: none; margin: 0; padding: 0; }
+
+.isa-lib__doc {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.6rem 0.85rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* A small page shape, so the list reads as documents at a glance. */
+.isa-lib__docIcon {
+    flex: none;
+    width: 30px;
+    height: 38px;
+    border-radius: 3px;
+    background: #e7f0f5;
+    border: 1px solid #cbd2d9;
+    position: relative;
+}
+
+.isa-lib__docIcon::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 9px;
+    height: 2px;
+    background: #cbd2d9;
+    box-shadow: 0 6px 0 #cbd2d9, 0 12px 0 #cbd2d9, 0 18px 0 #cbd2d9;
+}
+
+.isa-lib__docMain { flex: 1 1 12rem; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.isa-lib__docTitle { font-family: 'Roboto Slab', Georgia, serif; color: #1d2d5c; font-size: 0.98rem; line-height: 1.25; }
+.isa-lib__docDesc { font-size: 0.84rem; }
+.isa-lib__docMeta { font-size: 0.74rem; color: #606e7c; }
+
+.isa-lib__docBtns { display: flex; gap: 0.5rem; align-self: center; margin-left: auto; }
+
+.isa-lib__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 44px;
+    padding: 0 0.85rem;
+    border-radius: 4px;
+    border: 1px solid #1d2d5c;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: 500 0.78rem 'Roboto', Arial, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.isa-lib__btn:hover { background: #e7f0f5; }
+.isa-lib__btn--play { background: #6558b1; border-color: #6558b1; color: #ffffff; }
+.isa-lib__btn--play:hover { background: #544a99; }
+.isa-lib__btn:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
+
+.isa-lib__foot {
+    display: flex;
+    gap: 0.4rem;
+    margin: 1rem 0 0;
+    font-size: 0.76rem;
+    color: #606e7c;
+}
+
+/* ---- A document ---- */
+
+.isa-lib__back {
+    border: none;
+    background: none;
+    padding: 0.4rem 0;
+    min-height: 36px;
+    color: #07649d;
+    font: 0.84rem 'Roboto', Arial, sans-serif;
+    cursor: pointer;
+}
+
+.isa-lib__back:hover { text-decoration: underline; }
+
+.isa-lib__title {
+    margin: 0.2rem 0 0.2rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 400;
+    font-size: 1.3rem;
+    line-height: 1.25;
+    color: #1d2d5c;
+}
+
+.isa-lib__meta { margin: 0 0 0.8rem; font-size: 0.78rem; color: #606e7c; }
+
+/* The player stays at the top while the text scrolls under it. */
+.isa-lib__player {
+    position: sticky;
+    top: -1rem;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    padding: 0.6rem 0.7rem;
+    background: #ffffff;
+    border: 1px solid #cbd2d9;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(29, 45, 92, 0.08);
+}
+
+.isa-lib__pbtn {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #cbd2d9;
+    background: #ffffff;
+    color: #1d2d5c;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.isa-lib__pbtn--main { width: 46px; height: 46px; background: #6558b1; border-color: #6558b1; color: #ffffff; }
+.isa-lib__pbtn:focus-visible, .isa-lib__speed:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
+.isa-lib__pbtn:disabled, .isa-lib__speed:disabled { opacity: 0.4; cursor: default; }
+
+/* Play and pause share one button; the reader switches is-playing. */
+.isa-lib__iconPause { display: none; }
+.isa-lib__pbtn--main.is-playing .isa-lib__iconPlay { display: none; }
+.isa-lib__pbtn--main.is-playing .isa-lib__iconPause { display: block; }
+
+.isa-lib__track { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+
+.isa-lib__status {
+    font-size: 0.74rem;
+    color: #606e7c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.isa-lib__bar { display: block; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+.isa-lib__bar span { display: block; height: 100%; width: 0; background: #6558b1; transition: width 0.3s ease; }
+
+.isa-lib__speed {
+    flex: none;
+    min-width: 44px;
+    min-height: 36px;
+    border: 1px solid #cbd2d9;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: 500 0.78rem 'Roboto', Arial, sans-serif;
+    cursor: pointer;
+}
+
+/* The text: headings, page markers, paragraphs and bullets. */
+.isa-lib__sec {
+    margin: 1rem 0 0.35rem;
+    font-weight: 700;
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #07649d;
+}
+
+.isa-lib__page {
+    margin: 1rem 0 0.3rem;
+    font-size: 0.72rem;
+    color: #606e7c;
+    border-top: 1px dashed #cbd2d9;
+    padding-top: 0.3rem;
+}
+
+.isa-lib__para { margin: 0 0 0.6rem; font-size: 0.93rem; line-height: 1.6; }
+.isa-lib__para.is-bullet { position: relative; padding-left: 1.1rem; }
+.isa-lib__para.is-bullet::before { content: "•"; position: absolute; left: 0.2rem; color: #07649d; }
+
+/* A sentence can be clicked to read from there. */
+.isa-lib__s { cursor: pointer; border-radius: 3px; transition: background-color 0.2s ease, color 0.2s ease; }
+.isa-lib__s:hover { background: #f6f7f8; }
+
+/* The sentence being read, and the ones already read. */
+.isa-lib__s.is-reading {
+    background: #e3e0f3;   /* Purple, light tint */
+    color: #1d2d5c;
+    box-shadow: inset 3px 0 0 #6558b1;
+    padding: 1px 2px;
+}
+
+.isa-lib__s.is-read { color: #606e7c; }   /* Grey 6: dimmer, still readable (5:1) */
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-lib__s, .isa-lib__bar span { transition: none; }
+}

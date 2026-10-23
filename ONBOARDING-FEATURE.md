@@ -93,6 +93,7 @@ Two forms: the short guided tour as the day-1 journey step, and a full section a
 Rules:
 - The guide describes only what Isa actually does at the time of each demo. Never document a feature that isn't built yet.
 - Load the guide into Isa's knowledge base, so leaders can ask "What can you do?" and get a cited answer.
+- Built October 23, 2026 (Matthew's approved mockup, Claude outputs/How to use Isa mockups.html): a "?" Help button at the bottom of the rail opens the six-part guide in the right-hand place; the "Get to know Isa" step (J-02) has a five-card tour ending in "Read the full guide". All words in onboarding/help.json. Checked against the app: "What Isa doesn't do" is written as advice (those topics aren't blocked yet; input compliance is a keyword stub), and only one example question is listed (the only one of four answered correctly on 23 October). Not yet loaded into Isa's knowledge base (Matthew's decision: later, with Willis).
 
 === FEATURE 4: THE "TODAY" NOTE (ADDED OCTOBER 19, 2026) ===
 
@@ -124,6 +125,7 @@ B. Journeys for other board roles (FUTURE BUILD, not built for the demo)
 C. "Meet your board" step
 - Shows the new leader who else is on their chapter board, from the team's directory data.
 - Names, roles and time zones only. No emails or other contact details on this screen.
+- Built October 23, 2026 (Matthew's approved mockup, Claude outputs/Meet your board mockups.html): the J-05 step in the Today window lists the chapter's board: name, role, term dates (added: ISACA keeps them, Camille confirmed), and each member's time zone with the time there now and the difference from the leader's. Four invented board members added to Kenji's chapter (C-001) in directory/ and data/synthetic; only his chapter has a full board for now. LeaderTermService.GetBoard, Components/Shared/TodayPanel.razor.
 
 D. ISACA terms explained
 - A short glossary of terms new leaders meet early (for example AGM, CPE, Engage), loaded into Isa's knowledge base so leaders can ask "What's an AGM?" and get a cited answer.
@@ -147,6 +149,7 @@ E. Day 30, 60 and 90 check-ins
   - Listen on journey steps: a step that points to an approved document (for example J-07, J-22, J-27) has its own Listen button for that document. Same browser read-aloud as the Library.
   - Listen in the succession notebook: the new president can listen to the notes the previous president left. These are the chapter's own words, read word for word, so they need no ISACA approval.
   - Documents we don't have yet, such as the Chapter Affiliation Agreement (ISACA question 4), are still listed, marked "Requested from ISACA," with no Listen button until the document arrives. This shows it is part of the solution without pretending we have it.
+- Built October 23, 2026 (Matthew's approved mockup, Claude outputs/Library mockups.html): a Library button on the rail (ISACA Purple) opens the Library in the notebook's place on the right. For now it lists only ISACA's five documents that Isa answers from (Matthew's choice), from onboarding/library.json, grouped by topic, with Read and Listen. Listen reads the approved passages from data/content.db word for word, one sentence at a time, highlighting the sentence being read; pause, back and forward by section, speed, and click a sentence to read from there. Shown to anyone signed in. Components/Shared/LibraryPanel.razor, Services/Onboarding/LibraryService.cs. Not yet: Listen on journey steps and in the notebook, opening the original file, the team's governance guides, and the Chapter Affiliation Agreement (Camille has since sent it; it isn't in Isa's content yet).
 
 === OPEN NOTEBOOK: WHERE IT FITS AND WHERE IT DOESN'T ===
 

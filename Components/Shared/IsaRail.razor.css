@@ -199,6 +199,7 @@
 
 .isa-rail__btn--today     { --rail-color: #1b7a66; }
 .isa-rail__btn--notebook  { --rail-color: #3f7d20; }
+.isa-rail__btn--library   { --rail-color: #6558b1; }   /* ISACA Purple (Library, 23 October 2026) */
 .isa-rail__btn--c360      { --rail-color: #017dc2; }
 .isa-rail__btn--engage    { --rail-color: #1d2d5c; }
 
@@ -246,3 +247,24 @@
 
 .isa-rail__menuItem:hover,
 .isa-rail__menuItem:focus-visible { background: #e7f0f5; }
+
+
+/* Help and Backstage sit together at the bottom of the rail. */
+.isa-rail__bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.isa-rail__bottom .isa-rail__backstage { margin-top: 0; }
+
+/* Help: a round white tile with a Dark Blue question mark, so it reads as
+   a guide rather than one of the main tools. */
+.isa-rail__btn--help .isa-rail__tile {
+    background: #ffffff;
+    color: #1d2d5c;
+    border: 2px solid #1d2d5c;
+    border-radius: 50%;
+}

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meet your board mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup only: no app code. ISACA colours and type (BRAND_GUIDELINES.md). */
+  :root { --ink:#1d2d5c; --mblue:#07649d; --blue:#00a4e4; --green:#6cb33f; --dgreen:#3f7d20; --teal:#1b7a66;
+          --light:#e7f0f5; --g1:#f6f7f8; --g2:#e5e7eb; --g3:#cbd2d9; --g6:#606e7c; --g9:#323e48; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px 16px 64px; background:var(--g1); color:var(--g9); font-family:Roboto, Arial, sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; }
+  h1 { font-family:'Roboto Slab', serif; font-weight:500; color:var(--ink); font-size:1.6rem; margin:0 0 6px; }
+  h2 { font-family:'Roboto Slab', serif; font-weight:500; color:var(--ink); font-size:1.25rem; margin:44px 0 6px; }
+  p.note { margin:0 0 16px; max-width:780px; line-height:1.5; }
+  .row { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+
+  .today { width:440px; background:#fff; border:1px solid var(--g3); display:flex; flex-direction:column; }
+  .today__h { height:72px; background:var(--ink); color:#fff; display:flex; align-items:center; padding:0 18px; }
+  .today__h strong { font-family:'Roboto Slab', serif; font-weight:400; font-size:1.2rem; }
+  .today__h small { display:block; font-size:0.78rem; color:var(--light); }
+  .today__b { padding:16px 20px 22px; font-size:0.88rem; line-height:1.45; }
+  .back { color:var(--mblue); font-size:0.84rem; }
+  .stepH { font-family:'Roboto Slab', serif; color:var(--ink); font-size:1.25rem; font-weight:400; margin:8px 0 2px; }
+  .when { font-size:0.78rem; color:var(--g6); margin:0 0 8px; }
+  .lede { margin:0 0 14px; }
+  .chap { display:flex; justify-content:space-between; align-items:baseline; margin:0 0 6px; font-weight:700; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--mblue); }
+  .chap span { font-weight:400; letter-spacing:0; text-transform:none; color:var(--g6); font-size:0.76rem; }
+  .person { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--g2); }
+  .person:first-of-type { border-top:1px solid var(--g2); }
+  .av { flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-weight:500; font-size:0.85rem; color:#fff; background:var(--mblue); }
+  .av.you { background:var(--teal); }
+  .av.past { background:var(--dgreen); }
+  .pmain { flex:1; min-width:0; }
+  .pname { color:var(--ink); font-weight:500; }
+  .pname em { font-style:normal; font-weight:400; color:var(--g6); font-size:0.8rem; }
+  .prole { font-size:0.82rem; }
+  .pmeta { font-size:0.76rem; color:var(--g6); }
+  .tz { flex:none; text-align:right; font-size:0.76rem; color:var(--g6); }
+  .tz b { display:block; color:var(--ink); font-weight:500; font-size:0.86rem; }
+  .tz .diff { color:var(--mblue); }
+  .priv { display:flex; gap:6px; font-size:0.76rem; color:var(--g6); margin:12px 0 14px; }
+  .next { background:var(--light); border-radius:6px; padding:10px 12px; font-size:0.84rem; margin:0 0 14px; }
+  .next b { color:var(--ink); }
+  .btn { display:inline-flex; align-items:center; min-height:44px; padding:0 18px; border-radius:4px; background:var(--ink); color:#fff; font:500 0.8rem Roboto, sans-serif; letter-spacing:0.04em; text-transform:uppercase; }
+
+  .decisions { background:#fff; border:1px solid var(--g3); padding:16px 20px; max-width:840px; line-height:1.5; }
+  .decisions li { margin-bottom:8px; }
+  table.data { border-collapse:collapse; font-size:0.85rem; background:#fff; margin:6px 0 0; }
+  table.data th, table.data td { border:1px solid var(--g3); padding:5px 9px; text-align:left; }
+  table.data th { background:var(--light); color:var(--ink); }
+  .tag { display:inline-block; font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:2px 6px; border-radius:3px; background:var(--light); color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>"Meet your board": mockups</h1>
+<p class="note">For Matthew's review, 23 October 2026. Nothing in the app has changed yet. The "Meet your board" step (J-05, days 6–7) opens in the Today window like every other step. Under its one-line description, it shows who is on the leader's chapter board, from ISACA's records (in the prototype: the team's directory files, with invented people only).</p>
+
+<h2>1. The step, for Watanabe Kenji (Sakura Bay Chapter)</h2>
+<p class="note">Each board member: initials, name, board role, term dates, and their time zone with the time it is there now (handy for planning a first board call). The leader is marked "you"; the previous president is marked as such, since the notebook step points to her. No emails or other contact details, as the plan says. Under the list: a privacy line, a pointer to the next step, and Mark as done.</p>
+
+<div class="row">
+  <div class="today">
+    <div class="today__h"><div><strong>Today</strong><small>Friday 3 July</small></div></div>
+    <div class="today__b">
+      <span class="back">‹ Today's steps</span>
+      <div class="stepH">Meet your board</div>
+      <p class="when">Week 1 · Days 6–7</p>
+      <p class="lede">See who else is on your chapter board, with their roles and time zones.</p>
+
+      <p class="chap">Sakura Bay Chapter <span>6 board members</span></p>
+
+      <div class="person"><span class="av you">KW</span>
+        <div class="pmain"><div class="pname">Kenji Watanabe <em>(you)</em></div><div class="prole">President</div><div class="pmeta">Jul 2026 – Jun 2027</div></div>
+        <div class="tz"><b>4:10 pm</b>Tokyo</div></div>
+
+      <div class="person"><span class="av">MT</span>
+        <div class="pmain"><div class="pname">Mei Takahashi</div><div class="prole">Vice President</div><div class="pmeta">Jul 2026 – Jun 2027</div></div>
+        <div class="tz"><b>4:10 pm</b>Tokyo</div></div>
+
+      <div class="person"><span class="av">HN</span>
+        <div class="pmain"><div class="pname">Hiroshi Nakamura</div><div class="prole">Secretary</div><div class="pmeta">Jul 2026 – Jun 2027</div></div>
+        <div class="tz"><b>4:10 pm</b>Tokyo</div></div>
+
+      <div class="person"><span class="av">DO</span>
+        <div class="pmain"><div class="pname">Daniel Okafor</div><div class="prole">Treasurer</div><div class="pmeta">Jul 2025 – Jun 2027</div></div>
+        <div class="tz"><b>5:10 pm</b>Sydney<br><span class="diff">1 hour ahead of you</span></div></div>
+
+      <div class="person"><span class="av">JL</span>
+        <div class="pmain"><div class="pname">Ji-woo Lee</div><div class="prole">Membership Director</div><div class="pmeta">Jul 2026 – Jun 2027</div></div>
+        <div class="tz"><b>4:10 pm</b>Seoul</div></div>
+
+      <div class="person"><span class="av past">YS</span>
+        <div class="pmain"><div class="pname">Yumiko Sato</div><div class="prole">Immediate Past President · the president before you</div><div class="pmeta">Jul 2026 – Jun 2027</div></div>
+        <div class="tz"><b>4:10 pm</b>Tokyo</div></div>
+
+      <p class="priv">🔒 <span>From ISACA's records: names, board roles, term dates and time zones only.</span></p>
+      <div class="next"><b>Coming up, days 8–10:</b> introduce yourself to your board.</div>
+      <span class="btn">Mark as done</span>
+    </div>
+  </div>
+
+  <div style="flex:1; min-width:280px; max-width:520px">
+    <p class="note" style="margin-top:0"><strong>Why these details:</strong> Camille confirmed on 21 October that ISACA keeps each board member's name, role and term dates, and that a president may see the member roster. The plan's rule for this screen is "names, roles and time zones only, no emails". Term dates are added because ISACA keeps them and they tell a new president who is staying and who is leaving soon.</p>
+    <p class="note"><strong>The time shown:</strong> the time it is now in each member's city, from their time zone. Where it differs from the leader's, a short line says by how much. (The day of term still follows the demo date; only the clock is real.)</p>
+  </div>
+</div>
+
+<h2>2. The invented board members this needs</h2>
+<p class="note">Today, Kenji's chapter has only Kenji and Sato Yumiko in the test data. These four would be added to the shared directory files (directory/people.csv and role_assignments.csv, then the copy in data/synthetic), as invented people with no sign-in accounts. They are only names on the board list.</p>
+<table class="data">
+  <tr><th>Person</th><th>Chapter</th><th>Role</th><th>Term</th><th>Time zone</th></tr>
+  <tr><td>Takahashi Mei</td><td>C-001 Sakura Bay</td><td>Vice President</td><td>1 Jul 2026 – 30 Jun 2027</td><td>Asia/Tokyo</td></tr>
+  <tr><td>Nakamura Hiroshi</td><td>C-001 Sakura Bay</td><td>Secretary</td><td>1 Jul 2026 – 30 Jun 2027</td><td>Asia/Tokyo</td></tr>
+  <tr><td>Daniel Okafor</td><td>C-001 Sakura Bay</td><td>Treasurer</td><td>1 Jul 2025 – 30 Jun 2027 (two-year term)</td><td>Australia/Sydney</td></tr>
+  <tr><td>Lee Ji-woo</td><td>C-001 Sakura Bay</td><td>Membership Director</td><td>1 Jul 2026 – 30 Jun 2027</td><td>Asia/Seoul</td></tr>
+</table>
+
+<h2>Decisions for Matthew</h2>
+<div class="decisions">
+  <ol>
+    <li><strong>Add the four invented board members</strong> to the shared directory files? These are the team's master list (Willis's code reads them too), so it's worth telling Willis. They get no sign-in accounts. <span class="tag">Recommended</span></li>
+    <li><strong>Only Kenji's chapter for now?</strong> It's the one in the demo. Fahad (the Arabic backup, also day 3) would see only himself on his board unless his chapter gets members too. <span class="tag">Recommended: Kenji's only</span></li>
+    <li><strong>Show term dates</strong> as well as names, roles and time zones? <span class="tag">Recommended</span></li>
+    <li><strong>Show the local time now</strong> in each member's city, and how far ahead or behind it is? <span class="tag">Recommended</span></li>
+    <li><strong>Where the list appears:</strong> inside the step, in the Today window, as shown. <span class="tag">Recommended</span></li>
+  </ol>
+  <p style="margin:12px 0 0">Not in this step (planned separately): the board introduction email (J-19) and the board's profile replies (J-25).</p>
+</div>
+
+</div>
+</body>
+</html>

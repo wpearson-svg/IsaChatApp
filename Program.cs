@@ -64,6 +64,12 @@ builder.Services.AddSingleton<ProgressService>();
 // NotebookService: each chapter's succession notebook (saved answers and
 // notes), kept in data/notebook.db, created on first run.
 builder.Services.AddSingleton<NotebookService>();
+// The Library (Feature 5): ISACA's documents to read or listen to, from onboarding/library.json
+// and the approved passages in data/content.db (Components/Shared/LibraryPanel.razor).
+builder.Services.AddSingleton<LibraryService>();
+// "How to use Isa" (Feature 3): the guide's words, from onboarding/help.json
+// (Components/Shared/HelpPanel.razor and the day-1 tour in TodayPanel.razor).
+builder.Services.AddSingleton<HelpGuideService>();
 // HandoffService: the outgoing president's handoff checklist (the President
 // Guidebook's turnover items), for the last 30 days of a term and 30 days after.
 builder.Services.AddSingleton<HandoffService>();

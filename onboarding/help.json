@@ -1,0 +1,92 @@
+// ============================================================
+// onboarding/help.json -- the words of "How to use Isa"
+// (Feature 3 in ONBOARDING-FEATURE.md; Matthew's approved mockup,
+// Claude outputs/How to use Isa mockups.html, 23 October 2026).
+//
+// RULE: describe only what Isa actually does today. When Isa changes,
+// change this file. Read each time Help opens; no rebuild needed.
+//
+// Checked against the app on 23 October 2026:
+// - "What Isa doesn't do" is advice, not a promise that Isa blocks
+//   those topics: input compliance is still a keyword stub. Reword it
+//   once real input rules are built.
+// - "questions" lists only questions Isa answered correctly when
+//   tested. Add more as answers improve; test each one first.
+//
+// In "points" and "text": **bold**, *italics*, and `TKT-0012` (shown
+// as a reference-number chip). Lines starting with // are ignored.
+// ============================================================
+{
+  "sections": [
+    {
+      "id": "helps",
+      "title": "What Isa can help with",
+      "short": "What Isa helps with",
+      "points": [
+        "**Answers from ISACA's guidance.** Ask about running your chapter. Isa looks only in ISACA's approved documents for chapter leaders, and every answer lists its sources. Open \"Show the steps\" on an answer to see how she found it.",
+        "**Your first 90 days.** *Today* shows your steps for where you are in your term. Mark them done as you go.",
+        "**The succession notebook.** Notes and decisions that pass from one president to the next.",
+        "**The Library.** Read ISACA's documents, or listen to them read aloud."
+      ]
+    },
+    {
+      "id": "doesnt",
+      "title": "What Isa doesn't do",
+      "short": "What Isa doesn't do",
+      "points": [
+        "Isa doesn't give opinions, rulings or advice of her own, and she doesn't search the internet. She only shares what ISACA's guidance says.",
+        "For legal questions, local laws, disagreements on your board, money matters, or anything personal, talk to a person.",
+        "If you raise something sensitive, such as harassment, Isa doesn't answer it herself. She passes it to a person and gives you a reference number."
+      ]
+    },
+    {
+      "id": "try",
+      "title": "Questions to try",
+      "short": "Questions to try",
+      "questions": [
+        "When do we send in our yearly paperwork?"
+      ],
+      "text": "Tips: ask one thing at a time, in your own words. If ISACA's guidance doesn't cover it, Isa says so and passes it to a person; she won't guess."
+    },
+    {
+      "id": "save",
+      "title": "Saving decisions and notes",
+      "short": "Saving decisions",
+      "points": [
+        "Under an answer, **Save to notebook** keeps the question, Isa's answer, its sources and the date. You can add a line about what you decided.",
+        "In the notebook, **+ Add a note** for contacts, what worked, or what's unfinished.",
+        "Notes are private to you. **Share with the board** on a note lets your board members see it."
+      ]
+    },
+    {
+      "id": "person",
+      "title": "Reaching a person",
+      "short": "Reaching a person",
+      "points": [
+        "**Talk to a person**, under the question box, any time.",
+        "When Isa passes a question on, she gives you a reference number, like `TKT-0012`. Keep it if you follow up with ISACA's Chapter Experience team or ISACA Support.",
+        "In your first week, *Meet your Chapter Experience contact* (in Today) lets you book a welcome call or send an introduction."
+      ]
+    },
+    {
+      "id": "info",
+      "title": "What happens to your information",
+      "short": "Your information",
+      "points": [
+        "Isa's logs don't keep the text of your questions. A question is only kept if you save it to your notebook.",
+        "Your Chapter Experience contact sees your chapter, role and term dates. Your questions to Isa stay private.",
+        "Your notebook is private to you unless you share a note with your board.",
+        "Introductions you write in Isa are saved in Isa; Isa never emails them."
+      ]
+    }
+  ],
+
+  // The day-1 tour in the "Get to know Isa" step (J-02): one card at a time.
+  "tour": [
+    { "title": "Ask about running your chapter", "text": "Isa answers questions about running your chapter, from ISACA's approved guidance for chapter leaders. Type a question in your own words, one at a time." },
+    { "title": "Every answer shows where it came from", "text": "Isa answers only from ISACA's approved documents. Under each answer you'll see its sources, and \"Show the steps\" shows how she found it." },
+    { "title": "When Isa can't help, a person can", "text": "If ISACA's guidance doesn't cover your question, or it's sensitive, Isa passes it on and gives you a reference number. **Talk to a person** is always under the question box." },
+    { "title": "Your first 90 days, a few steps at a time", "text": "*Today* shows your steps for where you are in your term. The notebook holds what your predecessor left you, and the Library has ISACA's documents to read or listen to." },
+    { "title": "Your questions stay private", "text": "Your Chapter Experience contact sees your chapter, role and term dates, not your questions. Your notebook is private unless you share a note with your board." }
+  ]
+}

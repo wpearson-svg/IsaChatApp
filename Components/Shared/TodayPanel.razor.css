@@ -759,3 +759,134 @@
     height: 14px;
     margin-top: 0.05rem;
 }
+
+
+/* ---- "Meet your board" (J-05): the chapter's board ----
+   Matthew's approved mockup (Claude outputs/Meet your board mockups.html,
+   23 October 2026). Initials circles: ISACA Medium Blue; the leader in
+   Isa's teal, the previous president in the notebook's green. */
+
+.isa-today__boardHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 0.4rem 0 0.4rem;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #07649d;
+}
+
+.isa-today__boardHead span { font-weight: 400; letter-spacing: 0; text-transform: none; color: #606e7c; font-size: 0.76rem; }
+
+.isa-today__board { list-style: none; margin: 0; padding: 0; border-top: 1px solid #e5e7eb; }
+
+.isa-today__member {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.isa-today__avatar {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #07649d;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.isa-today__avatar.is-you { background: #1b7a66; }
+.isa-today__avatar.is-past { background: #3f7d20; }
+
+.isa-today__memberMain { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.isa-today__memberName { color: #1d2d5c; font-weight: 500; }
+.isa-today__memberName em { font-style: normal; font-weight: 400; color: #606e7c; font-size: 0.8rem; }
+.isa-today__memberRole { font-size: 0.82rem; }
+.isa-today__memberTerm { font-size: 0.76rem; color: #606e7c; }
+
+.isa-today__memberTime {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    font-size: 0.76rem;
+    color: #606e7c;
+    line-height: 1.3;
+}
+
+.isa-today__memberTime b { color: #1d2d5c; font-weight: 500; font-size: 0.86rem; }
+.isa-today__memberDiff { color: #07649d; max-width: 6.5rem; }   /* wraps, rather than squeezing the name */
+
+.isa-today__boardPrivacy {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.75rem 0 0.75rem;
+    font-size: 0.76rem;
+    color: #606e7c;
+}
+
+.isa-today__boardNext {
+    display: block;
+    width: 100%;
+    margin: 0 0 0.9rem;
+    padding: 0.6rem 0.75rem;
+    min-height: 44px;
+    border: none;
+    border-radius: 6px;
+    background: #e7f0f5;
+    color: #323e48;
+    font: 0.84rem 'Roboto', Arial, sans-serif;
+    text-align: left;
+    cursor: pointer;
+}
+
+.isa-today__boardNext b { color: #1d2d5c; }
+.isa-today__boardNext:hover { background: #d7e6ee; }
+.isa-today__boardNext:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
+
+
+/* ---- "Get to know Isa" (J-02): the day-1 tour, one card at a time ----
+   Matthew's approved mockup (Claude outputs/How to use Isa mockups.html,
+   23 October 2026). */
+
+.isa-today__tour {
+    margin: 0.4rem 0 0.9rem;
+    padding: 0.8rem 0.9rem 0.9rem;
+    border: 1px solid #cbd2d9;
+    border-radius: 8px;
+}
+
+.isa-today__tourDots { display: flex; gap: 0.35rem; margin: 0 0 0.55rem; }
+.isa-today__tourDots span { width: 8px; height: 8px; border-radius: 50%; background: #cbd2d9; }
+.isa-today__tourDots span.is-on { background: #1d2d5c; }
+
+.isa-today__tourTitle { margin: 0 0 0.3rem; font-weight: 500; color: #1d2d5c; }
+.isa-today__tourText { margin: 0 0 0.75rem; }
+
+.isa-today__tourBtns { display: flex; gap: 0.5rem; }
+
+.isa-today__tourBtn {
+    min-height: 44px;
+    padding: 0 1rem;
+    border: 1px solid #1d2d5c;
+    border-radius: 4px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font: 500 0.78rem 'Roboto', Arial, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.isa-today__tourBtn.is-ghost { background: #ffffff; color: #1d2d5c; }
+.isa-today__tourBtn:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
