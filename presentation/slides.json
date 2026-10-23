@@ -106,7 +106,7 @@
         { "name": "RAG", "status": "partial", "text": "Finds passages by meaning; vector search to come" },
         { "name": "Complex AI", "status": "built", "text": "Local model writes only from the passages found" },
         { "name": "Output compliance", "status": "partial", "text": "Checks the source is approved and was found; deeper checks to come" },
-        { "name": "Ticketing", "status": "partial", "text": "Reference numbers work; Salesforce off until it passes its test" }
+        { "name": "Ticketing", "status": "built", "text": "Reference number, and a Salesforce Case for a person to pick up" }
       ]
     },
     {
@@ -134,6 +134,7 @@
     },
     {
       "kind": "list",
+      "warmup": true,
       "section": "What we built",
       "presenter": "Willis Pearson",
       "title": "Safe by design",
@@ -180,7 +181,6 @@
       "lead": "In priority order.",
       "items": [
         { "title": "Real translation", "text": "Planned: LibreTranslate / Argos, self-hosted, plus a second self-hosted model for languages it doesn't cover, including Amharic, Oromo, Somali and Tigrinya." },
-        { "title": "Salesforce tickets", "text": "Turn the connection on and pass the live Case test." },
         { "title": "Real input rules", "text": "Replace the keyword stub with rule-based checks." },
         { "title": "Vector search and RAG", "text": "Replace the meaning map with embedding search." },
         { "title": "Knowledge graph", "text": "Related topics from linked sections." },
@@ -191,7 +191,7 @@
     {
       "kind": "features",
       "section": "What comes next",
-      "presenter": "Eliyas Eshtea",
+      "presenter": "Matthew Brady",
       "title": "Additional features",
       "groups": [
         {

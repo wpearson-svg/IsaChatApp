@@ -5,6 +5,9 @@
 @inject WidgetSettings Settings
 @inject PresentationDeck Deck
 @inject IJSRuntime JS
+@inject IsaChatApp.Services.Orchestrator.OllamaChatService Ollama
+@inject SalesforceTicketService Salesforce
+@inject DevAccessService DevAccess
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -57,6 +60,75 @@ else
     @if (_introPending)
     {
         <div class="present__introCover" aria-hidden="true"></div>
+    }
+    @* Opening screen: a quick check, then "Ready" in ISACA Green. The next-slide key fades it and starts the intro. *@
+    @if (_gate != Gate.Off)
+    {
+        <div class="present__gate @(_gateLeaving ? "is-leaving" : "")" role="status" aria-live="polite">
+            @if (_gate == Gate.Checking)
+            {
+                <p class="present__gateWord present__gateWord--checking">Checking&hellip;</p>
+            }
+            else if (_gate == Gate.Ready)
+            {
+                <p class="present__gateWord">Ready</p>
+            }
+            else
+            {
+                <p class="present__gateWord present__gateWord--not">Not ready</p>
+                <ul class="present__gateProblems">
+                    @foreach (var problem in _gateProblems) { <li>@problem</li> }
+                </ul>
+                <p class="present__gateHint">Fix it and this updates on its own. The next-slide key starts anyway.</p>
+            }
+        </div>
+    }
+    @* Live Salesforce Cases (Alt+C): Isa's own read-only view of the newest Cases, refreshed every 3 seconds. *@
+    @if (_casesOpen)
+    {
+        <div class="present__cases" role="dialog" aria-label="Salesforce Cases, live">
+            <div class="present__casesHead">
+                <h2>Salesforce Cases <span>live</span></h2>
+                <small>@(_casesUpdated is { } t ? $"Updated {t:h:mm:ss tt}" : "Loading…") &middot; Esc closes</small>
+            </div>
+            @if (_cases is { Ok: false } bad)
+            {
+                <p class="present__casesNote">@CasesError(bad.Error)</p>
+            }
+            else if (_cases is { Rows.Count: 0 })
+            {
+                <p class="present__casesNote">No Isa Cases yet. Ask a question Isa passes to a person and it appears here.</p>
+            }
+            else if (_cases is { } list)
+            {
+                <table class="present__casesTable">
+                    <thead><tr><th>Case</th><th>Isa ref</th><th>Status</th><th>Priority</th><th>Requested by</th><th>Chapter</th><th>Created</th></tr></thead>
+                    <tbody>
+                        @foreach (var row in list.Rows)
+                        {
+                            var fresh = row.CreatedAt is { } created && DateTimeOffset.UtcNow - created < TimeSpan.FromMinutes(2);
+                            <tr class="@(fresh ? "is-new" : "")">
+                                <td>@row.CaseNumber</td>
+                                <td>@row.IsaReference</td>
+                                <td>@row.Status</td>
+                                <td class="@(row.Priority == "High" ? "is-high" : "")">@row.Priority</td>
+                                <td>@row.RequestedBy</td>
+                                <td>@row.Chapter</td>
+                                <td>@(row.CreatedAt is { } at ? at.ToLocalTime().ToString("h:mm:ss tt") : "")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+    @* A dashboard over the slides (Alt+6 Developer Dashboard, Alt+7 Content Health). Esc or the button returns to the same slide. *@
+    @if (_frameUrl is not null)
+    {
+        <div class="present__frame">
+            <button type="button" class="present__frameBack" @onclick="CloseFrame">&#8592; Back to slides</button>
+            <iframe src="@_frameUrl" title="Dashboard"></iframe>
+        </div>
     }
     var s = _slides[_index];
     var dark = s.Kind is "landing" or "cover" or "closing";
@@ -265,24 +337,11 @@ else
                         <h1 class="present__title">@s.Title</h1>
                         <p class="present__lead">@s.Lead</p>
                         <div class="present__split">
-                            <div class="present__mock">
-                                @for (var i = 0; i < s.Items.Count; i++)
-                                {
-                                    var line = s.Items[i];
-                                    <div class="present__mockCard">
-                                        <div class="present__mockLine">
-                                            <span class="present__mockIcon is-@line.Status" aria-hidden="true">@(line.Status == "handoff" ? "→" : "✓")</span>
-                                            <span>@line.Title</span>
-                                            <span class="present__mockChevron" aria-hidden="true">@(i == 0 ? "▴" : "▾")</span>
-                                        </div>
-                                        @if (i == 0)
-                                        {
-                                            <ul class="present__mockSteps">
-                                                @foreach (var step in s.Steps) { <li>@step</li> }
-                                            </ul>
-                                        }
-                                    </div>
-                                }
+                            @* The real "show the work" panel (Components/Shared/ShowTheWork.razor), fed sample steps
+                               built from the stage contract's test questions 2 and 4, so it looks exactly like the chat. *@
+                            <div class="present__work">
+                                <ShowTheWork Steps="_sampleAnswered" TotalMs="@(_sampleAnswered.Sum(x => x.ElapsedMs))" StartOpen="true" />
+                                <ShowTheWork Steps="_sampleHandoff" TotalMs="@(_sampleHandoff.Sum(x => x.ElapsedMs))" />
                             </div>
                             <ul class="present__bullets">
                                 @foreach (var b in s.Bullets) { <li>@b</li> }
@@ -377,6 +436,45 @@ else
     // down-left, right.
     private static readonly int[] StripTurns = [270, 135, 0];
 
+    // Presentation set-up (runs once when the page opens). Settings is app-wide and in memory,
+    // so a fresh start of Isa puts both back.
+    private const int PresentationStepMs = 500;   // each stage stays on screen at least this long
+    private bool _warmed;
+
+    // Alt+1 to Alt+5 type these into Isa's question box (the demo's test questions 1 to 5).
+    private static readonly string[] DemoQuestions =
+        IsaChatApp.Services.ShowTheWork.MockStageFeed.Cases.Take(5).Select(c => c.Question).ToArray();
+
+    // The opening screen. Stays until the next-slide key is pressed, then fades and the intro plays.
+    private enum Gate { Off, Checking, Ready, NotReady }
+    private Gate _gate = Gate.Off;
+    private bool _gateLeaving;
+    private string? _frameUrl;
+    private bool _casesOpen;
+    private SalesforceTicketService.CaseList? _cases;
+    private DateTime? _casesUpdated;
+    private CancellationTokenSource? _casesCts;
+
+    private bool _outro;                 // the closing animation is showing (Back takes it away)
+    private List<string> _gateProblems = [];
+    private CancellationTokenSource? _gateCts;                         // the model warm-up is sent once per visit
+
+    [CascadingParameter] private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthState { get; set; }
+
+    // Sample runs for the "Show the work" slide: made by the same feed the panel's tests use,
+    // so the wording comes from the real WorkStepText, not from the slide file.
+    private readonly IReadOnlyList<IsaChatApp.Services.Orchestrator.WorkStep> _sampleAnswered = SampleSteps(2, null);
+    private readonly IReadOnlyList<IsaChatApp.Services.Orchestrator.WorkStep> _sampleHandoff = SampleSteps(4, "TKT-4817");
+
+    private static IReadOnlyList<IsaChatApp.Services.Orchestrator.WorkStep> SampleSteps(int testQuestion, string? ticket)
+    {
+        var state = new IsaChatApp.Services.ShowTheWork.StageFeedState();
+        foreach (var update in IsaChatApp.Services.ShowTheWork.MockStageFeed.Script(testQuestion)) state.Apply(update);
+        return state.Finished
+            .Select(step => ticket is null ? step : step with { DataText = step.DataText.Replace("TKT-0001", ticket) })
+            .ToList();
+    }
+
     private IReadOnlyList<Slide> _slides = [];
     private string? _error;
     private int _index;
@@ -390,28 +488,229 @@ else
     {
         if (!firstRender || !Settings.PresentationEnabled || _slides.Count == 0) return;
         _self = DotNetObjectReference.Create(this);
-        _js = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Present.razor.js");
-        var start = await _js.InvokeAsync<int>("init", _self);
-        // The intro plays only when the slides open on the first slide, so a
-        // refresh in the middle of the talk never replays it (I replays it).
-        if (start == 0) await _js.InvokeVoidAsync("playIntro");
-        else await GoTo(start);
+        _js = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Present.razor.js?v=" + DateTime.UtcNow.Ticks);   // new address each load, so a browser never serves an old copy
+        ApplyPresentationSetup();
+        var start = await _js.InvokeAsync<int>("init", _self, DemoQuestions);
+        // The opening screen and the intro happen only when the slides open on the first
+        // slide, so a refresh in the middle of the talk skips both (I replays the intro).
+        if (start == 0)
+        {
+            _gate = Gate.Checking;   // the dark cover stays until the screen is dismissed
+            StateHasChanged();
+            _ = RunGateAsync();
+            return;
+        }
+        _ = RunReadinessCheckAsync();
+        await GoTo(start);
         _introPending = false;
         StateHasChanged();
     }
 
     [JSInvokable]
-    public Task Go(int delta) => GoTo(_index + delta);
+    public Task Go(int delta)
+    {
+        if (_gate != Gate.Off)
+        {
+            if (delta > 0) _ = LeaveGateAsync();   // forward leaves the opening screen; back does nothing
+            return Task.CompletedTask;
+        }
+        if (_outro)
+        {
+            if (delta < 0) return EndOutroAsync();   // Back leaves the closing; forward does nothing
+            return Task.CompletedTask;
+        }
+        // Back on the first slide returns to the opening screen (Ready), so the intro can play again.
+        if (delta < 0 && _index == 0)
+        {
+            ResetToStart();
+            return Task.CompletedTask;
+        }
+        // Forward on the last slide plays the closing.
+        if (delta > 0 && _index == _slides.Count - 1 && _js is not null)
+        {
+            _outro = true;
+            return _js.InvokeVoidAsync("playOutro").AsTask();
+        }
+        return GoTo(_index + delta);
+    }
+
+    // Alt+C: show or hide the live Cases panel (not over the opening screen or the closing).
+    [JSInvokable]
+    public async Task ToggleCases()
+    {
+        if (_gate != Gate.Off || _outro) return;
+        if (_casesOpen) { await CloseCases(); return; }
+        await CloseFrame();
+        _casesOpen = true;
+        _cases = null;
+        _casesUpdated = null;
+        _casesCts = new CancellationTokenSource();
+        _ = PollCasesAsync(_casesCts.Token);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task CloseCases()
+    {
+        if (!_casesOpen) return;
+        _casesOpen = false;
+        _casesCts?.Cancel();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // Alt+6 / Alt+7: a dashboard over the slides. The slide, the chat and its sign-in are untouched underneath.
+    [JSInvokable]
+    public async Task ToggleFrame(string path)
+    {
+        if (_gate != Gate.Off || _outro) return;
+        var url = path + "?embed=1";   // ?embed=1: no second Isa inside the frame
+        if (_frameUrl == url) { await CloseFrame(); return; }
+        await CloseCases();
+        _frameUrl = url;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public async Task CloseFrame()
+    {
+        if (_frameUrl is null) return;
+        _frameUrl = null;
+        await InvokeAsync(StateHasChanged);
+        if (_js is not null) await _js.InvokeVoidAsync("refocus");
+    }
+
+    private async Task PollCasesAsync(CancellationToken ct)
+    {
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                _cases = await Salesforce.ListRecentCasesAsync(6, ct);
+                _casesUpdated = DateTime.Now;
+                await InvokeAsync(StateHasChanged);
+                if (_js is not null) await _js.InvokeVoidAsync("fitCases");
+                await Task.Delay(3000, ct);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private static string CasesError(string? error) => error switch
+    {
+        "off" => "The Salesforce connection is switched off (Ticketing:Salesforce:Enabled).",
+        "not_configured" => "Salesforce is not configured on the Dev Dashboard.",
+        "http_403" or "http_401" => $"Salesforce refused the read ({error}). The Isa login needs permission to read Cases.",
+        _ => $"Could not read Cases from Salesforce ({error})."
+    };
+
+    private void ResetToStart()
+    {
+        _introPending = true;       // the dark cover comes back over the first slide
+        _gateLeaving = false;
+        _gate = Gate.Checking;      // the same check as when the page opened, then Ready
+        _ = InvokeAsync(StateHasChanged);
+        _ = RunGateAsync();
+    }
+
+    private async Task EndOutroAsync()
+    {
+        _outro = false;
+        if (_js is not null) await _js.InvokeVoidAsync("stopOutro");
+    }
 
     [JSInvokable]
     public async Task GoTo(int index)
     {
+        if (_gate != Gate.Off) return;
+        if (_outro) await EndOutroAsync();
         var next = Math.Clamp(index, 0, _slides.Count - 1);
         if (next == _index && _js is not null) return;
         _index = next;
+        if (_slides[_index].Warmup && !_warmed)
+        {
+            _warmed = true;
+            _ = Task.Run(async () => { await Ollama.WarmAsync(); });   // background; a failure changes nothing on screen
+        }
         await InvokeAsync(StateHasChanged);
         if (_js is not null) await _js.InvokeVoidAsync("setSlide", _index);
     }
+
+    // Slows the "show the work" steps for the audience and gives this session the Executive
+    // role (Developer Dashboard + Content Health in Backstage). Signing in stays manual.
+    private void ApplyPresentationSetup()
+    {
+        Settings.MinStageMs = PresentationStepMs;
+        Settings.CurrentRole = WidgetSettings.UserRole.Executive;
+    }
+
+    // Quiet readiness check: nothing on the slides. The result goes to the browser console
+    // ("[Isa ready]") and is kept in _ready for the indicator.
+    private ReadyReport? _ready;
+
+    private async Task<ReadyReport?> RunReadinessCheckAsync()
+    {
+        try
+        {
+            var model = await Ollama.StatusAsync();
+            var dev = await DevAccess.HasDevRoleAsync(AuthState);
+            var sf = await Salesforce.CheckAsync();
+            _ready = new ReadyReport(model.Reachable, model.ModelInstalled, model.ModelLoaded, dev, sf, Settings.MinStageMs, Settings.CurrentRole.ToString());
+            if (_js is not null) await _js.InvokeVoidAsync("reportReady", _ready);
+            return _ready;
+        }
+        catch { return null; /* the check must never break the slides */ }
+    }
+
+    // Runs the check every 3 seconds until everything is ready, so signing in or starting Ollama
+    // turns the screen to Ready by itself.
+    private async Task RunGateAsync()
+    {
+        _gateCts = new CancellationTokenSource();
+        var ct = _gateCts.Token;
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                ApplyGate(await RunReadinessCheckAsync());
+                await InvokeAsync(StateHasChanged);
+                if (_gate == Gate.Ready) return;
+                await Task.Delay(3000, ct);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void ApplyGate(ReadyReport? r)
+    {
+        var problems = new List<string>();
+        if (r is null) problems.Add("The check could not run");
+        else
+        {
+            if (!r.OllamaReachable) problems.Add("Ollama is not running");
+            else if (!r.ModelInstalled) problems.Add("The model is not installed");
+            if (!r.SignedInAsDev) problems.Add("Not signed in with the developer role");
+            if (r.Salesforce is not ("ok" or "off")) problems.Add(r.Salesforce == "not_configured" ? "Salesforce is not configured" : $"Salesforce: {r.Salesforce}");
+        }
+        _gateProblems = problems;
+        _gate = problems.Count == 0 ? Gate.Ready : Gate.NotReady;
+    }
+
+    // The next-slide key: "Ready" fades, then the intro plays and the first slide opens under it.
+    private async Task LeaveGateAsync()
+    {
+        if (_gateLeaving) return;
+        _gateLeaving = true;
+        _gateCts?.Cancel();
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(600);
+        if (_js is not null) await _js.InvokeVoidAsync("playIntro");
+        _gate = Gate.Off;
+        _gateLeaving = false;
+        _introPending = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private sealed record ReadyReport(bool OllamaReachable, bool ModelInstalled, bool ModelLoaded, bool SignedInAsDev, string Salesforce, int StepMs, string Role);
 
     // "Meet Isa": the last word ("Isa") is shown in ISACA Green.
     private static (string Start, string Name) SplitLastWord(string title)
@@ -466,6 +765,8 @@ else
             }
         }
         catch (JSDisconnectedException) { }
+        _gateCts?.Cancel();
+        _casesCts?.Cancel();
         _self?.Dispose();
     }
 }
