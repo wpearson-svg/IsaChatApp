@@ -99,7 +99,12 @@ else
     /// <summary>Live only: the stage running right now, from the latest "started" update (empty = work it out from the finished steps).</summary>
     [Parameter] public string? Current { get; set; }
 
+    /// <summary>Start with the steps open (the presentation shows one open and one closed). Normal use leaves it closed.</summary>
+    [Parameter] public bool StartOpen { get; set; }
+
     private bool _open;
+
+    protected override void OnInitialized() => _open = StartOpen;
 
     // The list of steps, used both while working and after the reply.
     private RenderFragment StepList(IReadOnlyList<StepLine> lines) => __builder =>

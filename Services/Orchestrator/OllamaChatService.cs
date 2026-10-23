@@ -25,6 +25,63 @@ public sealed class OllamaChatService
         _log = log;
     }
 
+    /// <summary>
+    /// Warm-up for the presentation: loads the model into memory with a one-token request,
+    /// using the normal keep-alive. Never throws. Returns true when Ollama answered.
+    /// </summary>
+    public async Task<bool> WarmAsync(CancellationToken cancellationToken = default)
+    {
+        var endpoint = _config["Ollama:Endpoint"] ?? "http://localhost:11434";
+        var model = _config["Ollama:Model"] ?? "phi4-mini";
+        var keepAlive = _config["Ollama:KeepAlive"] ?? "10m";
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(90));
+            using var response = await _clients.CreateClient("ollama").PostAsJsonAsync(
+                $"{endpoint.TrimEnd('/')}/api/generate",
+                new { model, prompt = "Reply with OK.", stream = false, keep_alive = keepAlive, options = new { temperature = 0, num_predict = 1 } },
+                timeout.Token);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _log.LogInformation(ex, "Model warm-up did not complete");
+            return false;
+        }
+    }
+
+    /// <summary>Is Ollama reachable, is the model installed, is it loaded in memory right now. Never throws.</summary>
+    public async Task<OllamaStatus> StatusAsync(CancellationToken cancellationToken = default)
+    {
+        var endpoint = (_config["Ollama:Endpoint"] ?? "http://localhost:11434").TrimEnd('/');
+        var model = _config["Ollama:Model"] ?? "phi4-mini";
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(4));
+            var client = _clients.CreateClient("ollama");
+            bool Has(JsonElement root) =>
+                root.TryGetProperty("models", out var arr) && arr.ValueKind == JsonValueKind.Array &&
+                arr.EnumerateArray().Any(m => m.TryGetProperty("name", out var n) && (n.GetString() ?? "").StartsWith(model, StringComparison.OrdinalIgnoreCase));
+
+            using var tags = JsonDocument.Parse(await client.GetStringAsync($"{endpoint}/api/tags", timeout.Token));
+            var installed = Has(tags.RootElement);
+            var loaded = false;
+            try
+            {
+                using var ps = JsonDocument.Parse(await client.GetStringAsync($"{endpoint}/api/ps", timeout.Token));
+                loaded = Has(ps.RootElement);
+            }
+            catch { /* older Ollama without /api/ps: treat as not loaded */ }
+            return new OllamaStatus(true, installed, loaded);
+        }
+        catch
+        {
+            return new OllamaStatus(false, false, false);
+        }
+    }
+
     /// <param name="endpointOverride">Test only: send the call somewhere else (an address with nothing listening) to test the "model unavailable" path.</param>
     public async Task<OllamaAnswer> GenerateAsync(string prompt, string? endpointOverride = null, CancellationToken cancellationToken = default)
     {
@@ -74,3 +131,5 @@ public sealed class OllamaChatService
 /// <param name="Detail">For an "unavailable" error: the HTTP status or exception type, written to the event log to help find the cause.</param>
 /// <param name="Error">null when it worked; otherwise "timeout" or "unavailable" (the contract's error values).</param>
 public sealed record OllamaAnswer(string Model, string Text, long ElapsedMs, string? Error, int? PromptTokens, int? CompletionTokens, string? Detail = null);
+
+public sealed record OllamaStatus(bool Reachable, bool ModelInstalled, bool ModelLoaded);

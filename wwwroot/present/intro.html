@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Isa C Intro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300&display=swap">
 <style>
   /* Copy of Isa_C_Intro.html for the /present slides (Components/Pages/Present.razor.js plays it
      as an overlay with ?embed=1). Changed 23 October 2026 (Matthew): the finished ring is half
@@ -75,6 +76,8 @@
     </g>
   </g></g>
 
+  <!-- outro only: "Thank you" under the logo circle, appears once the spin ends -->
+  <text id="thanks" text-anchor="middle" opacity="0" fill="#ffffff" font-family="'Roboto Slab', Georgia, serif" font-weight="300" font-size="46">Thank you</text>
 </svg>
 
 <button id="replay" type="button">Replay intro</button>
@@ -89,7 +92,11 @@
   const params = new URLSearchParams(location.search);
   const T_IN = 1.6, T_SPIN = 1.1, T_PAUSE = 1.0, T_OUT = 1.5;   // seconds: roll in, one logo spin, a pause, roll out
   const T_HOLD = T_SPIN + T_PAUSE;
-  const TOTAL = T_IN + T_HOLD + T_OUT;
+  // ?mode=outro (the closing of the talk): the Cs roll in from both sides pulling the curtain closed over the
+  // page, end exactly on top of each other, the Isa logo spins one turn and everything stays as it is.
+  const outro = params.get("mode") === "outro";
+  const T_THANKS = 0.8;           // outro: the fade-in of "Thank you" after the spin
+  const TOTAL = outro ? T_OUT + T_SPIN + T_THANKS : T_IN + T_HOLD + T_OUT;
   const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------- geometry (from the C window design, c-window1.svg) ----------
@@ -106,6 +113,7 @@
   const curtainL = $("curtainL"), curtainR = $("curtainR"), plate = $("plate");
   const logo = $("logo"), ring = $("ring"), ringPath = $("ringPath"), letters = $("letters"), word = $("word");
   const replayBtn = $("replay");
+  const thanks = $("thanks");
 
   // page underneath
   const frame = $("page"), mock = $("mock");
@@ -159,7 +167,10 @@
     const outTravelR = Math.max(RR - CX, RR - (A_FINAL.x - R)) + 20;
 
     let dB = 0, dA = 0, pOut = 0;                // dB, dA: signed offsets from the resting place
-    if (t < T_IN) {
+    if (outro) {
+      const q = 1 - easeInOutCubic(clamp(t / T_OUT, 0, 1));   // 1 = Cs off the screen, curtain open; 0 = closed
+      dB = -outTravel * q; dA = outTravelR * q;
+    } else if (t < T_IN) {
       const e = easeOutCubic(clamp(t / T_IN, 0, 1));
       dB = -inB * (1 - e); dA = inA * (1 - e);
     } else if (t > T_IN + T_HOLD) {
@@ -174,19 +185,24 @@
     halfB.setAttribute("x", B_FINAL.x + dB); halfB.setAttribute("y", B_FINAL.y - 50000);
 
     // the curtain halves ride along with the Cs (they stay joined at the middle until the end)
-    const slideL = t > T_IN ? dB : 0, slideR = t > T_IN ? dA : 0;
+    const slideL = (outro || t > T_IN) ? dB : 0, slideR = (outro || t > T_IN) ? dA : 0;
     curtainL.setAttribute("x", L + slideL); curtainL.setAttribute("width", CX - L);
     curtainR.setAttribute("x", CX + slideR); curtainR.setAttribute("width", RR - CX);
 
     // the logo appears in the window as the Cs arrive, spins ONE full turn (cycling through the ISACA colours once),
     // then rests in its normal colours for the pause before the Cs roll out
-    const fadeIn = clamp((t - T_IN * 0.55) / (T_IN * 0.45), 0, 1);
+    const tArrive = outro ? T_OUT : T_IN;                       // when the Cs reach the middle
+    const fadeIn = clamp((t - tArrive * 0.55) / (tArrive * 0.45), 0, 1);
     logo.setAttribute("opacity", fadeIn);
     const lx = CX, ly = CY, s = 0.69;                      // logo size inside the window
     logo.setAttribute("transform", "translate(" + lx + " " + ly + ") scale(" + s + ") translate(-100 -100)");
-    const sp = clamp((t - T_IN) / T_SPIN, 0, 1);
+    const sp = clamp((t - tArrive) / T_SPIN, 0, 1);
     const spinE = 0.5 - 0.5 * Math.cos(Math.PI * sp);          // eases in and out so it settles softly
     ring.setAttribute("transform", "rotate(" + (spinE * 360) + " 100 100)");
+    // "Thank you" fades in (and rises a little) once the spin has ended
+    const th = outro ? clamp((t - T_OUT - T_SPIN) / T_THANKS, 0, 1) : 0;
+    thanks.setAttribute("x", CX); thanks.setAttribute("y", CY + R + 62 - 10 * (1 - easeOutCubic(th)));
+    thanks.setAttribute("opacity", easeOutCubic(th));
     ringPath.setAttribute("fill", cycle(sp));                  // green round to green
     letters.setAttribute("fill", cycle(0.8 - sp));             // navy round to navy, the other way
   }
@@ -195,6 +211,10 @@
   let raf = 0, t0 = 0, finished = false;
   function done() {
     if (finished) return; finished = true;
+    if (outro) {   // the closing picture stays: Cs overlapping, logo at rest
+      try { parent !== window && parent.postMessage({ type: "isa-outro-done" }, "*"); } catch (e) {}
+      return;
+    }
     scene.style.display = "none";
     frame.removeAttribute("aria-hidden"); mock.removeAttribute("aria-hidden");
     try { parent !== window && parent.postMessage({ type: "isa-intro-done" }, "*"); } catch (e) {}

@@ -32,7 +32,7 @@ Write-Host "Token OK"
 # 2. Create a Case with the standard fields and the six custom fields
 $case = @{
     Subject          = 'Isa escalation: test from test-salesforce.ps1'
-    Description      = "Question: test question`nLanguage: en`nEscalated by: output_compliance`nIsa reference: TKT-TEST"
+    Description      = "Language: en`nEscalated by: output_compliance`nIsa reference: TKT-TEST"
     Status           = 'New'
     Origin           = 'Web'
     Priority         = 'Medium'

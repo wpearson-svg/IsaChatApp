@@ -51,6 +51,8 @@ public class PresentationDeck
 public class Slide
 {
     public string Kind { get; set; } = "statement";
+    /// <summary>True on the slide where the model warm-up starts in the background (once per visit).</summary>
+    public bool Warmup { get; set; }
     public string? Section { get; set; }
     public string? Presenter { get; set; }
     public string Title { get; set; } = "";

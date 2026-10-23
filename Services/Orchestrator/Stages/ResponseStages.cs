@@ -287,7 +287,7 @@ public class TicketingStage : IStage
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
             if (string.IsNullOrWhiteSpace(requestedBy)) requestedBy = ctx.UserId ?? "";
             var r = await _salesforce.CreateCaseAsync(new IsaChatApp.Services.SalesforceTicketService.CaseInput(
-                ticket, ctx.TraceId, ctx.Question, ctx.Language, ctx.EscalatedBy, ctx.EscalationReason,
+                ticket, ctx.TraceId, ctx.Language, ctx.EscalatedBy, ctx.EscalationReason,
                 chapterId, chapterRole, ctx.SafetyTopic, requestedBy, personId));
             sf = r.Ok ? $"; salesforce=created; case_id={r.CaseId}" : $"; salesforce=failed; detail={r.Error}";
         }
