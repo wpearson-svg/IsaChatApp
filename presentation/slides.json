@@ -1,0 +1,224 @@
+// ============================================================
+// presentation/slides.json -- every word on the /present slides.
+//
+// Edit wording here; no code changes needed. Save the file and
+// refresh /present in the browser: the page reads this file each
+// time it opens, so Isa does NOT need a restart (and must not be
+// restarted mid-talk: ticket numbers would start again at TKT-0001).
+//
+// Rules for the wording (Isa_Presentation_Breakdown.md):
+// - The Client is never named on a slide.
+// - No model timing on the slides.
+// - Keep dev-only items (test scripts, the launcher) off the slides.
+//
+// Each slide has a "kind" that decides its layout:
+//   landing, cover, problem, statement, rules, pipeline, status, showwork, list,
+//   demo, numbered, features, closing.
+// "presenter" shows in the corner, so hand-offs are clear.
+// In "lead", a word between *asterisks* is shown in italics and colour.
+// On a "problem" slide, \n in "lead" starts a new line.
+// Lines starting with // are comments and are ignored.
+// ============================================================
+{
+  "slides": [
+    {
+      // The landing slide: the intro animation's curtain opens onto this one.
+      "kind": "landing",
+      "presenter": "Matthew Brady",
+      "title": "Meet Isa",
+      "lead": "Your chapter support assistant"
+    },
+    {
+      // What this presentation shows: the pipeline is built.
+      "kind": "cover",
+      "presenter": "Matthew Brady",
+      "title": "Pipeline built",
+      "lead": "Every question now runs end to end, through all ten stages.",
+      "note": "Second Star Collective"
+    },
+    {
+      // The problem on the left (with the big number), Isa's two answers on the right.
+      "kind": "problem",
+      "section": "The plan",
+      "presenter": "Matthew Brady",
+      "title": "The problem",
+      "stat": "6",
+      "statLabel": "people on the support team",
+      "lead": "Chapter leaders are volunteers. They need approved guidance *fast*,\nand a six-person support team cannot answer every question.",
+      "items": [
+        { "title": "Isa answers from approved content.", "status": "blue" },
+        { "title": "Isa hands off to a person when it should.", "status": "green" }
+      ]
+    },
+    {
+      "kind": "rules",
+      "section": "The plan",
+      "presenter": "Matthew Brady",
+      "title": "What Isa promises",
+      "lead": "Three rules, shown on every answer.",
+      "items": [
+        { "title": "Approved content only", "text": "Answers come only from approved content, in the Client's own words, with the source shown." },
+        { "title": "Isa shows its work", "text": "Every answer shows its steps, one by one, in plain language." },
+        { "title": "A person takes over", "text": "When Isa can't answer well, a person takes over and the leader gets a reference number." }
+      ]
+    },
+    {
+      "kind": "pipeline",
+      "section": "The plan",
+      "presenter": "Matthew Brady",
+      "title": "One question, ten stages",
+      "lead": "Every question moves through the stages in order. The AI stages run only when they're needed.",
+      "stages": [
+        { "name": "Front end" },
+        { "name": "Access control" },
+        { "name": "Translation" },
+        { "name": "Input compliance" },
+        { "name": "Database search" },
+        { "name": "Knowledge graph", "path": "ai" },
+        { "name": "RAG", "path": "ai" },
+        { "name": "Complex AI", "path": "ai" },
+        { "name": "Output compliance" },
+        { "name": "Ticketing", "path": "handoff" }
+      ],
+      // Each path is drawn as a bar under the stages it uses (numbers 1-10).
+      // "color": blue, darkblue or green.
+      "paths": [
+        { "title": "Cheap path", "text": "A direct text match answers straight from the approved text. No AI.", "color": "blue", "stages": [1, 2, 3, 4, 5, 9] },
+        { "title": "AI path", "text": "Runs only when it's needed, which keeps cost down.", "color": "darkblue", "stages": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+        { "title": "To a person", "text": "Ticketing runs when a question goes to a person.", "color": "green", "stages": [10] }
+      ]
+    },
+    {
+      // The ten stages, in pipeline order, coloured by status, then the same
+      // stages grouped by status. "status": built, partial or stub.
+      "kind": "status",
+      "section": "What we built",
+      "presenter": "Willis Pearson",
+      "title": "Real versus stub",
+      "lead": "The honest status of every stage.",
+      "rows": [
+        { "name": "Front end", "status": "built", "text": "Chat, sign-in, Today and notebook panels" },
+        { "name": "Access control", "status": "built", "text": "Keycloak sign-in and roles" },
+        { "name": "Translation", "status": "stub", "text": "Detects the language; doesn't translate yet" },
+        { "name": "Input compliance", "status": "stub", "text": "Simple keyword rules for now" },
+        { "name": "Database search", "status": "built", "text": "Full-text search; direct hits answer with the source" },
+        { "name": "Knowledge graph", "status": "stub", "text": "Skipped on a direct hit" },
+        { "name": "RAG", "status": "partial", "text": "Finds passages by meaning; vector search to come" },
+        { "name": "Complex AI", "status": "built", "text": "Local model writes only from the passages found" },
+        { "name": "Output compliance", "status": "partial", "text": "Checks the source is approved and was found; deeper checks to come" },
+        { "name": "Ticketing", "status": "partial", "text": "Reference numbers work; Salesforce off until it passes its test" }
+      ]
+    },
+    {
+      "kind": "showwork",
+      "section": "What we built",
+      "presenter": "Willis Pearson",
+      "title": "Show the work",
+      "lead": "Every answer has a closed line and an expandable panel of steps.",
+      "items": [
+        { "title": "Answered from approved guidance", "status": "built" },
+        { "title": "Passed to a person", "status": "handoff" }
+      ],
+      "steps": [
+        "Received your question",
+        "Confirmed your sign-in",
+        "Made sure Isa can help with this",
+        "Searched the approved guidance",
+        "Found the answer in the approved text",
+        "Double-checked the answer"
+      ],
+      "bullets": [
+        "Plain-language steps, in wording the team wrote.",
+        "A developer view shows the raw events for each stage."
+      ]
+    },
+    {
+      "kind": "list",
+      "section": "What we built",
+      "presenter": "Willis Pearson",
+      "title": "Safe by design",
+      "lead": "What happens when things go wrong.",
+      "items": [
+        { "title": "A failed model call", "text": "becomes a hand-off, never a wrong answer." },
+        { "title": "A source that wasn't found", "text": "If the model cites a source that wasn't retrieved, it is caught and escalated." },
+        { "title": "Sensitive topics", "text": "Harassment never gets an automatic answer, and gets a safety line." },
+        { "title": "A crashed stage", "text": "shows a plain \"something went wrong\" message, not a stack trace." },
+        { "title": "Private by default", "text": "The event log never stores question text. Usage records hold only a one-way hash, with a key made fresh on every start and never saved." }
+      ]
+    },
+    {
+      "kind": "rules",
+      "section": "What we built",
+      "presenter": "Willis Pearson",
+      "title": "For the team",
+      "lead": "Tools for the people who run Isa.",
+      "items": [
+        { "title": "Developer dashboard", "text": "Role-gated. Trace lookup, content import, and Salesforce settings." },
+        { "title": "Content Health dashboard", "text": "For support managers: how the approved content is holding up." }
+      ]
+    },
+    {
+      "kind": "demo",
+      "section": "Demo",
+      "presenter": "Willis Pearson",
+      "title": "Live demo",
+      "lead": "Isa is in the corner. Let's ask her.",
+      "steps": [
+        "A direct answer",
+        "A question the AI helps with",
+        "An off-topic question",
+        "A question Isa's content doesn't cover",
+        "A sensitive topic",
+        "Backstage: tracing one question"
+      ]
+    },
+    {
+      "kind": "numbered",
+      "section": "What comes next",
+      "presenter": "Eliyas Eshtea",
+      "title": "Next steps",
+      "lead": "In priority order.",
+      "items": [
+        { "title": "Real translation", "text": "Planned: LibreTranslate / Argos, self-hosted, plus a second self-hosted model for languages it doesn't cover, including Amharic, Oromo, Somali and Tigrinya." },
+        { "title": "Salesforce tickets", "text": "Turn the connection on and pass the live Case test." },
+        { "title": "Real input rules", "text": "Replace the keyword stub with rule-based checks." },
+        { "title": "Vector search and RAG", "text": "Replace the meaning map with embedding search." },
+        { "title": "Knowledge graph", "text": "Related topics from linked sections." },
+        { "title": "Output compliance", "text": "Add the answer-check and confidence layers." },
+        { "title": "Measuring quality", "text": "Accuracy sampling and a feedback loop on answers." }
+      ]
+    },
+    {
+      "kind": "features",
+      "section": "What comes next",
+      "presenter": "Eliyas Eshtea",
+      "title": "Additional features",
+      "groups": [
+        {
+          "label": "In the build, not finished",
+          "items": [
+            { "title": "Onboarding", "text": "The Today panel and the first-90-days journey: steps matched to where a leader is in their term, with progress." },
+            { "title": "Succession notebook", "text": "Leaders leave notes for the person who takes over." }
+          ]
+        },
+        {
+          "label": "Planned",
+          "items": [
+            { "title": "Peer content panel", "text": "Always on, alongside the chat." },
+            { "title": "Offline packages", "text": "Custom packages for specific remote chapters." },
+            { "title": "Android app wrapper", "text": "Isa as an app icon on a phone. Same server and API." },
+            { "title": "Chrome extension", "text": "A quick-access popup of the chat. Same server and API." },
+            { "title": "Multi-model testing", "text": "Side-by-side model tests on the Dev Dashboard." }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "closing",
+      "presenter": "Matthew Brady",
+      "title": "Isa only answers from approved content, shows every step, and hands off to a person with a reference number whenever it can't.",
+      "subtitle": "Thank you",
+      "note": "Second Star Collective"
+    }
+  ]
+}

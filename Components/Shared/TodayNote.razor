@@ -149,7 +149,7 @@ else if (_ctx is not null)
     /// <summary>Goes up when the handoff checklist changes in the notebook panel, so the note reads its counts again.</summary>
     [Parameter] public int Version { get; set; }
 
-    /// <summary>Called by "Open the checklist" (outgoing president). The chat widget opens the notebook, where the checklist is.</summary>
+    /// <summary>Called by "Open the checklist" (outgoing president). The chat widget opens the notebook on its checklist page.</summary>
     [Parameter] public EventCallback OnOpenNotebook { get; set; }
 
     // Who is signed in, from the sign-in cookie.

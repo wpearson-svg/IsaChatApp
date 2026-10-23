@@ -32,12 +32,18 @@
     font-family: 'Roboto', Arial, sans-serif;
     /* Glides with the chat when Today or the notebook opens. */
     transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Opening and closing: a soft 24px glide with a fade, starting gently
+    /* Opening with the chat: a soft 24px glide with a fade, starting gently
        and settling gently, like the Today window (TodayPanel.razor.css).
-       Matthew asked for it, 21 October 2026; slowed from 0.5s to 0.7s on
-       22 October 2026, with the header's menu button and the chat moving
-       on the same glide (RailGlideMs in ChatWidget.razor). */
-    animation: isa-rail-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+       Matthew asked for it, 21 October 2026, then slower (1.1s, 22 October
+       2026) so leaders can watch the buttons arrive as the rail settles
+       against the chat. */
+    animation: isa-rail-in 1.1s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Coming back from the header's menu button: the 0.7s glide the header's
+   Isa ring slides on (RailGlideMs in ChatWidget.razor), so they move together. */
+.isa-rail.is-returning {
+    animation-duration: 0.7s;
 }
 
 /* While "Hide" closes it: the same glide in reverse. The chat widget

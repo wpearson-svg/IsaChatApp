@@ -24,7 +24,7 @@
    when a button is clicked. Nothing here comes from the AI model.
    ============================================================ *@
 
-<nav class="isa-rail @(Closing ? "is-closing" : "")" style="@Style" aria-label="Isa menu">
+<nav class="isa-rail @(Closing ? "is-closing" : Returning ? "is-returning" : "")" style="@Style" aria-label="Isa menu">
     <button type="button" class="isa-rail__btn isa-rail__hide" @onclick="OnHide"
             title="Hide the menu" aria-label="Hide the menu">
         <svg viewBox="0 0 24 24" class="isa-rail__hideIcon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -157,6 +157,9 @@
 
     /// <summary>True while "Hide" is closing the rail, so it glides away.</summary>
     [Parameter] public bool Closing { get; set; }
+
+    /// <summary>True while the rail comes back from the header's menu button, so it uses the shorter glide.</summary>
+    [Parameter] public bool Returning { get; set; }
 
     /// <summary>Show the Today button (a leader in their first 90 days).</summary>
     [Parameter] public bool ShowToday { get; set; }

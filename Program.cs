@@ -24,6 +24,8 @@ builder.Services.AddSingleton<WidgetSettings>();
 // persistence story as WidgetSettings: one for the whole app, gone on
 // restart.
 builder.Services.AddSingleton<UsageLogService>();
+// The /present slides, read from presentation/slides.json (Components/Pages/Present.razor).
+builder.Services.AddSingleton<IsaChatApp.Services.Presentation.PresentationDeck>();
 
 // --- Sign-in (Keycloak) ---
 // The sign-in page (/sign-in) checks the email and password with

@@ -214,6 +214,21 @@
    below is the week 8 "done" check: every test leader with a role on
    that date, their day of term (day 1 = term start date), and the
    journey steps their role sees on that day. *@
+@* ---- Presentation page (/present): off by default, so chapter leaders
+   never come across it. See WidgetSettings.PresentationEnabled. *@
+<h2 class="h4">Presentation</h2>
+<div class="form-check form-switch">
+    <input class="form-check-input" type="checkbox" role="switch" id="presentationEnabled"
+           checked="@Settings.PresentationEnabled"
+           @onchange="@(e => Settings.PresentationEnabled = (bool)e.Value!)" />
+    <label class="form-check-label" for="presentationEnabled">
+        Show the presentation slides at <a href="/present">/present</a>
+    </label>
+</div>
+<p class="text-muted mt-1 mb-4">
+    Slide wording is in presentation/slides.json. Resets to off on app restart.
+</p>
+
 <h2 class="h4">Onboarding: demo date</h2>
 <p class="text-muted">
     The 90-day journey counts each leader's day of term from this date,

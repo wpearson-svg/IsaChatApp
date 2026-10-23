@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calmer Notebook Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup only: not used by the app. The succession notebook panel as it
+     is now ("Before") next to a calmer version ("After"), for Sato Yumiko,
+     Watanabe Kenji and one entry page, plus the half-width opening.
+     Sample people, the chapter and all entries are invented. */
+  :root {
+    --ink: #1d2d5c;          /* ISACA Dark Blue */
+    --text: #323e48;         /* Grey 9 */
+    --muted: #5f6b7a;
+    --page: #eef2f5;
+    --panel: #ffffff;
+    --soft: #f6f7f8;         /* ISACA Grey 1 */
+    --line: #dde3e9;
+    --light-blue: #e7f0f5;   /* ISACA Light Blue */
+    --blue: #07649d;
+    --green: #3f7d20;        /* ISACA Green, darkened */
+    --green-bg: #edf6e8;
+    --teal: #1b7a66;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 64px; background: var(--page); color: var(--text); font-family: Roboto, Arial, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; }
+  h1 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.6rem; margin: 0 0 6px; }
+  h2 { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.25rem; margin: 48px 0 6px; }
+  .intro { max-width: 860px; line-height: 1.5; margin: 0 0 8px; }
+  .intro ul, .changes ul { margin: 6px 0 0; padding-left: 20px; }
+  .changes { max-width: 860px; line-height: 1.5; font-size: 0.92rem; margin: 6px 0 18px; }
+  .changes li { margin-bottom: 3px; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+  figure { margin: 0; max-width: 100%; }
+  figcaption { font-weight: 700; color: var(--ink); margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+  figcaption + p { margin: 0 0 10px; font-size: 0.85rem; line-height: 1.45; max-width: 380px; min-height: 2.9em; }
+  .label { font-size: 0.68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; }
+  .label.before { background: #e3e7eb; color: var(--muted); }
+  .label.after { background: var(--green-bg); color: var(--green); }
+
+  /* ---------- The notebook panel (shared) ---------- */
+  .nb { width: 380px; max-width: 100%; height: 680px; display: flex; flex-direction: column; background: var(--panel); border: 1px solid #cbd2d9; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 18px rgba(29,45,92,.08); }
+  .nb__head { flex: 0 0 64px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px 0 16px; }
+  .nb__title { font-family: 'Roboto Slab', Georgia, serif; font-size: 1.1rem; line-height: 1.2; }
+  .nb__sub { font-size: 0.75rem; color: #e7f0f5; }
+  .nb__icons { display: flex; gap: 2px; color: #e7f0f5; font-size: 1.05rem; }
+  .nb__icons span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 6px; }
+  .nb__body { flex: 1 1 auto; overflow: hidden; padding: 14px 16px 16px; position: relative; }
+  .nb__body.scroll { overflow: auto; }
+  .fade::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: linear-gradient(rgba(255,255,255,0), #fff); pointer-events: none; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 8px; font: 500 0.85rem Roboto, Arial, sans-serif; border: 1px solid var(--ink); background: #fff; color: var(--ink); white-space: nowrap; }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.ghost { border-color: transparent; color: var(--blue); padding: 0 8px; }
+  .btn.icon { width: 40px; padding: 0; border-color: var(--line); font-size: 1.1rem; letter-spacing: 1px; }
+
+  /* ---------- Before: as the panel is now ---------- */
+  .b-tag { font-size: 0.82rem; font-weight: 700; color: var(--ink); margin: 0 0 6px; }
+  .b-priv { font-size: 0.72rem; color: var(--muted); line-height: 1.4; margin: 0 0 12px; }
+  .b-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+  .b-card__top { display: flex; justify-content: space-between; align-items: baseline; }
+  .b-card__title { font-family: 'Roboto Slab', Georgia, serif; color: var(--ink); font-size: 1rem; }
+  .b-card__count { font-size: 0.72rem; color: var(--green); font-weight: 700; }
+  .b-bar { height: 4px; background: var(--line); border-radius: 4px; margin: 8px 0; }
+  .b-bar span { display: block; height: 100%; width: 15%; background: var(--green); border-radius: 4px; }
+  .b-small { font-size: 0.74rem; line-height: 1.4; color: var(--text); margin: 0 0 6px; }
+  .b-small.muted { color: var(--muted); }
+  .b-item { display: flex; align-items: center; gap: 8px; min-height: 31px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--ink); }
+  .b-item i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #7b8794; flex: none; }
+  .b-item i.done { background: var(--green); border-color: var(--green); }
+  .b-item em { margin-left: auto; font-style: normal; color: var(--muted); }
+  .b-tools { display: flex; gap: 8px; margin: 4px 0 10px; }
+  .b-search { min-height: 38px; border: 1px solid #cbd2d9; border-radius: 8px; padding: 0 12px; display: flex; align-items: center; color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .chip { min-height: 30px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: 999px; border: 1px solid #cbd2d9; background: #fff; color: var(--ink); font-size: 0.76rem; }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .month { font-size: 0.7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 10px 0 6px; }
+  .b-entry { display: grid; grid-template-columns: 34px 1fr 10px; gap: 8px; align-items: center; min-height: 52px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; }
+  .b-date { text-align: center; color: var(--ink); line-height: 1.05; }
+  .b-date b { display: block; font-size: 1rem; }
+  .b-date span { font-size: 0.64rem; color: var(--muted); }
+  .b-title { font-size: 0.8rem; color: var(--ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .b-meta { display: flex; gap: 5px; margin-top: 3px; align-items: center; font-size: 0.66rem; color: var(--muted); }
+  .badge { font-size: 0.6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; }
+  .badge.dec { background: var(--ink); color: #fff; }
+  .badge.sav { background: var(--light-blue); color: var(--blue); }
+  .badge.prv { background: #eef0f2; color: var(--muted); }
+  .chev { color: #9aa5b1; }
+
+  /* ---------- After: the calmer panel ---------- */
+  .a-intro { font-size: 0.86rem; color: var(--muted); line-height: 1.45; margin: 2px 0 16px; }
+  .hand { border: 1px solid var(--line); border-left: 4px solid var(--green); border-radius: 10px; padding: 14px 14px 12px; margin-bottom: 18px; background: #fff; }
+  .hand__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .hand__title { font-weight: 500; color: var(--ink); font-size: 0.95rem; }
+  .hand__count { font-size: 0.78rem; color: var(--green); font-weight: 700; white-space: nowrap; }
+  .hand__bar { height: 6px; background: var(--line); border-radius: 6px; margin: 10px 0; }
+  .hand__bar span { display: block; height: 100%; width: 15%; background: var(--green); border-radius: 6px; }
+  .hand__next { font-size: 0.84rem; color: var(--text); line-height: 1.4; }
+  .hand__next b { color: var(--ink); font-weight: 500; }
+  .hand__foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 0.78rem; color: var(--muted); }
+  .hand__foot a { color: var(--blue); font-weight: 500; text-decoration: none; }
+
+  .a-tools { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .a-tools .grow { flex: 1; }
+  .a-list-head { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 4px; }
+  .a-list-head h3 { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .a-list-head span { font-size: 0.78rem; color: var(--muted); }
+  .a-entry { display: grid; grid-template-columns: 1fr 12px; gap: 10px; align-items: center; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+  .a-entry:last-child { border-bottom: none; }
+  .a-title { font-size: 0.9rem; color: var(--ink); font-weight: 500; line-height: 1.35; }
+  .a-meta { font-size: 0.76rem; color: var(--muted); margin-top: 3px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .shared { display: inline-flex; align-items: center; gap: 4px; color: var(--green); font-weight: 500; }
+  .a-foot { position: absolute; left: 16px; right: 16px; bottom: 14px; font-size: 0.74rem; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  .info { width: 16px; height: 16px; border-radius: 50%; border: 1.3px solid var(--muted); display: inline-grid; place-items: center; font-size: 0.62rem; font-weight: 700; flex: none; }
+
+  /* checklist page */
+  .back { font-size: 0.82rem; color: var(--blue); margin: 0 0 12px; display: inline-block; }
+  .cl-h { font-family: 'Roboto Slab', Georgia, serif; color: var(--ink); font-size: 1.05rem; margin: 0 0 4px; }
+  .cl-sub { font-size: 0.8rem; color: var(--muted); margin: 0 0 10px; line-height: 1.4; }
+  .cl-group { font-size: 0.7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 14px 0 2px; }
+  .cl-item { display: flex; align-items: center; gap: 10px; min-height: 40px; border-bottom: 1px solid var(--line); font-size: 0.85rem; color: var(--ink); }
+  .cl-item i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #7b8794; flex: none; }
+  .cl-item i.done { background: var(--green); border-color: var(--green); position: relative; }
+  .cl-item i.done::after { content: "✓"; color: #fff; font-size: 0.7rem; font-style: normal; position: absolute; inset: 0; display: grid; place-items: center; }
+  .cl-item.done span { color: var(--muted); }
+  .cl-item.next { background: var(--light-blue); margin: 0 -8px; padding: 0 8px; border-radius: 6px; border-bottom-color: transparent; }
+  .cl-item small { margin-left: auto; color: var(--blue); font-weight: 500; font-size: 0.74rem; }
+
+  /* entry page, before */
+  .e-back { font-size: 0.78rem; color: var(--blue); margin-bottom: 10px; }
+  .e-box { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .e-kicker { font-size: 0.64rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .e-title { color: var(--ink); font-weight: 700; font-size: 0.92rem; margin: 4px 0 8px; }
+  .e-grid { display: grid; grid-template-columns: 62px 1fr; gap: 5px 8px; font-size: 0.72rem; align-items: center; }
+  .e-grid dt { color: var(--muted); }
+  .e-grid dd { margin: 0; color: var(--text); }
+  .e-select { border: 1px solid #cbd2d9; border-radius: 4px; padding: 2px 6px; display: inline-block; font-size: 0.72rem; }
+  .e-q { font-weight: 700; color: var(--ink); font-size: 0.8rem; margin: 6px 0; }
+  .e-a { font-size: 0.74rem; line-height: 1.45; margin: 0 0 6px; }
+  .e-src { font-size: 0.7rem; color: var(--blue); }
+  .e-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 6px 0 10px; }
+  .e-actions .btn { min-height: 34px; font-size: 0.76rem; }
+  .e-share { display: flex; justify-content: space-between; font-size: 0.74rem; align-items: center; margin-bottom: 6px; }
+  .e-share a { color: var(--blue); text-decoration: underline; }
+
+  /* entry page, after */
+  .p-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .p-top .back { margin: 0; }
+  .p-kind { font-size: 0.74rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink); }
+  .p-title { font-family: 'Roboto Slab', Georgia, serif; font-weight: 500; color: var(--ink); font-size: 1.2rem; line-height: 1.3; margin: 4px 0 6px; }
+  .p-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; }
+  .p-sec { font-size: 0.7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .p-q { font-weight: 500; color: var(--ink); font-size: 0.88rem; margin: 0 0 6px; line-height: 1.4; }
+  .p-a { font-size: 0.84rem; line-height: 1.55; margin: 0 0 8px; }
+  .p-src { font-size: 0.78rem; color: var(--blue); margin-bottom: 18px; display: flex; gap: 6px; }
+  .p-hr { border: 0; border-top: 1px solid var(--line); margin: 0 0 12px; }
+  .p-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; font-size: 0.85rem; color: var(--ink); }
+  .p-row small { display: block; color: var(--muted); font-size: 0.74rem; }
+  .switch { width: 40px; height: 24px; border-radius: 12px; background: #cbd2d9; position: relative; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+  .p-link { color: var(--blue); font-size: 0.84rem; font-weight: 500; }
+  .p-details { font-size: 0.8rem; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  .menu { position: absolute; right: 16px; top: 46px; width: 210px; background: #fff; border: 1px solid #cbd2d9; border-radius: 10px; box-shadow: 0 8px 24px rgba(29,45,92,.16); padding: 6px 0; z-index: 2; }
+  .menu div { padding: 10px 14px; font-size: 0.84rem; color: var(--ink); }
+  .menu div.sep { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; color: #9b2c2c; }
+
+  /* ---------- Whole-screen schematics ---------- */
+  .screen { width: 540px; max-width: 100%; aspect-ratio: 16 / 10; background: #3b4a6b; border-radius: 10px; position: relative; overflow: hidden; border: 1px solid #cbd2d9; box-shadow: 0 6px 18px rgba(29,45,92,.1); }
+  .screen__page { position: absolute; inset: 0; background: linear-gradient(135deg, #2a3a63, #1d2d5c); opacity: .55; }
+  .s-rail { position: absolute; left: 0; top: 0; bottom: 0; width: 5.3%; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 10px; }
+  .s-rail i { width: 60%; aspect-ratio: 1; border-radius: 5px; }
+  .s-p { position: absolute; top: 0; bottom: 0; background: #fff; border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+  .s-p__h { height: 11%; background: var(--ink); color: #fff; font-size: 0.62rem; display: flex; align-items: center; padding: 0 8px; font-family: 'Roboto Slab', Georgia, serif; }
+  .s-p__b { padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .s-line { height: 6px; border-radius: 3px; background: #dde3e9; }
+  .s-line.dark { background: #b7c2cf; }
+  .s-box { border: 1px solid var(--line); border-radius: 4px; height: 22px; }
+  .s-box.green { border-left: 3px solid var(--green); height: 30px; }
+  .s-w { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 0.62rem; color: var(--muted); background: var(--soft); padding: 1px 6px; border-radius: 999px; white-space: nowrap; }
+
+  .decide { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; max-width: 860px; line-height: 1.5; font-size: 0.92rem; margin-top: 12px; }
+  .decide ol { margin: 6px 0 0; padding-left: 20px; }
+  .decide li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>A calmer succession notebook</h1>
+<p class="intro">The notebook panel as it looks now (<b>Before</b>, copied from Isa on 23 October 2026 at 1440 × 900) next to a calmer version (<b>After</b>). Nothing the notebook can do is taken away: every action is still one or two taps from where it is now. What changes is how much shows at once. The sample entries are tidied too, so they no longer contradict each other. All people, the chapter and the entries are invented.</p>
+<p class="intro">The ideas behind every "After":</p>
+<div class="intro"><ul>
+  <li><b>One job per screen.</b> The handoff checklist becomes a one-card summary that opens its own page, the same way an entry does.</li>
+  <li><b>Say it once.</b> One line under the title says what the notebook is. The privacy rule sits in one quiet line at the bottom, with ⓘ for the full wording.</li>
+  <li><b>One main button.</b> "Add a note" stays. Rarer actions (print all decisions, print one record, remove) move into a "⋯" menu.</li>
+  <li><b>Only what tells you something.</b> No "PRIVATE" badge on every row, because every entry is private unless it is shared. Shared entries get a small green "Shared with the board" mark instead.</li>
+  <li><b>Tools when they're needed.</b> Search and the filters appear once a notebook has more than six entries.</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>1. Sato Yumiko opens the notebook (outgoing president, in her handoff window)</h2>
+<div class="changes"><ul>
+  <li>Before: the 13 checklist items fill the first screen, and her notes start a screen and a half further down.</li>
+  <li>After: one card shows her progress, the next item and the time left. Her notes are visible straight away. "Open the checklist" opens the full list as its own page (third picture).</li>
+</ul></div>
+<div class="row">
+
+  <figure>
+    <figcaption><span class="label before">Before</span> What she sees now</figcaption>
+    <p>The first screen is all checklist. The four explanation lines come before anything she can act on.</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body fade">
+        <p class="b-tag">What your chapter's presidents leave for the next one.</p>
+        <p class="b-priv">🔒 Only presidents see this notebook, unless an entry is shared with the board. You can add to it until Thu 30 July.</p>
+        <div class="b-card">
+          <div class="b-card__top"><span class="b-card__title">Your handoff checklist</span><span class="b-card__count">2 of 13 done</span></div>
+          <div class="b-bar"><span></span></div>
+          <p class="b-small">Your term ended on 30 June. You can work through this, and add to the notebook, until 30 July (27 days left).</p>
+          <p class="b-small muted">From the President Guidebook (August 2026): its handover items, in its own words.</p>
+          <div class="b-item"><i class="done"></i>Notify ISACA of the new leaders<em>⌄</em></div>
+          <div class="b-item"><i></i>Hand over records and knowledge<em>⌄</em></div>
+          <div class="b-item"><i></i>Close out reporting and compliance<em>⌄</em></div>
+          <div class="b-item"><i></i>Set a handover timeline<em>⌄</em></div>
+          <div class="b-item"><i></i>Update procedures and records<em>⌄</em></div>
+          <div class="b-item"><i class="done"></i>List the open items<em>⌄</em></div>
+          <div class="b-item"><i></i>Hold transition meetings<em>⌄</em></div>
+          <div class="b-item"><i></i>Review assets with the Treasurer<em>⌄</em></div>
+          <div class="b-item"><i></i>Transfer chapter property<em>⌄</em></div>
+          <div class="b-item"><i></i>Update bank signers and accounts<em>⌄</em></div>
+          <div class="b-item"><i></i>Hand over access to accounts<em>⌄</em></div>
+          <div class="b-item"><i></i>Pass on correspondence and ISACA guidance<em>⌄</em></div>
+          <div class="b-item"><i></i>Thank the year's volunteers<em>⌄</em></div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> One summary card, then her notes</figcaption>
+    <p>The checklist is one card. Her notes, the reason the notebook exists, show without scrolling.</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body">
+        <p class="a-intro">What your chapter's presidents leave for the next one.</p>
+        <div class="hand">
+          <div class="hand__top"><span class="hand__title">Your handoff checklist</span><span class="hand__count">2 of 13 done</span></div>
+          <div class="hand__bar"><span></span></div>
+          <div class="hand__next">Next: <b>Hand over records and knowledge</b></div>
+          <div class="hand__foot"><span>27 days left, until 30 July</span><a>Open the checklist ›</a></div>
+        </div>
+        <div class="a-tools"><span class="btn primary">+ Add a note</span><span class="grow"></span><span class="btn icon" title="More">⋯</span></div>
+        <div class="a-list-head"><h3>Your notes</h3><span>4</span></div>
+        <div>
+          <div class="a-entry"><div><div class="a-title">The board voted to hold this year's election online</div><div class="a-meta">Decision · Elections · 3 Jul</div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">We'll hold six board meetings this year, every second month</div><div class="a-meta">Decision · Meetings · 3 Jul · <span class="shared">● Shared with the board</span></div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">How many educational events must a chapter hold?</div><div class="a-meta">Saved answer · Events · 3 Jul</div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">Sponsor renewal with the local university is still open</div><div class="a-meta">Unfinished · Sponsors · 2 Jul</div></div><span class="chev">›</span></div>
+        </div>
+        <div class="a-foot"><span class="info">i</span>Only presidents see this, unless you share an entry.</div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> The checklist on its own page</figcaption>
+    <p>"Open the checklist" opens this page. The 13 items are grouped by the guidebook's own pages, and the next one is highlighted.</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body fade">
+        <span class="back">‹ Notebook</span>
+        <p class="cl-h">Your handoff checklist</p>
+        <p class="cl-sub">The President Guidebook's handover items (August 2026). 2 of 13 done, 27 days left.</p>
+        <div class="cl-group">Guidebook p. 8</div>
+        <div class="cl-item done"><i class="done"></i><span>Notify ISACA of the new leaders</span></div>
+        <div class="cl-group">Turnover procedures, pp. 12–13</div>
+        <div class="cl-item next"><i></i><span>Hand over records and knowledge</span><small>Next</small></div>
+        <div class="cl-item"><i></i><span>Close out reporting and compliance</span></div>
+        <div class="cl-item"><i></i><span>Set a handover timeline</span></div>
+        <div class="cl-item"><i></i><span>Update procedures and records</span></div>
+        <div class="cl-item done"><i class="done"></i><span>List the open items</span></div>
+        <div class="cl-item"><i></i><span>Hold transition meetings</span></div>
+        <div class="cl-item"><i></i><span>Review assets with the Treasurer</span></div>
+        <div class="cl-item"><i></i><span>Transfer chapter property</span></div>
+        <div class="cl-item"><i></i><span>Update bank signers and accounts</span></div>
+        <div class="cl-item"><i></i><span>Hand over access to accounts</span></div>
+        <div class="cl-item"><i></i><span>Pass on correspondence and ISACA guidance</span></div>
+        <div class="cl-item"><i></i><span>Thank the year's volunteers</span></div>
+      </div>
+    </div>
+  </figure>
+
+</div>
+
+<!-- ============================================================ -->
+<h2>2. Watanabe Kenji opens the notebook (incoming president, day 3)</h2>
+<div class="changes"><ul>
+  <li>Before: four rows of controls (two buttons, search, three filters, a month heading) sit above four entries, and every row carries two or three badges.</li>
+  <li>After: one button and the entries. Each row is a full title and one quiet line: kind, topic, who wrote it and when. Search and filters return once there are more than six entries.</li>
+  <li>His Today step "Read what your predecessor left you" opens this same view.</li>
+</ul></div>
+<div class="row">
+
+  <figure>
+    <figcaption><span class="label before">Before</span> What he sees now</figcaption>
+    <p>Titles are cut off, and "PRIVATE" repeats on every row.</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body">
+        <p class="b-tag">What your chapter's presidents leave for the next one.</p>
+        <p class="b-priv">🔒 Only you see this notebook, unless you share an entry with the board. The outgoing president can also see it for 30 days after their term.</p>
+        <div class="b-tools"><span class="btn primary">+ Add a note</span><span class="btn">Print all decisions</span></div>
+        <div class="b-search">Search the notebook</div>
+        <div class="chips"><span class="chip on">All 4</span><span class="chip">Decisions 3</span><span class="chip">Saved answers 1</span></div>
+        <div class="month">July 2026</div>
+        <div class="b-entry"><div class="b-date"><b>3</b><span>Jul</span></div><div style="min-width:0"><div class="b-title">We decided to do 5 meetings annually.</div><div class="b-meta"><span class="badge dec">Decision</span>Meetings<span class="badge prv">Private</span></div></div><span class="chev">›</span></div>
+        <div class="b-entry"><div class="b-date"><b>3</b><span>Jul</span></div><div style="min-width:0"><div class="b-title">How many educational events must a chapter hold?</div><div class="b-meta"><span class="badge sav">Saved answer</span>Events<span class="badge prv">Private</span></div></div><span class="chev">›</span></div>
+        <div class="b-entry"><div class="b-date"><b>3</b><span>Jul</span></div><div style="min-width:0"><div class="b-title">We'll hold six board meetings this year, every second month</div><div class="b-meta"><span class="badge dec">Decision</span>Meetings<span class="badge prv">Private</span></div></div><span class="chev">›</span></div>
+        <div class="b-entry"><div class="b-date"><b>3</b><span>Jul</span></div><div style="min-width:0"><div class="b-title">The board voted to hold this year's election online, by secure ballot</div><div class="b-meta"><span class="badge dec">Decision</span>Elections<span class="badge prv">Private</span></div></div><span class="chev">›</span></div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> One button, then what was left for him</figcaption>
+    <p>The heading says whose notes these are, so the new president knows at once what he's looking at.</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body">
+        <p class="a-intro">What your chapter's presidents leave for the next one.</p>
+        <div class="a-tools"><span class="btn primary">+ Add a note</span><span class="grow"></span><span class="btn icon" title="More">⋯</span></div>
+        <div class="a-list-head"><h3>Left for you by Sato Yumiko</h3><span>4</span></div>
+        <div>
+          <div class="a-entry"><div><div class="a-title">The board voted to hold this year's election online</div><div class="a-meta">Decision · Elections · 3 Jul</div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">We'll hold six board meetings this year, every second month</div><div class="a-meta">Decision · Meetings · 3 Jul · <span class="shared">● Shared with the board</span></div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">How many educational events must a chapter hold?</div><div class="a-meta">Saved answer · Events · 3 Jul</div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">Sponsor renewal with the local university is still open</div><div class="a-meta">Unfinished · Sponsors · 2 Jul</div></div><span class="chev">›</span></div>
+        </div>
+        <div class="a-foot"><span class="info">i</span>Only you see this, unless you share an entry.</div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> The "⋯" menu, opened</figcaption>
+    <p>Everything that left the main screen is here, one tap away. Search and filters join the screen itself once there are more than six entries.</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body">
+        <p class="a-intro">What your chapter's presidents leave for the next one.</p>
+        <div class="a-tools"><span class="btn primary">+ Add a note</span><span class="grow"></span><span class="btn icon" style="border-color:var(--ink)">⋯</span></div>
+        <div class="menu" style="top:104px">
+          <div>Print all decisions</div>
+          <div>Show decisions only</div>
+          <div>Show shared entries only</div>
+          <div>Who can see this notebook</div>
+        </div>
+        <div class="a-list-head"><h3>Left for you by Sato Yumiko</h3><span>4</span></div>
+        <div style="opacity:.45">
+          <div class="a-entry"><div><div class="a-title">The board voted to hold this year's election online</div><div class="a-meta">Decision · Elections · 3 Jul</div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">We'll hold six board meetings this year, every second month</div><div class="a-meta">Decision · Meetings · 3 Jul</div></div><span class="chev">›</span></div>
+          <div class="a-entry"><div><div class="a-title">How many educational events must a chapter hold?</div><div class="a-meta">Saved answer · Events · 3 Jul</div></div><span class="chev">›</span></div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+</div>
+
+<!-- ============================================================ -->
+<h2>3. An entry on its own page</h2>
+<div class="changes"><ul>
+  <li>Before: a five-line details table with a drop-down, three boxed sections, two buttons, a checkbox, a Remove link and a second privacy line.</li>
+  <li>After: the title in large type, one line saying when, who and the topic, then what was asked and Isa's cited answer. "Share with the board" stays on the page as a switch, because it's a privacy choice and should never be hidden. Print, email, change the topic, the record number and Remove go into "⋯".</li>
+  <li>The sample entry now makes sense: the decision matches the question it answers.</li>
+</ul></div>
+<div class="row">
+
+  <figure>
+    <figcaption><span class="label before">Before</span> What an entry looks like now</figcaption>
+    <p>It reads like a form. The decision and the question it answers don't match (sample data).</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body fade">
+        <div class="e-back">‹ All entries</div>
+        <div class="e-box">
+          <div class="e-kicker">Decision · Meetings</div>
+          <div class="e-title">We decided to do 5 meetings annually.</div>
+          <dl class="e-grid">
+            <dt>Recorded</dt><dd>3 July 2026, 04:26 (Asia/Tokyo)</dd>
+            <dt>By</dt><dd>Watanabe Kenji, President</dd>
+            <dt>Shared</dt><dd><span class="badge prv">Private</span> only presidents see it</dd>
+            <dt>Topic</dt><dd><span class="e-select">Meetings ⌄</span></dd>
+            <dt>Record</dt><dd>NB-C001-0004</dd>
+          </dl>
+        </div>
+        <div class="e-box">
+          <div class="e-kicker">What was asked</div>
+          <div class="e-q">What should we cover when we orient new board members?</div>
+          <p class="e-a">Here's what general governance best practice suggests (not ISACA policy): An orientation for new board members should cover the chapter's mission and goals, the key issues the chapter faces right now, what is expected of each board member (time, meetings, committee work), the board meeting calendar…</p>
+          <div class="e-src">Best Practice Guide: Orienting New Board Members · What to cover in a new board member orientation</div>
+        </div>
+        <div class="e-box">
+          <div class="e-kicker">Follow-ups (0)</div>
+          <p class="e-a" style="margin:4px 0">Nothing added since. Follow-ups keep later news about this entry together.</p>
+          <div class="e-src" style="text-align:center">+ Add a follow-up</div>
+        </div>
+        <div class="e-actions"><span class="btn">Print or save PDF</span><span class="btn">Email this record</span></div>
+        <div class="e-share"><span>☐ Share with the board</span><a>Remove</a></div>
+        <p class="b-priv">🔒 Only presidents see this entry, unless its writer shares it with the board.</p>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> The same entry, calmer</figcaption>
+    <p>Reads like a page, not a form. Sharing stays one tap away; the rest is in "⋯". (The answer text is placeholder wording, not a quote from the guidebook.)</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body">
+        <div class="p-top"><span class="back">‹ Notebook</span><span class="btn icon">⋯</span></div>
+        <div class="p-kind">Decision</div>
+        <div class="p-title">We'll hold six board meetings this year, every second month</div>
+        <div class="p-meta">3 July 2026 · Sato Yumiko · Meetings</div>
+        <div class="p-sec">What was asked</div>
+        <p class="p-q">How often should our board meet?</p>
+        <p class="p-a">From ISACA's approved guidance: the board should meet regularly throughout the year, and the president sets the meeting calendar with the board at the start of the term…</p>
+        <div class="p-src"><span>↗</span>President Guidebook · Board meetings</div>
+        <hr class="p-hr">
+        <div class="p-row"><span>Share with the board<small>Board members see the decision, not your question.</small></span><span class="switch"></span></div>
+        <div class="p-row"><span class="p-link">+ Add a follow-up</span></div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> The entry's "⋯" menu</figcaption>
+    <p>Record details (record number, recorded time and time zone) and changing the topic live here, with Remove last, set apart.</p>
+    <div class="nb">
+      <div class="nb__head"><div><div class="nb__title">Succession notebook</div><div class="nb__sub">Sakura Bay Chapter</div></div><div class="nb__icons"><span>⤢</span><span>✕</span></div></div>
+      <div class="nb__body">
+        <div class="p-top"><span class="back">‹ Notebook</span><span class="btn icon" style="border-color:var(--ink)">⋯</span></div>
+        <div class="menu" style="top:58px">
+          <div>Print or save as PDF</div>
+          <div>Email this record</div>
+          <div>Change the topic</div>
+          <div>Record details</div>
+          <div class="sep">Remove from the notebook</div>
+        </div>
+        <div style="opacity:.45">
+          <div class="p-kind">Decision</div>
+          <div class="p-title">We'll hold six board meetings this year, every second month</div>
+          <div class="p-meta">3 July 2026 · Sato Yumiko · Meetings</div>
+          <div class="p-sec">What was asked</div>
+          <p class="p-q">How often should our board meet?</p>
+          <p class="p-a">From ISACA's approved guidance: the board should meet regularly throughout the year…</p>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+</div>
+
+<!-- ============================================================ -->
+<h2>4. Opening at half width</h2>
+<div class="changes"><ul>
+  <li>Now: with only the chat and the notebook open, each takes a third, and the last third shows the dimmed landing page.</li>
+  <li>After: the notebook opens at half the screen and the chat keeps its third (the same sizes "Enlarge" gives today). Entry titles fit on one line and the entry page has room to breathe.</li>
+  <li>When Today opens too, all three go back to a third each, exactly as now. Enlarge still works the same way.</li>
+  <li>This changes the October 20 rule "With two panels open, each is still a third". It needs your decision.</li>
+</ul></div>
+<div class="row">
+
+  <figure>
+    <figcaption><span class="label before">Now</span> Chat and notebook</figcaption>
+    <p>A third each. The first third of the screen is unused.</p>
+    <div class="screen">
+      <div class="screen__page"></div>
+      <div class="s-rail"><i style="background:var(--teal)"></i><i style="background:var(--green)"></i><i style="background:#017dc2"></i><i style="background:var(--ink)"></i></div>
+      <div class="s-p" style="left:33.33%;width:33.33%"><div class="s-p__h">Isa</div><div class="s-p__b"><div class="s-box"></div><div class="s-line" style="width:80%"></div><div class="s-line" style="width:60%"></div></div><span class="s-w">⅓</span></div>
+      <div class="s-p" style="left:66.66%;width:33.34%"><div class="s-p__h">Succession notebook</div><div class="s-p__b"><div class="s-line dark" style="width:70%"></div><div class="s-box green"></div><div class="s-line" style="width:90%"></div><div class="s-line" style="width:75%"></div><div class="s-line" style="width:85%"></div></div><span class="s-w">⅓</span></div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> Chat and notebook</figcaption>
+    <p>The notebook opens at half. The chat keeps its third, so the conversation doesn't move.</p>
+    <div class="screen">
+      <div class="screen__page"></div>
+      <div class="s-rail"><i style="background:var(--teal)"></i><i style="background:var(--green)"></i><i style="background:#017dc2"></i><i style="background:var(--ink)"></i></div>
+      <div class="s-p" style="left:16.67%;width:33.33%"><div class="s-p__h">Isa</div><div class="s-p__b"><div class="s-box"></div><div class="s-line" style="width:80%"></div><div class="s-line" style="width:60%"></div></div><span class="s-w">⅓</span></div>
+      <div class="s-p" style="left:50%;width:50%"><div class="s-p__h">Succession notebook</div><div class="s-p__b"><div class="s-line dark" style="width:55%"></div><div class="s-box green"></div><div class="s-line" style="width:70%"></div><div class="s-line" style="width:60%"></div><div class="s-line" style="width:66%"></div></div><span class="s-w">½</span></div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption><span class="label after">After</span> Today opens as well</figcaption>
+    <p>Back to a third each, as now. Closing Today returns the notebook to half.</p>
+    <div class="screen">
+      <div class="screen__page"></div>
+      <div class="s-p" style="left:0;width:33.33%"><div class="s-p__h">Isa</div><div class="s-p__b"><div class="s-box"></div><div class="s-line" style="width:80%"></div><div class="s-line" style="width:60%"></div></div><span class="s-w">⅓</span></div>
+      <div class="s-p" style="left:33.33%;width:33.33%"><div class="s-p__h">Today</div><div class="s-p__b"><div class="s-line dark" style="width:50%"></div><div class="s-box"></div><div class="s-box"></div></div><span class="s-w">⅓</span></div>
+      <div class="s-p" style="left:66.66%;width:33.34%"><div class="s-p__h">Succession notebook</div><div class="s-p__b"><div class="s-line dark" style="width:70%"></div><div class="s-box green"></div><div class="s-line" style="width:90%"></div><div class="s-line" style="width:75%"></div></div><span class="s-w">⅓</span></div>
+      <div class="s-rail" style="width:5.3%"><i style="background:var(--teal)"></i><i style="background:var(--green)"></i><i style="background:#017dc2"></i><i style="background:var(--ink)"></i></div>
+    </div>
+  </figure>
+
+</div>
+
+<div class="decide">
+  <b>Decisions for you</b>
+  <ol>
+    <li><b>The handoff checklist:</b> a summary card that opens its own page (shown here), or two tabs at the top of the panel ("Checklist" and "Notes")?</li>
+    <li><b>Half width on opening:</b> yes or no? It changes the October 20 panel rule for two open panels.</li>
+    <li><b>The "⋯" menus:</b> are you happy for print, email, change the topic, record details and Remove to move there? "Share with the board" stays on the page.</li>
+    <li><b>Search and filters:</b> show them only above six entries, or always?</li>
+    <li><b>Sample entries:</b> replace the test entries in data/notebook.db with a tidy, consistent set like the ones above before rehearsal?</li>
+  </ol>
+</div>
+
+</main>
+</body>
+</html>

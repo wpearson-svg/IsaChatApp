@@ -1,0 +1,471 @@
+@page "/present"
+@layout LandingLayout
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Presentation
+@inject WidgetSettings Settings
+@inject PresentationDeck Deck
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+@rendermode InteractiveServer
+
+@* ============================================================
+   Present.razor -- the presentation slides, inside Isa.
+
+   One slide at a time, full screen, with Isa's normal chat widget in
+   the bottom-right corner the whole time (LandingLayout places it),
+   so the talk moves into the live demo without switching windows.
+   The "Live demo" slide keeps the right side empty for the chat.
+
+   - Wording: presentation/slides.json (Services/Presentation/
+     PresentationDeck.cs). Edit it and refresh; no restart needed.
+   - Keys: Present.razor.js (arrows, Page Up/Down for a clicker, Home,
+     End, F for full screen). The small arrows in the footer do the same.
+   - Intro: wwwroot/present/intro.html (Matthew's Isa_C_Intro.html, with
+     the ring half blue, half green) plays over the first slide, "Meet
+     Isa", when the page opens there. I replays it.
+   - Off by default: the team switches it on at /isa-config
+     (WidgetSettings.PresentationEnabled), so chapter leaders never come
+     across it.
+   - Styles: Present.razor.css, ISACA colors and type only
+     (BRAND_GUIDELINES.md). The C shape is the approved one.
+   ============================================================ *@
+
+<PageTitle>Isa | Presentation</PageTitle>
+
+@if (!Settings.PresentationEnabled)
+{
+    <div class="present present--off">
+        <div class="present__offBox">
+            <h1>The presentation is switched off</h1>
+            <p>Switch it on at <a href="/isa-config">/isa-config</a> (Presentation), then refresh this page.</p>
+        </div>
+    </div>
+}
+else if (_slides.Count == 0)
+{
+    <div class="present present--off">
+        <div class="present__offBox">
+            <h1>No slides to show</h1>
+            <p>@(_error ?? "presentation/slides.json has no slides.")</p>
+        </div>
+    </div>
+}
+else
+{
+    @* Dark Blue until the intro starts (Present.razor.js, playIntro), so the
+       landing slide doesn't show for a moment before the animation. *@
+    @if (_introPending)
+    {
+        <div class="present__introCover" aria-hidden="true"></div>
+    }
+    var s = _slides[_index];
+    var dark = s.Kind is "landing" or "cover" or "closing";
+    <div class="present">
+        <div class="present__stage present__stage--@s.Kind @(dark ? "is-dark" : "")" @key="_index">
+
+            <div class="present__progress" aria-hidden="true">
+                <span style="width:@(((_index + 1) * 100.0 / _slides.Count).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%"></span>
+            </div>
+
+            @if (dark)
+            {
+                <svg class="present__c" viewBox="-2 -2 204 204" aria-hidden="true" focusable="false"><path d="@CPath" /></svg>
+            }
+            else
+            {
+                @* White slides: a row of small Cs, blue and green, coming in from
+                   the right edge along the top, a third of the slide wide. The Cs
+                   turn as in the graphic strip on ISACA's Visual Style page:
+                   opening up, then down-left, then right, repeating (StripTurns). *@
+                <div class="present__cornerStrip" aria-hidden="true">
+                    @for (var i = 0; i < 6; i++)
+                    {
+                        <svg viewBox="-2 -2 204 204" focusable="false" class="@(i % 2 == 0 ? "is-blue" : "is-green")" style="transform:rotate(@(StripTurns[i % 3])deg)"><path d="@CPath" /></svg>
+                    }
+                </div>
+            }
+
+            <div class="present__body">
+                @if (!string.IsNullOrEmpty(s.Section))
+                {
+                    <p class="present__section">@s.Section</p>
+                }
+
+                @switch (s.Kind)
+                {
+                    case "landing":
+                        var (titleStart, titleName) = SplitLastWord(s.Title);
+                        @* The intro's ring, large: the blue C's left half and the
+                           mirrored green C's right half, with Isa in the middle. *@
+                        <div class="present__landing">
+                            <div class="present__landingText">
+                                <h1 class="present__landingTitle">@titleStart<span class="present__landingName">@titleName</span></h1>
+                                <p class="present__landingLead">@s.Lead</p>
+                                @* A C strip (ISACA Visual Style), alternating blue and green. *@
+                                <div class="present__strip" aria-hidden="true">
+                                    @for (var i = 0; i < 6; i++)
+                                    {
+                                        <svg viewBox="-2 -2 204 204" focusable="false" class="@(i % 2 == 0 ? "is-blue" : "is-green")"><path d="@CPath" /></svg>
+                                    }
+                                </div>
+                            </div>
+                            <svg class="present__pop" viewBox="-2 -2 204 204" aria-hidden="true" focusable="false"><path d="@CPath" /></svg>
+                            <div class="present__ring" aria-hidden="true">
+                                <svg viewBox="-2 -2 204 204" focusable="false">
+                                    <defs>
+                                        <clipPath id="present-ring-left"><rect x="-2" y="-2" width="102" height="204" /></clipPath>
+                                        <clipPath id="present-ring-right"><rect x="100" y="-2" width="102" height="204" /></clipPath>
+                                    </defs>
+                                    <circle cx="100" cy="100" r="58" fill="#ffffff" />
+                                    <g clip-path="url(#present-ring-left)"><path d="@CPath" fill="#00a4e4" /></g>
+                                    <g clip-path="url(#present-ring-right)"><path d="@CPath" fill="#6cb33f" transform="translate(200 0) scale(-1 1)" /></g>
+                                </svg>
+                                <span class="present__ringMark"><Throbber Spinning="false" /></span>
+                            </div>
+                        </div>
+                        break;
+
+                    case "problem":
+                        @* The title across the top, then two columns that line up top
+                           and bottom: the big number over the blue panel, the problem
+                           over the green one. *@
+                        <div class="present__problem">
+                            <h1 class="present__title">@s.Title</h1>
+                            <div class="present__problemTop">
+                                <div class="present__stat">
+                                    <span class="present__statNum">@s.Stat</span>
+                                    <span class="present__statLabel">@s.StatLabel</span>
+                                </div>
+                                <p class="present__lead">@Emphasised(s.Lead)</p>
+                            </div>
+                            <div class="present__answers">
+                                @foreach (var item in s.Items)
+                                {
+                                    <div class="present__answer is-@item.Status">
+                                        <svg viewBox="-2 -2 204 204" aria-hidden="true" focusable="false"><path d="@CPath" /></svg>
+                                        <span>@item.Title</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        break;
+
+                    case "cover":
+                        <div class="present__cover">
+                            <span class="present__mark"><Throbber Spinning="false" WordColor="#ffffff" /></span>
+                            <h1 class="present__coverTitle">@s.Title</h1>
+                            @* Ten stages joined end to end, alternating blue and green. They
+                               light up one after another, left to right, like a question
+                               passing through each stage (Present.razor.css, present-stage). *@
+                            <ol class="present__track" aria-hidden="true">
+                                @for (var i = 0; i < 10; i++)
+                                {
+                                    <li class="@(i % 2 == 0 ? "is-blue" : "is-green")" style="animation-delay:@(i * 375)ms"></li>
+                                }
+                            </ol>
+                            <p class="present__coverLead">@s.Lead</p>
+                            <p class="present__coverNote">@s.Note</p>
+                        </div>
+                        break;
+
+                    case "closing":
+                        <div class="present__closing">
+                            <span class="present__mark present__mark--small"><Throbber Spinning="false" WordColor="#ffffff" /></span>
+                            <h1 class="present__quote">@s.Title</h1>
+                            <p class="present__coverSub">@s.Subtitle</p>
+                            <p class="present__coverNote">@s.Note</p>
+                        </div>
+                        break;
+
+                    case "rules":
+                        <h1 class="present__title">@s.Title</h1>
+                        <p class="present__lead">@s.Lead</p>
+                        <div class="present__cards present__cards--@s.Items.Count">
+                            @for (var i = 0; i < s.Items.Count; i++)
+                            {
+                                var item = s.Items[i];
+                                <div class="present__card">
+                                    <span class="present__cardNum">@((i + 1).ToString("00"))</span>
+                                    <h2 class="present__cardTitle">@item.Title</h2>
+                                    <p class="present__cardText">@item.Text</p>
+                                </div>
+                            }
+                        </div>
+                        break;
+
+                    case "pipeline":
+                        <h1 class="present__title">@s.Title</h1>
+                        <p class="present__lead">@s.Lead</p>
+                        @* The stages light up one after another, left to right (like the
+                           dots on "Pipeline built"); under them, each path is a bar
+                           under the stages it uses, so the cheap path visibly skips
+                           the AI stages. *@
+                        <ol class="present__pipe" style="--stages:@s.Stages.Count">
+                            @for (var i = 0; i < s.Stages.Count; i++)
+                            {
+                                var stage = s.Stages[i];
+                                <li class="present__pipeStage @(string.IsNullOrEmpty(stage.Path) ? "" : $"is-{stage.Path}")">
+                                    <span class="present__pipeDot" style="animation-delay:@(i * 375)ms">@(i + 1)</span>
+                                    <span class="present__pipeName">@stage.Name</span>
+                                </li>
+                            }
+                        </ol>
+                        <div class="present__paths">
+                            @foreach (var path in s.Paths)
+                            {
+                                <div class="present__path is-@path.Color">
+                                    <p class="present__pathLabel"><strong>@path.Title</strong> @path.Text</p>
+                                    <ol class="present__pathBar" style="--stages:@s.Stages.Count" aria-hidden="true">
+                                        @for (var n = 1; n <= s.Stages.Count; n++)
+                                        {
+                                            var on = path.Stages.Contains(n);
+                                            var start = on && !path.Stages.Contains(n - 1);
+                                            var end = on && !path.Stages.Contains(n + 1);
+                                            <li class="@(on ? "is-on" : "") @(start ? "is-start" : "") @(end ? "is-end" : "")"></li>
+                                        }
+                                    </ol>
+                                </div>
+                            }
+                        </div>
+                        break;
+
+                    case "status":
+                        @* The ten stages from slide 5, each coloured by its status, then
+                           the same stages grouped into Built, Partly built and Stub. *@
+                        <h1 class="present__title present__title--compact">@s.Title</h1>
+                        <p class="present__lead present__lead--compact">@s.Lead</p>
+                        <ol class="present__statusLine" style="--stages:@s.Rows.Count">
+                            @for (var i = 0; i < s.Rows.Count; i++)
+                            {
+                                var row = s.Rows[i];
+                                <li class="is-@row.Status">
+                                    <span class="present__statusDot">@(i + 1)</span>
+                                    <span class="present__statusName">@row.Name</span>
+                                </li>
+                            }
+                        </ol>
+                        <div class="present__statusCols">
+                            @foreach (var status in new[] { "built", "partial", "stub" })
+                            {
+                                var group = s.Rows.Select((r, i) => (Row: r, Number: i + 1)).Where(x => x.Row.Status == status).ToList();
+                                <div class="present__statusCol">
+                                    <p class="present__statusHead is-@status">@StatusIcon(status) @StatusLabel(status) <span>@group.Count</span></p>
+                                    <ul>
+                                        @foreach (var (row, number) in group)
+                                        {
+                                            <li><strong>@number. @row.Name</strong> <span>@row.Text</span></li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                        break;
+
+                    case "showwork":
+                        <h1 class="present__title">@s.Title</h1>
+                        <p class="present__lead">@s.Lead</p>
+                        <div class="present__split">
+                            <div class="present__mock">
+                                @for (var i = 0; i < s.Items.Count; i++)
+                                {
+                                    var line = s.Items[i];
+                                    <div class="present__mockCard">
+                                        <div class="present__mockLine">
+                                            <span class="present__mockIcon is-@line.Status" aria-hidden="true">@(line.Status == "handoff" ? "→" : "✓")</span>
+                                            <span>@line.Title</span>
+                                            <span class="present__mockChevron" aria-hidden="true">@(i == 0 ? "▴" : "▾")</span>
+                                        </div>
+                                        @if (i == 0)
+                                        {
+                                            <ul class="present__mockSteps">
+                                                @foreach (var step in s.Steps) { <li>@step</li> }
+                                            </ul>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <ul class="present__bullets">
+                                @foreach (var b in s.Bullets) { <li>@b</li> }
+                            </ul>
+                        </div>
+                        break;
+
+                    case "list":
+                        <h1 class="present__title">@s.Title</h1>
+                        <p class="present__lead">@s.Lead</p>
+                        <ul class="present__rows">
+                            @foreach (var item in s.Items)
+                            {
+                                <li><strong>@item.Title</strong> <span>@item.Text</span></li>
+                            }
+                        </ul>
+                        break;
+
+                    case "demo":
+                        <div class="present__demo">
+                            <h1 class="present__title">@s.Title</h1>
+                            <p class="present__lead">@s.Lead</p>
+                            <ol class="present__demoSteps">
+                                @foreach (var step in s.Steps) { <li>@step</li> }
+                            </ol>
+                        </div>
+                        break;
+
+                    case "numbered":
+                        <h1 class="present__title present__title--compact">@s.Title</h1>
+                        <p class="present__lead present__lead--compact">@s.Lead</p>
+                        <ol class="present__numbered">
+                            @for (var i = 0; i < s.Items.Count; i++)
+                            {
+                                var item = s.Items[i];
+                                <li>
+                                    <span class="present__numberedNum">@(i + 1)</span>
+                                    <span><strong>@item.Title</strong><span>@item.Text</span></span>
+                                </li>
+                            }
+                        </ol>
+                        break;
+
+                    case "features":
+                        <h1 class="present__title">@s.Title</h1>
+                        <div class="present__groups">
+                            @foreach (var g in s.Groups)
+                            {
+                                <div class="present__group">
+                                    <p class="present__groupLabel">@g.Label</p>
+                                    <ul class="present__rows present__rows--small">
+                                        @foreach (var item in g.Items)
+                                        {
+                                            <li><strong>@item.Title</strong> <span>@item.Text</span></li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                        break;
+
+                    default:
+                        <h1 class="present__title">@s.Title</h1>
+                        <p class="present__lead present__lead--big">@s.Lead</p>
+                        <ul class="present__bullets">
+                            @foreach (var b in s.Bullets) { <li>@b</li> }
+                        </ul>
+                        break;
+                }
+            </div>
+
+            @* Footer, bottom left. The bottom-right corner stays empty for Isa's chat bubble. *@
+            <div class="present__footer">
+                <button type="button" class="present__nav" @onclick="@(() => Go(-1))" disabled="@(_index == 0)" aria-label="Previous slide">&#8249;</button>
+                <span class="present__count" aria-live="polite">@(_index + 1) / @_slides.Count</span>
+                <button type="button" class="present__nav" @onclick="@(() => Go(1))" disabled="@(_index == _slides.Count - 1)" aria-label="Next slide">&#8250;</button>
+                @if (!string.IsNullOrEmpty(s.Presenter))
+                {
+                    <span class="present__presenter">@s.Presenter</span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    // The approved ISACA C (BRAND_GUIDELINES.md, section 3), drawn as a fill.
+    private const string CPath = "M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z";
+
+    // The turns in ISACA's graphic strip (brand.isaca.org/visual-style), in
+    // degrees clockwise from the approved C's right-facing opening: up,
+    // down-left, right.
+    private static readonly int[] StripTurns = [270, 135, 0];
+
+    private IReadOnlyList<Slide> _slides = [];
+    private string? _error;
+    private int _index;
+    private bool _introPending = true;   // until JS has decided whether the intro plays
+    private IJSObjectReference? _js;
+    private DotNetObjectReference<Present>? _self;
+
+    protected override void OnInitialized() => (_slides, _error) = Deck.Load();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !Settings.PresentationEnabled || _slides.Count == 0) return;
+        _self = DotNetObjectReference.Create(this);
+        _js = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Present.razor.js");
+        var start = await _js.InvokeAsync<int>("init", _self);
+        // The intro plays only when the slides open on the first slide, so a
+        // refresh in the middle of the talk never replays it (I replays it).
+        if (start == 0) await _js.InvokeVoidAsync("playIntro");
+        else await GoTo(start);
+        _introPending = false;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public Task Go(int delta) => GoTo(_index + delta);
+
+    [JSInvokable]
+    public async Task GoTo(int index)
+    {
+        var next = Math.Clamp(index, 0, _slides.Count - 1);
+        if (next == _index && _js is not null) return;
+        _index = next;
+        await InvokeAsync(StateHasChanged);
+        if (_js is not null) await _js.InvokeVoidAsync("setSlide", _index);
+    }
+
+    // "Meet Isa": the last word ("Isa") is shown in ISACA Green.
+    private static (string Start, string Name) SplitLastWord(string title)
+    {
+        var cut = title.LastIndexOf(' ');
+        return cut < 0 ? ("", title) : (title[..(cut + 1)], title[(cut + 1)..]);
+    }
+
+    // A lead with words between *asterisks*: those words in italics and colour
+    // (present__em). Every other part is plain text, so nothing is read as HTML.
+    private RenderFragment Emphasised(string? text) => __builder =>
+    {
+        var parts = (text ?? "").Split('*');
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (i % 2 == 1)
+            {
+                <em class="present__em">@parts[i]</em>
+            }
+            else
+            {
+                @parts[i]
+            }
+        }
+    };
+
+    private static string StatusLabel(string? status) => status switch
+    {
+        "built" => "Built",
+        "partial" => "Partly built",
+        "stub" => "Stub",
+        _ => status ?? ""
+    };
+
+    // Each status has its own symbol, so color never carries the meaning alone.
+    private static string StatusIcon(string? status) => status switch
+    {
+        "built" => "✓",
+        "partial" => "◐",
+        "stub" => "○",
+        _ => ""
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_js is not null)
+            {
+                await _js.InvokeVoidAsync("dispose");
+                await _js.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException) { }
+        _self?.Dispose();
+    }
+}
