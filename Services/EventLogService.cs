@@ -75,7 +75,7 @@ public class EventLogService
         }
     }
 
-    /// <summary>Return all events for a trace ID in time order. Used by A'keyrah T13.</summary>
+    /// <summary>Return all events for a trace ID in time order. Used by T13.</summary>
     public async Task<IReadOnlyList<EventRow>> GetByTraceIdAsync(string traceId)
     {
         await using var conn = Open();

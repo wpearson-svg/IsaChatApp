@@ -251,13 +251,17 @@ public class OutputComplianceStage : IStage
 /// </summary>
 public class TicketingStage : IStage
 {
-    private static int _counter;
+    // Starts at a random number in the middle of the 4-digit range each time Isa starts, so refs do not repeat across restarts and do not look like a default start.
+    private static int _counter = Random.Shared.Next(4000, 6000);
     public string Name => "ticketing";
 
-    public Task<StageResult> RunAsync(QueryContext ctx)
+    private readonly IsaChatApp.Services.SalesforceTicketService _salesforce;
+    public TicketingStage(IsaChatApp.Services.SalesforceTicketService salesforce) => _salesforce = salesforce;
+
+    public async Task<StageResult> RunAsync(QueryContext ctx)
     {
         if (ctx.EscalatedBy is null)
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "not escalated", Skipped: true));
+            return new StageResult(StageOutcome.Pass, null, "not escalated", Skipped: true);
 
         var ticket = $"TKT-{Interlocked.Increment(ref _counter):0000}";
         ctx.TicketReference = ticket;
@@ -269,6 +273,26 @@ public class TicketingStage : IStage
         var kind = IsaChatApp.Services.ShowTheWork.Wording.KindOf(ctx.EscalatedBy, ctx.EscalationReason);
         ctx.AnswerText = IsaChatApp.Services.ShowTheWork.Wording.Handoff(kind, ticket, ctx.SafetyTopic);
 
-        return Task.FromResult(new StageResult(StageOutcome.Pass, null, $"ticket={ticket}; from={ctx.EscalatedBy}"));
+        // Send it to Salesforce when that is switched on (Ticketing:Salesforce:Enabled). A failure
+        // never stops the hand-off: the leader still has the reference, and the run records it.
+        var sf = "";
+        if (_salesforce.Enabled)
+        {
+            ctx.Profile.TryGetValue("chapter_id", out var chapterId);
+            ctx.Profile.TryGetValue("chapter_role", out var chapterRole);
+            ctx.Profile.TryGetValue("person_id", out var personId);
+            ctx.Profile.TryGetValue("display_name", out var contactName);
+            ctx.Profile.TryGetValue("email", out var contactEmail);
+            var requestedBy = string.Join(" ", new[] { contactName, string.IsNullOrWhiteSpace(contactEmail) ? null : $"<{contactEmail}>" }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            if (string.IsNullOrWhiteSpace(requestedBy)) requestedBy = ctx.UserId ?? "";
+            var r = await _salesforce.CreateCaseAsync(new IsaChatApp.Services.SalesforceTicketService.CaseInput(
+                ticket, ctx.TraceId, ctx.Question, ctx.Language, ctx.EscalatedBy, ctx.EscalationReason,
+                chapterId, chapterRole, ctx.SafetyTopic, requestedBy, personId));
+            sf = r.Ok ? $"; salesforce=created; case_id={r.CaseId}" : $"; salesforce=failed; detail={r.Error}";
+        }
+        else sf = "; salesforce=off";
+
+        return new StageResult(StageOutcome.Pass, null, $"ticket={ticket}; from={ctx.EscalatedBy}{sf}");
     }
 }
