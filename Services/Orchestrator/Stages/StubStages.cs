@@ -175,7 +175,7 @@ public class RagStage : IStage
     }
 }
 
-/// <summary>Stub translation — pass-through. A'keyrah owns T11a.</summary>
+/// <summary>Stub translation — pass-through (detects the language, does not translate yet).</summary>
 public class TranslationStage : IStage
 {
     public string Name => "translation";
@@ -189,7 +189,7 @@ public class TranslationStage : IStage
 
 /// <summary>
 /// Stub input_compliance — stops pizza / jailbreak; escalates harassment.
-/// A'keyrah owns real T11a. This supports the four test paths.
+/// Stub rules for the four test paths; a real rules check is still to come.
 /// </summary>
 public class InputComplianceStage : IStage
 {

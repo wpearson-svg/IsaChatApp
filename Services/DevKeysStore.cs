@@ -23,6 +23,22 @@ public sealed class DevKeysStore
 
     public sealed record SalesforceKeys(string OrgUrl, string ApiVersion, string ClientId, bool SecretIsSet);
 
+    /// <summary>What the ticketing code needs to sign in. Used only by SalesforceTicketService; never shown or logged.</summary>
+    public sealed record SalesforceUse(string OrgUrl, string ApiVersion, string ClientId, string ClientSecret);
+
+    /// <summary>The full settings for signing in, or null when any value is missing or still a placeholder.</summary>
+    public SalesforceUse? GetSalesforceForUse()
+    {
+        lock (_lock)
+        {
+            var sf = ReadRoot()["salesforce"] as JsonObject;
+            string Get(string name) => sf?[name]?.GetValue<string>() ?? "";
+            var org = Get("orgUrl"); var ver = Get("apiVersion"); var id = Get("clientId"); var secret = Get("clientSecret");
+            if (!IsReal(org) || !IsReal(ver) || !IsReal(id) || !IsReal(secret)) return null;
+            return new SalesforceUse(org.TrimEnd('/'), ver, id, secret);
+        }
+    }
+
     /// <summary>Placeholder values left in the file count as "not set".</summary>
     private static bool IsReal(string? v) =>
         !string.IsNullOrWhiteSpace(v) && !v.StartsWith("PASTE_", StringComparison.OrdinalIgnoreCase);

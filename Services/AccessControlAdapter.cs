@@ -28,7 +28,7 @@ public class KeycloakAccessControlAdapter : IAccessControlAdapter
     private static readonly string[] ProfileClaims =
     {
         "person_id", "chapter_id", "chapter_role", "permission", "term_start", "term_end",
-        "years_as_leader", "language", "formality", "form_of_address"
+        "years_as_leader", "language", "formality", "form_of_address", "display_name", "email"
     };
 
     public KeycloakAccessControlAdapter(
