@@ -374,7 +374,7 @@
                    column-reverse layout it sits at the very TOP of the
                    chat, above the welcome message. Shows only for a
                    signed-in leader in their first 90 days. *@
-                <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenNotebook" Version="@_notebookVersion" />
+                <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenChecklist" Version="@_notebookVersion" />
             </div>
 
             @* Input row, matching wireframe "Expanded": the ring icon
@@ -422,7 +422,7 @@
            beside the rail, is drawn over the chat. *@
         if (ShowRail)
         {
-            <IsaRail Style="@RailStyle" Closing="@_railClosing" ShowToday="@HasJourney" ShowNotebook="@CanOpenNotebook"
+            <IsaRail Style="@RailStyle" Closing="@_railClosing" Returning="@_railCameBack" ShowToday="@HasJourney" ShowNotebook="@CanOpenNotebook"
                      StepsLeftToday="@StepsLeftToday" TodayOpen="@IsTodayOpen" NotebookOpen="@IsNotebookOpen"
                      Backstage="@BackstageItems" OnHide="HideRail" OnToggleToday="ToggleToday"
                      OnToggleNotebook="ToggleNotebook" OnOpenBackstage="OpenDashboard" />
@@ -443,7 +443,7 @@
         if (IsNotebookOpen)
         {
             <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion" OnChecklistChanged="NotebookChanged"
-                           Enlarged="@(Enlarged == SidePanel.Notebook)" OnToggleEnlarge="() => ToggleEnlarge(SidePanel.Notebook)" />
+                           Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest" />
         }
     }
 
@@ -691,9 +691,28 @@
         set => SelectedIndex = int.TryParse(value, out var i) ? i : null;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        await LoadModels();
+        // The model list loads in the background. Waiting for it here held up
+        // everything after it, including the Today and Notebook buttons on the
+        // rail, for as long as an unreachable model host took to time out
+        // (Matthew, 22 October 2026). It fills in the developer model picker
+        // when it arrives.
+        _ = LoadModelsInBackground();
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadModelsInBackground()
+    {
+        try
+        {
+            await LoadModels();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (ObjectDisposedException)
+        {
+            // The page closed before the model list arrived; nothing to show.
+        }
     }
 
     private void Expand()
@@ -720,6 +739,7 @@
         IsTodayOpen = false;
         IsNotebookOpen = false;
         Enlarged = null;
+        _railCameBack = false;   // next time the chat opens, the rail opens with its slower glide
     }
 
     // ---- Onboarding: the Today window ------------------------------------
@@ -730,8 +750,10 @@
     // The Today window's close button calls CloseToday, and the chat
     // slides back.
     private bool IsTodayOpen { get; set; } = false;
-    private void ToggleToday() { IsTodayOpen = !IsTodayOpen; if (!IsTodayOpen) Unenlarge(SidePanel.Today); }
-    private void CloseToday() { IsTodayOpen = false; Unenlarge(SidePanel.Today); }
+    // Closing Today also undoes an enlarged notebook: beside the chat alone,
+    // the notebook is already half the screen (see SideWidth).
+    private void ToggleToday() { IsTodayOpen = !IsTodayOpen; if (!IsTodayOpen) { Unenlarge(SidePanel.Today); Unenlarge(SidePanel.Notebook); } }
+    private void CloseToday() { IsTodayOpen = false; Unenlarge(SidePanel.Today); Unenlarge(SidePanel.Notebook); }
     private void OpenToday() => IsTodayOpen = true;
 
     // ---- Onboarding: the succession notebook ------------------------------
@@ -741,9 +763,14 @@
     // someone with no journey strip, like the outgoing president) by the
     // notebook icon in the header. NotebookService decides who may open it.
     private bool IsNotebookOpen { get; set; } = false;
-    private void ToggleNotebook() { IsNotebookOpen = !IsNotebookOpen; if (!IsNotebookOpen) Unenlarge(SidePanel.Notebook); }
-    private void OpenNotebook() => IsNotebookOpen = true;
+    private void ToggleNotebook() { if (!IsNotebookOpen) _notebookSmall = false; IsNotebookOpen = !IsNotebookOpen; _checklistRequest = 0; if (!IsNotebookOpen) Unenlarge(SidePanel.Notebook); }
+    private void OpenNotebook() { if (!IsNotebookOpen) _notebookSmall = false; IsNotebookOpen = true; _checklistRequest = 0; }
     private void CloseNotebook() { IsNotebookOpen = false; Unenlarge(SidePanel.Notebook); }
+
+    // "Open the checklist" in the outgoing president's Today note: opens the
+    // notebook on its handoff checklist page (NotebookPanel.ChecklistRequest).
+    private int _checklistRequest;
+    private void OpenChecklist() { if (!IsNotebookOpen) _notebookSmall = false; IsNotebookOpen = true; _checklistRequest++; }
 
     // Goes up by one whenever something is saved to the notebook from the
     // chat, so an open notebook panel reads its entries again.
@@ -758,16 +785,18 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        CanOpenNotebook = false;
-        HasJourney = false;
-        _personId = null;
+        // Today and Notebook first: a quick lookup in Isa's own databases, so the
+        // rail shows all its buttons together when the chat opens. The developer
+        // check below asks the sign-in server and takes about a second; it only
+        // decides the Backstage button, so it must not hold the others back
+        // (they used to pop in a second late, Matthew, 22 October 2026).
+        _personId = AuthState is null ? null
+            : (await AuthState).User.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
+        CanOpenNotebook = _personId is not null && Notebook.GetAccess(_personId, Settings.Today).CanRead;
+        HasJourney = _personId is not null && JourneyContexts.GetFor(_personId) is not null;
+        if (_personId is not null) RefreshStepsLeft();
+
         _isDev = await DevAccess.HasDevRoleAsync(AuthState);
-        if (AuthState is null) return;
-        _personId = (await AuthState).User.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
-        if (_personId is null) return;
-        CanOpenNotebook = Notebook.GetAccess(_personId, Settings.Today).CanRead;
-        HasJourney = JourneyContexts.GetFor(_personId) is not null;
-        RefreshStepsLeft();
     }
 
     // ---- The rail on the left (IsaRail.razor) ---------------------------
@@ -814,12 +843,21 @@
         await Task.Delay(RailGlideMs);
         _railClosing = false;
         _railGliding = false;
+        _railCameBack = false;
         IsRailHidden = true;
     }
+
+    // True from the moment the rail comes back from the header's menu button
+    // until it is hidden again or the chat closes (both remove the rail). It
+    // gives the rail the shorter 0.7s glide (IsaRail.razor.css, is-returning)
+    // instead of the slower glide it opens with. Kept on after the glide, so
+    // the finished glide isn't re-timed and replayed.
+    private bool _railCameBack;
 
     private async Task ShowRailAgain()
     {
         if (!IsRailHidden) return;
+        _railCameBack = true;
         _railGliding = true;
         IsRailHidden = false;
         KeepAtTopBeforeFirstQuestion();
@@ -871,12 +909,32 @@
     // widens Today or the notebook to half the screen; only one is enlarged
     // at a time. With all three open, the other two shrink to a quarter each
     // so everything still fits; with two open, the chat keeps its third.
+    // Changed by Matthew, 23 October 2026 (Claude outputs/Calmer notebook
+    // mockups.html): the notebook opens at half the screen while Today is
+    // closed, and goes back to a third when Today opens. Beside the chat
+    // alone, its "Make smaller" button shrinks it to a third like the other
+    // panels (_notebookSmall); it opens large again each time.
     // On narrow screens (phones) each panel fills the screen instead (the
     // .css files override these sizes there).
     private enum SidePanel { Today, Notebook }
     private SidePanel? Enlarged { get; set; }
 
     private void ToggleEnlarge(SidePanel panel) => Enlarged = Enlarged == panel ? null : panel;
+
+    // The notebook beside the chat alone: large (half) unless made smaller.
+    private bool _notebookSmall;
+
+    // Whether the notebook is at its larger size, so its button offers
+    // "Make smaller": half beside the chat alone, or enlarged with Today open.
+    private bool NotebookLarge => IsTodayOpen ? Enlarged == SidePanel.Notebook : !_notebookSmall;
+
+    // The notebook's size button: with Today open it enlarges as before;
+    // beside the chat alone it switches between half and a third.
+    private void ToggleNotebookSize()
+    {
+        if (IsTodayOpen) ToggleEnlarge(SidePanel.Notebook);
+        else _notebookSmall = !_notebookSmall;
+    }
     private void Unenlarge(SidePanel panel) { if (Enlarged == panel) Enlarged = null; }
 
     private const double Third = 100.0 / 3;
@@ -886,7 +944,10 @@
     // percentage of a fixed panel leaves out the page's scrollbar, so the
     // three panels fit exactly; "vw" would include it and overflow.)
     private double SideWidth(SidePanel panel) =>
-        Enlarged == panel ? 50 : AllThreeOpen && Enlarged is not null ? 25 : Third;
+        Enlarged == panel ? 50
+        : panel == SidePanel.Notebook && !IsTodayOpen ? (_notebookSmall ? Third : 50)
+        : AllThreeOpen && Enlarged is not null ? 25
+        : Third;
 
     private double ChatWidth => AllThreeOpen && Enlarged is not null ? 25 : Third;
 

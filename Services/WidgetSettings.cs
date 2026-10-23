@@ -237,4 +237,14 @@ public class WidgetSettings
 
     /// <summary>The date the onboarding feature treats as today: DemoDate, or the real date when the demo date is off.</summary>
     public DateOnly Today => UseDemoDate ? DemoDate : DateOnly.FromDateTime(DateTime.Today);
+
+    // ---- Presentation page (/present) ----------------------------------
+    // The presentation slides live inside Isa (Components/Pages/Present.razor),
+    // so the talk moves into the live demo without switching windows.
+    // Off by default, so chapter leaders never come across the page; the
+    // team switches it on at /isa-config before presenting. Resets to off
+    // when Isa restarts, like every setting here.
+
+    /// <summary>When true, /present shows the slides. When false, it says the page is switched off.</summary>
+    public bool PresentationEnabled { get; set; }
 }

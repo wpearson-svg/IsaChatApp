@@ -1,0 +1,1006 @@
+/* ============================================================
+   Present.razor.css -- the /present slides.
+
+   ISACA colors and type only (BRAND_GUIDELINES.md):
+   Dark Blue #1d2d5c (ink, dark slides), Medium Blue #07649d (labels),
+   Blue #00a4e4 and Green #6cb33f (accents), Light Blue #e7f0f5,
+   Greys 1-9, Yellow at a 30% tint for "partly built".
+   Headlines Roboto Slab Light in sentence case, body Roboto Light,
+   paragraph titles Roboto Bold in capitals.
+
+   The stage is always 16:9, letterboxed to fit any screen. Sizes are
+   in cqw (hundredths of the stage's width), so a slide looks the same
+   on a laptop, a projector or a Teams share.
+   ============================================================ */
+
+.present {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f6f7f8; /* Grey 1 */
+    font-family: Roboto, Arial, sans-serif;
+    color: #1d2d5c;
+}
+
+.present__stage {
+    position: relative;
+    width: min(100vw, 177.78vh);
+    height: min(100vh, 56.25vw);
+    background: #ffffff;
+    overflow: hidden;
+    container-type: size;
+    animation: present-in 0.25s ease-out;
+}
+
+.present__stage.is-dark {
+    background: #1d2d5c;
+    color: #ffffff;
+}
+
+@keyframes present-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__stage { animation: none; }
+}
+
+/* ---- Progress line and the cropped C ---- */
+
+.present__progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 0.4cqw;
+    background: #e5e7eb;
+    z-index: 2;
+}
+
+.present__progress span {
+    display: block;
+    height: 100%;
+    background: #00a4e4;
+    transition: width 0.3s ease;
+}
+
+.is-dark .present__progress { background: rgba(255, 255, 255, 0.15); }
+
+/* White slides: a row of six approved Cs, alternating ISACA Blue and
+   Green, coming in from the right edge near the top (not touching it), a
+   third of the slide wide; the last C runs off the edge (Matthew,
+   23 October 2026). */
+.present__cornerStrip {
+    position: absolute;
+    top: 1.6cqw;
+    right: -2.3cqw;
+    width: 35.6cqw;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.present__cornerStrip svg { width: 4.6cqw; height: 4.6cqw; flex: none; }
+.present__cornerStrip .is-blue { fill: #00a4e4; }
+.present__cornerStrip .is-green { fill: #6cb33f; }
+
+/* Dark slides: one approved C, heavily cropped, bleeding off an edge. */
+.present__c {
+    position: absolute;
+    width: 34cqw;
+    top: -11cqw;
+    right: -9cqw;
+    fill: #e7f0f5;
+    transform: rotate(-35deg);
+    pointer-events: none;
+}
+
+.is-dark .present__c {
+    width: 62cqw;
+    top: auto;
+    bottom: -24cqw;
+    right: -16cqw;
+    fill: #07649d;
+    opacity: 0.6;
+    transform: rotate(140deg);
+}
+
+/* ---- Body ---- */
+
+.present__body {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    padding: 5.5cqw 7cqw 7cqw 7cqw;
+    display: flex;
+    flex-direction: column;
+}
+
+.present__section {
+    margin: 0 0 1.2cqw;
+    font-weight: 700;
+    font-size: 1.05cqw;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #07649d;
+}
+
+.present__title {
+    margin: 0 0 1.4cqw;
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 300;
+    font-size: 4.2cqw;
+    line-height: 1.12;
+    color: #1d2d5c;
+    max-width: 62cqw;
+}
+
+.present__title:focus { outline: none; }
+.present__title--compact { font-size: 3.2cqw; margin-bottom: 0.6cqw; }
+
+.present__lead {
+    margin: 0 0 2.6cqw;
+    font-weight: 300;
+    font-size: 1.9cqw;
+    line-height: 1.4;
+    color: #323e48; /* Grey 9 */
+    max-width: 66cqw;
+}
+
+.present__lead--big { font-size: 2.5cqw; max-width: 70cqw; }
+.present__lead--compact { font-size: 1.5cqw; margin-bottom: 1.4cqw; }
+
+/* Bullets use a small approved C, ISACA Blue, as the marker. */
+.present__bullets {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-weight: 300;
+    font-size: 1.9cqw;
+    line-height: 1.4;
+    color: #323e48;
+}
+
+.present__bullets li {
+    position: relative;
+    padding-left: 2.4cqw;
+    margin-bottom: 1.1cqw;
+}
+
+.present__bullets li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.45em;
+    width: 0.8em;
+    height: 0.8em;
+    background: #00a4e4;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-2 -2 204 204'%3E%3Cpath d='M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-2 -2 204 204'%3E%3Cpath d='M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+
+/* ---- Cover and closing ---- */
+
+.present__cover,
+.present__closing {
+    margin: auto 0;
+    max-width: 62cqw;
+}
+
+.present__mark {
+    display: block;
+    width: 9cqw;
+    height: 9cqw;
+    margin-bottom: 2cqw;
+}
+
+.present__mark--small { width: 5.5cqw; height: 5.5cqw; }
+
+/* The Isa mark is the approved C; the slides show it large enough
+   (9cqw) for its rounded opening corners to read. At that size, "Isa"
+   centred exactly looks pushed left by the C's opening, so on the
+   slides it sits a little right of centre. The chat bubble keeps it
+   centred, which looks right at the bubble's small size (Matthew,
+   23 October 2026). */
+.present__mark ::deep .throbber__word,
+.present__ringMark ::deep .throbber__word { left: 54%; }
+
+.present__coverTitle {
+    margin: 0;
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 300;
+    font-size: 9cqw;
+    line-height: 1;
+    color: #ffffff;
+}
+
+.present__coverLead {
+    margin: 1cqw 0 3cqw;
+    font-weight: 300;
+    font-size: 2.4cqw;
+    color: #e7f0f5;
+}
+
+.present__coverSub {
+    margin: 0 0 0.6cqw;
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 400;
+    font-size: 2cqw;
+    color: #ffffff;
+}
+
+.present__coverNote {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.1cqw;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #cbd2d9; /* Grey 3 */
+}
+
+.present__quote {
+    margin: 0 0 3cqw;
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 300;
+    font-size: 3.6cqw;
+    line-height: 1.25;
+    color: #ffffff;
+}
+
+.present__quote:focus,
+.present__coverTitle:focus { outline: none; }
+
+/* ---- Cards (rules) ---- */
+
+.present__cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2cqw;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.present__cards--2 { grid-template-columns: repeat(2, 1fr); max-width: 62cqw; }
+
+.present__card {
+    padding: 2.2cqw 2.2cqw 2.4cqw;
+    background: #f6f7f8;
+    border-top: 0.35cqw solid #6cb33f;
+}
+
+.present__cardNum {
+    display: block;
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 300;
+    font-size: 3cqw;
+    color: #07649d;
+    margin-bottom: 0.8cqw;
+}
+
+.present__cardTitle {
+    margin: 0 0 0.8cqw;
+    font-family: Roboto, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.25cqw;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+}
+
+.present__cardText {
+    margin: 0;
+    font-weight: 300;
+    font-size: 1.6cqw;
+    line-height: 1.4;
+    color: #323e48;
+}
+
+/* ---- Pipeline: ten stages in a row, larger so they read over a screen
+   share. Dark Blue: every question; dashed: the AI path only; Green tint:
+   when a person takes over. Each stage lights up in turn, 0.375s apart,
+   the run repeating every 5.25s, like the dots on "Pipeline built". ---- */
+
+.present__pipe {
+    list-style: none;
+    margin: 1cqw 0 2.2cqw;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(var(--stages, 10), 1fr);
+    position: relative;
+}
+
+/* The line every question travels along. */
+.present__pipe::before {
+    content: "";
+    position: absolute;
+    top: 2.6cqw;
+    left: 5%;
+    right: 5%;
+    height: 0.3cqw;
+    background: #cbd2d9;
+}
+
+.present__pipeStage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.present__pipeDot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5.2cqw;
+    height: 5.2cqw;
+    border-radius: 50%;
+    background: #1d2d5c;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 1.9cqw;
+    border: 0.3cqw solid #1d2d5c;
+    position: relative;
+    box-sizing: border-box;
+    animation: present-pipe-stage 5.25s ease-in-out infinite;
+}
+
+.present__pipeStage.is-ai .present__pipeDot {
+    background: #ffffff;
+    color: #07649d;
+    border: 0.3cqw dashed #07649d;
+}
+
+.present__pipeStage.is-handoff .present__pipeDot {
+    background: #d3e8c5; /* Green at a 30% tint */
+    color: #1d2d5c;
+    border-color: #6cb33f;
+}
+
+/* A stage lighting up: it grows a little inside a soft ISACA Blue ring. */
+@keyframes present-pipe-stage {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 164, 228, 0); }
+    6% { transform: scale(1.18); box-shadow: 0 0 0 0.7cqw rgba(0, 164, 228, 0.35); }
+    16% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 164, 228, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 164, 228, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__pipeDot { animation: none; }
+}
+
+.present__pipeName {
+    margin-top: 1cqw;
+    padding: 0 0.3cqw;
+    font-weight: 400;
+    font-size: 1.45cqw;
+    line-height: 1.25;
+    color: #1d2d5c;
+}
+
+/* The paths: a label, then a bar under the stages the path uses, in the
+   same ten columns as the stages above. */
+.present__paths { display: flex; flex-direction: column; gap: 1.3cqw; }
+
+.present__pathLabel {
+    margin: 0 0 0.5cqw;
+    font-weight: 300;
+    font-size: 1.5cqw;
+    color: #323e48;
+}
+
+.present__pathLabel strong {
+    margin-right: 0.6cqw;
+    font-weight: 700;
+    font-size: 1.15cqw;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.present__path.is-blue .present__pathLabel strong { color: #07649d; }
+.present__path.is-darkblue .present__pathLabel strong { color: #1d2d5c; }
+.present__path.is-green .present__pathLabel strong { color: #3f7d20; }
+
+.present__pathBar {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(var(--stages, 10), 1fr);
+    height: 1cqw;
+}
+
+.present__pathBar li.is-on { background: var(--path-color); }
+.present__pathBar li.is-start { border-radius: 0.5cqw 0 0 0.5cqw; margin-left: 1.2cqw; }
+.present__pathBar li.is-end { border-radius: 0 0.5cqw 0.5cqw 0; margin-right: 1.2cqw; }
+.present__pathBar li.is-start.is-end { border-radius: 0.5cqw; }
+
+.present__path.is-blue { --path-color: #00a4e4; }
+.present__path.is-darkblue { --path-color: #1d2d5c; }
+.present__path.is-green { --path-color: #6cb33f; }
+
+/* ---- Real versus stub: the ten stages coloured by status (ISACA Green:
+   built; Yellow: partly built; white with a dashed grey ring: stub; each
+   status also has its own symbol in the column heads, so colour never
+   carries the meaning alone), then three columns grouping the stages by
+   status. ---- */
+
+.present__statusLine {
+    list-style: none;
+    margin: 0.6cqw 0 1.8cqw;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(var(--stages, 10), 1fr);
+    position: relative;
+}
+
+.present__statusLine::before {
+    content: "";
+    position: absolute;
+    top: 2.1cqw;
+    left: 5%;
+    right: 5%;
+    height: 0.3cqw;
+    background: #cbd2d9;
+}
+
+.present__statusLine li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.present__statusDot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.2cqw;
+    height: 4.2cqw;
+    border-radius: 50%;
+    box-sizing: border-box;
+    font-weight: 500;
+    font-size: 1.6cqw;
+    color: #1d2d5c;
+}
+
+.present__statusLine .is-built .present__statusDot { background: #6cb33f; }
+.present__statusLine .is-partial .present__statusDot { background: #fbb034; }
+.present__statusLine .is-stub .present__statusDot {
+    background: #ffffff;
+    border: 0.25cqw dashed #7b8794;
+    color: #52606d;
+}
+
+.present__statusName {
+    margin-top: 0.7cqw;
+    padding: 0 0.3cqw;
+    font-size: 1.2cqw;
+    line-height: 1.2;
+    color: #1d2d5c;
+}
+
+.present__statusCols {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr 1fr;
+    gap: 2.6cqw;
+}
+
+.present__statusHead {
+    display: flex;
+    align-items: center;
+    gap: 0.6cqw;
+    margin: 0 0 0.8cqw;
+    padding: 0.5cqw 1cqw;
+    font-weight: 700;
+    font-size: 1.15cqw;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+}
+
+.present__statusHead span { margin-left: auto; font-size: 1.5cqw; letter-spacing: 0; }
+.present__statusHead.is-built { background: #6cb33f; }
+.present__statusHead.is-partial { background: #fbb034; }
+.present__statusHead.is-stub { background: #e5e7eb; }
+
+.present__statusCol ul { list-style: none; margin: 0; padding: 0; }
+
+.present__statusCol li {
+    padding: 0.55cqw 0;
+    border-bottom: 0.08cqw solid #e5e7eb;
+    font-size: 1.2cqw;
+    line-height: 1.3;
+}
+
+.present__statusCol strong { display: block; font-weight: 500; font-size: 1.35cqw; color: #1d2d5c; }
+.present__statusCol li span { font-weight: 300; color: #323e48; }
+
+/* ---- Show the work ---- */
+
+.present__split {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 4cqw;
+    align-items: start;
+}
+
+.present__mock { display: flex; flex-direction: column; gap: 1.2cqw; }
+
+.present__mockCard {
+    border: 0.1cqw solid #cbd2d9;
+    background: #ffffff;
+    box-shadow: 0 0.3cqw 1cqw rgba(29, 45, 92, 0.08);
+}
+
+.present__mockLine {
+    display: flex;
+    align-items: center;
+    gap: 0.9cqw;
+    padding: 1cqw 1.3cqw;
+    font-weight: 500;
+    font-size: 1.45cqw;
+    color: #1d2d5c;
+}
+
+.present__mockIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2cqw;
+    height: 2cqw;
+    border-radius: 50%;
+    font-size: 1.1cqw;
+    color: #ffffff;
+    background: #3f7d20; /* darker green, as in the app, so the icon reads */
+}
+
+.present__mockIcon.is-handoff { background: #07649d; }
+
+.present__mockChevron { margin-left: auto; color: #7b8794; }
+
+.present__mockSteps {
+    list-style: none;
+    margin: 0;
+    padding: 0.4cqw 1.3cqw 1.2cqw 4.2cqw;
+    border-top: 0.08cqw solid #e5e7eb;
+    font-weight: 300;
+    font-size: 1.3cqw;
+    color: #323e48;
+}
+
+.present__mockSteps li { position: relative; padding: 0.45cqw 0; }
+
+.present__mockSteps li::before {
+    content: "\2713";
+    position: absolute;
+    left: -2.2cqw;
+    color: #3f7d20;
+    font-weight: 700;
+}
+
+/* ---- Rows (safe by design, features) ---- */
+
+.present__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 72cqw;
+}
+
+.present__rows li {
+    padding: 1.05cqw 0;
+    border-bottom: 0.08cqw solid #e5e7eb;
+    font-size: 1.65cqw;
+    line-height: 1.4;
+}
+
+.present__rows li:first-child { border-top: 0.08cqw solid #e5e7eb; }
+.present__rows strong { font-weight: 500; color: #1d2d5c; }
+.present__rows span { font-weight: 300; color: #323e48; }
+
+.present__rows--small li { font-size: 1.4cqw; padding: 0.85cqw 0; }
+
+/* ---- Live demo: the right side stays empty for Isa's chat ---- */
+
+.present__demo { max-width: 52cqw; margin: auto 0; }
+
+.present__demoSteps {
+    margin: 0;
+    padding-left: 2.2cqw;
+    font-weight: 300;
+    font-size: 1.7cqw;
+    line-height: 1.35;
+    color: #323e48;
+}
+
+.present__demoSteps li { padding: 0.45cqw 0 0.45cqw 0.6cqw; }
+.present__demoSteps li::marker { font-family: "Roboto Slab", Georgia, serif; color: #07649d; }
+
+/* ---- Numbered next steps ---- */
+
+.present__numbered {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(4, auto);
+    grid-auto-flow: column;
+    column-gap: 4cqw;
+    row-gap: 1.4cqw;
+    max-width: 84cqw;
+}
+
+.present__numbered li { display: flex; gap: 1.2cqw; align-items: flex-start; }
+
+.present__numberedNum {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.8cqw;
+    height: 2.8cqw;
+    border-radius: 50%;
+    background: #1d2d5c;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 1.3cqw;
+}
+
+.present__numbered strong {
+    display: block;
+    font-weight: 500;
+    font-size: 1.55cqw;
+    color: #1d2d5c;
+}
+
+.present__numbered li > span > span {
+    display: block;
+    margin-top: 0.2cqw;
+    font-weight: 300;
+    font-size: 1.2cqw;
+    line-height: 1.35;
+    color: #323e48;
+}
+
+/* ---- Feature groups ---- */
+
+.present__groups {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 4cqw;
+    margin-top: 1cqw;
+    max-width: 84cqw;
+}
+
+.present__groupLabel {
+    display: inline-block;
+    margin: 0 0 1cqw;
+    padding: 0.3cqw 0.9cqw;
+    font-weight: 700;
+    font-size: 1cqw;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+    background: #fee7c2; /* in the build: Yellow, 30% tint */
+}
+
+.present__group + .present__group .present__groupLabel { background: #e7f0f5; } /* planned: Light Blue */
+
+/* ---- Footer, bottom left (the bottom right is Isa's chat bubble) ---- */
+
+.present__footer {
+    position: absolute;
+    left: 7cqw;
+    bottom: 2.2cqw;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.8cqw;
+    font-size: 1.05cqw;
+    color: #606e7c; /* Grey 6 */
+}
+
+.is-dark .present__footer { color: #cbd2d9; }
+
+.present__nav {
+    width: 2.4cqw;
+    height: 2.4cqw;
+    min-width: 28px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0.1cqw solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1.5cqw;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.present__nav:hover:not(:disabled) { opacity: 1; }
+.present__nav:disabled { opacity: 0.3; cursor: default; }
+.present__nav:focus-visible { outline: 0.2cqw solid #00a4e4; outline-offset: 0.2cqw; }
+
+.present__count { font-variant-numeric: tabular-nums; min-width: 3.6cqw; text-align: center; }
+
+.present__presenter {
+    margin-left: 1cqw;
+    padding-left: 1.4cqw;
+    border-left: 0.08cqw solid currentColor;
+}
+
+/* ---- Switched off / no slides ---- */
+
+.present--off { background: #ffffff; }
+
+.present__offBox { max-width: 520px; padding: 24px; }
+
+.present__offBox h1 {
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 300;
+    font-size: 1.8rem;
+    color: #1d2d5c;
+}
+
+.present__offBox p { color: #323e48; font-weight: 300; }
+
+/* ---- Landing: "Meet Isa", where the intro's curtain opens ----
+   Dark Blue ground; the intro's half-blue, half-green ring, large, on
+   the right; a green cropped C bleeding off the top left; a C strip
+   under the words. Text: white, Green (5:1 on Dark Blue) and Blue
+   (4.9:1 on Dark Blue). */
+
+.present__stage--landing .present__c { display: none; }
+
+.present__landing {
+    position: relative;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 40cqw;
+    align-items: center;
+    gap: 3cqw;
+}
+
+.present__landingText { position: relative; z-index: 1; }
+
+.present__landingTitle {
+    margin: 0 0 1.6cqw;
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 300;
+    font-size: 8.4cqw;
+    line-height: 1.02;
+    color: #ffffff;
+}
+
+.present__landingTitle:focus { outline: none; }
+.present__landingName { color: #6cb33f; }
+
+.present__landingLead {
+    margin: 0 0 3.2cqw;
+    font-weight: 300;
+    font-size: 3cqw;
+    line-height: 1.25;
+    color: #00a4e4;
+}
+
+.present__strip { display: flex; gap: 1.2cqw; }
+.present__strip svg { width: 2.6cqw; height: 2.6cqw; }
+.present__strip .is-blue { fill: #00a4e4; }
+.present__strip .is-green { fill: #6cb33f; }
+
+.present__ring {
+    position: relative;
+    width: 40cqw;
+    height: 40cqw;
+    animation: present-ring-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.present__ring svg { width: 100%; height: 100%; display: block; }
+
+.present__ringMark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 17cqw;
+    height: 17cqw;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes present-ring-in {
+    from { transform: scale(0.92) rotate(-12deg); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+
+.present__pop {
+    position: absolute;
+    width: 21cqw;
+    left: -9cqw;
+    top: -10cqw;
+    fill: #6cb33f;
+    transform: rotate(35deg);
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__ring { animation: none; }
+}
+
+/* Dark Blue cover while the page connects, before the intro starts.
+   Above Isa's chat bubble, like the intro itself. */
+.present__introCover {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483600;
+    background: #1d2d5c;
+}
+
+/* ---- Cover: "Pipeline built" ---- */
+
+.present__stage--cover .present__cover { max-width: 80cqw; }
+
+/* The big C opens to the left like a mouth, its opening level with the
+   title, the line of stages and the line under it, as if taking them in.
+   Larger and lighter, so the slide isn't bottom heavy (Matthew,
+   23 October 2026). Centre: about 102cqw across, 31cqw down, so the
+   words sit midway between the top and bottom of the opening. */
+.present__stage--cover .present__c {
+    width: 90cqw;
+    top: -14cqw;
+    bottom: auto;
+    right: -47cqw;
+    opacity: 0.3;
+    transform: rotate(180deg);
+}
+.present__stage--cover .present__coverTitle { font-size: 8.6cqw; }
+
+/* Ten stages on one line: blue and green dots joined by a line. */
+.present__track {
+    position: relative;
+    list-style: none;
+    margin: 2.4cqw 0 2.4cqw;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    width: 56cqw;
+}
+
+.present__track::before {
+    content: "";
+    position: absolute;
+    left: 0.9cqw;
+    right: 0.9cqw;
+    top: 50%;
+    height: 0.3cqw;
+    transform: translateY(-50%);
+    background: #00a4e4;
+}
+
+.present__track li {
+    position: relative;
+    width: 1.8cqw;
+    height: 1.8cqw;
+    border-radius: 50%;
+    border: 0.3cqw solid #1d2d5c;
+    box-sizing: content-box;
+}
+
+.present__track .is-blue { background: #00a4e4; }
+.present__track .is-green { background: #6cb33f; }
+
+/* A question passing through the stages: each dot lights up in turn,
+   0.375s apart, left to right; the run repeats every 5.25 seconds
+   (slowed by half, Matthew, 23 October 2026). */
+.present__track li {
+    filter: brightness(0.5);
+    animation: present-stage 5.25s ease-in-out infinite;
+}
+
+@keyframes present-stage {
+    0% { filter: brightness(0.5); transform: scale(1); box-shadow: none; }
+    6% { filter: none; transform: scale(1.5); box-shadow: 0 0 0 0.45cqw rgba(255, 255, 255, 0.25); }
+    16% { filter: none; transform: scale(1); box-shadow: none; }
+    30%, 100% { filter: brightness(0.5); transform: scale(1); box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__track li { animation: none; filter: none; }
+}
+
+/* ---- The problem: the title across the top; the big number on the
+   left with its words beside its middle, and the problem in two lines
+   beside it; below, Isa's two answers in solid blue and green panels,
+   in two equal columns (Dark Blue text: 4.9:1 on Blue,
+   5.1:1 on Green). ---- */
+
+.present__problem {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    padding-bottom: 2cqw;
+}
+
+.present__answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 4cqw;
+}
+
+.present__problemTop {
+    display: flex;
+    align-items: center;
+    gap: 4cqw;
+}
+
+/* The words sit beside the middle of the "6"; the pair is centred in its column. */
+.present__stat {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 1.4cqw;
+}
+
+.present__statNum {
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 300;
+    font-size: 8.5cqw;
+    line-height: 1;
+    color: #07649d;
+}
+
+.present__statLabel {
+    max-width: 13cqw;
+    font-weight: 700;
+    font-size: 1.4cqw;
+    line-height: 1.35;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+}
+
+.present__problem .present__title { margin-bottom: 0; }
+.present__problem .present__lead {
+    margin-bottom: 0;
+    max-width: none;
+    font-size: 1.8cqw;
+    white-space: pre-line;   /* the \n in slides.json starts the second line */
+}
+
+/* "fast": italic, in ISACA Medium Blue (6.3:1 on white). */
+.present__em {
+    font-style: italic;
+    font-weight: 500;
+    color: #07649d;
+}
+
+.present__answer {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+    padding: 2.2cqw 2.4cqw;
+    font-weight: 500;
+    font-size: 1.9cqw;
+    line-height: 1.3;
+    color: #1d2d5c;
+}
+
+.present__answer.is-blue { background: #00a4e4; }
+.present__answer.is-green { background: #6cb33f; }
+
+.present__answer svg {
+    flex: none;
+    width: 3.4cqw;
+    height: 3.4cqw;
+    fill: #ffffff;
+}

@@ -1,17 +1,73 @@
-/* The outgoing president's handoff checklist, at the top of the notebook
-   panel. ISACA Dark Blue, Medium Blue and Light Blue (BRAND_GUIDELINES.md);
-   the darkened green from "show the work" marks finished items. */
+/* The outgoing president's handoff checklist: a summary card at the top of
+   the notebook, and the whole list on its own page (Matthew's approved
+   mockup, 23 October 2026). ISACA Dark Blue, Medium Blue and Light Blue
+   (BRAND_GUIDELINES.md); the darkened green from "show the work" marks
+   finished items. */
 
 .isa-handoff {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 0.9rem;
-    border: 1px solid #c9d8e3;
-    border-radius: 10px;
-    background: #ffffff;
     color: #1d2d5c;
 }
+
+/* The summary card: a green edge on the left says "progress". */
+.isa-handoff.is-summary {
+    gap: 0.6rem;
+    padding: 0.9rem 0.95rem 0.8rem;
+    border: 1px solid #dde3e9;
+    border-left: 4px solid #3f7d20;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.isa-handoff__cardTitle { margin: 0; font-size: 0.95rem; font-weight: 500; }
+
+.isa-handoff.is-summary .isa-handoff__bar { height: 6px; border-radius: 3px; }
+
+.isa-handoff__next { margin: 0; font-size: 0.86rem; color: #323e48; }
+.isa-handoff__next b { color: #1d2d5c; font-weight: 500; }
+
+.isa-handoff__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    color: #5f6b7a;
+}
+
+.isa-handoff__open {
+    min-height: 36px;
+    padding: 0 0.25rem;
+    border: none;
+    background: none;
+    font: inherit;
+    font-weight: 500;
+    color: #07649d;
+    cursor: pointer;
+}
+
+.isa-handoff__open:hover { text-decoration: underline; }
+.isa-handoff__open:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+/* The checklist page. */
+.isa-handoff.is-page .isa-handoff__bar { margin: 0.1rem 0 0.2rem; }
+
+.isa-handoff__group {
+    margin: 0.7rem 0 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5f6b7a;
+}
+
+/* The next item to do: a light blue band and a small "Next". */
+.isa-handoff__item.is-next > .isa-handoff__row { background: #e7f0f5; border-radius: 6px; }
+
+.isa-handoff__nextTag { flex: 0 0 auto; font-size: 0.74rem; font-weight: 600; color: #07649d; }
 
 .isa-handoff__head {
     display: flex;
@@ -33,17 +89,16 @@
 .isa-handoff__bar { height: 4px; border-radius: 2px; background: #e4e7eb; overflow: hidden; }
 .isa-handoff__bar span { display: block; height: 100%; background: #3f7d20; transition: width 0.3s ease; }
 
-.isa-handoff__when { margin: 0; font-size: 0.82rem; }
-.isa-handoff__from { margin: 0; font-size: 0.76rem; color: #5f6b7a; }
+.isa-handoff__from { margin: 0; font-size: 0.8rem; color: #5f6b7a; }
 
 .isa-handoff__list {
     list-style: none;
-    margin: 0.25rem 0 0;
+    margin: 0;
     padding: 0;
-    border-top: 1px solid #eef2f5;
 }
 
 .isa-handoff__item { border-bottom: 1px solid #eef2f5; }
+.isa-handoff__item:last-child { border-bottom: none; }
 
 /* Each item: a tappable row, at least 44px tall. */
 .isa-handoff__row {
@@ -52,7 +107,7 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.35rem 0.2rem;
+    padding: 0.35rem 0.4rem;
     border: none;
     background: none;
     font: inherit;

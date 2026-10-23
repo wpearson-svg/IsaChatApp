@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isa C Intro</title>
+<style>
+  /* Copy of Isa_C_Intro.html for the /present slides (Components/Pages/Present.razor.js plays it
+     as an overlay with ?embed=1). Changed 23 October 2026 (Matthew): the finished ring is half
+     blue (left) and half green (right), so the green C isn't hidden under the blue one.
+     Isa intro: two Cs roll in, the window where they overlap reveals the spinning Isa logo,
+     then the Cs roll out and pull the curtain open on the Isa page underneath.
+     Colours are the ISACA palette from BRAND_GUIDELINES.md. */
+  :root { --navy:#1d2d5c; --blue:#00a4e4; --green:#6cb33f; --paper:#ffffff; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--navy); overflow:hidden; }
+  #page { position:fixed; inset:0; width:100%; height:100%; border:0; background:#fff; display:block; }
+  #mock { position:fixed; inset:0; display:none; font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--navy);
+          background:linear-gradient(135deg,#e7f0f5,#fff 60%); }
+  #mock header { display:flex; justify-content:space-between; align-items:center; padding:20px 6vw; }
+  #mock .brand { font-weight:700; letter-spacing:.04em; }
+  #mock .hero { padding:8vh 6vw; max-width:760px; }
+  #mock h1 { font-size:clamp(28px,5vw,56px); line-height:1.1; margin:0 0 16px; }
+  #mock p { color:#445; max-width:46ch; }
+  #mock .btn { display:inline-block; margin-top:18px; padding:12px 22px; border-radius:999px; background:var(--green); color:#fff; font-weight:600; }
+  #scene { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  #replay { position:fixed; right:16px; bottom:16px; z-index:5; display:none; font:14px system-ui,sans-serif; padding:8px 14px;
+            border-radius:999px; border:1px solid rgba(29,45,92,.35); background:rgba(255,255,255,.92); color:var(--navy); cursor:pointer; }
+  /* ?embed=1: no page of its own; the /present slide underneath shows when the curtain opens */
+  html.embed, html.embed body { background:transparent; }
+  html.embed #page, html.embed #mock { display:none; }
+  #replay:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<iframe id="page" title="Isa" aria-hidden="true"></iframe>
+<div id="mock" aria-hidden="true">
+  <header><span class="brand">ISA</span><span>Sign in</span></header>
+  <div class="hero"><h1>Your chapter questions, answered from ISACA's own guidance.</h1>
+  <p>Ask about board meetings, elections or your yearly paperwork. Isa shows its work.</p><span class="btn">Ask Isa</span></div>
+</div>
+
+<svg id="scene" aria-label="Isa is loading" role="img" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- the C, open to the right, with the rounded gap corners of the Isa logo (outer radius 100.89, centred on 0,0), scaled by K below -->
+    <g id="cShape"><path transform="translate(-100 -100)" d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z" /></g>
+    <!-- the window is where the two Cs' centre holes overlap; when the Cs sit exactly on each other it is the whole hole -->
+    <clipPath id="clipA"><circle id="clipAPath" r="79.3"/></clipPath>
+    <clipPath id="clipB"><circle id="clipBPath" r="79.3"/></clipPath>
+    <!-- the right half of the screen, measured from the green C's centre: where the green C is drawn on top of the blue one -->
+    <clipPath id="halfB"><rect id="halfBRect" width="100000" height="100000"/></clipPath>
+  </defs>
+
+  <!-- curtains: two halves of the navy cover, they slide apart at the end -->
+  <rect id="curtainL" fill="#1d2d5c"/>
+  <rect id="curtainR" fill="#1d2d5c"/>
+
+  <!-- the two Cs -->
+  <use id="cB" href="#cShape" fill="#6cb33f"/>
+  <use id="cA" href="#cShape" fill="#00a4e4"/>
+  <!-- the green C's right half again, on top of the blue C, so the finished ring is half blue (left) and half green (right) -->
+  <g clip-path="url(#halfB)"><use id="cBTop" href="#cShape" fill="#6cb33f"/></g>
+
+  <!-- the window (where the two Cs overlap) is drawn on top and shows the logo -->
+  <g clip-path="url(#clipA)"><g clip-path="url(#clipB)">
+    <rect id="plate" fill="#ffffff"/>
+    <g id="logo" opacity="0">
+      <g id="ring"><path id="ringPath" d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z"/></g>
+      <g id="word" transform="translate(100 100) scale(1.336) translate(-29.795 -14.91)"><g id="letters">
+        <path d="M4.06 27.66V1.79H9.48V27.66Z"/>
+        <path d="M32.1 21.86Q32.1 24.74 29.74 26.39Q27.38 28.03 23.21 28.03Q19.12 28.03 16.94 26.74Q14.76 25.44 14.05 22.71L18.58 22.03Q18.97 23.44 19.92 24.03Q20.86 24.62 23.21 24.62Q25.38 24.62 26.37 24.06Q27.36 23.51 27.36 22.34Q27.36 21.38 26.56 20.82Q25.76 20.26 23.85 19.88Q19.48 19.01 17.96 18.27Q16.44 17.53 15.64 16.34Q14.84 15.16 14.84 13.43Q14.84 10.59 17.03 9Q19.23 7.41 23.25 7.41Q26.79 7.41 28.95 8.79Q31.11 10.16 31.64 12.77L27.07 13.25Q26.85 12.04 25.98 11.44Q25.12 10.84 23.25 10.84Q21.41 10.84 20.49 11.31Q19.58 11.78 19.58 12.88Q19.58 13.74 20.28 14.25Q20.99 14.75 22.66 15.08Q24.99 15.56 26.8 16.07Q28.61 16.57 29.7 17.27Q30.8 17.97 31.45 19.06Q32.1 20.15 32.1 21.86Z"/>
+        <path d="M41.59 28.03Q38.71 28.03 37.09 26.46Q35.48 24.89 35.48 22.04Q35.48 18.96 37.49 17.34Q39.5 15.73 43.32 15.69L47.6 15.62V14.61Q47.6 12.66 46.92 11.71Q46.24 10.77 44.7 10.77Q43.26 10.77 42.59 11.42Q41.92 12.07 41.76 13.58L36.38 13.32Q36.87 10.42 39.03 8.92Q41.19 7.43 44.92 7.43Q48.68 7.43 50.72 9.28Q52.76 11.14 52.76 14.55V21.79Q52.76 23.46 53.14 24.09Q53.51 24.73 54.39 24.73Q54.98 24.73 55.53 24.62V27.41Q55.07 27.52 54.71 27.61Q54.34 27.7 53.97 27.76Q53.6 27.81 53.19 27.85Q52.78 27.88 52.23 27.88Q50.28 27.88 49.35 26.93Q48.42 25.97 48.24 24.12H48.13Q45.96 28.03 41.59 28.03ZM47.6 18.46 44.95 18.5Q43.15 18.57 42.4 18.89Q41.65 19.22 41.25 19.88Q40.86 20.54 40.86 21.64Q40.86 23.05 41.51 23.74Q42.16 24.43 43.25 24.43Q44.46 24.43 45.46 23.77Q46.46 23.11 47.03 21.94Q47.6 20.78 47.6 19.47Z"/>
+      </g></g>
+    </g>
+  </g></g>
+
+</svg>
+
+<button id="replay" type="button">Replay intro</button>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- settings ----------
+  // The page revealed at the end. Use ?page=https://... to change it, ?mock=1 for a stand-in page.
+  const ISA_URL = "http://localhost:5067/";
+  const params = new URLSearchParams(location.search);
+  const T_IN = 1.6, T_SPIN = 1.1, T_PAUSE = 1.0, T_OUT = 1.5;   // seconds: roll in, one logo spin, a pause, roll out
+  const T_HOLD = T_SPIN + T_PAUSE;
+  const TOTAL = T_IN + T_HOLD + T_OUT;
+  const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- geometry (from the C window design, c-window1.svg) ----------
+  const K = 1.39;                 // scale of the C shape
+  const R = 100.89 * K;           // outer radius, used for the rolling
+  // The two Cs finish exactly on top of each other: the right-opening C and the mirrored left-opening C
+  // together make a complete ring.
+  const A_FINAL = { x: 315.14, y: 289.47, fx: 1 };    // opens right
+  const B_FINAL = { x: 315.14, y: 289.47, fx: -1 };   // mirrored, opens left
+  const CX = (A_FINAL.x + B_FINAL.x) / 2, CY = (A_FINAL.y + B_FINAL.y) / 2;
+
+  const $ = (id) => document.getElementById(id);
+  const scene = $("scene"), cA = $("cA"), cB = $("cB"), cBTop = $("cBTop"), halfB = $("halfBRect"), clipA = $("clipAPath"), clipB = $("clipBPath");
+  const curtainL = $("curtainL"), curtainR = $("curtainR"), plate = $("plate");
+  const logo = $("logo"), ring = $("ring"), ringPath = $("ringPath"), letters = $("letters"), word = $("word");
+  const replayBtn = $("replay");
+
+  // page underneath
+  const frame = $("page"), mock = $("mock");
+  const embed = params.get("embed") === "1";
+  if (embed) document.documentElement.classList.add("embed");
+  else if (params.get("mock") === "1") { frame.style.display = "none"; mock.style.display = "block"; }
+  else { frame.src = params.get("page") || ISA_URL; }
+
+  // the view: the C pair sits at the middle of the screen, about 60% of the screen height
+  let view = { hw: 600, hh: 340 };
+  function fit() {
+    const w = innerWidth || 1280, h = innerHeight || 720;
+    const hh = 321 / 0.6 / 2;
+    const hw = hh * (w / h);
+    view = { hw, hh };
+    scene.setAttribute("viewBox", (CX - hw) + " " + (CY - hh) + " " + (2 * hw) + " " + (2 * hh));
+    const L = CX - hw - 10, T = CY - hh - 10, W = 2 * hw + 20, H = 2 * hh + 20;
+    curtainL.setAttribute("y", T); curtainL.setAttribute("height", H);
+    curtainR.setAttribute("y", T); curtainR.setAttribute("height", H);
+    plate.setAttribute("x", L); plate.setAttribute("y", T); plate.setAttribute("width", W); plate.setAttribute("height", H);
+    curtainL.dataset.left = L; curtainR.dataset.right = L + W;
+  }
+  addEventListener("resize", function () { fit(); render(lastT); });
+
+  // ---------- helpers ----------
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3);
+  const easeInOutCubic = (p) => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  const PAL = ["#6cb33f", "#36ac91", "#00a4e4", "#07649d", "#1d2d5c", "#6cb33f"];
+  function hex(h) { return [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16)); }
+  function cycle(p) {            // p in [0,1): the ISACA colour cycle used by the Isa spinner
+    p = ((p % 1) + 1) % 1;
+    const s = p * 5, i = Math.floor(s), f = s - i, a = hex(PAL[i]), b = hex(PAL[i + 1]);
+    return "rgb(" + a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(",") + ")";
+  }
+  const place = (el, clip, c) => {
+    const t = "translate(" + c.x + " " + c.y + ") rotate(" + c.rot + ") scale(" + c.fx + " 1) scale(" + K + ")";
+    el.setAttribute("transform", t); clip.setAttribute("cx", c.x); clip.setAttribute("cy", c.y);
+  };
+
+  // ---------- the animation, as a pure function of time (seconds) ----------
+  let lastT = 0;
+  function render(t) {
+    lastT = t;
+    const L = parseFloat(curtainL.dataset.left), RR = parseFloat(curtainR.dataset.right);
+    // how far each C starts from its resting place so it begins just off the screen
+    const inB = (B_FINAL.x + R) - (CX - view.hw) + 20;          // B starts this far to the left
+    const inA = (CX + view.hw) - (A_FINAL.x - R) + 20;          // A starts this far to the right
+    // how far each side travels at the end so the curtain clears the screen and the C leaves
+    const outTravel = Math.max(CX - L, (B_FINAL.x + R) - L) + 20;
+    const outTravelR = Math.max(RR - CX, RR - (A_FINAL.x - R)) + 20;
+
+    let dB = 0, dA = 0, pOut = 0;                // dB, dA: signed offsets from the resting place
+    if (t < T_IN) {
+      const e = easeOutCubic(clamp(t / T_IN, 0, 1));
+      dB = -inB * (1 - e); dA = inA * (1 - e);
+    } else if (t > T_IN + T_HOLD) {
+      pOut = easeInOutCubic(clamp((t - T_IN - T_HOLD) / T_OUT, 0, 1));
+      dB = -outTravel * pOut; dA = outTravelR * pOut;
+    }
+    // rolling without slipping: the turn follows the distance travelled
+    const rotDeg = (d) => (d / R) * 180 / Math.PI;
+    place(cB, clipB, { x: B_FINAL.x + dB, y: B_FINAL.y, rot: rotDeg(dB), fx: B_FINAL.fx });
+    place(cA, clipA, { x: A_FINAL.x + dA, y: A_FINAL.y, rot: rotDeg(dA), fx: A_FINAL.fx });
+    cBTop.setAttribute("transform", cB.getAttribute("transform"));
+    halfB.setAttribute("x", B_FINAL.x + dB); halfB.setAttribute("y", B_FINAL.y - 50000);
+
+    // the curtain halves ride along with the Cs (they stay joined at the middle until the end)
+    const slideL = t > T_IN ? dB : 0, slideR = t > T_IN ? dA : 0;
+    curtainL.setAttribute("x", L + slideL); curtainL.setAttribute("width", CX - L);
+    curtainR.setAttribute("x", CX + slideR); curtainR.setAttribute("width", RR - CX);
+
+    // the logo appears in the window as the Cs arrive, spins ONE full turn (cycling through the ISACA colours once),
+    // then rests in its normal colours for the pause before the Cs roll out
+    const fadeIn = clamp((t - T_IN * 0.55) / (T_IN * 0.45), 0, 1);
+    logo.setAttribute("opacity", fadeIn);
+    const lx = CX, ly = CY, s = 0.69;                      // logo size inside the window
+    logo.setAttribute("transform", "translate(" + lx + " " + ly + ") scale(" + s + ") translate(-100 -100)");
+    const sp = clamp((t - T_IN) / T_SPIN, 0, 1);
+    const spinE = 0.5 - 0.5 * Math.cos(Math.PI * sp);          // eases in and out so it settles softly
+    ring.setAttribute("transform", "rotate(" + (spinE * 360) + " 100 100)");
+    ringPath.setAttribute("fill", cycle(sp));                  // green round to green
+    letters.setAttribute("fill", cycle(0.8 - sp));             // navy round to navy, the other way
+  }
+
+  // ---------- run ----------
+  let raf = 0, t0 = 0, finished = false;
+  function done() {
+    if (finished) return; finished = true;
+    scene.style.display = "none";
+    frame.removeAttribute("aria-hidden"); mock.removeAttribute("aria-hidden");
+    try { parent !== window && parent.postMessage({ type: "isa-intro-done" }, "*"); } catch (e) {}
+    replayBtn.style.display = embed || params.get("replay") === "0" ? "none" : "block";
+  }
+  function tick(now) {
+    const t = (now - t0) / 1000;
+    render(Math.min(t, TOTAL));
+    if (t >= TOTAL) { done(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+  function start() {
+    cancelAnimationFrame(raf); finished = false;
+    replayBtn.style.display = "none"; scene.style.display = "block";
+    fit();
+    if (reduced) { render(TOTAL); done(); return; }
+    t0 = performance.now(); raf = requestAnimationFrame(tick);
+  }
+  replayBtn.addEventListener("click", start);
+
+  // for checking single frames: Isa_C_Intro.html?freeze=2.1
+  window.__render = function (t) { fit(); scene.style.display = "block"; render(t); };
+  window.__total = TOTAL;
+  if (params.has("freeze")) { fit(); render(parseFloat(params.get("freeze")) || 0); }
+  else start();
+})();
+</script>
+</body>
+</html>

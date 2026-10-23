@@ -9,16 +9,22 @@
    Notebook, left to right, a third of the screen each. "Enlarge" widens
    this panel to half the screen.
 
-   Two views (Matthew's approved mockup, 22 October 2026: Claude
-   outputs/Notebook records mockups.html), so the notebook stays easy to
-   read however many entries it holds:
-     - the INDEX: search, filters by kind, and one short line per entry,
-       grouped by month, newest first. "Add a note" opens when asked for.
-     - an ENTRY PAGE, opened from the index: the whole record (the
-       decision, when and by whom it was recorded, whether and when it was
-       shared, the topic, the question and Isa's cited answer) and its
-       follow-ups, with "Add a follow-up", "Share with the board" and
-       "Remove" for the writer's own entries.
+   Three views (Matthew's approved mockups: Claude outputs/Notebook
+   records mockups.html, 22 October 2026, made calmer in Claude
+   outputs/Calmer notebook mockups.html, 23 October 2026), so the
+   notebook stays easy to read however many entries it holds:
+     - the INDEX: one line under the title, the outgoing president's
+       handoff checklist as one summary card, one main button ("Add a
+       note"), and one entry per line, newest first. Rarer actions (print
+       all decisions, filters, who can see the notebook) are in "⋯".
+       Search and the filter chips appear once there are more than six
+       entries. One quiet privacy line sits at the bottom.
+     - the HANDOFF CHECKLIST on its own page, opened from its card.
+     - an ENTRY PAGE, opened from the index: the title, one line saying
+       when, who and the topic, the question and Isa's cited answer, the
+       follow-ups, and "Share with the board" as a switch (a privacy
+       choice, so never hidden). Print, email, change the topic, record
+       details and Remove are in "⋯".
 
    Where the data comes from: NotebookService (data/notebook.db), which
    also enforces who can read and write, so this panel can't show or
@@ -66,10 +72,14 @@
     </div>
 
     @* @key: each view gets a fresh scrolling area, so an entry page opens at its top. *@
-    <div class="isa-nb__body" @key="@(_openId ?? 0)">
+    <div class="isa-nb__body" @key="@(_checklistOpen ? "checklist" : _openId?.ToString() ?? "index")">
         @if (!_access.CanRead)
         {
             <p class="isa-nb__empty">Only your chapter's president can open the succession notebook.</p>
+        }
+        else if (_checklistOpen)
+        {
+            @ChecklistView()
         }
         else if (Open is NotebookEntry open)
         {
@@ -106,70 +116,58 @@
     private RenderFragment IndexView() => __builder =>
     {
         <p class="isa-nb__lede">What your chapter's presidents leave for the next one.</p>
-        <p class="isa-nb__privacy">
-            <span class="isa-nb__lock" aria-hidden="true"></span>
-            <span>@PrivacyLine</span>
-        </p>
 
-        @* The outgoing president's handoff checklist (only shown to a
-           president in the last 30 days of their term, or for 30 days
-           after it ends). *@
-        <HandoffChecklist OnAddToNotebook="StartNote" CanAddToNotebook="@_access.CanWrite" OnChanged="OnChecklistChanged" />
+        @* The outgoing president's handoff checklist, as one summary card
+           (only shown to a president in the last 30 days of their term, or
+           for 30 days after it ends). "Open the checklist" opens its page. *@
+        <HandoffChecklist Summary="true" OnOpenFull="OpenChecklist" CanAddToNotebook="@_access.CanWrite" />
 
-        @if (_access.CanWrite)
+        @if (_access.CanWrite && _adding)
         {
-            @if (!_adding)
-            {
-                <div class="isa-nb__bar">
-                    <button type="button" class="isa-nb__saveBtn" @onclick="() => { _adding = true; _justSaved = false; }">+ Add a note</button>
-                    @if (HasDecisions)
+            @* ---- Add a note ---- *@
+            <section class="isa-nb__add" aria-label="Add a note">
+                <h2 class="isa-nb__addTitle">Add a note</h2>
+                <div class="isa-nb__kinds" role="radiogroup" aria-label="What kind of note">
+                    @foreach (var cat in NotebookService.Categories)
                     {
-                        <button type="button" class="isa-nb__ghostBtn" @onclick="() => OpenSheet(PrintAll, null)">Print all decisions</button>
+                        <button type="button" role="radio" aria-checked="@(_category == cat ? "true" : "false")"
+                                class="isa-nb__kind @(_category == cat ? "is-on" : "")" @onclick="() => _category = cat">@CategoryLabel(cat)</button>
                     }
                 </div>
-                @if (_justSaved)
+                <textarea @ref="_noteBox" class="isa-nb__text" rows="3" maxlength="1000" aria-label="Your note"
+                          placeholder="@Placeholder(_category)" @bind="_draft" @bind:event="oninput" disabled="@_saving"></textarea>
+                <div class="isa-nb__addRow">
+                    <label class="isa-nb__share">
+                        <input type="checkbox" @bind="_shareDraft" disabled="@_saving" />
+                        <span>Share with the board</span>
+                    </label>
+                    <span class="isa-nb__btnPair">
+                        <button type="button" class="isa-nb__linkBtn" @onclick="CancelNote" disabled="@_saving">Cancel</button>
+                        <button type="button" class="isa-nb__saveBtn" @onclick="SaveNoteAsync"
+                                disabled="@(_saving || string.IsNullOrWhiteSpace(_draft))">@(_saving ? "Checking..." : "Save note")</button>
+                    </span>
+                </div>
+                @if (_problem is not null)
                 {
-                    <p class="isa-nb__saved" role="status">Saved to the notebook.</p>
+                    <p class="isa-nb__problem" role="status">@_problem</p>
                 }
-            }
-            else
-            {
-                @* ---- Add a note ---- *@
-                <section class="isa-nb__add" aria-label="Add a note">
-                    <h2 class="isa-nb__addTitle">Add a note</h2>
-                    <div class="isa-nb__kinds" role="radiogroup" aria-label="What kind of note">
-                        @foreach (var cat in NotebookService.Categories)
-                        {
-                            <button type="button" role="radio" aria-checked="@(_category == cat ? "true" : "false")"
-                                    class="isa-nb__kind @(_category == cat ? "is-on" : "")" @onclick="() => _category = cat">@CategoryLabel(cat)</button>
-                        }
-                    </div>
-                    <textarea @ref="_noteBox" class="isa-nb__text" rows="3" maxlength="1000" aria-label="Your note"
-                              placeholder="@Placeholder(_category)" @bind="_draft" @bind:event="oninput" disabled="@_saving"></textarea>
-                    <div class="isa-nb__addRow">
-                        <label class="isa-nb__share">
-                            <input type="checkbox" @bind="_shareDraft" disabled="@_saving" />
-                            <span>Share with the board</span>
-                        </label>
-                        <span class="isa-nb__btnPair">
-                            <button type="button" class="isa-nb__linkBtn" @onclick="CancelNote" disabled="@_saving">Cancel</button>
-                            <button type="button" class="isa-nb__saveBtn" @onclick="SaveNoteAsync"
-                                    disabled="@(_saving || string.IsNullOrWhiteSpace(_draft))">@(_saving ? "Checking..." : "Save note")</button>
-                        </span>
-                    </div>
-                    @if (_problem is not null)
-                    {
-                        <p class="isa-nb__problem" role="status">@_problem</p>
-                    }
-                </section>
-            }
+            </section>
         }
-
-        @if (!_access.CanWrite && HasDecisions)
+        else
         {
+            @* One main button; everything rarer is in "⋯". *@
             <div class="isa-nb__bar">
-                <button type="button" class="isa-nb__ghostBtn" @onclick="() => OpenSheet(PrintAll, null)">Print all decisions</button>
+                @if (_access.CanWrite)
+                {
+                    <button type="button" class="isa-nb__saveBtn" @onclick="() => { _adding = true; _justSaved = false; }">+ Add a note</button>
+                }
+                <span class="isa-nb__grow"></span>
+                @MoreMenu("index", IndexMenu())
             </div>
+            @if (_justSaved)
+            {
+                <p class="isa-nb__saved" role="status">Saved to the notebook.</p>
+            }
         }
 
         @if (TopLevel.Count == 0)
@@ -178,20 +176,31 @@
         }
         else
         {
-            <input type="search" class="isa-nb__search" placeholder="Search the notebook" aria-label="Search the notebook"
-                   @bind="_search" @bind:event="oninput" />
+            @if (ShowTools)
+            {
+                <input type="search" class="isa-nb__search" placeholder="Search the notebook" aria-label="Search the notebook"
+                       @bind="_search" @bind:event="oninput" />
 
-            <div class="isa-nb__chips" role="radiogroup" aria-label="Show">
-                @foreach (var (filter, label) in Filters)
-                {
-                    var count = TopLevel.Count(e => Matches(e, filter));
-                    if (filter != "all" && count == 0) continue;
-                    <button type="button" role="radio" aria-checked="@(_filter == filter ? "true" : "false")"
-                            class="isa-nb__kind @(_filter == filter ? "is-on" : "")" @onclick="() => _filter = filter">
-                        @label <span class="isa-nb__chipCount">@count</span>
-                    </button>
-                }
-            </div>
+                <div class="isa-nb__chips" role="radiogroup" aria-label="Show">
+                    @foreach (var (filter, label) in Filters)
+                    {
+                        var count = TopLevel.Count(e => Matches(e, filter));
+                        if (filter != "all" && count == 0) continue;
+                        <button type="button" role="radio" aria-checked="@(_filter == filter ? "true" : "false")"
+                                class="isa-nb__kind @(_filter == filter ? "is-on" : "")" @onclick="() => _filter = filter">
+                            @label <span class="isa-nb__chipCount">@count</span>
+                        </button>
+                    }
+                </div>
+            }
+            else if (_filter != "all")
+            {
+                @* A filter chosen from "⋯" (no chips on screen): say so, with a way back. *@
+                <p class="isa-nb__filtered" role="status">
+                    Showing @FilterPhrase(_filter) only.
+                    <button type="button" class="isa-nb__linkBtn" @onclick='() => _filter = "all"'>Show all</button>
+                </p>
+            }
 
             var shown = Shown;
             @if (shown.Count == 0)
@@ -200,51 +209,46 @@
             }
             else
             {
-                @if (_filter != "all" || !string.IsNullOrWhiteSpace(_search))
-                {
-                    <p class="isa-nb__month">@(shown.Count == 1 ? "1 result" : $"{shown.Count} results")</p>
-                }
-                @foreach (var month in shown.GroupBy(e => new DateOnly(e.OnDate.Year, e.OnDate.Month, 1)))
-                {
-                    @if (_filter == "all" && string.IsNullOrWhiteSpace(_search))
+                <div class="isa-nb__listHead">
+                    <h2>@ListHeading(shown)</h2>
+                    <span>@shown.Count</span>
+                </div>
+                <ul class="isa-nb__index">
+                    @foreach (var e in shown)
                     {
-                        <p class="isa-nb__month">@month.Key.ToString("MMMM yyyy", CultureInfo.InvariantCulture)</p>
-                    }
-                    <ul class="isa-nb__index" aria-label="@month.Key.ToString("MMMM yyyy", CultureInfo.InvariantCulture)">
-                        @foreach (var e in month)
-                        {
-                            var followUps = FollowUpsOf(e).Count;
-                            <li>
-                                <button type="button" class="isa-nb__row" @onclick="() => OpenEntry(e)">
-                                    <span class="isa-nb__date" aria-hidden="true"><b>@e.OnDate.Day</b>@e.OnDate.ToString("MMM", CultureInfo.InvariantCulture)</span>
-                                    <span class="isa-nb__rowMain">
-                                        <span class="isa-nb__rowTitle">@e.Title</span>
-                                        <span class="isa-nb__rowMeta">
-                                            <span class="isa-nb__tag @(e.KindLabel == "Decision" ? "is-decision" : e.KindLabel == "Unfinished" ? "is-unfinished" : "")">@e.KindLabel</span>
-                                            <span>@e.Topic</span>
-                                            @if (e.Shared)
-                                            {
-                                                <span class="isa-nb__sharedTag">Shared</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="isa-nb__privateTag">Private</span>
-                                            }
-                                            @if (followUps > 0)
-                                            {
-                                                <span>· @(followUps == 1 ? "1 follow-up" : $"{followUps} follow-ups")</span>
-                                            }
-                                        </span>
-                                        <span class="isa-nb__sr">@e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)</span>
+                        var followUps = FollowUpsOf(e).Count;
+                        <li>
+                            <button type="button" class="isa-nb__row" @onclick="() => OpenEntry(e)">
+                                <span class="isa-nb__rowMain">
+                                    <span class="isa-nb__rowTitle">@e.Title</span>
+                                    <span class="isa-nb__rowMeta">
+                                        @e.KindLabel · @e.Topic · @ShortDate(e.OnDate)@(followUps == 0 ? "" : followUps == 1 ? " · 1 follow-up" : $" · {followUps} follow-ups")
+                                        @if (e.Shared && _access.SeesAll)
+                                        {
+                                            <span class="isa-nb__shared"><span class="isa-nb__dot" aria-hidden="true"></span>Shared with the board</span>
+                                        }
                                     </span>
-                                    <span class="isa-nb__chev" aria-hidden="true">›</span>
-                                </button>
-                            </li>
-                        }
-                    </ul>
-                }
+                                    <span class="isa-nb__sr">@e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)</span>
+                                </span>
+                                <span class="isa-nb__chev" aria-hidden="true">›</span>
+                            </button>
+                        </li>
+                    }
+                </ul>
             }
         }
+
+        @PrivacyFoot(PrivacyLine)
+    };
+
+    // ================================================================
+    // The handoff checklist on its own page
+    // ================================================================
+
+    private RenderFragment ChecklistView() => __builder =>
+    {
+        <button type="button" class="isa-nb__back" @onclick="CloseChecklist">‹ Notebook</button>
+        <HandoffChecklist OnAddToNotebook="StartNote" CanAddToNotebook="@_access.CanWrite" OnChanged="OnChecklistChanged" />
     };
 
     // ================================================================
@@ -255,100 +259,121 @@
     {
         var mine = e.AuthorId == _personId && _access.CanWrite;
         var followUps = FollowUpsOf(e);
+        var askedTitle = string.IsNullOrEmpty(e.Note);   // a saved answer without a decision: its title is the question
 
-        <button type="button" class="isa-nb__back" @onclick="CloseEntry">‹ All entries</button>
+        <div class="isa-nb__pageTop">
+            <button type="button" class="isa-nb__back" @onclick="CloseEntry">‹ Notebook</button>
+            @MoreMenu("entry", EntryMenu(e, mine))
+        </div>
 
-        <section class="isa-nb__card" aria-label="@e.KindLabel">
-            <p class="isa-nb__cardKicker">@e.KindLabel · @e.Topic</p>
-            @if (!string.IsNullOrEmpty(e.Note))
+        <article class="isa-nb__page" aria-labelledby="isa-nb-entry-title">
+            <p class="isa-nb__kindLine">@e.KindLabel</p>
+            <h2 class="isa-nb__headline" id="isa-nb-entry-title">@e.Title</h2>
+            <p class="isa-nb__byline">@e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) · @e.AuthorName · @e.Topic</p>
+
+            @if (_changingTopic && mine)
             {
-                <p class="isa-nb__headline">@e.Note</p>
-            }
-            <dl class="isa-nb__facts">
-                <dt>Recorded</dt><dd>@NotebookService.RecordedLabel(e, _access.TimeZone)</dd>
-                <dt>By</dt><dd>@e.AuthorName, @e.AuthorRole</dd>
-                <dt>Shared</dt>
-                <dd>
-                    @if (e.Shared)
-                    {
-                        <span class="isa-nb__sharedTag">With the board</span>
-                        @(e.SharedOn is DateOnly day ? $" on {day.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}" : "")
-                    }
-                    else
-                    {
-                        <span class="isa-nb__privateTag">Private</span> <span>only presidents see it</span>
-                    }
-                </dd>
-                <dt>Topic</dt>
-                <dd>
-                    @if (mine)
-                    {
-                        <select class="isa-nb__select" aria-label="Topic" value="@e.Topic" @onchange="ev => SetTopic(e, ev.Value?.ToString())">
-                            @foreach (var t in NotebookService.Topics)
-                            {
-                                <option value="@t">@t</option>
-                            }
-                        </select>
-                    }
-                    else
-                    {
-                        @e.Topic
-                    }
-                </dd>
-                <dt>Record</dt><dd>@NotebookService.RecordNumber(e)</dd>
-            </dl>
-        </section>
-
-        @if (e.Kind == "saved_answer")
-        {
-            <section class="isa-nb__card" aria-label="What was asked">
-                <p class="isa-nb__cardKicker">@(e.Question is null ? "Isa's answer" : "What was asked")</p>
-                @if (e.Question is not null)
-                {
-                    <p class="isa-nb__q">@e.Question</p>
-                }
-                <p class="isa-nb__a">@e.Answer</p>
-                @if (e.Sources.Count > 0)
-                {
-                    <ul class="isa-nb__sources" aria-label="Sources">
-                        @foreach (var s in e.Sources)
+                <div class="isa-nb__inline">
+                    <label for="isa-nb-topic">Topic</label>
+                    <select id="isa-nb-topic" class="isa-nb__select" value="@e.Topic" @onchange="ev => SetTopic(e, ev.Value?.ToString())">
+                        @foreach (var t in NotebookService.Topics)
                         {
-                            <li>@s.Document &middot; @s.Section@(s.Page is "" or "n/a" ? "" : $" · p. {s.Page}")</li>
+                            <option value="@t">@t</option>
                         }
-                    </ul>
-                }
-            </section>
-        }
-
-        <section class="isa-nb__card" aria-label="Follow-ups">
-            <p class="isa-nb__cardKicker">Follow-ups (@followUps.Count)</p>
-            @if (followUps.Count == 0 && !_addingFollowUp)
-            {
-                <p class="isa-nb__empty">Nothing added since. Follow-ups keep later news about this entry together.</p>
+                    </select>
+                    <button type="button" class="isa-nb__linkBtn" @onclick="() => _changingTopic = false">Done</button>
+                </div>
             }
+
+            @if (_showDetails)
+            {
+                <div class="isa-nb__inline is-details">
+                    <dl class="isa-nb__facts">
+                        <dt>Recorded</dt><dd>@NotebookService.RecordedLabel(e, _access.TimeZone)</dd>
+                        <dt>By</dt><dd>@e.AuthorName, @e.AuthorRole</dd>
+                        <dt>Shared</dt>
+                        <dd>@(e.Shared ? (e.SharedOn is DateOnly day ? $"With the board, on {day.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}" : "With the board") : "No, only presidents see it")</dd>
+                        <dt>Record</dt><dd>@NotebookService.RecordNumber(e)</dd>
+                    </dl>
+                    <button type="button" class="isa-nb__linkBtn" @onclick="() => _showDetails = false">Hide details</button>
+                </div>
+            }
+
+            @if (e.Kind == "saved_answer")
+            {
+                <section class="isa-nb__section" aria-label="@(askedTitle ? "Isa's answer" : "What was asked")">
+                    @if (!askedTitle && e.Question is not null)
+                    {
+                        <p class="isa-nb__sectionHead">What was asked</p>
+                        <p class="isa-nb__q">@e.Question</p>
+                    }
+                    else
+                    {
+                        <p class="isa-nb__sectionHead">Isa's answer</p>
+                    }
+                    <p class="isa-nb__a">@e.Answer</p>
+                    @if (e.Sources.Count > 0)
+                    {
+                        <ul class="isa-nb__sources" aria-label="Sources">
+                            @foreach (var s in e.Sources)
+                            {
+                                <li>@s.Document &middot; @s.Section@(s.Page is "" or "n/a" ? "" : $" · p. {s.Page}")</li>
+                            }
+                        </ul>
+                    }
+                </section>
+            }
+
             @if (followUps.Count > 0)
             {
-                <ol class="isa-nb__thread">
-                    @foreach (var f in followUps)
-                    {
-                        <li>
-                            <p class="isa-nb__note">@f.Note</p>
-                            <p class="isa-nb__meta">
-                                @NotebookService.RecordedLabel(f, _access.TimeZone) · @f.AuthorName, @f.AuthorRole
-                                @if (!f.Shared && _access.SeesAll)
-                                {
-                                    <span> · </span><span class="isa-nb__privateTag">Private</span>
-                                }
-                            </p>
-                        </li>
-                    }
-                </ol>
+                <section class="isa-nb__section" aria-label="Follow-ups">
+                    <p class="isa-nb__sectionHead">Follow-ups</p>
+                    <ol class="isa-nb__thread">
+                        @foreach (var f in followUps)
+                        {
+                            <li>
+                                <p class="isa-nb__note">@f.Note</p>
+                                <p class="isa-nb__meta">
+                                    @f.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) · @f.AuthorName
+                                    @if (!f.Shared && _access.SeesAll && e.Shared)
+                                    {
+                                        <span> · not shared</span>
+                                    }
+                                </p>
+                            </li>
+                        }
+                    </ol>
+                </section>
             }
+        </article>
+
+        <div class="isa-nb__own">
+            @if (mine)
+            {
+                @* Sharing is a privacy choice, so it stays on the page, never in "⋯". *@
+                <button type="button" role="switch" aria-checked="@(e.Shared ? "true" : "false")" class="isa-nb__switchRow"
+                        @onclick="() => SetShared(e, !e.Shared)">
+                    <span>
+                        Share with the board
+                        <small>@ShareHint(e)</small>
+                    </span>
+                    <span class="isa-nb__switch @(e.Shared ? "is-on" : "")" aria-hidden="true"></span>
+                </button>
+            }
+            else
+            {
+                <p class="isa-nb__status">
+                    @(!_access.SeesAll ? "Your president shared this with the board."
+                      : e.Shared ? "Shared with the board by the person who wrote it."
+                      : "Private: only presidents see it.")
+                </p>
+            }
+
             @if (_access.CanWrite)
             {
                 @if (!_addingFollowUp)
                 {
-                    <button type="button" class="isa-nb__linkBtn" @onclick="() => StartFollowUp(e)">+ Add a follow-up</button>
+                    <button type="button" class="isa-nb__addLink" @onclick="() => StartFollowUp(e)">+ Add a follow-up</button>
                 }
                 else
                 {
@@ -371,48 +396,90 @@
                     }
                 }
             }
-        </section>
 
-        <div class="isa-nb__actions">
-            <button type="button" class="isa-nb__ghostBtn" @onclick="() => OpenSheet(PrintOne, e)">Print or save PDF</button>
-            @if (_access.CanWrite)
+            @if (_emailSaved == e.EntryId)
             {
-                <button type="button" class="isa-nb__ghostBtn" @onclick="() => OpenSheet(EmailOne, e)">Email this record</button>
+                <p class="isa-nb__saved" role="status">Saved in Isa. In this prototype, nothing is sent by email.</p>
+            }
+
+            @if (_confirmRemove == e.EntryId)
+            {
+                <p class="isa-nb__confirm" role="alert">
+                    Remove this entry? It disappears from the notebook; Isa keeps a record that it was removed.
+                    <span class="isa-nb__btnPair">
+                        <button type="button" class="isa-nb__linkBtn" @onclick="() => _confirmRemove = null">Keep</button>
+                        <button type="button" class="isa-nb__ghostBtn" @onclick="() => Remove(e)">Remove</button>
+                    </span>
+                </p>
             }
         </div>
-        @if (_emailSaved == e.EntryId)
-        {
-            <p class="isa-nb__saved" role="status">Saved in Isa. In this prototype, nothing is sent by email.</p>
-        }
+    };
 
-        @if (mine)
-        {
-            <div class="isa-nb__own">
-                <label class="isa-nb__share">
-                    <input type="checkbox" checked="@e.Shared" @onchange="ev => SetShared(e, (bool)ev.Value!)" />
-                    <span>Share with the board</span>
-                </label>
-                @if (_confirmRemove == e.EntryId)
-                {
-                    <span class="isa-nb__confirm">
-                        Remove this entry?
-                        <button type="button" class="isa-nb__linkBtn" @onclick="() => Remove(e)">Remove</button>
-                        <button type="button" class="isa-nb__linkBtn" @onclick="() => _confirmRemove = null">Keep</button>
-                    </span>
-                }
-                else
-                {
-                    <button type="button" class="isa-nb__linkBtn" @onclick="() => _confirmRemove = e.EntryId">Remove</button>
-                }
-            </div>
-        }
+    // ================================================================
+    // The "⋯" menus and the privacy line
+    // ================================================================
 
-        <p class="isa-nb__privacy">
-            <span class="isa-nb__lock" aria-hidden="true"></span>
-            <span>@(!_access.SeesAll ? "Your president shared this with the board."
-                   : e.Shared ? "Shared with the board: other board members see this entry, without the question asked."
-                   : "Only presidents see this entry, unless its writer shares it with the board.")</span>
-        </p>
+    private record MenuItem(string Label, Action Do, bool Danger = false);
+
+    // A "⋯" button with its small menu. Choosing an item closes the menu;
+    // tapping anywhere else closes it too.
+    private RenderFragment MoreMenu(string which, IReadOnlyList<MenuItem> items) => __builder =>
+    {
+        if (items.Count == 0) return;
+        var open = _menu == which;
+        <div class="isa-nb__more">
+            <button type="button" class="isa-nb__moreBtn @(open ? "is-on" : "")" aria-haspopup="menu" aria-expanded="@(open ? "true" : "false")"
+                    aria-label="More options" title="More" @onclick="() => _menu = open ? null : which">
+                <span aria-hidden="true">⋯</span>
+            </button>
+            @if (open)
+            {
+                <div class="isa-nb__menuShade" @onclick="() => _menu = null"></div>
+                <div class="isa-nb__menu" role="menu">
+                    @foreach (var item in items)
+                    {
+                        <button type="button" role="menuitem" class="isa-nb__menuItem @(item.Danger ? "is-danger" : "")"
+                                @onclick="() => { _menu = null; item.Do(); }">@item.Label</button>
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private List<MenuItem> IndexMenu()
+    {
+        var items = new List<MenuItem>();
+        if (HasDecisions) items.Add(new("Print all decisions", () => OpenSheet(PrintAll, null)));
+        if (!ShowTools)
+        {
+            // With six entries or fewer there are no filter chips on screen, so the filters live here.
+            if (_filter != "decision" && TopLevel.Any(e => Matches(e, "decision"))) items.Add(new("Show decisions only", () => _filter = "decision"));
+            if (_access.SeesAll && _filter != "shared" && TopLevel.Any(e => e.Shared)) items.Add(new("Show shared entries only", () => _filter = "shared"));
+            if (_filter != "all") items.Add(new("Show all entries", () => _filter = "all"));
+        }
+        items.Add(new("Who can see this notebook", () => _showPrivacy = true));
+        return items;
+    }
+
+    private List<MenuItem> EntryMenu(NotebookEntry e, bool mine)
+    {
+        var items = new List<MenuItem> { new("Print or save as PDF", () => OpenSheet(PrintOne, e)) };
+        if (_access.CanWrite) items.Add(new("Email this record", () => OpenSheet(EmailOne, e)));
+        if (mine) items.Add(new("Change the topic", () => { _changingTopic = true; _showDetails = false; }));
+        items.Add(new("Record details", () => { _showDetails = true; _changingTopic = false; }));
+        if (mine) items.Add(new("Remove from the notebook", () => _confirmRemove = e.EntryId, Danger: true));
+        return items;
+    }
+
+    // One quiet line at the bottom of the index. ⓘ (or "Who can see this
+    // notebook" in "⋯") shows the full rule.
+    private RenderFragment PrivacyFoot(string full) => __builder =>
+    {
+        <div class="isa-nb__foot">
+            <button type="button" class="isa-nb__info" aria-expanded="@(_showPrivacy ? "true" : "false")"
+                    aria-label="Who can see this notebook" title="Who can see this notebook" @onclick="() => _showPrivacy = !_showPrivacy">i</button>
+            <span>@(_showPrivacy ? full : ShortPrivacyLine)</span>
+        </div>
     };
 
     // ================================================================
@@ -552,11 +619,22 @@
     /// <summary>Called by the close button. The chat widget closes this panel and slides the others back.</summary>
     [Parameter] public EventCallback OnClose { get; set; }
 
-    /// <summary>Called by the Enlarge button. The chat widget widens this panel to half the screen, or back.</summary>
+    /// <summary>
+    /// Called by the Enlarge / "Make smaller" button. The chat widget widens
+    /// this panel to half the screen, or makes it a third like the others.
+    /// The notebook opens at half when Today is closed (Matthew, 23 October 2026).
+    /// </summary>
     [Parameter] public EventCallback OnToggleEnlarge { get; set; }
 
     /// <summary>True while this panel is enlarged (the button shows "Make smaller").</summary>
     [Parameter] public bool Enlarged { get; set; }
+
+    /// <summary>
+    /// Goes up by one each time "Open the checklist" is tapped in the chat's
+    /// Today note, so the panel shows the handoff checklist page. The chat
+    /// widget puts it back to 0 when the notebook is opened any other way.
+    /// </summary>
+    [Parameter] public int ChecklistRequest { get; set; }
 
     /// <summary>Called when a handoff checklist item is marked, so the chat's Today note can update.</summary>
     [Parameter] public EventCallback OnChecklistChanged { get; set; }
@@ -579,9 +657,21 @@
     private string _search = "";
     private string _filter = "all";
 
-    // The entry page that is open, if any.
+    // The entry page that is open, if any, or the handoff checklist page.
     private long? _openId;
     private NotebookEntry? Open => _openId is long id ? _entries.FirstOrDefault(e => e.EntryId == id) : null;
+    private bool _checklistOpen;
+    private int _seenChecklistRequest;
+
+    // Which "⋯" menu is open ("index" or "entry"), and what it has shown.
+    private string? _menu;
+    private bool _showPrivacy;     // the full privacy rule at the bottom of the index
+    private bool _changingTopic;   // the topic picker on an entry page
+    private bool _showDetails;     // record details on an entry page
+
+    // Search and the filter chips only earn their place in a longer notebook.
+    private const int ToolsAfter = 6;
+    private bool ShowTools => TopLevel.Count > ToolsAfter;
 
     // Writing a note or a follow-up (one box at a time).
     private bool _adding;
@@ -642,6 +732,7 @@
     private async Task StartNote(string kind)
     {
         _openId = null;
+        _checklistOpen = false;
         _adding = true;
         _category = kind;
         _justSaved = false;
@@ -654,15 +745,37 @@
     private void OpenEntry(NotebookEntry e)
     {
         _openId = e.EntryId;
-        _confirmRemove = null;
-        _emailSaved = null;
-        CancelNote();
+        ResetPage();
     }
 
     private void CloseEntry()
     {
         _openId = null;
         _sheet = null;
+        ResetPage();
+    }
+
+    private void OpenChecklist()
+    {
+        _checklistOpen = true;
+        _openId = null;
+        ResetPage();
+    }
+
+    private void CloseChecklist()
+    {
+        _checklistOpen = false;
+        ResetPage();
+    }
+
+    // A fresh page: no menu open, no half-finished note, nothing expanded.
+    private void ResetPage()
+    {
+        _menu = null;
+        _confirmRemove = null;
+        _emailSaved = null;
+        _changingTopic = false;
+        _showDetails = false;
         CancelNote();
     }
 
@@ -695,6 +808,11 @@
             _sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
             _myEmail = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
         }
+        if (ChecklistRequest != _seenChecklistRequest)
+        {
+            _seenChecklistRequest = ChecklistRequest;
+            if (ChecklistRequest > 0) OpenChecklist();
+        }
         Reload();
     }
 
@@ -710,6 +828,36 @@
         !_access.SeesAll ? "You're seeing the entries your president shared with the board."
         : _access.HandoffEnds is DateOnly ends ? $"Only presidents see this notebook, unless an entry is shared with the board. You can add to it until {DayLabel(ends)}."
         : "Only you see this notebook, unless you share an entry with the board. The outgoing president can also see it for 30 days after their term.";
+
+    // The one quiet line at the bottom of the index (PrivacyLine is the full rule).
+    private string ShortPrivacyLine =>
+        !_access.SeesAll ? "You're seeing the entries your president shared with the board."
+        : "Only presidents see this, unless you share an entry.";
+
+    // Under "Share with the board" on an entry page.
+    private static string ShareHint(NotebookEntry e) =>
+        e.Shared && e.SharedOn is DateOnly day
+            ? $"Shared on {day.ToString("d MMMM", CultureInfo.InvariantCulture)}.{(e.Question is null ? "" : " Board members see it without your question.")}"
+        : e.Question is not null ? "Board members would see it without your question."
+        : "Other board members would see this entry.";
+
+    // The heading over the list: whose notes these are.
+    private string ListHeading(List<NotebookEntry> shown)
+    {
+        if (!_access.SeesAll) return "Shared with the board";
+        var authors = shown.Select(e => e.AuthorId).Distinct().ToList();
+        if (authors.Count == 1 && authors[0] == _personId) return "Your notes";
+        if (authors.Count == 1 && _access.HandoffEnds is null) return $"Left for you by {shown[0].AuthorName}";
+        return "Your chapter's notes";
+    }
+
+    // "3 Jul", or "3 Jul 2025" for an entry from another year.
+    private string ShortDate(DateOnly d) =>
+        d.ToString(d.Year == Settings.Today.Year ? "d MMM" : "d MMM yyyy", CultureInfo.InvariantCulture);
+
+    // "Showing decisions only", "Showing shared entries only" (a filter chosen from "⋯").
+    private static string FilterPhrase(string filter) =>
+        filter == "shared" ? "shared entries" : (Filters.FirstOrDefault(f => f.Filter == filter).Label ?? "all entries").ToLowerInvariant();
 
     private Task SaveNoteAsync() => SaveAsync(parentId: null);
 

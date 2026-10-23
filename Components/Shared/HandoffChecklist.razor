@@ -2,8 +2,15 @@
    HandoffChecklist.razor
 
    Onboarding feature, piece A (see ONBOARDING-FEATURE.md): the outgoing
-   president's handoff checklist, at the top of the succession notebook
-   panel (NotebookPanel.razor).
+   president's handoff checklist, in the succession notebook panel
+   (NotebookPanel.razor). Two forms (Matthew's approved mockup, 23
+   October 2026: Claude outputs/Calmer notebook mockups.html):
+     - Summary="true": one card at the top of the notebook (progress, the
+       next item, the time left, "Open the checklist"), so the notebook's
+       entries still show without scrolling.
+     - Summary="false": the whole checklist on its own page, grouped by
+       the guidebook section each item comes from, with the next item
+       marked.
 
    - Shown to a president in the last 30 days of their term, and to a
      former president for the 30 days after it ends (HandoffService).
@@ -26,75 +33,109 @@
 @inject HandoffService Handoff
 @inject ProgressService Progress
 
-@if (_ctx is not null)
+@if (_ctx is not null && Summary)
 {
-    var doneCount = _ctx.Steps.Count(s => _done.ContainsKey(s.StepId));
-    <section class="isa-handoff" aria-label="Your handoff checklist">
+    var doneCount = DoneCount;
+    var next = NextStep;
+    <section class="isa-handoff is-summary" aria-label="Your handoff checklist">
         <div class="isa-handoff__head">
-            <h2 class="isa-handoff__title">Your handoff checklist</h2>
+            <h2 class="isa-handoff__cardTitle">Your handoff checklist</h2>
             <span class="isa-handoff__count">@doneCount of @_ctx.Steps.Count done</span>
         </div>
-        <div class="isa-handoff__bar" role="progressbar" aria-valuemin="0" aria-valuemax="@_ctx.Steps.Count" aria-valuenow="@doneCount">
+        <div class="isa-handoff__bar" role="progressbar" aria-valuemin="0" aria-valuemax="@_ctx.Steps.Count" aria-valuenow="@doneCount" aria-label="Handoff checklist progress">
             <span style="width: @(doneCount * 100 / _ctx.Steps.Count)%"></span>
         </div>
-        <p class="isa-handoff__when">@WhenLine</p>
-        <p class="isa-handoff__from">From the President Guidebook (August 2026): its handover items, in its own words.</p>
-
-        <ol class="isa-handoff__list">
-            @foreach (var step in _ctx.Steps)
+        <p class="isa-handoff__next">
+            @if (next is not null)
             {
-                var isDone = _done.TryGetValue(step.StepId, out var d);
-                var open = _openId == step.StepId;
-                <li class="isa-handoff__item @(isDone ? "is-done" : "") @(open ? "is-open" : "")">
-                    <button type="button" class="isa-handoff__row" aria-expanded="@(open ? "true" : "false")"
-                            @onclick="() => Toggle(step.StepId)">
-                        <span class="isa-handoff__check @(isDone ? "is-on" : "")" aria-hidden="true"></span>
-                        <span class="isa-handoff__stepTitle">@step.Title<span class="visually-hidden">@(isDone ? " (done)" : "")</span></span>
-                        <span class="isa-handoff__chev" aria-hidden="true"></span>
-                    </button>
-
-                    @if (open)
-                    {
-                        <div class="isa-handoff__body">
-                            @{ var (lead, examples) = SplitExamples(step.Text); }
-                            <blockquote class="isa-handoff__quote">
-                                <p>@lead</p>
-                                @if (examples.Count > 0)
-                                {
-                                    <p class="isa-handoff__exLead">Examples may include:</p>
-                                    <ul>
-                                        @foreach (var ex in examples)
-                                        {
-                                            <li>@ex</li>
-                                        }
-                                    </ul>
-                                }
-                            </blockquote>
-                            <p class="isa-handoff__source">
-                                <span class="isa-handoff__sourceIcon" aria-hidden="true"></span>
-                                @step.Source
-                            </p>
-                            <div class="isa-handoff__actions">
-                                @if (isDone)
-                                {
-                                    <span class="isa-handoff__doneOn">Done on @d!.DoneOn?.ToString("ddd d MMMM", CultureInfo.InvariantCulture)</span>
-                                    <button type="button" class="isa-handoff__link" @onclick="() => MarkNotDone(step)">Mark as not done</button>
-                                }
-                                else
-                                {
-                                    <button type="button" class="isa-handoff__primary" @onclick="() => MarkDone(step)">Mark as done</button>
-                                }
-                                @if (step.NotebookKind is not null && CanAddToNotebook)
-                                {
-                                    <button type="button" class="isa-handoff__secondary" @onclick="() => OnAddToNotebook.InvokeAsync(step.NotebookKind)">Add to the notebook</button>
-                                }
-                            </div>
-                            <StepHistoryList Entries="_history" />
-                        </div>
-                    }
-                </li>
+                <span>Next: <b>@next.Title</b></span>
             }
-        </ol>
+            else
+            {
+                <span>All @_ctx.Steps.Count items are done. Thank you.</span>
+            }
+        </p>
+        <div class="isa-handoff__foot">
+            <span>@TimeLeftLine</span>
+            <button type="button" class="isa-handoff__open" @onclick="OnOpenFull">Open the checklist ›</button>
+        </div>
+    </section>
+}
+else if (_ctx is not null)
+{
+    var doneCount = DoneCount;
+    var next = NextStep;
+    <section class="isa-handoff is-page" aria-labelledby="isa-handoff-title">
+        <h2 class="isa-handoff__title" id="isa-handoff-title">Your handoff checklist</h2>
+        <p class="isa-handoff__from">The President Guidebook's handover items (August 2026), in its own words. @doneCount of @_ctx.Steps.Count done, @TimeLeftShort.</p>
+        <div class="isa-handoff__bar" role="progressbar" aria-valuemin="0" aria-valuemax="@_ctx.Steps.Count" aria-valuenow="@doneCount" aria-label="Handoff checklist progress">
+            <span style="width: @(doneCount * 100 / _ctx.Steps.Count)%"></span>
+        </div>
+
+        @foreach (var group in Groups)
+        {
+            <p class="isa-handoff__group">@group.Label</p>
+            <ol class="isa-handoff__list">
+                @foreach (var step in group.Steps)
+                {
+                    var isDone = _done.TryGetValue(step.StepId, out var d);
+                    var open = _openId == step.StepId;
+                    var isNext = next?.StepId == step.StepId;
+                    <li class="isa-handoff__item @(isDone ? "is-done" : "") @(open ? "is-open" : "") @(isNext ? "is-next" : "")">
+                        <button type="button" class="isa-handoff__row" aria-expanded="@(open ? "true" : "false")"
+                                @onclick="() => Toggle(step.StepId)">
+                            <span class="isa-handoff__check @(isDone ? "is-on" : "")" aria-hidden="true"></span>
+                            <span class="isa-handoff__stepTitle">@step.Title<span class="visually-hidden">@(isDone ? " (done)" : isNext ? " (next)" : "")</span></span>
+                            @if (isNext && !open)
+                            {
+                                <span class="isa-handoff__nextTag" aria-hidden="true">Next</span>
+                            }
+                            <span class="isa-handoff__chev" aria-hidden="true"></span>
+                        </button>
+
+                        @if (open)
+                        {
+                            <div class="isa-handoff__body">
+                                @{ var (lead, examples) = SplitExamples(step.Text); }
+                                <blockquote class="isa-handoff__quote">
+                                    <p>@lead</p>
+                                    @if (examples.Count > 0)
+                                    {
+                                        <p class="isa-handoff__exLead">Examples may include:</p>
+                                        <ul>
+                                            @foreach (var ex in examples)
+                                            {
+                                                <li>@ex</li>
+                                            }
+                                        </ul>
+                                    }
+                                </blockquote>
+                                <p class="isa-handoff__source">
+                                    <span class="isa-handoff__sourceIcon" aria-hidden="true"></span>
+                                    @step.Source
+                                </p>
+                                <div class="isa-handoff__actions">
+                                    @if (isDone)
+                                    {
+                                        <span class="isa-handoff__doneOn">Done on @d!.DoneOn?.ToString("ddd d MMMM", CultureInfo.InvariantCulture)</span>
+                                        <button type="button" class="isa-handoff__link" @onclick="() => MarkNotDone(step)">Mark as not done</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="isa-handoff__primary" @onclick="() => MarkDone(step)">Mark as done</button>
+                                    }
+                                    @if (step.NotebookKind is not null && CanAddToNotebook)
+                                    {
+                                        <button type="button" class="isa-handoff__secondary" @onclick="() => OnAddToNotebook.InvokeAsync(step.NotebookKind)">Add to the notebook</button>
+                                    }
+                                </div>
+                                <StepHistoryList Entries="_history" />
+                            </div>
+                        }
+                    </li>
+                }
+            </ol>
+        }
     </section>
 }
 
@@ -111,6 +152,12 @@
     /// <summary>False when the person can no longer write to the notebook, so "Add to the notebook" is hidden.</summary>
     [Parameter] public bool CanAddToNotebook { get; set; } = true;
 
+    /// <summary>True for the one-card summary at the top of the notebook; false for the whole checklist on its own page.</summary>
+    [Parameter] public bool Summary { get; set; }
+
+    /// <summary>Called by the summary card's "Open the checklist". The notebook panel opens the checklist page.</summary>
+    [Parameter] public EventCallback OnOpenFull { get; set; }
+
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 
     private HandoffContext? _ctx;
@@ -126,17 +173,43 @@
         if (_ctx is not null) _done = Progress.GetCompletedSteps(_ctx.PersonId);
     }
 
-    private string WhenLine
+    private int DoneCount => _ctx is null ? 0 : _ctx.Steps.Count(s => _done.ContainsKey(s.StepId));
+
+    // The first item, in the guidebook's order, that isn't done yet.
+    private HandoffStep? NextStep => _ctx?.Steps.FirstOrDefault(s => !_done.ContainsKey(s.StepId));
+
+    private static string Day(DateOnly x) => x.ToString("d MMMM", CultureInfo.InvariantCulture);
+    private string TimeLeftShort => _ctx is null ? "" : (_ctx.DaysLeft == 1 ? "1 day left" : $"{_ctx.DaysLeft} days left");
+
+    // The summary card's time line: until when the outgoing president can
+    // still work through the checklist and add to the notebook.
+    private string TimeLeftLine =>
+        _ctx is null ? ""
+        : _ctx.TermHasEnded ? $"{TimeLeftShort}, until {Day(_ctx.WindowEnds)}"
+        : $"Your term ends {Day(_ctx.Term.TermEnd)} ({TimeLeftShort})";
+
+    // The checklist page groups the items by the guidebook section they come
+    // from, e.g. "Turnover Procedures · pp. 12–13", in the guidebook's order.
+    private List<(string Label, List<HandoffStep> Steps)> Groups =>
+        _ctx is null ? new()
+        : _ctx.Steps.GroupBy(s => SectionOf(s.Source))
+            .Select(g => (Label: $"{g.Key} · {PagesOf(g.Select(s => s.Source))}", Steps: g.ToList()))
+            .ToList();
+
+    // "ISACA President Guidebook (August 2026), p. 12 (Turnover Procedures)" -> "Turnover Procedures"
+    private static string SectionOf(string source)
     {
-        get
-        {
-            if (_ctx is null) return "";
-            string Day(DateOnly x) => x.ToString("d MMMM", CultureInfo.InvariantCulture);
-            string Days(int n) => n == 1 ? "1 day" : $"{n} days";
-            return _ctx.TermHasEnded
-                ? $"Your term ended on {Day(_ctx.Term.TermEnd)}. You can work through this, and add to the notebook, until {Day(_ctx.WindowEnds)} ({Days(_ctx.DaysLeft)} left)."
-                : $"Your term ends on {Day(_ctx.Term.TermEnd)} ({Days(_ctx.DaysLeft)} left). Hand over what your successor will need.";
-        }
+        var m = Regex.Match(source, @"\(([^()]*)\)\s*$");
+        return m.Success ? m.Groups[1].Value : "President Guidebook";
+    }
+
+    // The page numbers of a group's sources, as "p. 8" or "pp. 12–13".
+    private static string PagesOf(IEnumerable<string> sources)
+    {
+        var pages = sources.SelectMany(s => Regex.Matches(Regex.Replace(s, @"\(August \d{4}\)", ""), @"\d+").Select(m => int.Parse(m.Value))).ToList();
+        if (pages.Count == 0) return "";
+        var (lo, hi) = (pages.Min(), pages.Max());
+        return lo == hi ? $"p. {lo}" : $"pp. {lo}–{hi}";
     }
 
     private void Toggle(string stepId)
