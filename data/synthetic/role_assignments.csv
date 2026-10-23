@@ -13,3 +13,7 @@ R-0011,P-0010,C-009,Member,2026-01-01,2026-12-31,Member
 R-0012,P-0012,C-001,President,2025-07-01,2026-06-30,Leadership
 R-0013,P-0012,C-001,Immediate Past President,2026-07-01,2027-06-30,Leadership
 R-0014,P-0013,C-010,President,2026-05-05,2027-05-04,Leadership
+R-0015,P-0014,C-001,Vice President,2026-07-01,2027-06-30,Leadership
+R-0016,P-0015,C-001,Secretary,2026-07-01,2027-06-30,Leadership
+R-0017,P-0016,C-001,Treasurer,2025-07-01,2027-06-30,Leadership
+R-0018,P-0017,C-001,Membership Director,2026-07-01,2027-06-30,Leadership

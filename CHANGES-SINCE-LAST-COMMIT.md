@@ -46,10 +46,43 @@ A running list of every change made since Matthew's last commit (October 22, 202
 
 - **Claude outputs/Presentation talking points - Matthew.md, - Willis.md, - Eliyas.md** (new): one sheet per presenter, written for their AI assistant. For each of their slides: what is on screen (so they don't read it out), the points to get across, an example of saying it in different words, and hand-off lines. Willis's sheet has the six demo steps and the before-the-talk checks.
 
+- **Claude outputs/Library mockups.html** (new, mockup only, no app code changed): the document library with Listen (Feature 5) for Matthew's review: a Library button on the rail opening a panel beside the chat, ISACA's five documents that Isa answers from grouped by topic, the listening view with the sentence being read highlighted, and phone screens. Ends with five decisions for Matthew.
+
+- **The Library with Listen (Feature 5), built from the approved mockup** (Matthew, 23 October 2026: approved as shown, with the recommended answers to its five decisions):
+  - **onboarding/library.json** (new): the five ISACA documents Isa answers from (only ISACA's own for now, Matthew's choice), grouped under Your role, Deadlines and compliance, and ISACA's systems, each with a short description in Isa's words. Read when the Library opens; no rebuild needed.
+  - **Services/Onboarding/LibraryService.cs** (new), registered in **Program.cs**: reads that list and each document's text from data/content.db, the same approved passages Isa answers from, in order, so nothing is rewritten. Splits the text into numbered sentences for highlighting, works out about how many minutes each takes to listen to, and shows the PDF's made-up "Guidebook page N" sections as quiet page markers instead of reading them aloud.
+  - **Components/Shared/LibraryPanel.razor, .razor.css, .razor.js** (new): the panel. The list (Read and Listen on each document, the note on Listen's limits), and a document view with a player pinned at the top: back a section, play/pause, forward a section, speed (0.75×, 1×, 1.25×, 1.5×), the section and time left, and a progress line. Listen uses the browser's own read-aloud, one sentence at a time: the sentence being read is highlighted in purple and kept in view, sentences already read turn grey, and clicking a sentence reads from there. The voice stops on Back, on Close, and when the chat closes. A browser that can't read aloud gets a plain message and the text.
+  - **Components/Shared/IsaRail.razor and .razor.css**: a purple Library button under Notebook, for anyone signed in.
+  - **Components/Layout/ChatWidget.razor**: the Library takes the notebook's place on the right, with the same sizes (half the screen beside the chat alone, a third with Today open); opening one of the two closes the other.
+  - Not logged in the event log: that log is written only by the question pipeline (EventLogService), and the Library asks no questions.
+  - Checked in the browser on a test copy (port 5068) as k.watanabe: the list; Listen reading and highlighting sentence by sentence; pause, play, forward a section, speed, clicking a sentence, Back and Close (the voice stops each time); the player staying at the top while the text scrolls; half width alone, thirds with Today, switching with the Notebook; phone width. Builds with no errors or warnings. How the voices sound depends on the computer; worth a listen on the demo laptop.
+
+- **Claude outputs/Meet your board mockups.html** (new, mockup only, no app code changed): the "Meet your board" step (J-05) for Matthew's review: Kenji's chapter board inside the step in the Today window (name, role, term dates, time zone and the time there now), the four invented board members it needs, and five decisions.
+
+- **"Meet your board" (J-05), built from the approved mockup** (Matthew, 23 October 2026: approved as shown, with the recommended answers to its five decisions):
+  - **directory/people.csv and role_assignments.csv** (the team's shared master list; **tell Willis**), and the matching copy in **data/synthetic/**: four invented board members for Kenji's chapter (C-001, Sakura Bay): Takahashi Mei, Vice President (Tokyo); Nakamura Hiroshi, Secretary (Tokyo); Daniel Okafor, Treasurer, a two-year term from July 2025 (Sydney); Lee Ji-woo, Membership Director (Seoul). P-0014 to P-0017, R-0015 to R-0018. No sign-in accounts (they are not in keycloak_accounts.csv). data/directory.db rebuilt (python directoryuild_directory_db.py): 16 people, 18 roles.
+  - **Services/Onboarding/LeaderTermService.cs**: GetBoard, a chapter's board on a date (board roles only), in the usual officer order with the past president last. Names, roles, term dates and time zones only; no emails.
+  - **Components/Shared/TodayPanel.razor and .razor.css**: the "Meet your board" step now lists the board under its description: initials, name (the leader marked "you", the previous president marked "the president before you"), role, term dates, and the time now in each member's city, with how far ahead or behind the leader it is. Then the privacy line ("From ISACA's records: names, board roles, term dates and time zones only"), a "Coming up" link that opens the next step (J-19, introduce yourself to your board), and Mark as done as before.
+  - Only Kenji's chapter has a full board for now (Matthew's choice); other leaders see the board members their chapter has in the test data.
+  - Checked in the browser on a test copy as k.watanabe: the step from My progress, all six board members in order, Sydney shown 2 hours ahead (daylight saving time there today), the Coming up link, and phone width. Builds with no errors or warnings.
+
+- **Claude outputs/How to use Isa mockups.html** (new, mockup only, no app code changed): the "How to use Isa" help section (Feature 3) for Matthew's review: a Help button on the rail opening a six-part guide, and a five-card tour in the day-1 step "Get to know Isa". Every sentence checked against the app: the "won't do" part is written as advice because those topics aren't blocked yet (input compliance is a keyword stub), and only one example question is listed because, of four tried on 23 October, only "When do we send in our yearly paperwork?" was answered correctly. Found while testing, for Willis: "When is the compliance submission window?" and "Where do I update my board's leadership information?" were passed to a person although the documents cover them, and "Who writes down what the board decided?" (demo step 2) got a best-practice line about committees labelled "Answered from ISACA's guidance".
+
+- **"How to use Isa" (Feature 3), built from the approved mockup** (Matthew, 23 October 2026: approved as shown, with the recommended answers to its five decisions):
+  - **onboarding/help.json** (new): every word of the guide and the tour, in one file, so it can be kept true as Isa changes (the plan's rule: describe only what Isa does today). Small markup: **bold**, *italics*, and `TKT-0012` as a reference-number chip.
+  - **Services/Onboarding/HelpGuideService.cs** (new), registered in **Program.cs**: reads that file; a missing or broken file shows "The guide isn't available right now" instead of breaking the chat.
+  - **Components/Shared/HelpPanel.razor and .razor.css** (new): the guide, in the right-hand place like the Library and the notebook (one of the three at a time, same sizes). Links at the top jump to each of the six sections; "Ask Isa" on the example question puts it in the question box (the leader still presses Send) and closes the guide so the chat is in view.
+  - **Components/Shared/HelpText.razor and .razor.css** (new): shows one line of the guide with its markup; everything else is plain text, never read as HTML.
+  - **Components/Shared/IsaRail.razor and .razor.css**: a round "?" Help button at the bottom of the rail, for everyone (above Backstage for staff).
+  - **Components/Layout/ChatWidget.razor**: Help shares the right-hand place with the notebook and the Library; "Read the full guide" from the tour opens it.
+  - **Components/Shared/TodayPanel.razor and .razor.css**: the "Get to know Isa" step (J-02, day 1) now has the five-card tour under its description, one card at a time with Back and Next (it starts again from the first card each time the step opens); the last card has "Read the full guide". Mark as done as before.
+  - Not done, by decision: the guide is not loaded into Isa's knowledge base yet (it would change the content Willis's pipeline answers from; later, with Willis).
+  - Checked in the browser on a test copy as k.watanabe: Help from the rail, the six section links, the reference-number chip, "Ask Isa", the tour's five cards with Back and Next, "Read the full guide", and phone width. Builds with no errors or warnings.
+
 ## Suggested commit message
 
 ```
-Calmer succession notebook; Sprint 2 slides at /present
+Calmer notebook; presentation at /present; Library with Listen
 
 - Load the AI model list in the background instead of waiting for it
 - Work out Today and Notebook before the slower developer-role check
@@ -64,4 +97,8 @@ Calmer succession notebook; Sprint 2 slides at /present
 - Add a Presentation switch on /isa-config (off by default)
 - Open /present with the Isa intro and a "Meet Isa" landing slide
 - Add talking-point sheets for each presenter
+- Add the Library: ISACA's documents to read or listen to, word for word
+- Meet your board: list the chapter's board in the J-05 step
+- Add four invented board members to Kenji's chapter (directory and synthetic copy)
+- Add How to use Isa: a Help guide on the rail and a day-1 tour
 ```

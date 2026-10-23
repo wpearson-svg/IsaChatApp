@@ -1,0 +1,10 @@
+/* A reference number in the guide, shown like the one in a hand-off reply. */
+.isa-helptext__ref {
+    display: inline-block;
+    padding: 0 0.35rem;
+    border-radius: 4px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-weight: 500;
+    font-size: 0.92em;
+}

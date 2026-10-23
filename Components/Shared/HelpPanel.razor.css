@@ -1,0 +1,175 @@
+/* ============================================================
+   HelpPanel.razor.css
+
+   "How to use Isa", in the right-hand place with the notebook's sizes
+   (the chat widget sets its width and position). Built from Matthew's
+   approved mockup, Claude outputs/How to use Isa mockups.html
+   (23 October 2026). Colours from BRAND_GUIDELINES.md: ISACA Dark Blue
+   header (like the chat and Today), Light Blue links, the greys.
+   ============================================================ */
+
+.isa-help {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 33.333vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #323e48;
+    border-left: 1px solid #cbd2d9;
+    overflow: hidden;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: isa-help-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes isa-help-in {
+    from { transform: translateX(24px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .isa-help { animation: none; transition: none; }
+}
+
+/* Phones: one panel at a time, filling the screen beside the rail. */
+@media (max-width: 720px) {
+    .isa-help {
+        width: calc(100vw - var(--isa-rail-w, 0px)) !important;
+        right: 0 !important;
+    }
+    .isa-help__iconBtn.isa-help__enlarge { display: none; }
+}
+
+.isa-help__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    height: 72px;
+    box-sizing: border-box;
+    background: #1d2d5c;
+    color: #ffffff;
+}
+
+.isa-help__headText { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.isa-help__name { font-family: 'Roboto Slab', Georgia, serif; font-size: 1.2rem; }
+.isa-help__sub { font-size: 0.78rem; color: #e7f0f5; }
+.isa-help__headBtns { display: flex; align-items: center; gap: 0.25rem; }
+
+.isa-help__iconBtn {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: #e7f0f5;
+    cursor: pointer;
+}
+
+.isa-help__close { font-size: 1.5rem; line-height: 1; }
+.isa-help__iconBtn:hover,
+.isa-help__iconBtn:focus-visible { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+.isa-help__iconBtn:focus-visible { outline: 2px solid #ffffff; outline-offset: 1px; }
+
+.isa-help__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1rem 1.25rem 1.75rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.isa-help__empty { color: #606e7c; }
+
+/* Links to each section. */
+.isa-help__toc { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 0.9rem; }
+
+.isa-help__tocLink {
+    min-height: 32px;
+    padding: 0.25rem 0.7rem;
+    border: none;
+    border-radius: 16px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font: 0.78rem 'Roboto', Arial, sans-serif;
+    cursor: pointer;
+}
+
+.isa-help__tocLink:hover { background: #d7e6ee; }
+.isa-help__tocLink:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
+
+.isa-help__sec { border-top: 1px solid #e5e7eb; padding: 0.8rem 0 0.3rem; }
+
+.isa-help__secTitle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.45rem;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 400;
+    font-size: 1.02rem;
+    color: #1d2d5c;
+    scroll-margin-top: 0.5rem;
+}
+
+.isa-help__secTitle:focus { outline: none; }
+.isa-help__secTitle:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
+
+.isa-help__num {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #1d2d5c;
+    color: #ffffff;
+    font: 500 0.75rem 'Roboto', Arial, sans-serif;
+}
+
+.isa-help__points { margin: 0 0 0.5rem; padding-left: 1.1rem; }
+.isa-help__points li { margin-bottom: 0.35rem; }
+
+.isa-help__ask {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0.35rem 0;
+    padding: 0.5rem 0.6rem 0.5rem 0.75rem;
+    border: 1px solid #cbd2d9;
+    border-radius: 6px;
+    color: #1d2d5c;
+}
+
+.isa-help__askBtn {
+    flex: none;
+    min-height: 40px;
+    padding: 0 0.8rem;
+    border: none;
+    border-radius: 4px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font: 500 0.74rem 'Roboto', Arial, sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.isa-help__askBtn:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
+
+.isa-help__tip {
+    margin: 0.5rem 0 0.4rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 6px;
+    background: #f6f7f8;
+    font-size: 0.82rem;
+}

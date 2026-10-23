@@ -1,0 +1,50 @@
+// ============================================================
+// onboarding/library.json -- the documents in Isa's Library
+// (Feature 5 in ONBOARDING-FEATURE.md; Matthew's approved mockup,
+// Claude outputs/Library mockups.html, 23 October 2026).
+//
+// Only ISACA's own documents that Isa answers from (Matthew,
+// 23 October 2026: the five ISACA documents for now). "document" must
+// match the document's title in data/content.db exactly: the Library
+// reads and plays that same approved text, word for word.
+//
+// "group" puts documents under a heading, in the order they appear
+// here. "title" is the name shown; "date" is optional.
+// Read at runtime: edit, save and reopen the Library; no rebuild.
+// Lines starting with // are comments and are ignored.
+// ============================================================
+{
+  "documents": [
+    {
+      "group": "Your role",
+      "document": "Chapter Leader Guidebook - President (August 2026)",
+      "title": "Chapter Leader Guidebook: President",
+      "date": "August 2026",
+      "description": "Your role as president: leading the board, finances, your duties through the year, and handing over to the next president."
+    },
+    {
+      "group": "Your role",
+      "document": "Core Chapter Leader Roles and Responsibilities",
+      "title": "Core Chapter Leader Roles and Responsibilities",
+      "description": "What the president, vice president, secretary and treasurer each look after."
+    },
+    {
+      "group": "Deadlines and compliance",
+      "document": "Annual Chapter Compliance Framework",
+      "title": "Annual Chapter Compliance Framework",
+      "description": "The yearly compliance cycle: what chapters report, and when."
+    },
+    {
+      "group": "ISACA's systems",
+      "document": "ISACA Chapter Systems Overview",
+      "title": "ISACA Chapter Systems Overview",
+      "description": "Which system does what: the Chapter Leader Portal, Chapter 360, Engage and the reporting tools."
+    },
+    {
+      "group": "ISACA's systems",
+      "document": "Common Tasks and Navigation Guide",
+      "title": "Common Tasks and Navigation Guide",
+      "description": "Step-by-step tasks in the Chapter Leader Portal: board information, compliance and CPE."
+    }
+  ]
+}

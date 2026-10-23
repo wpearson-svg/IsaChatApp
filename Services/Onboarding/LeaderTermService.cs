@@ -54,6 +54,46 @@ public class LeaderTermService
     public IReadOnlyList<LeaderTerm> GetRecentlyEndedTerms(string personId, DateOnly onDate, int days)
         => Query(onDate, personId, endedWithinDays: days);
 
+    /// <summary>
+    /// A chapter's board on the given date: everyone holding a board role
+    /// (Leadership) there, with their name as they prefer it written, role,
+    /// term and time zone. Used by the "Meet your board" step (J-05) in the
+    /// Today window. Names, roles, term dates and time zones only: no
+    /// emails or other contact details (ONBOARDING-FEATURE.md, piece C).
+    /// </summary>
+    public IReadOnlyList<BoardMember> GetBoard(string chapterId, DateOnly onDate)
+    {
+        var list = new List<BoardMember>();
+        if (!DirectoryExists) return list;
+
+        using var conn = new SqliteConnection($"Data Source={_dbPath};Mode=ReadOnly");
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT r.person_id, p.short_name, r.role, r.term_start, r.term_end, p.time_zone
+            FROM role_assignments r
+            JOIN people p ON p.person_id = r.person_id
+            WHERE r.chapter_id = $chapter
+              AND r.permission = 'Leadership'
+              AND r.term_start <= $date AND r.term_end >= $date;
+            """;
+        cmd.Parameters.AddWithValue("$chapter", chapterId);
+        cmd.Parameters.AddWithValue("$date", onDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new BoardMember(reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                ParseDate(reader.GetString(3)), ParseDate(reader.GetString(4)), reader.GetString(5)));
+        }
+
+        // The usual order of a board, as in the President Guidebook's officer
+        // roles; any other role after them, and the past president last.
+        string[] order = ["President", "Vice President", "Secretary", "Treasurer", "Membership Director"];
+        int Rank(string role) => role == "Immediate Past President" ? 99
+            : Array.IndexOf(order, role) is var i and >= 0 ? i : 50;
+        return list.OrderBy(m => Rank(m.Role)).ThenBy(m => m.Name).ToList();
+    }
+
     private IReadOnlyList<LeaderTerm> Query(DateOnly onDate, string? personId, int? endedWithinDays = null)
     {
         var list = new List<LeaderTerm>();
@@ -112,6 +152,9 @@ public class LeaderTermService
     private static DateOnly ParseDate(string text)
         => DateOnly.ParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 }
+
+/// <summary>One person on a chapter's board: name (as they prefer it written), role, term and time zone.</summary>
+public record BoardMember(string PersonId, string Name, string Role, DateOnly TermStart, DateOnly TermEnd, string TimeZone);
 
 /// <summary>One role a person holds, with the day of term on the date asked about.</summary>
 public record LeaderTerm(

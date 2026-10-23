@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to use Isa mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* Mockup only: no app code. ISACA colours and type (BRAND_GUIDELINES.md). */
+  :root { --ink:#1d2d5c; --mblue:#07649d; --blue:#00a4e4; --green:#6cb33f; --dgreen:#3f7d20; --teal:#1b7a66;
+          --purple:#6558b1; --light:#e7f0f5; --g1:#f6f7f8; --g2:#e5e7eb; --g3:#cbd2d9; --g6:#606e7c; --g9:#323e48; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 16px 64px; background:var(--g1); color:var(--g9); font-family:Roboto, Arial, sans-serif; }
+  .wrap { max-width:1150px; margin:0 auto; }
+  h1 { font-family:'Roboto Slab', serif; font-weight:500; color:var(--ink); font-size:1.6rem; margin:0 0 6px; }
+  h2 { font-family:'Roboto Slab', serif; font-weight:500; color:var(--ink); font-size:1.25rem; margin:44px 0 6px; }
+  p.note { margin:0 0 16px; max-width:800px; line-height:1.5; }
+  .row { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+
+  .rail { width:76px; background:#fff; border:1px solid var(--g3); border-right:none; display:flex; flex-direction:column; align-items:center; gap:10px; padding:14px 0; height:720px; }
+  .rail b { display:flex; flex-direction:column; align-items:center; gap:4px; font-size:0.66rem; font-weight:500; color:var(--ink); }
+  .rail i { width:38px; height:38px; border-radius:8px; display:grid; place-items:center; color:#fff; font-style:normal; }
+  .rail .help { margin-top:auto; }
+  .rail .help i { background:#fff; color:var(--ink); border:2px solid var(--ink); border-radius:50%; font-weight:700; outline:3px solid var(--blue); outline-offset:2px; }
+
+  .panel { width:470px; height:720px; background:#fff; border:1px solid var(--g3); display:flex; flex-direction:column; }
+  .ph { height:72px; flex:none; background:var(--ink); color:#fff; display:flex; align-items:center; padding:0 18px; }
+  .ph strong { font-family:'Roboto Slab', serif; font-weight:400; font-size:1.2rem; }
+  .ph small { display:block; font-size:0.78rem; color:var(--light); }
+  .ph span { margin-left:auto; }
+  .pb { flex:1; overflow:auto; padding:14px 20px 24px; font-size:0.88rem; line-height:1.5; }
+  .toc { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
+  .toc a { font-size:0.78rem; color:var(--ink); background:var(--light); border-radius:14px; padding:5px 10px; text-decoration:none; }
+  .sec { border-top:1px solid var(--g2); padding:12px 0 4px; }
+  .sec h3 { margin:0 0 6px; font-family:'Roboto Slab', serif; font-weight:400; color:var(--ink); font-size:1.02rem; display:flex; gap:8px; align-items:center; }
+  .sec h3 em { font-style:normal; width:24px; height:24px; border-radius:50%; background:var(--ink); color:#fff; font:500 0.75rem Roboto, sans-serif; display:grid; place-items:center; }
+  .sec ul { margin:0 0 8px; padding-left:1.1rem; }
+  .sec li { margin-bottom:4px; }
+  .ask { display:flex; justify-content:space-between; align-items:center; gap:8px; border:1px solid var(--g3); border-radius:6px; padding:8px 10px; margin:6px 0; }
+  .ask span { color:var(--ink); }
+  .ask b { font:500 0.74rem Roboto, sans-serif; color:#fff; background:var(--ink); border-radius:4px; padding:6px 9px; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap; }
+  .tip { background:var(--g1); border-radius:6px; padding:8px 10px; font-size:0.82rem; }
+  .ref { display:inline-block; font:500 0.8rem Roboto, sans-serif; background:var(--light); color:var(--ink); border-radius:4px; padding:1px 6px; }
+
+  .today { width:440px; background:#fff; border:1px solid var(--g3); }
+  .today .pb { height:auto; }
+  .stepH { font-family:'Roboto Slab', serif; color:var(--ink); font-size:1.25rem; margin:6px 0 2px; }
+  .when { font-size:0.78rem; color:var(--g6); margin:0 0 8px; }
+  .tour { border:1px solid var(--g3); border-radius:8px; padding:12px 14px; margin:10px 0 12px; }
+  .tour p { margin:0 0 6px; }
+  .dots { display:flex; gap:6px; margin:6px 0 10px; }
+  .dots i { width:8px; height:8px; border-radius:50%; background:var(--g3); }
+  .dots i.on { background:var(--ink); }
+  .btn { display:inline-flex; align-items:center; min-height:44px; padding:0 16px; border-radius:4px; background:var(--ink); color:#fff; font:500 0.8rem Roboto, sans-serif; letter-spacing:0.04em; text-transform:uppercase; }
+  .btn.ghost { background:#fff; color:var(--ink); border:1px solid var(--ink); }
+
+  .decisions { background:#fff; border:1px solid var(--g3); padding:16px 20px; max-width:860px; line-height:1.5; }
+  .decisions li { margin-bottom:8px; }
+  .tag { display:inline-block; font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:2px 6px; border-radius:3px; background:var(--light); color:var(--ink); }
+  .warn { background:#fef3dd; border-left:4px solid #fbb034; padding:10px 14px; max-width:860px; line-height:1.5; margin:0 0 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>"How to use Isa": mockups</h1>
+<p class="note">For Matthew's review, 23 October 2026. Nothing in the app has changed yet. Feature 3 in the plan: a full help section, open any time, and a short tour as the day-1 step "Get to know Isa". The rule: <strong>describe only what Isa actually does today</strong>. Every sentence below was checked against the running app and the code.</p>
+
+<div class="warn"><strong>Checked against the app, 23 October:</strong> the plan's "What Isa won't do" list (legal questions, local laws, board disputes, money, personal matters) is not enforced yet: input compliance is still a keyword stub. So that section is written as advice (what Isa is for, and when to talk to a person), not as a promise that Isa blocks those questions. And of four questions tried for the examples, only one got a correct answer today, so only that one is listed.</div>
+
+<h2>1. The help section, from the rail</h2>
+<p class="note">A round <strong>?</strong> "Help" button at the bottom of the rail (above Backstage, for staff). It opens in the right-hand place, like the Library and the Notebook (one of the three at a time). Six short sections, with links to jump to each. "Ask Isa" buttons put an example question into the chat box.</p>
+
+<div class="row">
+ <div style="display:flex">
+  <div class="rail">
+    <b><i style="background:var(--teal)">◷</i>Today</b>
+    <b><i style="background:var(--dgreen)">✎</i>Notebook</b>
+    <b><i style="background:var(--purple)">▤</i>Library</b>
+    <b><i style="background:#017dc2">◎</i>Chapter 360</b>
+    <b><i style="background:var(--ink)">⚇</i>Engage</b>
+    <b class="help"><i>?</i>Help</b>
+  </div>
+  <div class="panel">
+    <div class="ph"><div><strong>How to use Isa</strong><small>A short guide</small></div><span>✕</span></div>
+    <div class="pb">
+      <div class="toc"><a>What Isa helps with</a><a>What Isa doesn't do</a><a>Questions to try</a><a>Saving decisions</a><a>Reaching a person</a><a>Your information</a></div>
+
+      <div class="sec"><h3><em>1</em>What Isa can help with</h3>
+        <ul>
+          <li><strong>Answers from ISACA's guidance.</strong> Ask about running your chapter. Isa looks only in ISACA's approved documents for chapter leaders, and every answer lists its sources. Open "Show the steps" on an answer to see how she found it.</li>
+          <li><strong>Your first 90 days.</strong> <em>Today</em> shows your steps for where you are in your term. Mark them done as you go.</li>
+          <li><strong>The succession notebook.</strong> Notes and decisions that pass from one president to the next.</li>
+          <li><strong>The Library.</strong> Read ISACA's documents, or listen to them read aloud.</li>
+        </ul>
+      </div>
+
+      <div class="sec"><h3><em>2</em>What Isa doesn't do</h3>
+        <ul>
+          <li>Isa doesn't give opinions, rulings or advice of her own, and she doesn't search the internet. She only shares what ISACA's guidance says.</li>
+          <li>For legal questions, local laws, disagreements on your board, money matters, or anything personal, talk to a person.</li>
+          <li>If you raise something sensitive, such as harassment, Isa doesn't answer it herself. She passes it to a person and gives you a reference number.</li>
+        </ul>
+      </div>
+
+      <div class="sec"><h3><em>3</em>Questions to try</h3>
+        <div class="ask"><span>When do we send in our yearly paperwork?</span><b>Ask Isa</b></div>
+        <p class="tip">Tips: ask one thing at a time, in your own words. If ISACA's guidance doesn't cover it, Isa says so and passes it to a person; she won't guess.</p>
+      </div>
+
+      <div class="sec"><h3><em>4</em>Saving decisions and notes</h3>
+        <ul>
+          <li>Under an answer, <strong>Save to notebook</strong> keeps the question, Isa's answer, its sources and the date. You can add a line about what you decided.</li>
+          <li>In the notebook, <strong>+ Add a note</strong> for contacts, what worked, or what's unfinished.</li>
+          <li>Notes are private to you. <strong>Share with the board</strong> on a note lets your board members see it.</li>
+        </ul>
+      </div>
+
+      <div class="sec"><h3><em>5</em>Reaching a person</h3>
+        <ul>
+          <li><strong>Talk to a person</strong>, under the question box, any time.</li>
+          <li>When Isa passes a question on, she gives you a reference number, like <span class="ref">TKT-0012</span>. Keep it if you follow up with ISACA's Chapter Experience team or ISACA Support.</li>
+          <li>In your first week, <em>Meet your Chapter Experience contact</em> (in Today) lets you book a welcome call or send an introduction.</li>
+        </ul>
+      </div>
+
+      <div class="sec"><h3><em>6</em>What happens to your information</h3>
+        <ul>
+          <li>Isa's logs don't keep the text of your questions. A question is only kept if you save it to your notebook.</li>
+          <li>Your Chapter Experience contact sees your chapter, role and term dates. Your questions to Isa stay private.</li>
+          <li>Your notebook is private to you unless you share a note with your board.</li>
+          <li>Introductions you write in Isa are saved in Isa; Isa never emails them.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+ </div>
+</div>
+
+<h2>2. The day-1 tour: "Get to know Isa"</h2>
+<p class="note">The step (J-02, day 1) keeps its description, and gets a short tour: five cards, one at a time, each two sentences, with Next and Back. The last card opens the full help section. Then Mark as done, as with every step.</p>
+<div class="row">
+  <div class="today">
+    <div class="ph"><div><strong>Today</strong><small>Wednesday 1 July</small></div></div>
+    <div class="pb">
+      <div class="stepH">Get to know Isa</div>
+      <p class="when">Day 1</p>
+      <p>Take a five-minute tour: what Isa can help with, how she shows her sources, and how to reach a person.</p>
+      <div class="tour">
+        <div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+        <p><strong>Every answer shows where it came from</strong></p>
+        <p>Isa answers only from ISACA's approved documents. Under each answer you'll see its sources, and "Show the steps" shows how she found it.</p>
+        <span class="btn ghost">Back</span> <span class="btn">Next</span>
+      </div>
+      <span class="btn">Mark as done</span>
+    </div>
+  </div>
+  <div style="flex:1; min-width:280px; max-width:520px">
+    <p class="note" style="margin-top:0"><strong>The five tour cards:</strong></p>
+    <ol class="note">
+      <li><strong>Ask about running your chapter</strong>: what Isa is for.</li>
+      <li><strong>Every answer shows where it came from</strong>: sources and Show the steps.</li>
+      <li><strong>When Isa can't help, a person can</strong>: hand-off and the reference number.</li>
+      <li><strong>Your first 90 days, a few steps at a time</strong>: Today, the notebook and the Library.</li>
+      <li><strong>Your questions stay private</strong>: what others see. Then "Read the full guide".</li>
+    </ol>
+  </div>
+</div>
+
+<h2>Decisions for Matthew</h2>
+<div class="decisions">
+  <ol>
+    <li><strong>Help on the rail</strong>, at the bottom, opening in the right-hand place like the Library? <span class="tag">Recommended</span></li>
+    <li><strong>The day-1 tour</strong> as five cards inside the "Get to know Isa" step, ending in the full guide? <span class="tag">Recommended</span></li>
+    <li><strong>"What Isa doesn't do" as advice</strong>, as written, since those topics aren't blocked yet? Change the wording once real input rules are built. <span class="tag">Recommended</span></li>
+    <li><strong>Only one example question</strong> for now (the only one that answered correctly today)? More can be added in one file once answers improve. <span class="tag">Recommended</span></li>
+    <li><strong>Loading the guide into Isa's knowledge base</strong> (the plan says so, so "What can you do?" gets a cited answer): not in this step. It changes Isa's content, which is shared with Willis's pipeline, and retrieval is missing some questions today. <span class="tag">Recommended: later, with Willis</span></li>
+  </ol>
+  <p style="margin:12px 0 0"><strong>Worth knowing:</strong> in the prototype, a question "passed to a person" gets its reference number, but no case reaches anyone yet (the Salesforce step is switched off). The guide says only what the leader sees: the reference number and what to do with it.</p>
+  <p style="margin:12px 0 0">The guide's text lives in one file, so it can be kept true as Isa changes, as the plan requires.</p>
+</div>
+
+</div>
+</body>
+</html>

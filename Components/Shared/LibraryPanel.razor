@@ -1,0 +1,207 @@
+@* ============================================================
+   LibraryPanel.razor
+
+   The Library (Feature 5 in ONBOARDING-FEATURE.md; Matthew's approved
+   mockup, Claude outputs/Library mockups.html, 23 October 2026).
+   Opened from the Library button on the rail; it takes the notebook's
+   place on the right (one of the two at a time), with the same sizes.
+
+   Two views:
+   - The list: ISACA's documents that Isa answers from, grouped by
+     topic, each with a description, about how long it takes to listen
+     to, and Read and Listen (onboarding/library.json).
+   - A document: its text, with a player at the top. Listen reads it
+     word for word with the browser's own read-aloud, highlighting the
+     sentence being read (LibraryPanel.razor.js). Nothing is installed
+     and no document is sent anywhere.
+
+   The text is the approved passages Isa answers from
+   (Services/Onboarding/LibraryService.cs), so nothing is rewritten or
+   summarised. Nothing here comes from the AI model.
+   ============================================================ *@
+
+@using IsaChatApp.Services.Onboarding
+@inject LibraryService Library
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<aside class="isa-lib" style="@Style" aria-label="Library">
+
+    <div class="isa-lib__header">
+        <div class="isa-lib__headText">
+            <span class="isa-lib__name">Library</span>
+            <span class="isa-lib__sub">@(_documents.Count == 1 ? "1 document" : $"{_documents.Count} documents") from ISACA</span>
+        </div>
+        <div class="isa-lib__headBtns">
+            <button type="button" class="isa-lib__iconBtn isa-lib__enlarge" @onclick="OnToggleEnlarge"
+                    aria-pressed="@(Enlarged ? "true" : "false")"
+                    title="@(Enlarged ? "Make smaller" : "Enlarge")" aria-label="@(Enlarged ? "Make the Library smaller" : "Enlarge the Library")">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    @if (Enlarged)
+                    {
+                        <path d="M6.5 2.5v4h-4M9.5 13.5v-4h4M6.5 6.5L2 2M9.5 9.5L14 14" />
+                    }
+                    else
+                    {
+                        <path d="M10 2h4v4M6 14H2v-4M14 2L9 7M2 14l5-5" />
+                    }
+                </svg>
+            </button>
+            <button type="button" class="isa-lib__iconBtn isa-lib__close" @onclick="Close" aria-label="Close the Library" title="Close">&times;</button>
+        </div>
+    </div>
+
+    @* @key: each view gets a fresh scrolling area, so a document opens at its top. *@
+    <div class="isa-lib__body" @key="@(_open?.Document.Document ?? "list")" @ref="_body">
+        @if (_open is null)
+        {
+            <p class="isa-lib__intro">ISACA's approved guidance that Isa answers from. Read it here, or listen to it word for word, for example on your way to work.</p>
+
+            @if (_documents.Count == 0)
+            {
+                <p class="isa-lib__empty">The Library's documents aren't loaded yet.</p>
+            }
+            @foreach (var group in _documents.GroupBy(d => d.Group))
+            {
+                <h3 class="isa-lib__group">@group.Key</h3>
+                <ul class="isa-lib__list">
+                    @foreach (var doc in group)
+                    {
+                        <li class="isa-lib__doc">
+                            <span class="isa-lib__docIcon" aria-hidden="true"></span>
+                            <div class="isa-lib__docMain">
+                                <span class="isa-lib__docTitle">@doc.Title</span>
+                                <span class="isa-lib__docDesc">@doc.Description</span>
+                                <span class="isa-lib__docMeta">@(doc.Date is null ? "" : $"{doc.Date} · ")about @Minutes(doc.Minutes) to listen</span>
+                            </div>
+                            <div class="isa-lib__docBtns">
+                                <button type="button" class="isa-lib__btn" @onclick="() => Open(doc, false)"
+                                        aria-label="@($"Read {doc.Title}")">Read</button>
+                                <button type="button" class="isa-lib__btn isa-lib__btn--play" @onclick="() => Open(doc, true)"
+                                        aria-label="@($"Listen to {doc.Title}")">
+                                    <span aria-hidden="true">&#9654;</span> Listen
+                                </button>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <p class="isa-lib__foot">
+                <span aria-hidden="true">&#9432;</span>
+                <span>Listen uses your device's own voices. Keep this page open while it reads; some phones stop reading when the screen locks.</span>
+            </p>
+        }
+        else
+        {
+            <button type="button" class="isa-lib__back" @onclick="Back">&lsaquo; All documents</button>
+            <h2 class="isa-lib__title">@_open.Document.Title</h2>
+            <p class="isa-lib__meta">ISACA@(_open.Document.Date is null ? "" : $" · {_open.Document.Date}") · read word for word, nothing rewritten</p>
+
+            @* The player. Its buttons are worked by LibraryPanel.razor.js, which
+               also keeps the progress line and the time left up to date. *@
+            <div class="isa-lib__player" data-lib-player>
+                <button type="button" class="isa-lib__pbtn" data-lib="prev" title="Back a section" aria-label="Back a section">
+                    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M3 2h2v12H3zM14 2v12L6 8z" /></svg>
+                </button>
+                <button type="button" class="isa-lib__pbtn isa-lib__pbtn--main" data-lib="toggle" title="Listen" aria-label="Listen">
+                    <svg class="isa-lib__iconPlay" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M4 2l10 6-10 6z" /></svg>
+                    <svg class="isa-lib__iconPause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z" /></svg>
+                </button>
+                <button type="button" class="isa-lib__pbtn" data-lib="next" title="Forward a section" aria-label="Forward a section">
+                    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M11 2h2v12h-2zM2 2v12l8-6z" /></svg>
+                </button>
+                <div class="isa-lib__track">
+                    <span class="isa-lib__status" data-lib-status aria-live="polite">Press play to listen</span>
+                    <span class="isa-lib__bar"><span data-lib-bar></span></span>
+                </div>
+                <button type="button" class="isa-lib__speed" data-lib="speed" title="Reading speed" aria-label="Reading speed, 1 times">1&times;</button>
+            </div>
+
+            <div class="isa-lib__text" data-lib-text>
+                @foreach (var section in _open.Sections)
+                {
+                    @if (section.PageMarker is not null)
+                    {
+                        <p class="isa-lib__page">@section.PageMarker</p>
+                    }
+                    @if (section.Heading is not null)
+                    {
+                        <h3 class="isa-lib__sec"><span class="isa-lib__s" data-i="@section.HeadingIndex" data-section>@section.Heading</span></h3>
+                    }
+                    @foreach (var para in section.Paragraphs)
+                    {
+                        <p class="isa-lib__para @(para.Bullet ? "is-bullet" : "")" data-section="@(section.Heading is null && para == section.Paragraphs[0] ? "" : null)">
+                            @foreach (var s in para.Sentences)
+                            {
+                                <span class="isa-lib__s" data-i="@s.Index">@s.Text</span>
+                                @(" ")
+                            }
+                        </p>
+                    }
+                }
+            </div>
+        }
+    </div>
+</aside>
+
+@code {
+    /// <summary>Width and position, from the chat widget, so the panels sit side by side.</summary>
+    [Parameter] public string? Style { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnToggleEnlarge { get; set; }
+    [Parameter] public bool Enlarged { get; set; }
+
+    private IReadOnlyList<LibraryDocument> _documents = [];
+    private LibraryText? _open;
+    private bool _playWhenShown;
+    private ElementReference _body;
+    private IJSObjectReference? _js;
+
+    protected override void OnInitialized() => _documents = Library.GetDocuments();
+
+    private static string Minutes(int m) => m == 1 ? "1 minute" : $"{m} minutes";
+
+    // Read opens the text; Listen opens it and starts reading from the top.
+    private async Task Open(LibraryDocument doc, bool listen)
+    {
+        await Stop();
+        _open = Library.GetText(doc.Document);
+        _playWhenShown = listen && _open is not null;
+    }
+
+    private async Task Back()
+    {
+        await Stop();
+        _open = null;
+    }
+
+    private async Task Close()
+    {
+        await Stop();
+        await OnClose.InvokeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_open is null) return;
+        _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/LibraryPanel.razor.js");
+        // Hands the newly shown document to the reader (it does nothing if this
+        // document is already attached), and starts it if Listen was pressed.
+        await _js.InvokeVoidAsync("attach", _body, _playWhenShown);
+        _playWhenShown = false;
+    }
+
+    private async Task Stop()
+    {
+        try { if (_js is not null) await _js.InvokeVoidAsync("stop"); }
+        catch (JSDisconnectedException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Stop();
+        try { if (_js is not null) await _js.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+    }
+}
