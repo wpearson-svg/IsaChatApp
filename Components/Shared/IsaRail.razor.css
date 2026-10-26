@@ -268,3 +268,27 @@
     border: 2px solid #1d2d5c;
     border-radius: 50%;
 }
+
+/* ---- Shorter screens (laptops, a zoomed-in browser) ----
+   Eight buttons and a divider need about 690px. On shorter screens the
+   rail tightens up, so Help and Backstage at the bottom are never pushed
+   off it (Matthew, 23 October 2026). Every button stays at least 44px
+   tall to tap, and keeps its name. */
+@media (min-width: 721px) and (max-height: 820px) {
+    .isa-rail { gap: 2px; padding: 6px 6px 8px; }
+    .isa-rail__list { gap: 2px; }
+    .isa-rail__bottom { gap: 2px; }
+    .isa-rail__btn { min-height: 54px; padding: 4px 2px; gap: 2px; }
+    .isa-rail__hide { min-height: 44px; }
+    .isa-rail__tile { width: 34px; height: 34px; border-radius: 9px; }
+    .isa-rail__tile svg { width: 19px; height: 19px; }
+    .isa-rail__label { font-size: 0.64rem; }
+    .isa-rail__divider { margin: 3px 10px; }
+}
+
+@media (min-width: 721px) and (max-height: 640px) {
+    .isa-rail__btn { min-height: 46px; padding: 3px 2px; }
+    .isa-rail__tile { width: 30px; height: 30px; border-radius: 8px; }
+    .isa-rail__tile svg { width: 17px; height: 17px; }
+    .isa-rail__label { font-size: 0.6rem; }
+}

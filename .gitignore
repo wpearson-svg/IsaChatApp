@@ -10,6 +10,8 @@ isa.pid
 # Old backup copies of files
 *.bak
 *.bak2
+# Dated backups too, like data/notebook.db.bak-2026-10-23
+*.bak-*
 
 # Visual Studio local settings
 .vs/

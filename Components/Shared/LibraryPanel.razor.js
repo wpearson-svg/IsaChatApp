@@ -17,6 +17,48 @@
 const SPEEDS = [0.75, 1, 1.25, 1.5];
 const WORDS_PER_MINUTE = 150;
 
+// ---- The voice (Matthew, 23 October 2026: a light female voice with the
+// slightest British accent, instead of the computer's default man's voice).
+//
+// Only voices that run on the leader's own device are used (localService).
+// "Online" voices, such as Google's or Edge's natural voices, send the text
+// to Google or Microsoft to be spoken, and ISACA's documents must not leave
+// the device. Which voices exist depends on the device: on Windows, Settings
+// > Time & language > Speech > Add voices > English (United Kingdom) adds
+// Hazel and Susan; Macs and iPhones usually have Kate, Serena or Stephanie.
+//
+// The first match wins: a female British voice by name, then any British
+// voice not known to be a man's, then a female American voice, then any
+// English voice, then the device's default.
+const FEMALE_GB = ['hazel', 'susan', 'kate', 'serena', 'stephanie', 'martha', 'fiona', 'libby', 'sonia', 'maisie', 'emily', 'amy'];
+const MALE = ['george', 'daniel', 'arthur', 'oliver', 'ryan', 'thomas', 'david', 'mark', 'james', 'alex', 'fred', 'tom', 'aaron', 'guy', 'eric'];
+const FEMALE_US = ['zira', 'samantha', 'ava', 'allison', 'susan', 'victoria', 'karen', 'moira', 'tessa', 'aria', 'jenny', 'michelle'];
+const PITCH = 1.06;   // a touch higher, for a lighter sound; 1 is the voice's own pitch
+
+let chosenVoice = null;
+
+function pickVoice() {
+    const voices = speechSynthesis.getVoices().filter(v => v.localService);
+    if (!voices.length) return null;
+    const name = v => v.name.toLowerCase();
+    const has = (v, list) => list.some(n => name(v).includes(n));
+    const gb = voices.filter(v => /^en[-_]GB/i.test(v.lang));
+    const us = voices.filter(v => /^en[-_]US/i.test(v.lang));
+    const en = voices.filter(v => /^en/i.test(v.lang));
+    return gb.find(v => has(v, FEMALE_GB))
+        || gb.find(v => !has(v, MALE))
+        || us.find(v => has(v, FEMALE_US))
+        || en.find(v => !has(v, MALE))
+        || en[0]
+        || null;
+}
+
+// The list of voices can arrive a moment after the page loads.
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    chosenVoice = pickVoice();
+    speechSynthesis.addEventListener?.('voiceschanged', () => { chosenVoice = pickVoice(); });
+}
+
 let root = null;        // the panel's scrolling body for the current document
 let sentences = [];     // the sentence spans, in reading order
 let sectionStarts = []; // sentence numbers where each section starts
@@ -103,7 +145,14 @@ function speakCurrent() {
     update(true);
     const u = new SpeechSynthesisUtterance(sentences[current].textContent.trim());
     u.rate = speed;
-    u.lang = document.documentElement.lang || 'en';
+    chosenVoice ??= pickVoice();
+    if (chosenVoice) {
+        u.voice = chosenVoice;
+        u.lang = chosenVoice.lang;
+        u.pitch = PITCH;
+    } else {
+        u.lang = document.documentElement.lang || 'en';   // no local English voice: the device's default
+    }
     u.onend = () => {
         if (id !== runId || !playing) return;
         current++;
