@@ -18,35 +18,43 @@
 // ============================================================
 
 let handler = null;
-let frameLoad = null;
 
 export function init(dotnet, questions) {
     handler = (e) => {
+        if (e.altKey && !e.ctrlKey && !e.metaKey && e.code !== 'AltLeft' && e.code !== 'AltRight') console.info('[Isa present] key', 'Alt+' + e.code);
         // Demo questions: Alt+1 to Alt+5 (or Ctrl+1 to Ctrl+5 where the browser lets the page have them)
         // type that test question into Isa's question box. Chrome and Edge keep Ctrl+1..8 for switching
         // tabs, so Alt is the one that works everywhere.
         // Alt+C: the live Salesforce Cases panel on and off. Esc closes it.
         if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC') { e.preventDefault(); dotnet.invokeMethodAsync('ToggleCases'); return; }
-        // Alt+6: the Developer Dashboard, Alt+7: the Content Health dashboard, over the slides (demo step 6, Backstage).
-        // Esc, or the Back to slides button, returns to the slide you were on.
+        // Alt+6: the Developer panel (trace lookup), Alt+7: the Content Health panel. Esc closes the panel and you
+        // are on the same slide. (Also reachable from Isa's Backstage menu.)
         if (e.altKey && !e.ctrlKey && !e.metaKey && (e.code === 'Digit6' || e.code === 'Digit7')) {
             e.preventDefault();
-            dotnet.invokeMethodAsync('ToggleFrame', e.code === 'Digit6' ? '/dev-dashboard' : '/content-health-dashboard');
+            dotnet.invokeMethodAsync('TogglePanel', e.code === 'Digit6' ? '/dev-dashboard' : '/content-health-dashboard');
             return;
         }
         if (e.key === 'Escape') {
+            console.info('[Isa present] Esc: closing panels');
             dotnet.invokeMethodAsync('CloseCases');
-            dotnet.invokeMethodAsync('CloseFrame');
-            document.querySelector('.isa-widget__dashboardClose')?.click();   // a dashboard opened from the Backstage menu
         }
         const digit = /^Digit([1-9])$/.exec(e.code || '');
         if ((e.altKey || e.ctrlKey) && !e.metaKey && !e.shiftKey && digit && questions && questions[+digit[1] - 1]) {
-            const box = document.querySelector('.isa-widget .isa-widget__input');
-            if (box && !box.disabled) {
-                e.preventDefault();
-                box.value = questions[+digit[1] - 1];
+            e.preventDefault();
+            const q = questions[+digit[1] - 1];
+            const fill = () => {
+                const box = document.querySelector('.isa-widget .isa-widget__input');
+                if (!box || box.disabled) return false;
+                box.value = q;
                 box.dispatchEvent(new Event('input', { bubbles: true }));   // so Isa sees the text
                 box.focus();
+                return true;
+            };
+            if (!fill()) {
+                // Isa's panel is closed: open it, then type the question once the box is there.
+                document.querySelector('.isa-widget__bubble')?.click();
+                let tries = 0;
+                const wait = setInterval(() => { if (fill() || ++tries > 20) clearInterval(wait); }, 100);
             }
             return;
         }
@@ -67,20 +75,8 @@ export function init(dotnet, questions) {
         e.preventDefault();
         dotnet.invokeMethodAsync(action[0], action[1]);
     };
-    document.addEventListener('keydown', handler);
-
-    // A dashboard in a frame has its own keyboard focus, so pass Esc and the Alt shortcuts on from inside it.
-    frameLoad = (ev) => {
-        const f = ev.target;
-        if (!f || f.tagName !== 'IFRAME' || !(f.closest('.present__frame') || f.classList.contains('isa-widget__dashboardFrame'))) return;
-        try {
-            f.contentWindow.document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' || (e.altKey && ['Digit6', 'Digit7', 'KeyC'].includes(e.code))) handler(e);
-            });
-        } catch (err) { /* not our page: leave it alone */ }
-    };
-    document.addEventListener('load', frameLoad, true);
-    console.info('[Isa present] keys ready: Alt+1..5 questions, Alt+C cases, Esc closes');
+    document.addEventListener('keydown', handler, true);
+    console.info('[Isa present] keys ready: Alt+1..5 questions, Alt+C cases, Alt+6/7 panels');
 
     const n = parseInt((location.hash || '').replace('#', ''), 10);
     return Number.isFinite(n) && n > 0 ? n - 1 : 0;
@@ -92,10 +88,8 @@ export function setSlide(index) {
 }
 
 export function dispose() {
-    if (handler) document.removeEventListener('keydown', handler);
-    if (frameLoad) document.removeEventListener('load', frameLoad, true);
+    if (handler) document.removeEventListener('keydown', handler, true);
     handler = null;
-    frameLoad = null;
 }
 
 let intro = null;

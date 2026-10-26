@@ -82,6 +82,7 @@
 @using IsaChatApp.Services
 @implements IDisposable
 @inject IJSRuntime JS
+@inject PresentPanels Panels
 @inject HttpClient Http
 @inject WidgetSettings Settings
 @inject UsageLogService UsageLog
@@ -1040,6 +1041,13 @@
     // nested ChatWidget inside the iframe -- see MainLayout.razor.
     private async Task OpenDashboard(string path)
     {
+        // During the presentation (/present) the dashboards open as the slides' own panels (like the Cases panel),
+        // so the slides, the chat and the sign-in stay put; Esc closes the panel.
+        if (Panels.Active && path is "/dev-dashboard" or "/content-health-dashboard")
+        {
+            await Panels.RequestAsync(path);
+            return;
+        }
         ActiveDashboardUrl = $"{path}?embed=1";
         StateHasChanged();
         await Task.Delay(500);

@@ -12,7 +12,7 @@
 // - Keep dev-only items (test scripts, the launcher) off the slides.
 //
 // Each slide has a "kind" that decides its layout:
-//   landing, cover, problem, statement, rules, pipeline, status, showwork, list,
+//   landing, cover, problem, statement, rules, safetynet, pipeline, status, showwork, list,
 //   demo, numbered, features, closing.
 // "presenter" shows in the corner, so hand-offs are clear.
 // In "lead", a word between *asterisks* is shown in italics and colour.
@@ -133,7 +133,7 @@
       ]
     },
     {
-      "kind": "list",
+      "kind": "safetynet",
       "warmup": true,
       "section": "What we built",
       "presenter": "Willis Pearson",
@@ -154,7 +154,7 @@
       "title": "For the team",
       "lead": "Tools for the people who run Isa.",
       "items": [
-        { "title": "Developer dashboard", "text": "Role-gated. Trace lookup, content import, and Salesforce settings." },
+        { "title": "Developer dashboard", "text": "Role-gated. Testing console and trace lookup, and content import." },
         { "title": "Content Health dashboard", "text": "For support managers: how the approved content is holding up." }
       ]
     },

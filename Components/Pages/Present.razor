@@ -8,6 +8,7 @@
 @inject IsaChatApp.Services.Orchestrator.OllamaChatService Ollama
 @inject SalesforceTicketService Salesforce
 @inject DevAccessService DevAccess
+@inject PresentPanels Panels
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -122,12 +123,30 @@ else
             }
         </div>
     }
-    @* A dashboard over the slides (Alt+6 Developer Dashboard, Alt+7 Content Health). Esc or the button returns to the same slide. *@
-    @if (_frameUrl is not null)
+    @* The dashboards, as panels over the slides (Alt+6 Developer, Alt+7 Content Health, or Isa's Backstage menu). Esc closes. *@
+    @if (_panel != Panel.None)
     {
-        <div class="present__frame">
-            <button type="button" class="present__frameBack" @onclick="CloseFrame">&#8592; Back to slides</button>
-            <iframe src="@_frameUrl" title="Dashboard"></iframe>
+        <div class="present__cases present__cases--dash" role="dialog" aria-label="@(_panel == Panel.Dev ? "Developer Dashboard" : "Content Health")">
+            <div class="present__casesHead">
+                <h2>@(_panel == Panel.Dev ? "Developer Dashboard" : "Content Health") <span>@(_panel == Panel.Dev ? "backstage" : "support")</span></h2>
+                <small>Esc closes</small>
+            </div>
+            @if (_panel == Panel.Dev)
+            {
+                <DevTesting />
+                <h3 class="present__subhead">Content import</h3>
+                <ContentImport />
+            }
+            else
+            {
+                <select class="present__healthRange" @bind="_healthRange">
+                    <option value="today">Today</option>
+                    <option value="week">This week</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="all">All time</option>
+                </select>
+                <ContentHealthSections CutoffUtc="HealthCutoff" RangeLabel="@HealthLabel" />
+            }
         </div>
     }
     var s = _slides[_index];
@@ -177,7 +196,7 @@ else
                                 <div class="present__strip" aria-hidden="true">
                                     @for (var i = 0; i < 6; i++)
                                     {
-                                        <svg viewBox="-2 -2 204 204" focusable="false" class="@(i % 2 == 0 ? "is-blue" : "is-green")"><path d="@CPath" /></svg>
+                                        <svg viewBox="-2 -2 204 204" focusable="false" class="@(i % 2 == 0 ? "is-blue" : "is-green")" style="transform:rotate(@(StripTurns[i % 3])deg)"><path d="@CPath" /></svg>
                                     }
                                 </div>
                             </div>
@@ -265,6 +284,42 @@ else
                         </div>
                         break;
 
+                    case "safetynet":
+                        @* Safe by design: the failures that all land in one hand-off, and the privacy rule beside it.
+                           The first items are the failures; the last item is the privacy rule. *@
+                        <h1 class="present__title">@s.Title</h1>
+                        <p class="present__lead">@s.Lead</p>
+                        <div class="present__net">
+                            <div class="present__netMain">
+                                <div class="present__netBoxes">
+                                    @foreach (var (item, n) in s.Items.Take(s.Items.Count - 1).Select((x, n) => (x, n)))
+                                    {
+                                        <div class="present__netBox" style="--n:@n">
+                                            <h2 class="present__netTitle">@item.Title</h2>
+                                            <p class="present__netText">@item.Text</p>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="present__netArrows" aria-hidden="true">
+                                    @for (var n = 0; n < s.Items.Count - 1; n++)
+                                    {
+                                        <span class="present__netArrow" style="--n:@n"></span>
+                                    }
+                                </div>
+                                <div class="present__netBar">Hand-off to a person, never a wrong answer</div>
+                            </div>
+                            @{ var priv = s.Items[^1]; }
+                            <div class="present__netPrivate">
+                                <svg viewBox="0 0 24 24" class="present__netLock" aria-hidden="true" focusable="false">
+                                    <rect x="4.5" y="10.5" width="15" height="10" rx="1.5" fill="currentColor" />
+                                    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                </svg>
+                                <h2 class="present__netTitle">@priv.Title</h2>
+                                <p class="present__netText">@priv.Text</p>
+                            </div>
+                        </div>
+                        break;
+
                     case "pipeline":
                         <h1 class="present__title">@s.Title</h1>
                         <p class="present__lead">@s.Lead</p>
@@ -317,15 +372,15 @@ else
                             }
                         </ol>
                         <div class="present__statusCols">
-                            @foreach (var status in new[] { "built", "partial", "stub" })
+                            @foreach (var (status, col) in new[] { "built", "partial", "stub" }.Select((x, c) => (x, c)))
                             {
                                 var group = s.Rows.Select((r, i) => (Row: r, Number: i + 1)).Where(x => x.Row.Status == status).ToList();
                                 <div class="present__statusCol">
                                     <p class="present__statusHead is-@status">@StatusIcon(status) @StatusLabel(status) <span>@group.Count</span></p>
-                                    <ul>
-                                        @foreach (var (row, number) in group)
+                                    <ul style="--col:@col">
+                                        @foreach (var ((row, number), n) in group.Select((g, n) => (g, n)))
                                         {
-                                            <li><strong>@number. @row.Name</strong> <span>@row.Text</span></li>
+                                            <li style="--n:@n"><strong>@number. @row.Name</strong> <span>@row.Text</span></li>
                                         }
                                     </ul>
                                 </div>
@@ -340,7 +395,7 @@ else
                             @* The real "show the work" panel (Components/Shared/ShowTheWork.razor), fed sample steps
                                built from the stage contract's test questions 2 and 4, so it looks exactly like the chat. *@
                             <div class="present__work">
-                                <ShowTheWork Steps="_sampleAnswered" TotalMs="@(_sampleAnswered.Sum(x => x.ElapsedMs))" StartOpen="true" />
+                                <ShowTheWork Steps="_sampleAnswered" TotalMs="@(_sampleAnswered.Sum(x => x.ElapsedMs))" />
                                 <ShowTheWork Steps="_sampleHandoff" TotalMs="@(_sampleHandoff.Sum(x => x.ElapsedMs))" />
                             </div>
                             <ul class="present__bullets">
@@ -377,7 +432,7 @@ else
                             @for (var i = 0; i < s.Items.Count; i++)
                             {
                                 var item = s.Items[i];
-                                <li>
+                                <li style="--n:@i">
                                     <span class="present__numberedNum">@(i + 1)</span>
                                     <span><strong>@item.Title</strong><span>@item.Text</span></span>
                                 </li>
@@ -449,7 +504,18 @@ else
     private enum Gate { Off, Checking, Ready, NotReady }
     private Gate _gate = Gate.Off;
     private bool _gateLeaving;
-    private string? _frameUrl;
+    private enum Panel { None, Dev, Health }
+    private Panel _panel;
+    private string _healthRange = "week";
+    private DateTime HealthCutoff => _healthRange switch
+    {
+        "today" => DateTime.UtcNow.Date,
+        "week" => DateTime.UtcNow.AddDays(-7),
+        "30d" => DateTime.UtcNow.AddDays(-30),
+        _ => DateTime.MinValue,
+    };
+    private string HealthLabel => _healthRange switch { "today" => "today", "week" => "this week", "30d" => "the last 30 days", _ => "all time" };
+
     private bool _casesOpen;
     private SalesforceTicketService.CaseList? _cases;
     private DateTime? _casesUpdated;
@@ -486,8 +552,13 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Keep an open panel to the left of Isa's panel and rail.
+        if (!firstRender && _js is not null && (_casesOpen || _panel != Panel.None))
+            await _js.InvokeVoidAsync("fitCases");
         if (!firstRender || !Settings.PresentationEnabled || _slides.Count == 0) return;
         _self = DotNetObjectReference.Create(this);
+        Panels.Active = true;
+        Panels.Requested += OnPanelRequested;
         _js = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Present.razor.js?v=" + DateTime.UtcNow.Ticks);   // new address each load, so a browser never serves an old copy
         ApplyPresentationSetup();
         var start = await _js.InvokeAsync<int>("init", _self, DemoQuestions);
@@ -534,13 +605,38 @@ else
         return GoTo(_index + delta);
     }
 
+    // Alt+6 / Alt+7 (JS) toggle a panel; Isa's Backstage menu asks for one through PresentPanels.
+    [JSInvokable]
+    public async Task TogglePanel(string path)
+    {
+        var panel = path == "/dev-dashboard" ? Panel.Dev : Panel.Health;
+        if (_gate != Gate.Off || _outro) return;
+        if (_panel == panel) { await CloseCases(); return; }
+        await OpenPanel(panel);
+    }
+
+    private Task OnPanelRequested(string path) =>
+        InvokeAsync(async () =>
+        {
+            if (_gate != Gate.Off || _outro) return;
+            await OpenPanel(path == "/dev-dashboard" ? Panel.Dev : Panel.Health);
+        });
+
+    private async Task OpenPanel(Panel panel)
+    {
+        _casesOpen = false;
+        _casesCts?.Cancel();
+        _panel = panel;
+        await InvokeAsync(StateHasChanged);
+    }
+
     // Alt+C: show or hide the live Cases panel (not over the opening screen or the closing).
     [JSInvokable]
     public async Task ToggleCases()
     {
         if (_gate != Gate.Off || _outro) return;
         if (_casesOpen) { await CloseCases(); return; }
-        await CloseFrame();
+        _panel = Panel.None;
         _casesOpen = true;
         _cases = null;
         _casesUpdated = null;
@@ -552,31 +648,11 @@ else
     [JSInvokable]
     public async Task CloseCases()
     {
-        if (!_casesOpen) return;
+        if (!_casesOpen && _panel == Panel.None) return;
         _casesOpen = false;
+        _panel = Panel.None;
         _casesCts?.Cancel();
         await InvokeAsync(StateHasChanged);
-    }
-
-    // Alt+6 / Alt+7: a dashboard over the slides. The slide, the chat and its sign-in are untouched underneath.
-    [JSInvokable]
-    public async Task ToggleFrame(string path)
-    {
-        if (_gate != Gate.Off || _outro) return;
-        var url = path + "?embed=1";   // ?embed=1: no second Isa inside the frame
-        if (_frameUrl == url) { await CloseFrame(); return; }
-        await CloseCases();
-        _frameUrl = url;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    [JSInvokable]
-    public async Task CloseFrame()
-    {
-        if (_frameUrl is null) return;
-        _frameUrl = null;
-        await InvokeAsync(StateHasChanged);
-        if (_js is not null) await _js.InvokeVoidAsync("refocus");
     }
 
     private async Task PollCasesAsync(CancellationToken ct)
@@ -767,6 +843,8 @@ else
         catch (JSDisconnectedException) { }
         _gateCts?.Cancel();
         _casesCts?.Cancel();
+        Panels.Active = false;
+        Panels.Requested -= OnPanelRequested;
         _self?.Dispose();
     }
 }
