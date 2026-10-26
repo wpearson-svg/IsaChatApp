@@ -18,6 +18,9 @@
      rest of that day; the line can be opened again.
    - "For today" leaves out steps already done; when nothing is left it
      says so.
+   - "Coming up" shows the next two steps only, then "and N more this
+     week, in Today" (Matthew, 23 October 2026: the full list pushed Isa's
+     greeting and her question buttons below the bottom of the chat).
    - Every fact comes from the database (the journey steps, the leader's
      progress, and onboarding/key_dates.csv), never from the AI model,
      so the days and counts are always exact.
@@ -119,9 +122,14 @@ else if (_ctx is not null)
                     <dt>Coming up</dt>
                     <dd>
                         <ul>
-                            @foreach (var s in _comingUp)
+                            @foreach (var s in _comingUp.Take(ComingUpShown))
                             {
                                 <li>@s.Title <span class="isa-tnote__days">(@DaysLabel(s))</span></li>
+                            }
+                            @if (_comingUp.Count > ComingUpShown)
+                            {
+                                var more = _comingUp.Count - ComingUpShown;
+                                <li class="isa-tnote__more">and @more more this week, in Today</li>
                             }
                         </ul>
                     </dd>
@@ -161,6 +169,9 @@ else if (_ctx is not null)
     private JourneyContext? _ctx;
     private List<JourneyStep> _todayLeft = new();
     private List<JourneyStep> _comingUp = new();
+
+    // How many "Coming up" steps the note lists before "and N more this week".
+    private const int ComingUpShown = 2;
     private List<KeyDateOnDay> _keyDates = new();
     private bool _compact;
 
