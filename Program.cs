@@ -86,6 +86,7 @@ builder.Services.AddSingleton<ContentImportService>();
 builder.Services.AddSingleton<DevAccessService>();
 builder.Services.AddHttpClient("salesforce");
 builder.Services.AddSingleton<SalesforceTicketService>();
+builder.Services.AddScoped<PresentPanels>();   // lets Backstage open the /present panels
 // Reads/writes dev-keys.json (Dev Dashboard > Models, RAG, access & ticketing).
 builder.Services.AddSingleton<DevKeysStore>();
 builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapter>();

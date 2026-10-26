@@ -485,6 +485,10 @@
     color: #1d2d5c;
 }
 
+/* Real versus stub is the tallest slide: lift everything except the corner C
+   strip so the last row clears the footer and its arrows. */
+.present__stage--status .present__body { padding-top: 2.2cqw; }
+
 .present__statusCols {
     display: grid;
     grid-template-columns: 1.45fr 1fr 1fr;
@@ -509,7 +513,23 @@
 .present__statusHead.is-partial { background: #fbb034; }
 .present__statusHead.is-stub { background: #e5e7eb; }
 
-.present__statusCol ul { list-style: none; margin: 0; padding: 0; }
+.present__statusCol ul { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+
+/* The rows slide down out of their coloured label, Built first, then Partly built, then Stub.
+   Starts by itself when the slide opens; no clicks. */
+.present__statusCol li {
+    animation: present-drop 0.4s ease-out backwards;
+    animation-delay: calc(0.3s + var(--col, 0) * 1.1s + var(--n, 0) * 0.14s);
+}
+
+@keyframes present-drop {
+    from { transform: translateY(-110%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__statusCol li { animation: none; }
+}
 
 .present__statusCol li {
     padding: 0.55cqw 0;
@@ -520,6 +540,105 @@
 
 .present__statusCol strong { display: block; font-weight: 500; font-size: 1.35cqw; color: #1d2d5c; }
 .present__statusCol li span { font-weight: 300; color: #323e48; }
+
+/* ---- Safe by design: the safety net. The failures drop in, arrows draw down, the green
+   hand-off bar fills, then the privacy panel fades in. Automatic, about 2.7 seconds. ---- */
+
+.present__net {
+    display: grid;
+    grid-template-columns: 1fr 22cqw;
+    gap: 3cqw;
+    margin-top: 1.6cqw;
+    align-items: stretch;
+}
+
+.present__netBoxes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4cqw; }
+
+.present__netBox {
+    padding: 1.4cqw 1.4cqw 1.6cqw;
+    background: #f6f7f8;
+    border-top: 0.35cqw solid #fbb034;
+    animation: present-fall 0.45s ease-out backwards;
+    animation-delay: calc(0.3s + var(--n, 0) * 0.25s);
+}
+
+.present__netTitle {
+    margin: 0 0 0.6cqw;
+    font-weight: 700;
+    font-size: 1.15cqw;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+}
+
+.present__netText { margin: 0; font-weight: 300; font-size: 1.35cqw; line-height: 1.4; color: #323e48; }
+
+.present__netArrows { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4cqw; height: 4.2cqw; }
+
+.present__netArrow {
+    position: relative;
+    justify-self: center;
+    width: 0.25cqw;
+    height: 100%;
+    background: #6cb33f;
+    transform-origin: top;
+    animation: present-draw 0.35s ease-out backwards;
+    animation-delay: calc(1.3s + var(--n, 0) * 0.1s);
+}
+
+.present__netArrow::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -0.1cqw;
+    transform: translateX(-50%);
+    border-left: 0.7cqw solid transparent;
+    border-right: 0.7cqw solid transparent;
+    border-top: 0.9cqw solid #6cb33f;
+}
+
+.present__netBar {
+    padding: 1.4cqw 2cqw;
+    background: #6cb33f;
+    color: #1d2d5c;
+    font-weight: 700;
+    font-size: 1.7cqw;
+    text-align: center;
+    transform-origin: left;
+    animation: present-fill 0.5s ease-out backwards;
+    animation-delay: 1.8s;
+}
+
+.present__netPrivate {
+    padding: 1.8cqw;
+    background: #1d2d5c;
+    color: #ffffff;
+    animation: present-in 0.6s ease-out backwards;
+    animation-delay: 2.3s;
+}
+
+.present__netPrivate .present__netTitle { color: #ffffff; }
+.present__netPrivate .present__netText { color: #e5e7eb; }
+.present__netLock { width: 3cqw; height: 3cqw; color: #6cb33f; margin-bottom: 0.8cqw; }
+
+@keyframes present-fall {
+    from { transform: translateY(-2.5cqw); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes present-draw {
+    from { transform: scaleY(0); opacity: 0; }
+    to { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes present-fill {
+    from { transform: scaleX(0); opacity: 0; }
+    to { transform: scaleX(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__netBox, .present__netArrow, .present__netBar, .present__netPrivate { animation: none; }
+}
 
 /* ---- Show the work ---- */
 
@@ -638,6 +757,16 @@
 }
 
 .present__numbered li { display: flex; gap: 1.2cqw; align-items: flex-start; }
+
+/* Next steps: the items fade in one at a time when the slide opens. */
+.present__numbered li {
+    animation: present-in 0.5s ease-out backwards;
+    animation-delay: calc(0.3s + var(--n, 0) * 0.35s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__numbered li { animation: none; }
+}
 
 .present__numberedNum {
     flex: none;
@@ -1074,3 +1203,8 @@
     box-shadow: 0 .4vw 1.4vw rgba(29, 45, 92, .35);
 }
 .present__frameBack:hover { background: #00a4e4; }
+
+/* The Developer / Content Health panels reuse the Cases panel's frame (.present__cases). */
+.present__cases--dash { font-size: 1rem; }
+.present__healthRange { margin: 0 0 1rem; padding: .35rem .6rem; font-size: 1rem; border: 1px solid #c8d1e0; border-radius: .4rem; color: #1d2d5c; }
+.present__subhead { margin: 1.6rem 0 .6rem; padding-top: 1rem; border-top: 1px solid #e3e8f0; font-size: 1.2rem; font-weight: 500; color: #1d2d5c; }
