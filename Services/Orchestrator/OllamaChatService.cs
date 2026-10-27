@@ -51,6 +51,31 @@ public sealed class OllamaChatService
         }
     }
 
+    /// <summary>
+    /// Unloads the model from memory now (keep_alive 0), so it does not sit there for the rest of the
+    /// keep-alive time after Isa stops. Never throws. Returns true when Ollama answered.
+    /// </summary>
+    public async Task<bool> UnloadAsync(CancellationToken cancellationToken = default)
+    {
+        var endpoint = _config["Ollama:Endpoint"] ?? "http://localhost:11434";
+        var model = _config["Ollama:Model"] ?? "phi4-mini";
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(5));
+            using var response = await _clients.CreateClient("ollama").PostAsJsonAsync(
+                $"{endpoint.TrimEnd('/')}/api/generate",
+                new { model, keep_alive = 0 },
+                timeout.Token);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _log.LogInformation(ex, "Model unload did not complete");
+            return false;
+        }
+    }
+
     /// <summary>Is Ollama reachable, is the model installed, is it loaded in memory right now. Never throws.</summary>
     public async Task<OllamaStatus> StatusAsync(CancellationToken cancellationToken = default)
     {

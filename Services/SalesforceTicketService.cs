@@ -39,7 +39,7 @@ public class SalesforceTicketService
 
     /// <summary>One Isa Case, as the presentation's live Cases panel shows it.</summary>
     public sealed record CaseRow(string CaseNumber, string? IsaReference, string? Status, string? Priority,
-        DateTimeOffset? CreatedAt, string RequestedBy, string Chapter, string? EscalatedBy);
+        DateTimeOffset? CreatedAt, string RequestedBy, string Chapter, string? EscalatedBy, string Reason = "");
 
     /// <summary>The newest Isa Cases, or a short error word (never a secret).</summary>
     public sealed record CaseList(bool Ok, IReadOnlyList<CaseRow> Rows, string? Error);
@@ -81,7 +81,8 @@ public class SalesforceTicketService
                 rows.Add(new CaseRow(Str("CaseNumber") ?? "", Str("Isa_Ticket_Ref__c"), Str("Status"), Str("Priority"), created,
                     Line("Requested by:"),
                     string.IsNullOrWhiteSpace(chapter) ? "" : string.IsNullOrWhiteSpace(role) ? chapter : $"{chapter} ({role})",
-                    Str("Escalated_By__c")));
+                    Str("Escalated_By__c"),
+                    Line("Reason:")));   // why Isa passed it to a person (never the question text)
             }
             return new CaseList(true, rows, null);
         }

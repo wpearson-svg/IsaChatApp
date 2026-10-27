@@ -38,13 +38,14 @@ export function init(dotnet, questions) {
             console.info('[Isa present] Esc: closing panels');
             dotnet.invokeMethodAsync('CloseCases');
         }
-        const digit = /^Digit([1-9])$/.exec(e.code || '');
+        const digit = /^Digit([1-9])$/.exec(e.code || '') || (/^[1-9]$/.test(e.key || '') ? [null, e.key] : null);
         if ((e.altKey || e.ctrlKey) && !e.metaKey && !e.shiftKey && digit && questions && questions[+digit[1] - 1]) {
             e.preventDefault();
             const q = questions[+digit[1] - 1];
             const fill = () => {
                 const box = document.querySelector('.isa-widget .isa-widget__input');
                 if (!box || box.disabled) return false;
+                toast('Alt+' + digit[1] + ': question ' + digit[1] + ' typed. Press Enter.');
                 box.value = q;
                 box.dispatchEvent(new Event('input', { bubbles: true }));   // so Isa sees the text
                 box.focus();
@@ -54,13 +55,16 @@ export function init(dotnet, questions) {
                 // Isa's panel is closed: open it, then type the question once the box is there.
                 document.querySelector('.isa-widget__bubble')?.click();
                 let tries = 0;
-                const wait = setInterval(() => { if (fill() || ++tries > 20) clearInterval(wait); }, 100);
+                const wait = setInterval(() => { if (fill()) clearInterval(wait); else if (++tries > 20) { clearInterval(wait); toast('Alt+' + digit[1] + ': Isa is busy or closed, try again.'); } }, 100);
             }
             return;
         }
         if (e.altKey || e.ctrlKey || e.metaKey) return;
+        // A clicker's Page Down / Page Up always change slides, even when the chat box still has focus
+        // after a demo question (a one-line box does not use them). Arrows and Space stay with the box.
+        const clickerKey = e.key === 'PageDown' || e.key === 'PageUp';
         const t = e.target;
-        if (t && t.closest && (t.closest('input, textarea, select, [contenteditable="true"]') || t.closest('.isa-widget'))) return;
+        if (!clickerKey && t && t.closest && (t.closest('input, textarea, select, [contenteditable="true"]') || t.closest('.isa-widget'))) return;
 
         let action = null;
         switch (e.key) {
@@ -80,6 +84,20 @@ export function init(dotnet, questions) {
 
     const n = parseInt((location.hash || '').replace('#', ''), 10);
     return Number.isFinite(n) && n > 0 ? n - 1 : 0;
+}
+
+// A small note in the bottom-left corner, so you can see a shortcut reached the page.
+let toastEl = null, toastTimer = 0;
+function toast(text) {
+    if (!toastEl) {
+        toastEl = document.createElement('div');
+        toastEl.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:2147483601;padding:8px 14px;border-radius:8px;background:#1d2d5c;color:#fff;font:500 14px Roboto,Arial,sans-serif;opacity:0;transition:opacity .2s;pointer-events:none;';
+        document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = text;
+    toastEl.style.opacity = '0.92';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { if (toastEl) toastEl.style.opacity = '0'; }, 1600);
 }
 
 export function setSlide(index) {

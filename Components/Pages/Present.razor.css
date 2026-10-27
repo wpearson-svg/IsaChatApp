@@ -264,7 +264,12 @@
     margin-bottom: auto;
 }
 
-.present__cards--2 { grid-template-columns: repeat(2, 1fr); max-width: 62cqw; }
+/* Two cards (For the team): bigger, and centred on the slide. */
+.present__cards--2 { grid-template-columns: repeat(2, 1fr); width: 84cqw; max-width: 100%; gap: 3cqw; margin-left: auto; margin-right: auto; }
+.present__cards--2 .present__card { padding: 3.2cqw 3cqw 3.4cqw; }
+.present__cards--2 .present__cardNum { font-size: 4.4cqw; margin-bottom: 1.2cqw; }
+.present__cards--2 .present__cardTitle { font-size: 1.7cqw; margin-bottom: 1.2cqw; }
+.present__cards--2 .present__cardText { font-size: 2.2cqw; }
 
 .present__card {
     padding: 2.2cqw 2.2cqw 2.4cqw;
@@ -313,15 +318,77 @@
     position: relative;
 }
 
-/* The line every question travels along. */
-.present__pipe::before {
+/* The pipes between the stages: nine, running centre to centre behind the numbered circles. */
+.present__links {
+    position: absolute;
+    top: 0;
+    left: calc(50% / var(--stages, 10));
+    right: calc(50% / var(--stages, 10));
+    height: 4.2cqw;
+    display: flex;
+    align-items: center;
+    z-index: 0;
+}
+
+.present__link {
+    position: relative;
+    flex: 1;
+    height: 1.5cqw;
+    margin: 0 -0.3cqw;
+    border-radius: 0.2cqw;
+    background: linear-gradient(to bottom, #1a2750 0%, #4a5d99 18%, #a9bbe8 36%, #4a5d99 62%, #1a2750 100%);
+    box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.3);
+    --from: #00a4e4;
+    --to: #00a4e4;
+}
+
+.present__link.is-last { --to: #6cb33f; }
+
+/* End fittings, just outside the circles. */
+.present__link::before,
+.present__link::after {
     content: "";
     position: absolute;
-    top: 2.6cqw;
-    left: 5%;
-    right: 5%;
-    height: 0.3cqw;
-    background: #cbd2d9;
+    top: 50%;
+    width: 0.45cqw;
+    height: 1.9cqw;
+    transform: translateY(-50%);
+    border-radius: 0.15cqw;
+    background: linear-gradient(to bottom, #1a2750, #a9bbe8 40%, #1a2750);
+}
+
+.present__link::before { left: 2.7cqw; }
+.present__link::after { right: 2.7cqw; }
+
+.present__linkWater {
+    position: absolute;
+    left: 3.4cqw;
+    right: 3.4cqw;
+    top: 0.32cqw;
+    bottom: 0.32cqw;
+    border-radius: 0.4cqw;
+    overflow: hidden;
+    background: rgba(8, 16, 40, 0.55);
+}
+
+.present__linkWater i {
+    position: absolute;
+    inset: 0;
+    transform-origin: left center;
+    transform: scaleX(0);
+    background:
+        repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.55) 0 0.35cqw, transparent 0.35cqw 1.4cqw) 0 0 / 200% 100%,
+        linear-gradient(to right, var(--from), var(--to));
+    animation: present-link-fill 5.25s ease-in-out infinite, present-slosh 0.9s linear infinite;
+    animation-delay: calc(var(--i) * 0.375s), 0s;
+}
+
+@keyframes present-link-fill {
+    0% { transform: scaleX(0); opacity: 1; }
+    8% { transform: scaleX(1); opacity: 1; }
+    16% { transform: scaleX(1); opacity: 1; }
+    30% { transform: scaleX(1); opacity: 0; }
+    31%, 100% { transform: scaleX(0); opacity: 0; }
 }
 
 .present__pipeStage {
@@ -336,17 +403,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 5.2cqw;
-    height: 5.2cqw;
+    width: 4.2cqw;
+    height: 4.2cqw;
     border-radius: 50%;
     background: #1d2d5c;
     color: #ffffff;
     font-weight: 500;
-    font-size: 1.9cqw;
+    font-size: 1.7cqw;
     border: 0.3cqw solid #1d2d5c;
     position: relative;
+    z-index: 1;
     box-sizing: border-box;
-    animation: present-pipe-stage 5.25s ease-in-out infinite;
+    box-shadow: 0 0 0 0.3cqw #a9bbe8, 0 0 0 0.55cqw #1a2750;   /* the flange ring */
+    animation: present-pipe-dot 5.25s ease-in-out infinite;
 }
 
 .present__pipeStage.is-ai .present__pipeDot {
@@ -369,8 +438,15 @@
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 164, 228, 0); }
 }
 
+@keyframes present-pipe-dot {
+    0% { transform: scale(1); filter: none; }
+    6% { transform: scale(1.18); filter: brightness(1.15); }
+    16%, 100% { transform: scale(1); filter: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .present__pipeDot { animation: none; }
+    .present__linkWater i { animation: none; transform: scaleX(1); }
 }
 
 .present__pipeName {
@@ -885,10 +961,9 @@
 .present__offBox p { color: #323e48; font-weight: 300; }
 
 /* ---- Landing: "Meet Isa", where the intro's curtain opens ----
-   Dark Blue ground; the intro's half-blue, half-green ring, large, on
-   the right; a green cropped C bleeding off the top left; a C strip
-   under the words. Text: white, Green (5:1 on Dark Blue) and Blue
-   (4.9:1 on Dark Blue). */
+   White ground (27 October 2026; it was Dark Blue); the intro's half-blue,
+   half-green ring, large, on the right; a C strip under the words.
+   Text: Dark Blue, dark Green and Blue, all readable on white. */
 
 .present__stage--landing .present__c { display: none; }
 
@@ -909,18 +984,18 @@
     font-weight: 300;
     font-size: 8.4cqw;
     line-height: 1.02;
-    color: #ffffff;
+    color: #1d2d5c;
 }
 
 .present__landingTitle:focus { outline: none; }
-.present__landingName { color: #6cb33f; }
+.present__landingName { color: #3f7d20; }
 
 .present__landingLead {
     margin: 0 0 3.2cqw;
     font-weight: 300;
     font-size: 3cqw;
     line-height: 1.25;
-    color: #00a4e4;
+    color: #07649d;
 }
 
 .present__strip { display: flex; gap: 1.2cqw; }
@@ -949,16 +1024,6 @@
 @keyframes present-ring-in {
     from { transform: scale(0.92) rotate(-12deg); opacity: 0; }
     to { transform: none; opacity: 1; }
-}
-
-.present__pop {
-    position: absolute;
-    width: 21cqw;
-    left: -9cqw;
-    top: -10cqw;
-    fill: #6cb33f;
-    transform: rotate(35deg);
-    pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -993,57 +1058,110 @@
 }
 .present__stage--cover .present__coverTitle { font-size: 8.6cqw; }
 
-/* Ten stages on one line: blue and green dots joined by a line. */
+/* The pipeline: ten fittings (blue and green) joined by nine pipes. Each fitting lights up in turn,
+   0.375s apart, left to right, and the water runs through the pipe after it; the run repeats every
+   5.25 seconds (slowed by half, Matthew, 23 October 2026). Pipes added 27 October 2026. */
 .present__track {
     position: relative;
     list-style: none;
-    margin: 2.4cqw 0 2.4cqw;
+    margin: 2.8cqw 0;
     padding: 0;
     display: flex;
-    justify-content: space-between;
-    width: 56cqw;
+    align-items: center;
+    width: 76cqw;
 }
 
-.present__track::before {
+.present__fit {
+    position: relative;
+    flex: none;
+    z-index: 2;
+    width: 2.2cqw;
+    height: 2.2cqw;
+    border-radius: 50%;
+    box-sizing: content-box;
+    border: 0.35cqw solid #1d2d5c;
+    box-shadow: 0 0 0 0.3cqw #a9bbe8, 0 0 0 0.55cqw #1a2750;   /* the flange ring */
+    filter: brightness(0.5);
+    animation: present-fit 5.25s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.375s);
+}
+
+.present__fit.is-blue { background: #00a4e4; }
+.present__fit.is-green { background: #6cb33f; }
+
+@keyframes present-fit {
+    0% { filter: brightness(0.5); transform: scale(1); }
+    6% { filter: none; transform: scale(1.45); }
+    16% { filter: none; transform: scale(1); }
+    30%, 100% { filter: brightness(0.5); transform: scale(1); }
+}
+
+/* A pipe: a tube with a light stripe along the top and a collar at each end. */
+.present__tube {
+    position: relative;
+    flex: 1;
+    height: 1.7cqw;
+    margin: 0 -0.6cqw;
+    border-radius: 0.2cqw;
+    background: linear-gradient(to bottom, #1a2750 0%, #4a5d99 18%, #a9bbe8 36%, #4a5d99 62%, #1a2750 100%);
+    box-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.35);
+}
+
+.present__tube::before,
+.present__tube::after {
     content: "";
     position: absolute;
-    left: 0.9cqw;
-    right: 0.9cqw;
     top: 50%;
-    height: 0.3cqw;
+    width: 0.55cqw;
+    height: 2.5cqw;
     transform: translateY(-50%);
-    background: #00a4e4;
+    border-radius: 0.15cqw;
+    background: linear-gradient(to bottom, #1a2750, #a9bbe8 40%, #1a2750);
 }
 
-.present__track li {
-    position: relative;
-    width: 1.8cqw;
-    height: 1.8cqw;
-    border-radius: 50%;
-    border: 0.3cqw solid #1d2d5c;
-    box-sizing: content-box;
+.present__tube::before { left: 0.9cqw; }
+.present__tube::after { right: 0.9cqw; }
+
+/* The water: a window along the pipe that fills from the left as the question arrives, then drains. */
+.present__water {
+    position: absolute;
+    left: 1.6cqw;
+    right: 1.6cqw;
+    top: 0.42cqw;
+    bottom: 0.42cqw;
+    border-radius: 0.4cqw;
+    overflow: hidden;
+    background: rgba(8, 16, 40, 0.55);
 }
 
-.present__track .is-blue { background: #00a4e4; }
-.present__track .is-green { background: #6cb33f; }
-
-/* A question passing through the stages: each dot lights up in turn,
-   0.375s apart, left to right; the run repeats every 5.25 seconds
-   (slowed by half, Matthew, 23 October 2026). */
-.present__track li {
-    filter: brightness(0.5);
-    animation: present-stage 5.25s ease-in-out infinite;
+.present__water i {
+    position: absolute;
+    inset: 0;
+    transform-origin: left center;
+    transform: scaleX(0);
+    background:
+        repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.55) 0 0.35cqw, transparent 0.35cqw 1.4cqw) 0 0 / 200% 100%,
+        linear-gradient(to right, var(--from), var(--to));
+    animation: present-tube-fill 5.25s ease-in-out infinite, present-slosh 0.9s linear infinite;
+    animation-delay: calc(var(--i) * 0.375s), 0s;
 }
 
-@keyframes present-stage {
-    0% { filter: brightness(0.5); transform: scale(1); box-shadow: none; }
-    6% { filter: none; transform: scale(1.5); box-shadow: 0 0 0 0.45cqw rgba(255, 255, 255, 0.25); }
-    16% { filter: none; transform: scale(1); box-shadow: none; }
-    30%, 100% { filter: brightness(0.5); transform: scale(1); box-shadow: none; }
+.present__tube.is-b2g { --from: #00a4e4; --to: #6cb33f; }
+.present__tube.is-g2b { --from: #6cb33f; --to: #00a4e4; }
+
+@keyframes present-tube-fill {
+    0% { transform: scaleX(0); opacity: 1; }
+    8% { transform: scaleX(1); opacity: 1; }
+    16% { transform: scaleX(1); opacity: 1; }
+    30% { transform: scaleX(1); opacity: 0; }
+    31%, 100% { transform: scaleX(0); opacity: 0; }
 }
+
+@keyframes present-slosh { to { background-position: 1.4cqw 0, 0 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-    .present__track li { animation: none; filter: none; }
+    .present__fit { animation: none; filter: none; }
+    .present__water i { animation: none; transform: scaleX(1); }
 }
 
 /* ---- The problem: the title across the top; the big number on the
@@ -1137,6 +1255,14 @@
 /* The real "show the work" panel on the Show the work slide: two panels stacked. */
 .present__work { display: flex; flex-direction: column; gap: 1.2cqw; min-width: 0; }
 
+/* Show the work: two columns, the text on top of each dropdown. Lifted a little so an opened dropdown
+   (the tall one has 7 steps) clears the footer. */
+.present__workCols { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; align-items: start; margin-top: 1.2cqw; }
+.present__workCol { min-width: 0; }
+.present__workCol .present__bullets { margin-bottom: 1.4cqw; }
+.present__workCol .present__bullets li { margin-bottom: 0; }
+.present__stage--showwork .present__body { padding-top: 2.2cqw; }
+
 /* ---- Opening screen: a quick check, then "Ready" in ISACA Green ---- */
 .present__gate {
     position: fixed;
@@ -1169,10 +1295,10 @@
 /* ---- Live Salesforce Cases panel (Alt+C) ---- */
 .present__cases {
     position: fixed;
-    left: 2.5vw;
-    top: 7vh;
-    width: 66vw;
-    max-height: 80vh;
+    left: 2vw;
+    top: 4vh;
+    width: 96vw;
+    max-height: 92vh;
     overflow: auto;
     z-index: 2147483000;
     background: #fff;
@@ -1187,8 +1313,8 @@
 .present__casesHead h2 span { margin-left: .6vw; font-family: Roboto, sans-serif; font-size: 1vw; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: #6cb33f; border-radius: 99px; padding: .15vw .7vw; vertical-align: middle; }
 .present__casesHead small { font-size: 1vw; color: #5b6b8c; }
 .present__casesNote { font-size: 1.5vw; margin: 1vw 0; }
-.present__casesTable { width: 100%; border-collapse: collapse; font-size: 1.15vw; }
-.present__casesTable th { text-align: left; font-weight: 500; font-size: .95vw; text-transform: uppercase; letter-spacing: .06em; color: #5b6b8c; padding: .5vw .7vw; border-bottom: 2px solid #00a4e4; }
+.present__casesTable { width: 100%; border-collapse: collapse; font-size: 1.4vw; }
+.present__casesTable th { text-align: left; font-weight: 500; font-size: 1.1vw; text-transform: uppercase; letter-spacing: .06em; color: #5b6b8c; padding: .5vw .7vw; border-bottom: 2px solid #00a4e4; }
 .present__casesTable td { padding: .65vw .7vw; border-bottom: 1px solid #e3e8f0; vertical-align: top; }
 .present__casesTable tr.is-new td { background: #eef7e7; }
 .present__casesTable td.is-high { color: #b3261e; font-weight: 700; }
@@ -1205,6 +1331,53 @@
 .present__frameBack:hover { background: #00a4e4; }
 
 /* The Developer / Content Health panels reuse the Cases panel's frame (.present__cases). */
-.present__cases--dash { font-size: 1rem; }
+.present__cases--dash { font-size: 1.1rem; left: 2vw; top: 3vh; width: 96vw; max-height: 94vh; }
 .present__healthRange { margin: 0 0 1rem; padding: .35rem .6rem; font-size: 1rem; border: 1px solid #c8d1e0; border-radius: .4rem; color: #1d2d5c; }
 .present__subhead { margin: 1.6rem 0 .6rem; padding-top: 1rem; border-top: 1px solid #e3e8f0; font-size: 1.2rem; font-weight: 500; color: #1d2d5c; }
+
+/* ---- Even slides: Dark Blue ground (odd slides stay white), 27 October 2026 ----
+   The white-slide colours above flip to light ones here. Cards and panels become
+   a faint white tint on the blue; coloured fills (green, yellow, white mock cards) are unchanged. */
+.is-dark .present__section,
+.is-dark .present__em,
+.is-dark .present__cardNum,
+.is-dark .present__demoSteps li::marker { color: #7fd0f5; }
+.is-dark .present__title,
+.is-dark .present__cardTitle,
+.is-dark .present__statusName,
+.is-dark .present__statusCol strong,
+.is-dark .present__netTitle,
+.is-dark .present__rows strong,
+.is-dark .present__pipeName,
+.is-dark .present__numbered strong { color: #ffffff; }
+.is-dark .present__lead,
+.is-dark .present__bullets,
+.is-dark .present__cardText,
+.is-dark .present__statusCol li span,
+.is-dark .present__netText,
+.is-dark .present__rows span,
+.is-dark .present__demoSteps,
+.is-dark .present__pathLabel,
+.is-dark .present__numbered li > span > span { color: #e7f0f5; }
+.is-dark .present__card,
+.is-dark .present__netBox { background: rgba(255, 255, 255, 0.09); }
+/* The privacy box is already Dark Blue, so on a blue slide it turns light. */
+.is-dark .present__netPrivate { background: #e7f0f5; }
+.is-dark .present__netPrivate .present__netTitle { color: #1d2d5c; }
+.is-dark .present__netPrivate .present__netText { color: #323e48; }
+.is-dark .present__netLock { color: #3f7d20; }
+
+/* The big cropped C sits behind the content, so on the blue content slides it is only a faint
+   shadow, and the safety-net slide (full of boxes) has none. The cover keeps its own. */
+.present__stage.is-dark:not(.present__stage--cover) .present__c { opacity: 0.15; }
+.present__stage--safetynet .present__c { display: none; }
+.is-dark .present__statusLine::before { background: rgba(255, 255, 255, 0.3); }
+.is-dark .present__statusCol li,
+.is-dark .present__rows li,
+.is-dark .present__rows li:first-child { border-color: rgba(255, 255, 255, 0.22); }
+.is-dark .present__statusLine .is-stub .present__statusDot { background: #1d2d5c; color: #e7f0f5; border-color: #9aa5b1; }
+
+/* The closing slide (13) is odd, so it is white: Dark Blue words instead of white. */
+.present__stage--closing:not(.is-dark) .present__quote,
+.present__stage--closing:not(.is-dark) .present__coverSub { color: #1d2d5c; }
+.present__stage--closing:not(.is-dark) .present__coverNote { color: #606e7c; }

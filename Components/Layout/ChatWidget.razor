@@ -178,6 +178,12 @@
                    moved to the rail on the left (IsaRail.razor, 21 October
                    2026), so the header leaves more room for the chat. *@
                 <div class="isa-widget__headerLinks">
+                    @* Help: "How to use Isa" (everyone). A text link in the header, between the
+                       name and the close button. It used to be at the bottom of the rail, which
+                       pushed Backstage off the screen (26 October 2026). *@
+                    <button type="button" class="isa-widget__headerLink isa-widget__helpLink" @onclick="ToggleHelp"
+                            aria-pressed="@(IsHelpOpen ? "true" : "false")"
+                            title="@(IsHelpOpen ? "Close the guide" : "How to use Isa")">Help</button>
                     @* New conversation: clears the chat so the welcome
                        message and suggested questions show again. Hidden
                        while the chat is already empty or a question is
