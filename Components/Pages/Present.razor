@@ -103,7 +103,7 @@ else
             else if (_cases is { } list)
             {
                 <table class="present__casesTable">
-                    <thead><tr><th>Case</th><th>Isa ref</th><th>Status</th><th>Priority</th><th>Requested by</th><th>Chapter</th><th>Created</th></tr></thead>
+                    <thead><tr><th>Case</th><th>Isa ref</th><th>Status</th><th>Priority</th><th>Requested by</th><th>Chapter</th><th>Reason</th><th>Created</th></tr></thead>
                     <tbody>
                         @foreach (var row in list.Rows)
                         {
@@ -115,6 +115,7 @@ else
                                 <td class="@(row.Priority == "High" ? "is-high" : "")">@row.Priority</td>
                                 <td>@row.RequestedBy</td>
                                 <td>@row.Chapter</td>
+                                <td>@ReasonText(row.Reason)</td>
                                 <td>@(row.CreatedAt is { } at ? at.ToLocalTime().ToString("h:mm:ss tt") : "")</td>
                             </tr>
                         }
@@ -150,7 +151,7 @@ else
         </div>
     }
     var s = _slides[_index];
-    var dark = s.Kind is "landing" or "cover" or "closing";
+    var dark = (_index + 1) % 2 == 0;   // Odd slides white, even slides Dark Blue (27 October 2026)
     <div class="present">
         <div class="present__stage present__stage--@s.Kind @(dark ? "is-dark" : "")" @key="_index">
 
@@ -162,7 +163,7 @@ else
             {
                 <svg class="present__c" viewBox="-2 -2 204 204" aria-hidden="true" focusable="false"><path d="@CPath" /></svg>
             }
-            else
+            else if (s.Kind != "landing")
             {
                 @* White slides: a row of small Cs, blue and green, coming in from
                    the right edge along the top, a third of the slide wide. The Cs
@@ -200,7 +201,6 @@ else
                                     }
                                 </div>
                             </div>
-                            <svg class="present__pop" viewBox="-2 -2 204 204" aria-hidden="true" focusable="false"><path d="@CPath" /></svg>
                             <div class="present__ring" aria-hidden="true">
                                 <svg viewBox="-2 -2 204 204" focusable="false">
                                     <defs>
@@ -245,13 +245,18 @@ else
                         <div class="present__cover">
                             <span class="present__mark"><Throbber Spinning="false" WordColor="#ffffff" /></span>
                             <h1 class="present__coverTitle">@s.Title</h1>
-                            @* Ten stages joined end to end, alternating blue and green. They
-                               light up one after another, left to right, like a question
-                               passing through each stage (Present.razor.css, present-stage). *@
+                            @* The pipeline: ten fittings (the stages, alternating blue and green) joined by nine
+                               pipes. They light up one after another, left to right, like a question passing
+                               through each stage, and the water runs through each pipe as it goes
+                               (Present.razor.css, present-fit and present-fill). *@
                             <ol class="present__track" aria-hidden="true">
                                 @for (var i = 0; i < 10; i++)
                                 {
-                                    <li class="@(i % 2 == 0 ? "is-blue" : "is-green")" style="animation-delay:@(i * 375)ms"></li>
+                                    <li class="present__fit @(i % 2 == 0 ? "is-blue" : "is-green")" style="--i:@i"></li>
+                                    @if (i < 9)
+                                    {
+                                        <li class="present__tube @(i % 2 == 0 ? "is-b2g" : "is-g2b")"><span class="present__water"><i style="--i:@(i + 0.5)"></i></span></li>
+                                    }
                                 }
                             </ol>
                             <p class="present__coverLead">@s.Lead</p>
@@ -261,7 +266,7 @@ else
 
                     case "closing":
                         <div class="present__closing">
-                            <span class="present__mark present__mark--small"><Throbber Spinning="false" WordColor="#ffffff" /></span>
+                            <span class="present__mark present__mark--small"><Throbber Spinning="false" WordColor="@(dark ? "#ffffff" : "#1d2d5c")" /></span>
                             <h1 class="present__quote">@s.Title</h1>
                             <p class="present__coverSub">@s.Subtitle</p>
                             <p class="present__coverNote">@s.Note</p>
@@ -328,6 +333,13 @@ else
                            under the stages it uses, so the cheap path visibly skips
                            the AI stages. *@
                         <ol class="present__pipe" style="--stages:@s.Stages.Count">
+                            @* The pipes between the stages (27 October 2026): water runs through each one just after its stage lights up. *@
+                            <li class="present__links" aria-hidden="true">
+                                @for (var i = 0; i < s.Stages.Count - 1; i++)
+                                {
+                                    <span class="present__link @(i == s.Stages.Count - 2 ? "is-last" : "")"><span class="present__linkWater"><i style="--i:@(i + 0.5)"></i></span></span>
+                                }
+                            </li>
                             @for (var i = 0; i < s.Stages.Count; i++)
                             {
                                 var stage = s.Stages[i];
@@ -389,18 +401,20 @@ else
                         break;
 
                     case "showwork":
-                        <h1 class="present__title">@s.Title</h1>
-                        <p class="present__lead">@s.Lead</p>
-                        <div class="present__split">
-                            @* The real "show the work" panel (Components/Shared/ShowTheWork.razor), fed sample steps
-                               built from the stage contract's test questions 2 and 4, so it looks exactly like the chat. *@
-                            <div class="present__work">
+                        <h1 class="present__title present__title--compact">@s.Title</h1>
+                        <p class="present__lead present__lead--compact">@s.Lead</p>
+                        @* The real "show the work" panel (Components/Shared/ShowTheWork.razor), fed sample steps
+                           built from the stage contract's test questions 2 and 4, so it looks exactly like the chat.
+                           Two columns: each has its line of text on top and its dropdown under it. *@
+                        <div class="present__workCols">
+                            <div class="present__workCol">
+                                @if (s.Bullets.Count > 0) { <ul class="present__bullets"><li>@s.Bullets[0]</li></ul> }
                                 <ShowTheWork Steps="_sampleAnswered" TotalMs="@(_sampleAnswered.Sum(x => x.ElapsedMs))" />
+                            </div>
+                            <div class="present__workCol">
+                                @if (s.Bullets.Count > 1) { <ul class="present__bullets"><li>@s.Bullets[1]</li></ul> }
                                 <ShowTheWork Steps="_sampleHandoff" TotalMs="@(_sampleHandoff.Sum(x => x.ElapsedMs))" />
                             </div>
-                            <ul class="present__bullets">
-                                @foreach (var b in s.Bullets) { <li>@b</li> }
-                            </ul>
                         </div>
                         break;
 
@@ -813,11 +827,18 @@ else
         }
     };
 
+    // The reason Isa handed off, in plain words ("low_confidence" shows as "Low confidence").
+    private static string ReasonText(string? reason)
+    {
+        var t = (reason ?? "").Replace('_', ' ').Replace('-', ' ').Trim();
+        return t.Length == 0 || t == "none" ? "" : char.ToUpperInvariant(t[0]) + t[1..];
+    }
+
     private static string StatusLabel(string? status) => status switch
     {
         "built" => "Built",
         "partial" => "Partly built",
-        "stub" => "Stub",
+        "stub" => "Placeholder",
         _ => status ?? ""
     };
 

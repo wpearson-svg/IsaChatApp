@@ -186,8 +186,8 @@
 
     // the curtain halves ride along with the Cs (they stay joined at the middle until the end)
     const slideL = (outro || t > T_IN) ? dB : 0, slideR = (outro || t > T_IN) ? dA : 0;
-    curtainL.setAttribute("x", L + slideL); curtainL.setAttribute("width", CX - L);
-    curtainR.setAttribute("x", CX + slideR); curtainR.setAttribute("width", RR - CX);
+    curtainL.setAttribute("x", L + slideL); curtainL.setAttribute("width", CX - L + 2);   // +2: the halves overlap, so no hairline seam shows the (white) slide behind
+    curtainR.setAttribute("x", CX + slideR - 2); curtainR.setAttribute("width", RR - CX + 2);
 
     // the logo appears in the window as the Cs arrive, spins ONE full turn (cycling through the ISACA colours once),
     // then rests in its normal colours for the pause before the Cs roll out

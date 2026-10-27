@@ -6,6 +6,9 @@ echo ============================================
 echo  Stopping IsaChatApp
 echo ============================================
 
+echo Unloading the Ollama model so it does not keep holding memory...
+powershell -NoProfile -Command "try { $c = Get-Content appsettings.json -Raw | ConvertFrom-Json; $m = $c.Ollama.Model; $e = $c.Ollama.Endpoint; if (-not $e) { $e = 'http://localhost:11434' }; Invoke-RestMethod -Method Post -Uri ($e.TrimEnd('/') + '/api/generate') -ContentType 'application/json' -Body (@{ model = $m; keep_alive = 0 } | ConvertTo-Json) -TimeoutSec 5 | Out-Null; Write-Host ('Unloaded ' + $m) } catch { Write-Host 'Could not reach Ollama (skipped).' }"
+
 if exist isa.pid (
     set /p ISA_PID=<isa.pid
     echo Found isa.pid -- stopping PID !ISA_PID! and its child processes...

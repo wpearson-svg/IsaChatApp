@@ -359,6 +359,15 @@
     color: #ffffff;
 }
 
+.isa-widget__helpLink {
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.isa-widget__helpLink[aria-pressed="true"] { color: #ffffff; }
+
 .isa-widget__headerIcon {
     width: 18px;
     height: 18px;

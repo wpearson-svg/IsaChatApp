@@ -18,7 +18,6 @@
      ----         a line between Isa's own tools and ISACA's sites
      Chapter 360  opens the sample Chapter 360 page in a new tab
      Engage       opens the sample Engage page in a new tab
-     Help         at the bottom: "How to use Isa" (everyone)
      Backstage    at the bottom: Config and the dashboards, for the
                   Developer, Executive and Manager roles only
 
@@ -138,20 +137,9 @@
        menu beside the rail listing what this role may open. On the User
        role (a chapter leader) the button isn't there at all; Config is
        still reachable by typing /isa-config. *@
-    @* Help: "How to use Isa", for everyone, at the bottom of the rail
-       (Matthew's approved mockup, 23 October 2026). *@
+    @* Help moved to a link in the chat header (22 Oct. mockup, changed 26 October 2026) so
+       Backstage keeps its room at the bottom of the rail. *@
     <div class="isa-rail__bottom">
-    <button type="button" class="isa-rail__btn isa-rail__btn--help" @onclick="OnToggleHelp"
-            aria-pressed="@(HelpOpen ? "true" : "false")"
-            title="@(HelpOpen ? "Close the guide" : "How to use Isa")" aria-label="Help: how to use Isa">
-        <span class="isa-rail__tile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M9.2 9a3 3 0 0 1 5.8 1c0 2-3 2.6-3 4.5" />
-                <path d="M12 18h.01" />
-            </svg>
-        </span>
-        <span class="isa-rail__label">Help</span>
-    </button>
 
     @if (Backstage.Count > 0)
     {

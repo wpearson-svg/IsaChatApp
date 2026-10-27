@@ -269,26 +269,20 @@
     border-radius: 50%;
 }
 
-/* ---- Shorter screens (laptops, a zoomed-in browser) ----
-   Eight buttons and a divider need about 690px. On shorter screens the
-   rail tightens up, so Help and Backstage at the bottom are never pushed
-   off it (Matthew, 23 October 2026). Every button stays at least 44px
-   tall to tap, and keeps its name. */
-@media (min-width: 721px) and (max-height: 820px) {
-    .isa-rail { gap: 2px; padding: 6px 6px 8px; }
-    .isa-rail__list { gap: 2px; }
-    .isa-rail__bottom { gap: 2px; }
-    .isa-rail__btn { min-height: 54px; padding: 4px 2px; gap: 2px; }
+/* ---- Sizing to the screen (26 October 2026) ----
+   The icons grow with the window's height, bigger on a tall screen and never smaller than
+   30px, and the buttons are spaced evenly down the rail. The rail is exactly the window's
+   height, so Backstage at the bottom always stays on screen, however short the window is.
+   Replaces the old two "shorter screens" steps, which shrank the icons. Every button stays
+   at least 44px tall to tap, and keeps its name. */
+@media (min-width: 721px) {
+    .isa-rail { gap: 0; padding: 8px 6px 10px; }
+    .isa-rail__list { flex: 1 1 auto; min-height: 0; gap: 0; justify-content: space-evenly; }
+    .isa-rail__bottom { gap: 0; }
+    .isa-rail__btn { min-height: 48px; padding: 4px 2px; gap: 3px; }
     .isa-rail__hide { min-height: 44px; }
-    .isa-rail__tile { width: 34px; height: 34px; border-radius: 9px; }
-    .isa-rail__tile svg { width: 19px; height: 19px; }
-    .isa-rail__label { font-size: 0.64rem; }
-    .isa-rail__divider { margin: 3px 10px; }
-}
-
-@media (min-width: 721px) and (max-height: 640px) {
-    .isa-rail__btn { min-height: 46px; padding: 3px 2px; }
-    .isa-rail__tile { width: 30px; height: 30px; border-radius: 8px; }
-    .isa-rail__tile svg { width: 17px; height: 17px; }
-    .isa-rail__label { font-size: 0.6rem; }
+    .isa-rail__tile { width: clamp(30px, 6.4vh, 52px); height: clamp(30px, 6.4vh, 52px); }
+    .isa-rail__tile svg { width: 55%; height: 55%; }
+    .isa-rail__label { font-size: clamp(0.62rem, 1.5vh, 0.8rem); }
+    .isa-rail__divider { margin: 0 10px; }
 }

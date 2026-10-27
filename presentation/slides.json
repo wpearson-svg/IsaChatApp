@@ -33,7 +33,7 @@
       "kind": "cover",
       "presenter": "Matthew Brady",
       "title": "Pipeline built",
-      "lead": "Every question now runs end to end, through all ten stages.",
+      "lead": "Every question now flows end to end, through all ten stages.",
       "note": "Second Star Collective"
     },
     {
@@ -94,7 +94,7 @@
       "kind": "status",
       "section": "What we built",
       "presenter": "Willis Pearson",
-      "title": "Real versus stub",
+      "title": "Built and Placeholder",
       "lead": "The honest status of every stage.",
       "rows": [
         { "name": "Front end", "status": "built", "text": "Chat, sign-in, Today and notebook panels" },
@@ -180,7 +180,7 @@
       "title": "Next steps",
       "lead": "In priority order.",
       "items": [
-        { "title": "Real translation", "text": "Planned: LibreTranslate / Argos, self-hosted, plus a second self-hosted model for languages it doesn't cover, including Amharic, Oromo, Somali and Tigrinya." },
+        { "title": "Real translation", "text": "Planned: Meta's NLLB-200 model, self-hosted, which covers Amharic, Oromo, Somali and Tigrinya." },
         { "title": "Real input rules", "text": "Replace the keyword stub with rule-based checks." },
         { "title": "Vector search and RAG", "text": "Replace the meaning map with embedding search." },
         { "title": "Knowledge graph", "text": "Related topics from linked sections." },

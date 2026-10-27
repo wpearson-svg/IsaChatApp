@@ -79,6 +79,7 @@ builder.Services.AddHttpClient("keycloak");
 // The local model for complex_ai (phi4-mini through Ollama). No client-level timeout: OllamaChatService enforces Ollama:TimeoutSeconds itself.
 builder.Services.AddHttpClient("ollama", client => client.Timeout = Timeout.InfiniteTimeSpan);
 builder.Services.AddSingleton<IsaChatApp.Services.Orchestrator.OllamaChatService>();
+builder.Services.AddHostedService<IsaChatApp.Services.Orchestrator.OllamaLifetimeService>();   // model loaded at start (60m), unloaded at stop
 builder.Services.AddSingleton<EventLogService>();
 builder.Services.AddSingleton<UsageSummaryService>();
 builder.Services.AddSingleton<UsageReportService>();

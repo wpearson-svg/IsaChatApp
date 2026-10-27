@@ -113,7 +113,9 @@ public class ComplexAiStage : IStage
     // Which handed-over passage did the source line name? By number first, then by document and page.
     private static Passage? Resolve(string sourceLine, IReadOnlyList<Passage> passages)
     {
-        var n = Regex.Match(sourceLine, @"(?:PASSAGE\s*#?\s*\[?|\[)(\d+)", RegexOptions.IgnoreCase);
+        // The model writes the label several ways: "PASSAGE 1", "PASSAGE: 1", "PASSAGE #1", "PASSAGE [1]", "Passage number 1", "[1]".
+        // (A colon after PASSAGE was not accepted before, so "PASSAGE: 1" escalated as "source not retrieved".)
+        var n = Regex.Match(sourceLine, @"(?:PASSAGES?\W{0,3}(?:NO\.?|NUMBER)?\W{0,3}|\[)(\d+)", RegexOptions.IgnoreCase);
         if (!n.Success && Regex.IsMatch(sourceLine.Trim(), @"^\d+\W*$")) n = Regex.Match(sourceLine, @"\d+");
         if (n.Success)
         {

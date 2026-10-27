@@ -177,3 +177,10 @@ The updated RFP is saved in docs/ISACA_RFP_AI_Chapter_Support_Agent.md.
 - Measurement for a go/no-go decision: a short "what a pilot would measure" slide (adoption, usefulness, answer quality, hand-offs by topic, knowledge currency) scores directly. Pieces already exist: hand-offs and save offers counted by category, the planned Chapter Experience staff view, the Content Health Dashboard.
 - Onboarding is not in the RFP. That is fine as a surprise, but present it in the RFP's terms: it reduces repetitive questions from new leaders ("Automate"), supports the Chapter Experience team rather than replacing it, and keeps knowledge through the yearly handover.
 - The onboarding feature is a SURPRISE for the presentation: never describe it to ISACA beforehand, in questions or updates.
+
+=== DECISION: TRANSLATION ENGINE (OCTOBER 26, 2026) ===
+
+- Stage 3 (translation) will use Meta's NLLB-200 model, self-hosted. We are switching to it instead of LibreTranslate / Argos, which is no longer the plan.
+- Reason: NLLB-200 covers Amharic, Oromo, Somali and Tigrinya, one model for all of them. Amharic is Eliyas's language, so he can check the quality of its output.
+- Caution: NLLB-200 is a research model released under a non-commercial license, so a real deployment needs a license check. Fine as a plan in the prototype.
+- Updated in presentation/slides.json (slide 11, "Real translation") and in the Eliyas talking points.

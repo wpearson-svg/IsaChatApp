@@ -26,7 +26,7 @@
 
 **Points to get across:**
 - These are in priority order, and most of them turn the placeholders Willis showed into the real thing.
-- **Translation first,** because chapter leaders work in many languages. The plan is a self-hosted engine (LibreTranslate / Argos), plus a second self-hosted model for languages it doesn't cover, such as Amharic, Oromo, Somali and Tigrinya. Self-hosted means the client's material never leaves their systems.
+- **Translation first,** because chapter leaders work in many languages. The plan is Meta's NLLB-200 model, self-hosted, which covers languages such as Amharic, Oromo, Somali and Tigrinya. Self-hosted means the client's material never leaves their systems.
 - **Salesforce tickets:** the connection is already written; it just needs to pass its live test before it's switched on. Then hand-offs land directly in the support team's own system.
 - **Real input rules:** replace today's simple keyword check with proper rules for what Isa should and shouldn't take on.
 - **Vector search:** find passages by meaning more accurately than today's simpler approach.
