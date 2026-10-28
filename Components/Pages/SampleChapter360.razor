@@ -1,12 +1,274 @@
 @page "/sample/chapter-360"
+@layout AuthLayout
+@using System.Globalization
 
-@* Placeholder for the sample Chapter 360 page, opened by the Chapter 360
-   button on the rail (IsaRail.razor). The real Chapter 360 is behind
-   ISACA's login, so the prototype will show a sample page instead. This
-   page says plainly that the sample is still being built. *@
+@* ============================================================
+   SampleChapter360.razor
 
-<PageTitle>Chapter 360 (sample)</PageTitle>
+   The sample Chapter 360 page, opened in a new tab by the Chapter 360
+   button on Isa's rail (IsaRail.razor). The real Chapter 360 is behind
+   ISACA's login, so the prototype shows this look-alike instead
+   (Matthew, 27 October 2026: "they don't need to function, but they
+   should look really good").
 
-<p><strong>Sample page</strong> &middot; not ISACA's real Chapter 360</p>
-<h1>Chapter 360</h1>
-<p>The real Chapter 360 is behind ISACA's login. This sample page is still being built.</p>
+   What it is built from: the structure in ISACA's own Chapter 360
+   documents (content/Chapter 360): six Focus Areas with their codes
+   (OP, MX, PD, GV, AD, CI), their Practice Areas, the self-assessment
+   that gives a chapter its "360 view", and template names those
+   documents list. The chapter (Sakura Bay), its maturity levels and its
+   progress are invented sample data.
+
+   Honest by design: a ribbon at the top says it is a sample, nothing
+   on it works, there are no sign-in fields, and it uses no ISACA logo.
+   ============================================================ *@
+
+<PageTitle>Chapter 360 (sample) · Sakura Bay Chapter</PageTitle>
+
+<div class="c3">
+    <div class="c3-ribbon" role="note">
+        <strong>Sample page</strong> for the Isa prototype · not ISACA's real Chapter 360 · links and buttons don't work
+    </div>
+
+    <header class="c3-top">
+        <div class="c3-top__inner">
+            <a class="c3-brand" aria-label="Chapter 360 (sample)">
+                <svg class="c3-brand__mark" viewBox="0 0 40 40" aria-hidden="true">
+                    <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="80 15" stroke-linecap="round" transform="rotate(-60 20 20)" />
+                    <path d="M33 9.5l1.6 6.2-6.2-1.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="20" cy="20" r="4.5" fill="currentColor" />
+                </svg>
+                <span class="c3-brand__name">Chapter <b>360</b></span>
+            </a>
+            <nav class="c3-nav" aria-label="Chapter 360 sections">
+                <a class="is-on">Overview</a>
+                <a>Self-assessment</a>
+                <a>Focus areas</a>
+                <a>Tools &amp; templates</a>
+                <a>Help</a>
+            </nav>
+            <div class="c3-user">
+                <span class="c3-chapterPick">Sakura Bay Chapter <span aria-hidden="true">▾</span></span>
+                <span class="c3-avatar" aria-label="Signed in as Watanabe Kenji">WK</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="c3-main">
+        @* ---- Hero: the chapter's 360 view ---- *@
+        <section class="c3-hero">
+            <div class="c3-hero__text">
+                <p class="c3-kicker">Sakura Bay Chapter · Asia-Pacific</p>
+                <h1>Your chapter's 360 view</h1>
+                <p class="c3-lede">
+                    Chapter 360 helps volunteer leaders run a strong, sustainable chapter.
+                    Assess each Focus Area, see where you're thriving and where to grow,
+                    and find the tools and templates for the next step.
+                </p>
+                <div class="c3-progress" aria-label="Self-assessment: 4 of 6 focus areas done">
+                    <div class="c3-progress__row">
+                        <span>Self-assessment</span>
+                        <b>4 of 6 Focus Areas</b>
+                    </div>
+                    <div class="c3-progress__bar"><span style="width: 66.7%"></span></div>
+                    <p class="c3-progress__note">Last updated 28 June 2026 by Sato Yumiko · Advocacy and Continuous Improvement still to assess</p>
+                </div>
+                <div class="c3-hero__btns">
+                    <a class="c3-btn c3-btn--primary">Continue self-assessment</a>
+                    <a class="c3-btn c3-btn--ghost">How maturity levels work</a>
+                </div>
+            </div>
+
+            <figure class="c3-radar" aria-label="Maturity by focus area, from 1 to 5">
+                <svg viewBox="0 0 320 320" role="img" aria-hidden="true">
+                    @for (var level = 5; level >= 1; level--)
+                    {
+                        <polygon class="c3-radar__ring @(level % 2 == 0 ? "is-alt" : "")" points="@Ring(level)" />
+                    }
+                    @for (var i = 0; i < Areas.Length; i++)
+                    {
+                        var (x, y) = Point(i, 5);
+                        <line class="c3-radar__axis" x1="160" y1="160" x2="@F(x)" y2="@F(y)" />
+                    }
+                    <polygon class="c3-radar__shape" points="@Shape()" />
+                    @for (var i = 0; i < Areas.Length; i++)
+                    {
+                        var a = Areas[i];
+                        @if (a.Level is double level)
+                        {
+                            var (x, y) = Point(i, level);
+                            <circle cx="@F(x)" cy="@F(y)" r="6" class="c3-radar__dot" style="--c: @a.Color" />
+                        }
+                        @* An SVG <text> label, written as plain markup because Razor reserves <text>. *@
+                        @Label(i, a.Code, assessed: a.Level is not null)
+                    }
+                </svg>
+                <figcaption>
+                    <span><i class="c3-key c3-key--done"></i> Assessed</span>
+                    <span><i class="c3-key c3-key--open"></i> Grey: not yet assessed</span>
+                </figcaption>
+            </figure>
+        </section>
+
+        <div class="c3-grid">
+            @* ---- The six Focus Areas ---- *@
+            <section aria-labelledby="c3-areas">
+                <div class="c3-sectionHead">
+                    <h2 id="c3-areas">Focus Areas</h2>
+                    <span>Six areas · three to six Practice Areas each</span>
+                </div>
+                <div class="c3-areas">
+                    @foreach (var a in Areas)
+                    {
+                        <article class="c3-area" style="--c: @a.Color">
+                            <div class="c3-area__top">
+                                <span class="c3-code">@a.Code</span>
+                                @if (a.Level is double lvl)
+                                {
+                                    <span class="c3-level" title="Maturity level @lvl of 5">Level @lvl.ToString("0", CultureInfo.InvariantCulture)<small> / 5</small></span>
+                                }
+                                else
+                                {
+                                    <span class="c3-level is-open">Not assessed</span>
+                                }
+                            </div>
+                            <h3>@a.Name</h3>
+                            <p>@a.Summary</p>
+                            <div class="c3-meter" aria-hidden="true">
+                                @for (var n = 1; n <= 5; n++)
+                                {
+                                    <span class="@(a.Level >= n ? "is-on" : "")"></span>
+                                }
+                            </div>
+                            <ul class="c3-practices" aria-label="Practice Areas">
+                                @foreach (var p in a.Practices)
+                                {
+                                    <li>@p</li>
+                                }
+                            </ul>
+                            <a class="c3-area__link">Explore @a.Name <span aria-hidden="true">→</span></a>
+                        </article>
+                    }
+                </div>
+            </section>
+
+            @* ---- Side column ---- *@
+            <aside class="c3-side" aria-label="For your chapter">
+                <section class="c3-card">
+                    <h2>Recommended for you</h2>
+                    <p class="c3-card__sub">Based on your self-assessment</p>
+                    <ul class="c3-recs">
+                        @foreach (var r in Recommended)
+                        {
+                            <li>
+                                <span class="c3-recs__type" style="--c: @r.Color">@r.Type</span>
+                                <span class="c3-recs__name">@r.Name</span>
+                                <span class="c3-recs__area">@r.Area</span>
+                            </li>
+                        }
+                    </ul>
+                    <a class="c3-btn c3-btn--ghost c3-btn--full">Browse all tools &amp; templates</a>
+                </section>
+
+                <section class="c3-card c3-card--tip">
+                    <h2>Leadership continuity</h2>
+                    <p>
+                        New board this year? The Governance Focus Area's <b>Chapter Leadership Continuity</b>
+                        practice helps outgoing and incoming leaders hand over smoothly.
+                    </p>
+                    <a class="c3-area__link" style="--c: #1d2d5c">Open the practice <span aria-hidden="true">→</span></a>
+                </section>
+
+                <section class="c3-card">
+                    <h2>Your board in Chapter 360</h2>
+                    <ul class="c3-board">
+                        @foreach (var (initials, name, role, color) in Board)
+                        {
+                            <li>
+                                <span class="c3-avatar c3-avatar--sm" style="background: @color">@initials</span>
+                                <span><b>@name</b><small>@role</small></span>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="c3-foot">
+        <span>Chapter 360 · sample page made for the Isa prototype</span>
+        <span>Structure from ISACA's Chapter 360 documents · chapter, people and scores are invented</span>
+    </footer>
+</div>
+
+@code {
+    private record Area(string Code, string Name, string Summary, string[] Practices, double? Level, string Color);
+    private record Rec(string Type, string Name, string Area, string Color);
+
+    // The six Focus Areas and their Practice Areas, as ISACA's Chapter 360
+    // documents name them. The levels are invented sample data; null means
+    // not assessed yet.
+    private static readonly Area[] Areas =
+    {
+        new("OP", "Operations", "Plan, run and assess the chapter's services and experiences, with sound budgets and secure data.",
+            new[] { "Service & Program Portfolio", "Budget & Costs", "Security & Privacy", "Operations", "Vendors" }, 3, "#017dc2"),
+        new("MX", "Member Experience", "A welcoming community where members connect, volunteer and have their achievements recognized.",
+            new[] { "ISACA Culture", "Community & Networking Events", "Member Communications", "Volunteers", "Recognition", "Requests & Incidents" }, 4, "#3f7d20"),
+        new("PD", "Professional Development", "Timely, relevant training and events that help members grow their careers.",
+            new[] { "Training Events", "Program Delivery", "Knowledge & Resources" }, 3, "#6b2f8f"),
+        new("GV", "Governance", "Equip the board to set strategy, manage risk, stay compliant and plan for leadership continuity.",
+            new[] { "Chapter Strategy", "Chapter Governance", "Risk Management", "Leadership Continuity", "Compliance" }, 2, "#1d2d5c"),
+        new("AD", "Advocacy", "Strong ties with local businesses, governments and schools that support the chapter's goals.",
+            new[] { "Government Relationships", "Academic Relationships", "Enterprise Relationships", "Community Communications" }, null, "#b0500f"),
+        new("CI", "Continuous Improvement", "Small, steady improvements to processes and services, measured and celebrated.",
+            new[] { "Performance Management", "Resource Optimization", "New Programs & Projects" }, null, "#1b7a66"),
+    };
+
+    // Template and tool names as listed in ISACA's Chapter 360 documents.
+    private static readonly Rec[] Recommended =
+    {
+        new("Template", "Event Planning Template", "Professional Development", "#6b2f8f"),
+        new("Presentation", "Sample Event Strategy", "Professional Development", "#6b2f8f"),
+        new("Template", "Satisfaction Surveys", "Operations", "#017dc2"),
+        new("Template", "Sample Value Proposition", "Advocacy", "#b0500f"),
+        new("List", "Sample Performance Measurements", "Continuous Improvement", "#1b7a66"),
+    };
+
+    // Sakura Bay Chapter's board, from the prototype's invented directory.
+    private static readonly (string Initials, string Name, string Role, string Color)[] Board =
+    {
+        ("WK", "Watanabe Kenji", "President", "#017dc2"),
+        ("TM", "Takahashi Mei", "Vice President", "#3f7d20"),
+        ("NH", "Nakamura Hiroshi", "Secretary", "#6b2f8f"),
+        ("DO", "Daniel Okafor", "Treasurer", "#b0500f"),
+        ("LJ", "Lee Ji-woo", "Membership Director", "#1b7a66"),
+        ("SY", "Sato Yumiko", "Immediate Past President", "#1d2d5c"),
+    };
+
+    // ---- The radar chart: six axes, levels 1 to 5, centre (160,160), radius 110 ----
+
+    private static (double X, double Y) Point(int i, double level)
+    {
+        var angle = (-90 + 60 * i) * Math.PI / 180;
+        var r = 110 * level / 5;
+        return (160 + r * Math.Cos(angle), 160 + r * Math.Sin(angle));
+    }
+
+    private static string F(double v) => v.ToString("0.#", CultureInfo.InvariantCulture);
+
+    // A Focus Area code just outside the chart's outer ring; grey when that area isn't assessed yet.
+    private static MarkupString Label(int i, string code, bool assessed)
+    {
+        var (x, y) = Point(i, 6.15);
+        var colour = assessed ? "#1d2d5c" : "#9aa5b1";
+        return new MarkupString(
+            $"<text x=\"{F(x)}\" y=\"{F(y)}\" text-anchor=\"middle\" dominant-baseline=\"middle\" " +
+            $"style=\"font: 700 13px Roboto, Arial, sans-serif; fill: {colour}; letter-spacing: 0.04em\">{code}</text>");
+    }
+
+    private static string Ring(int level) =>
+        string.Join(" ", Enumerable.Range(0, 6).Select(i => { var (x, y) = Point(i, level); return $"{F(x)},{F(y)}"; }));
+
+    // The chapter's shape: an assessed area at its level; one not yet assessed close to the centre.
+    private static string Shape() =>
+        string.Join(" ", Areas.Select((a, i) => { var (x, y) = Point(i, a.Level ?? 0.35); return $"{F(x)},{F(y)}"; }));
+}
