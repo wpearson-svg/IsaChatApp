@@ -18,7 +18,9 @@
 
    The text is the approved passages Isa answers from
    (Services/Onboarding/LibraryService.cs), so nothing is rewritten or
-   summarised. Nothing here comes from the AI model.
+   summarised. Nothing here comes from the AI model. The Chapter 360
+   group (28 October 2026) is ISACA's Chapter 360 documents, read the
+   same way; a note says Isa doesn't answer questions from them yet.
    ============================================================ *@
 
 @using IsaChatApp.Services.Onboarding
@@ -56,7 +58,7 @@
     <div class="isa-lib__body" @key="@(_open?.Document.Document ?? "list")" @ref="_body">
         @if (_open is null)
         {
-            <p class="isa-lib__intro">ISACA's approved guidance that Isa answers from. Read it here, or listen to it word for word, for example on your way to work.</p>
+            <p class="isa-lib__intro">ISACA's guidance for chapter leaders. Read it here, or listen to it word for word, for example on your way to work.</p>
 
             @if (_documents.Count == 0)
             {
@@ -65,6 +67,11 @@
             @foreach (var group in _documents.GroupBy(d => d.Group))
             {
                 <h3 class="isa-lib__group">@group.Key</h3>
+                @if (group.All(d => !d.AnswersFrom))
+                {
+                    @* Honest about what Isa can do: these are here to read and listen to only. *@
+                    <p class="isa-lib__groupNote">To read and listen to. Isa doesn't answer questions from these documents yet.</p>
+                }
                 <ul class="isa-lib__list">
                     @foreach (var doc in group)
                     {

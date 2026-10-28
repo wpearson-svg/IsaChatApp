@@ -24,6 +24,39 @@
 
 .isa-save__btn:hover { background: #e7f0f5; }
 
+/* In a narrow chat the label drops to its own line rather than
+   breaking "Save to notebook" in two. */
+.isa-save__btn { flex-wrap: wrap; row-gap: 0.25rem; text-align: left; }
+.isa-save__words { white-space: nowrap; }
+
+/* "Deadline · worth saving?": a quiet tag beside the words, part of the
+   same button, so there is still only one thing to tap. Grey-blue text on
+   a pale tint (about 8:1 contrast), smaller than the button's words. */
+.isa-save__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.15rem;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid #c9d6e2;
+    border-radius: 999px;
+    background: #f4f7fa;
+    color: #3a4a5c;
+    font-size: 0.74rem;
+    white-space: nowrap;
+}
+
+.isa-save__btn:hover .isa-save__hint { background: #ffffff; }
+
+/* In the open box: why the label appeared. */
+.isa-save__why {
+    margin: -0.1rem 0 0.1rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid #07649d;
+    font-size: 0.78rem;
+    color: #323e48;
+}
+
 .isa-save__btn:focus-visible,
 .isa-save__link:focus-visible,
 .isa-save__input:focus-visible,

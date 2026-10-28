@@ -13,6 +13,11 @@ namespace IsaChatApp.Services.Onboarding;
 /// nothing is rewritten or summarised and nothing can be wrong that isn't in the approved
 /// document. The text is split into sentences here so the panel can highlight the sentence
 /// being read (Components/Shared/LibraryPanel.razor). Nothing comes from the AI model.
+///
+/// Documents marked "source": "chapter360" in library.json (Matthew, 28 October 2026) come
+/// instead from ISACA's Chapter 360 documents (Chapter360Service, onboarding/chapter360.json).
+/// They are read and played the same way, but Isa doesn't answer questions from them yet,
+/// so the Library says so.
 /// </summary>
 public class LibraryService
 {
@@ -33,13 +38,17 @@ public class LibraryService
     // They are shown as a quiet page marker, not read aloud as a heading.
     private static readonly Regex PageSection = new(@"^Guidebook page (\d+)$", RegexOptions.Compiled);
 
+    private const string Chapter360Source = "chapter360";
+
     private readonly string _listPath;
     private readonly string _contentDbPath;
+    private readonly Chapter360Service _chapter360;
 
-    public LibraryService(IWebHostEnvironment env, IConfiguration config)
+    public LibraryService(IWebHostEnvironment env, IConfiguration config, Chapter360Service chapter360)
     {
         _listPath = Path.Combine(env.ContentRootPath, "onboarding", "library.json");
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
+        _chapter360 = chapter360;
     }
 
     /// <summary>The Library's documents, in order, with how long each takes to listen to.
@@ -57,11 +66,17 @@ public class LibraryService
         }
 
         var words = WordCounts();
-        return entries
-            .Where(e => words.ContainsKey(e.Document))
-            .Select(e => new LibraryDocument(e.Document, e.Title ?? e.Document, e.Group ?? "", e.Description ?? "", e.Date,
-                Math.Max(1, (int)Math.Round(words[e.Document] / WordsPerMinute))))
-            .ToList();
+        var c360 = _chapter360.Data.Documents.ToDictionary(d => d.Id, d => d.Words);
+        var list = new List<LibraryDocument>();
+        foreach (var e in entries)
+        {
+            var fromChapter360 = e.Source == Chapter360Source;
+            var count = fromChapter360 ? c360.GetValueOrDefault(e.Document) : words.GetValueOrDefault(e.Document);
+            if (count == 0) continue;   // not loaded: never offer text the Library can't play
+            list.Add(new LibraryDocument(e.Document, e.Title ?? e.Document, e.Group ?? "", e.Description ?? "", e.Date,
+                Math.Max(1, (int)Math.Round(count / WordsPerMinute)), AnswersFrom: !fromChapter360));
+        }
+        return list;
     }
 
     /// <summary>One document's text, split into sections, paragraphs and numbered sentences,
@@ -69,7 +84,31 @@ public class LibraryService
     public LibraryText? GetText(string document)
     {
         var doc = GetDocuments().FirstOrDefault(d => d.Document == document);
-        if (doc is null || !File.Exists(_contentDbPath)) return null;
+        if (doc is null) return null;
+        var sections = doc.AnswersFrom ? ContentDbSections(document) : Chapter360Sections(document);
+        return sections is null ? null : new LibraryText(doc, Number(sections));
+    }
+
+    // A Chapter 360 document: its sections and paragraphs as onboarding/chapter360.json has them.
+    private List<LibrarySection>? Chapter360Sections(string id)
+    {
+        var source = _chapter360.GetDocument(id);
+        if (source is null) return null;
+        var sections = new List<LibrarySection>();
+        var key = 0;
+        foreach (var s in source.Sections)
+        {
+            var section = new LibrarySection($"s{key++}", s.Heading, null, []);
+            foreach (var p in s.Paragraphs) AddLine(section, p.Bullet, p.Text);
+            sections.Add(section);
+        }
+        return sections;
+    }
+
+    // An approved document from data/content.db, in its stored order.
+    private List<LibrarySection>? ContentDbSections(string document)
+    {
+        if (!File.Exists(_contentDbPath)) return null;
 
         using var conn = new SqliteConnection($"Data Source={_contentDbPath};Mode=ReadOnly");
         conn.Open();
@@ -79,7 +118,6 @@ public class LibraryService
 
         var sections = new List<LibrarySection>();
         LibrarySection? current = null;
-        var next = 0;   // sentence number across the whole document
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -107,16 +145,25 @@ public class LibraryService
             foreach (var line in lines)
             {
                 var bullet = line.StartsWith('•') || line.StartsWith("- ");
-                var body = bullet ? line.TrimStart('•', '-', ' ') : line;
-                var sentences = SentenceBreak.Split(body)
-                    .Select(s => s.Trim())
-                    .Where(s => s.Length > 0)
-                    .Select(s => new LibrarySentence(next++, s))
-                    .ToList();
-                if (sentences.Count > 0) current.Paragraphs.Add(new LibraryParagraph(bullet, sentences));
+                AddLine(current, bullet, bullet ? line.TrimStart('•', '-', ' ') : line);
             }
         }
+        return sections;
+    }
 
+    // One line of text as a paragraph of sentences (numbered later, in reading order).
+    private static void AddLine(LibrarySection section, bool bullet, string body)
+    {
+        var sentences = SentenceBreak.Split(body)
+            .Select(s => s.Trim())
+            .Where(s => s.Length > 0)
+            .Select(s => new LibrarySentence(0, s))
+            .ToList();
+        if (sentences.Count > 0) section.Paragraphs.Add(new LibraryParagraph(bullet, sentences));
+    }
+
+    private static List<LibrarySection> Number(List<LibrarySection> sections)
+    {
         // A heading is read aloud too, as the first "sentence" of its section, so a listener
         // hears where they are; it gets its own number so it highlights like any sentence.
         var numbered = new List<LibrarySection>();
@@ -129,8 +176,7 @@ public class LibraryService
                 .ToList();
             numbered.Add(s with { HeadingIndex = headingIndex, Paragraphs = paragraphs });
         }
-
-        return new LibraryText(doc, numbered);
+        return numbered;
     }
 
     // Words per document, from the same passages that are read aloud.
@@ -165,12 +211,16 @@ public class LibraryService
         public string? Group { get; set; }
         public string? Description { get; set; }
         public string? Date { get; set; }
+        /// <summary>"chapter360" for a Chapter 360 document; empty for one in content.db.</summary>
+        public string? Source { get; set; }
     }
 }
 
-/// <summary>A document in the Library: its title in content.db, the name shown, its group,
-/// its description, an optional date, and about how many minutes it takes to listen to.</summary>
-public record LibraryDocument(string Document, string Title, string Group, string Description, string? Date, int Minutes);
+/// <summary>A document in the Library: its title in content.db (or its Chapter 360 id), the name
+/// shown, its group, its description, an optional date, about how many minutes it takes to listen
+/// to, and whether Isa answers questions from it.</summary>
+public record LibraryDocument(string Document, string Title, string Group, string Description, string? Date, int Minutes,
+    bool AnswersFrom = true);
 
 /// <summary>A document's text, ready to show and read aloud.</summary>
 public record LibraryText(LibraryDocument Document, IReadOnlyList<LibrarySection> Sections);

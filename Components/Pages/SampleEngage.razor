@@ -1,5 +1,10 @@
 @page "/sample/engage"
 @layout AuthLayout
+@rendermode InteractiveServer
+@using System.Globalization
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 @* ============================================================
    SampleEngage.razor
@@ -11,29 +16,41 @@
    should look really good", with a fun announcement that Isa is live
    for every chapter member).
 
-   Modelled on the layout of ISACA's public Engage pages (white header,
-   section links, a search pill, a teal-to-blue banner, cards) and on
-   how a chapter community page is usually arranged: discussions,
-   library, events and members. Every person, post, event and number is
-   invented (the people are the prototype's sample Sakura Bay board).
+   28 October 2026 (Matthew): parts now work, like the Chapter 360 page,
+   so it looks real in the presentation:
+   - Home: the Isa announcement (its example conversation steps through
+     two real questions Isa answers from ISACA's text, and "What can Isa
+     do?" opens a short, honest list), latest discussions, library,
+     events, leaders and numbers. "Post a message" and "Following" work.
+   - Discussion: every thread, filters, search, and "New discussion".
+     A thread opens with its replies; you can like it and reply.
+   - Library: folders and files (opening a file shows a sample note).
+   - Events: each event opens; Register and Add to calendar respond.
+   - Members: the members who chose to be listed, searchable.
+   Anything typed stays on this page until it is reloaded: nothing is
+   saved or sent, and none of it goes through Isa.
 
-   Honest by design: a ribbon at the top says it is a sample, nothing
-   on it works, there are no sign-in fields, and it uses no ISACA logo.
-   The announcement only claims what Isa really does: answers from
-   ISACA's approved guidance, shows where each answer comes from, and
-   passes a question to a person when it needs one.
+   Modelled on the layout of ISACA's public Engage pages and on how a
+   chapter community page is usually arranged. Every person, post,
+   reply, event, file and number is invented (the leaders are the
+   prototype's sample Sakura Bay board). The Isa example answers are
+   ISACA's own words from Isa's approved content, and the announcement
+   only claims what Isa really does.
+
+   Honest by design: a ribbon says it is a sample and nothing is saved;
+   there are no sign-in fields and no ISACA logo.
    ============================================================ *@
 
 <PageTitle>Engage (sample) · Sakura Bay Chapter</PageTitle>
 
 <div class="eg">
     <div class="eg-ribbon" role="note">
-        <strong>Sample page</strong> for the Isa prototype · not ISACA's real Engage site · links and buttons don't work
+        <strong>Sample page</strong> for the Isa prototype · not ISACA's real Engage site · some parts work, nothing is saved
     </div>
 
     <header class="eg-top">
         <div class="eg-top__inner">
-            <a class="eg-brand" aria-label="Engage (sample)">
+            <button type="button" class="eg-brand" aria-label="Engage (sample): community home" @onclick="@(() => Go("home"))">
                 <svg class="eg-brand__mark" viewBox="0 0 40 40" aria-hidden="true">
                     <circle cx="10" cy="12" r="5" fill="#017dc2" />
                     <circle cx="30" cy="10" r="4" fill="#36ac91" />
@@ -42,18 +59,19 @@
                     <path d="M10 12L30 10M30 10L28 29M28 29L11 30M11 30L10 12M10 12L28 29" stroke="#9fb3c8" stroke-width="1.4" />
                 </svg>
                 <span class="eg-brand__name">Engage</span>
-            </a>
+            </button>
             <nav class="eg-nav" aria-label="Engage sections">
-                <a>Home</a>
-                <a>Connect <span aria-hidden="true">▾</span></a>
-                <a class="is-on">Communities <span aria-hidden="true">▾</span></a>
-                <a>Events <span aria-hidden="true">▾</span></a>
-                <a>Volunteer <span aria-hidden="true">▾</span></a>
+                <button type="button" @onclick="@(() => Go("home"))">Home</button>
+                <button type="button" @onclick="@(() => ElsewhereInEngage("Connect"))">Connect <span aria-hidden="true">▾</span></button>
+                <button type="button" class="is-on">Communities <span aria-hidden="true">▾</span></button>
+                <button type="button" @onclick="@(() => Go("events"))">Events <span aria-hidden="true">▾</span></button>
+                <button type="button" @onclick="@(() => ElsewhereInEngage("Volunteer"))">Volunteer <span aria-hidden="true">▾</span></button>
             </nav>
-            <div class="eg-search" aria-hidden="true">
-                <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2" /><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                <span>Search Engage</span>
-            </div>
+            <form class="eg-search" role="search" @onsubmit="SearchEngage">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2" /><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                <label class="eg-visually-hidden" for="eg-search-box">Search discussions</label>
+                <input id="eg-search-box" type="search" placeholder="Search discussions" @bind="_topSearch" @bind:event="oninput" />
+            </form>
             <span class="eg-avatar" aria-label="Signed in as Watanabe Kenji">WK</span>
         </div>
     </header>
@@ -80,25 +98,346 @@
         <div class="eg-banner__inner">
             <p class="eg-kicker">Chapter community · Asia-Pacific</p>
             <h1>Sakura Bay Chapter</h1>
-            <p class="eg-banner__sub">412 members · Tokyo and online · Connecting digital trust professionals around the bay since 2009</p>
+            <p class="eg-banner__sub">@MemberCount members · Tokyo and online · Connecting digital trust professionals around the bay since 2009</p>
             <div class="eg-banner__btns">
-                <a class="eg-btn eg-btn--light">Post a message</a>
-                <a class="eg-btn eg-btn--outline">✓ Following</a>
+                <button type="button" class="eg-btn eg-btn--light" @onclick="StartPost">Post a message</button>
+                <button type="button" class="eg-btn eg-btn--outline" aria-pressed="@(_following ? "true" : "false")" @onclick="ToggleFollow">
+                    @(_following ? "✓ Following" : "+ Follow")
+                </button>
             </div>
         </div>
     </section>
 
     <nav class="eg-tabs" aria-label="Community pages">
         <div class="eg-tabs__inner">
-            <a class="is-on">Home</a>
-            <a>Discussion</a>
-            <a>Library</a>
-            <a>Events</a>
-            <a>Members</a>
+            @foreach (var (key, label) in TabItems)
+            {
+                <button type="button" class="@(CurrentTab == key ? "is-on" : "")" aria-current="@(CurrentTab == key ? "page" : null)"
+                        @onclick="@(() => Go(key))">@label</button>
+            }
         </div>
     </nav>
 
     <main class="eg-main">
+        @if (ShownPost is not null)
+        {
+            @ThreadView(ShownPost)
+        }
+        else if (ShownEvent is not null)
+        {
+            @EventView(ShownEvent)
+        }
+        else
+        {
+            @switch (CurrentTab)
+            {
+                case "discussion":
+                    @DiscussionView()
+                    break;
+                case "library":
+                    @LibraryView()
+                    break;
+                case "events":
+                    @EventsView()
+                    break;
+                case "members":
+                    @MembersView()
+                    break;
+                default:
+                    @HomeView()
+                    break;
+            }
+        }
+    </main>
+
+    <footer class="eg-foot">
+        <span>Engage · sample page made for the Isa prototype</span>
+        <span>Every person, post, event and number on this page is invented</span>
+    </footer>
+
+    @if (_toast is not null)
+    {
+        <div class="eg-toast" role="status" aria-live="polite">
+            <span>@_toast</span>
+            <button type="button" aria-label="Close" @onclick="@(() => _toast = null)">&times;</button>
+        </div>
+    }
+</div>
+
+@code {
+    // =====================================================================
+    // Where we are (in the address, so the browser's Back button works)
+    // =====================================================================
+
+    [SupplyParameterFromQuery(Name = "tab")] public string? Tab { get; set; }
+    [SupplyParameterFromQuery(Name = "post")] public int? PostId { get; set; }
+    [SupplyParameterFromQuery(Name = "event")] public int? EventId { get; set; }
+
+    private string CurrentTab => ShownPost is not null ? "discussion" : ShownEvent is not null ? "events" : string.IsNullOrEmpty(Tab) ? "home" : Tab;
+    private Post? ShownPost => PostId is int id ? _posts.FirstOrDefault(p => p.Id == id) : null;
+    private Ev? ShownEvent => EventId is int id ? Events.FirstOrDefault(e => e.Id == id) : null;
+
+    private static readonly (string Key, string Label)[] TabItems =
+    {
+        ("home", "Home"), ("discussion", "Discussion"), ("library", "Library"), ("events", "Events"), ("members", "Members"),
+    };
+
+    private void Go(string tab, int? post = null, int? ev = null)
+    {
+        Nav.NavigateTo(Nav.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            ["tab"] = tab == "home" ? null : tab,
+            ["post"] = post,
+            ["event"] = ev,
+        }));
+    }
+
+    private string? _shownFor;
+    private bool _scrollTop;
+
+    protected override void OnParametersSet()
+    {
+        var key = $"{Tab}|{PostId}|{EventId}";
+        if (key == _shownFor) return;
+        _scrollTop = _shownFor is not null;
+        _shownFor = key;
+        _replyText = "";
+    }
+
+    private IJSObjectReference? _page;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_scrollTop) return;
+        _scrollTop = false;
+        try
+        {
+            // The same small scrolling script as the Chapter 360 sample page.
+            _page ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/SampleChapter360.razor.js");
+            await _page.InvokeVoidAsync("scrollToTop");
+        }
+        catch (JSException) { }   // scrolling is a nicety: never let it break the page
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { if (_page is not null) await _page.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+    }
+
+    // ---- A small note at the bottom of the screen ----
+
+    private string? _toast;
+    private int _toastId;
+
+    private async Task Toast(string text)
+    {
+        _toast = text;
+        var id = ++_toastId;
+        StateHasChanged();
+        await Task.Delay(4500);
+        if (id == _toastId) { _toast = null; StateHasChanged(); }
+    }
+
+    private Task ElsewhereInEngage(string where) =>
+        Toast($"{where} is part of ISACA's real Engage site. This sample shows the chapter community only.");
+
+    // =====================================================================
+    // Sample data. Every person, post, reply, event, file and number is invented.
+    // =====================================================================
+
+    private const string Me = "Watanabe Kenji";
+    private const string MyInitials = "WK";
+    private const string MyColor = "#017dc2";
+    private const string MyRole = "President";
+
+    private sealed class Post
+    {
+        public int Id { get; init; }
+        public string Initials { get; init; } = "";
+        public string Color { get; init; } = "";
+        public string Title { get; init; } = "";
+        public string? Tag { get; init; }
+        public string Body { get; init; } = "";
+        public string Author { get; init; } = "";
+        public string Role { get; init; } = "";
+        public string When { get; init; } = "";
+        public int Likes { get; set; }
+        public bool LikedByMe { get; set; }
+        public List<Reply> Replies { get; init; } = new();
+        public int EarlierReplies { get; init; }   // older replies not shown, so the count looks lived-in
+        public int ReplyCount => EarlierReplies + Replies.Count;
+    }
+
+    private sealed record Reply(string Initials, string Color, string Author, string Role, string When, string Text);
+
+    private int _nextPostId = 100;
+
+    // The authors are the prototype's sample Sakura Bay board, plus invented members.
+    // Anything said about Isa matches what she really does.
+    private readonly List<Post> _posts = new()
+    {
+        new Post
+        {
+            Id = 1, Initials = "LJ", Color = "#1b7a66", Title = "Has anyone tried Isa yet? Share your favorite question", Tag = "Isa",
+            Body = "I asked Isa how many board meetings a chapter needs each year. She answered in one line and showed the page of the President Guidebook it came from. What have you asked her?",
+            Author = "Lee Ji-woo", Role = "Membership Director", When = "4 hours ago", Likes = 21, EarlierReplies = 9,
+            Replies =
+            {
+                new("MH", "#6b2f8f", "Mori Haruka", "Member", "3 hours ago", "I asked when the chapter's compliance report is due. She gave me the dates and the document it's from. Much faster than digging through the portal."),
+                new("SR", "#b0500f", "Suzuki Ren", "Member", "2 hours ago", "I tried a question about our local tax filing. She said that needs a person, passed it to the Chapter Experience team and gave me a reference number. Honest, which I liked."),
+                new("TM", "#3f7d20", "Takahashi Mei", "Vice President", "1 hour ago", "Same here. I like that every answer shows where it came from, so I can check it myself."),
+            },
+        },
+        new Post
+        {
+            Id = 2, Initials = "TM", Color = "#3f7d20", Title = "Speakers wanted for our September CPE evening", Tag = "Events",
+            Body = "We're looking for two speakers on cloud audit or privacy engineering. Talks are 30 minutes and earn speaker CPE. Reply here or message me if you're interested, even if you've never spoken before.",
+            Author = "Takahashi Mei", Role = "Vice President", When = "Yesterday", Likes = 9, EarlierReplies = 5,
+            Replies =
+            {
+                new("AK", "#017dc2", "Aoki Kaito", "Member", "Yesterday", "I could talk about auditing serverless workloads. Happy to share an outline first."),
+                new("PN", "#1b7a66", "Priya Nair", "Member", "Today", "First-timer here, but I'd love to do a short privacy-by-design talk. Is 20 minutes OK?"),
+                new("TM", "#3f7d20", "Takahashi Mei", "Vice President", "Today", "Both sound great! I'll set up a quick call with each of you this week."),
+            },
+        },
+        new Post
+        {
+            Id = 3, Initials = "MH", Color = "#6b2f8f", Title = "CISA study group starting in August", Tag = "Study group",
+            Body = "Six weekly sessions, online on Thursday evenings. Reply here if you'd like to join, and say which domains you find hardest.",
+            Author = "Mori Haruka", Role = "Member", When = "2 days ago", Likes = 17, EarlierReplies = 12,
+            Replies =
+            {
+                new("OY", "#b0500f", "Ono Yui", "Student member", "2 days ago", "Count me in! Domain 4 (operations and resilience) is the one I keep getting wrong."),
+                new("DO", "#6b2f8f", "Daniel Okafor", "Treasurer", "Yesterday", "Great idea. I passed a couple of years ago and can join one session to share tips."),
+                new("MH", "#6b2f8f", "Mori Haruka", "Member", "Today", "Thank you all! Kickoff is on 6 August. It's in Events now."),
+            },
+        },
+        new Post
+        {
+            Id = 4, Initials = "NH", Color = "#b0500f", Title = "Photos from our June networking night", Tag = "Photos",
+            Body = "Thank you to everyone who came to the bayside networking night! Photos are now in the library, in the Events folder.",
+            Author = "Nakamura Hiroshi", Role = "Secretary", When = "3 days ago", Likes = 24, EarlierReplies = 4,
+            Replies =
+            {
+                new("IA", "#3f7d20", "Ito Aiko", "Member", "3 days ago", "What a lovely evening. The sunset photo is my new desktop background."),
+                new("SR", "#b0500f", "Suzuki Ren", "Member", "2 days ago", "Thanks for organizing! Let's do another one in the autumn."),
+            },
+        },
+        new Post
+        {
+            Id = 5, Initials = "WK", Color = "#017dc2", Title = "Volunteers needed to help plan the annual general meeting", Tag = "Volunteering",
+            Body = "We're forming a small team to plan this year's AGM. A few hours a month, and a great way to meet the board. No experience needed.",
+            Author = "Watanabe Kenji", Role = "President", When = "5 days ago", Likes = 11, EarlierReplies = 1,
+            Replies =
+            {
+                new("KS", "#1d2d5c", "Kobayashi Sora", "Member", "4 days ago", "I can help with the venue and the online stream."),
+                new("PN", "#1b7a66", "Priya Nair", "Member", "3 days ago", "Happy to help with the member survey before the AGM."),
+            },
+        },
+        new Post
+        {
+            Id = 6, Initials = "AK", Color = "#017dc2", Title = "Free CPE webinar recordings worth watching", Tag = null,
+            Body = "A few recordings from this spring that I found really useful for CPE. Share yours below and let's build a list.",
+            Author = "Aoki Kaito", Role = "Member", When = "1 week ago", Likes = 14, EarlierReplies = 6,
+            Replies =
+            {
+                new("IA", "#3f7d20", "Ito Aiko", "Member", "6 days ago", "The session on AI risk governance was excellent."),
+            },
+        },
+        new Post
+        {
+            Id = 7, Initials = "OY", Color = "#b0500f", Title = "Students: mentoring evening with the board", Tag = "Events",
+            Body = "Any other student members interested in an evening where board members share how they got into audit and security? I'd love to hear their stories.",
+            Author = "Ono Yui", Role = "Student member", When = "1 week ago", Likes = 19, EarlierReplies = 3,
+            Replies =
+            {
+                new("LJ", "#1b7a66", "Lee Ji-woo", "Membership Director", "6 days ago", "Love this. Let's plan it for October. I'll bring it to the next board meeting."),
+            },
+        },
+    };
+
+    private sealed record Ev(int Id, string Month, string Day, string Title, string When, string Where, string? Cpe, string About, int Going, bool Past = false);
+
+    private static readonly Ev[] Events =
+    {
+        new(1, "Jul", "16", "CPE Evening: Auditing cloud services", "Thursday 16 July · 18:30 to 20:30 JST", "Hybrid · Bayside Conference Room, Tokyo, and online", "2 CPE",
+            "Two short talks on auditing cloud services, then questions and networking. Light snacks in the room; the online link is sent the day before.", 46),
+        new(2, "Jul", "23", "New member welcome", "Thursday 23 July · 19:00 to 20:00 JST", "Online", null,
+            "Meet the board, hear what the chapter offers, and find a way to get involved. Bring your questions.", 18),
+        new(3, "Aug", "06", "CISA study group: kickoff", "Thursday 6 August · 19:30 to 21:00 JST", "Online", "1 CPE",
+            "The first of six weekly sessions. We'll agree the plan and start with the domain people find hardest.", 23),
+        new(4, "Sep", "17", "CPE Evening: Privacy engineering", "Thursday 17 September · 18:30 to 20:30 JST", "Hybrid · Bayside Conference Room, Tokyo, and online", "2 CPE",
+            "Speakers to be announced. Interested in speaking? See the discussion \"Speakers wanted\".", 12),
+        new(5, "Jun", "25", "Bayside networking night", "Thursday 25 June · 19:00 to 21:30 JST", "Bayside Terrace, Tokyo", null,
+            "An evening of conversation by the water. Photos are in the library.", 58, Past: true),
+    };
+
+    private sealed record LibFile(string Kind, string Name, string Meta, string Color, string Folder);
+
+    private static readonly LibFile[] Files =
+    {
+        new("PDF", "June board meeting minutes (approved)", "Added by Nakamura Hiroshi · 1 July", "#b0500f", "Board"),
+        new("PPT", "Slides: Zero trust in plain words", "From the June CPE evening · 28 June", "#017dc2", "CPE events"),
+        new("XLS", "Chapter calendar 2026-27", "Added by Watanabe Kenji · 2 July", "#3f7d20", "Chapter documents"),
+        new("JPG", "Bayside networking night (42 photos)", "Added by Nakamura Hiroshi · 30 June", "#6b2f8f", "Events"),
+        new("PDF", "May board meeting minutes (approved)", "Added by Nakamura Hiroshi · 3 June", "#b0500f", "Board"),
+        new("PPT", "Slides: Getting started with CISA", "From the May study session · 21 May", "#017dc2", "CPE events"),
+        new("PDF", "Chapter annual report 2025-26", "Added by Sato Yumiko · 20 June", "#b0500f", "Chapter documents"),
+        new("DOC", "Volunteer role descriptions", "Added by Lee Ji-woo · 12 June", "#1d2d5c", "Chapter documents"),
+    };
+
+    private sealed record Member(string Initials, string Name, string Role, string Color, int Since, bool Leader = false);
+
+    // Members who chose to be listed in the directory. Names and roles only.
+    private static readonly Member[] Members =
+    {
+        new("WK", "Watanabe Kenji", "President", "#017dc2", 2014, true),
+        new("TM", "Takahashi Mei", "Vice President", "#3f7d20", 2016, true),
+        new("NH", "Nakamura Hiroshi", "Secretary", "#b0500f", 2012, true),
+        new("DO", "Daniel Okafor", "Treasurer", "#6b2f8f", 2018, true),
+        new("LJ", "Lee Ji-woo", "Membership Director", "#1b7a66", 2019, true),
+        new("SY", "Sato Yumiko", "Immediate Past President", "#1d2d5c", 2010, true),
+        new("MH", "Mori Haruka", "IT auditor", "#6b2f8f", 2021),
+        new("SR", "Suzuki Ren", "Risk analyst", "#b0500f", 2020),
+        new("AK", "Aoki Kaito", "Cloud security engineer", "#017dc2", 2017),
+        new("PN", "Priya Nair", "Privacy consultant", "#1b7a66", 2022),
+        new("OY", "Ono Yui", "Student member", "#b0500f", 2025),
+        new("IA", "Ito Aiko", "Compliance manager", "#3f7d20", 2015),
+        new("KS", "Kobayashi Sora", "IT governance lead", "#1d2d5c", 2019),
+        new("FE", "Felipe Esteves", "Internal audit manager", "#017dc2", 2013),
+        new("YN", "Yamada Nao", "Student member", "#6b2f8f", 2026),
+        new("HC", "Hayashi Chen", "Security architect", "#3f7d20", 2018),
+    };
+
+    private const int MemberCount = 412;
+
+    // =====================================================================
+    // Home
+    // =====================================================================
+
+    private bool _following = true;
+    private bool _isaInfoOpen;
+    private int _example;
+
+    private Task ToggleFollow()
+    {
+        _following = !_following;
+        return Toast(_following ? "You're following Sakura Bay Chapter again (sample)." : "You've unfollowed Sakura Bay Chapter (sample: nothing is saved).");
+    }
+
+    // Two real questions Isa answers from ISACA's approved content, word for word.
+    private static readonly (string Question, string Answer, string Source)[] Examples =
+    {
+        ("How many board meetings must a chapter hold each year?",
+         "As required by the chapter bylaws, the chapter board should meet regularly throughout the year, with a minimum of four board meetings annually.",
+         "President Guidebook · p. 7"),
+        ("When do we send in our yearly paperwork?",
+         "Submit your chapter's compliance report between 1 November and 31 December.",
+         "Common Tasks and Navigation Guide"),
+    };
+
+    private RenderFragment HomeView() => @<text>
         @* ---- The announcement: Isa is live ---- *@
         <section class="eg-isa" aria-labelledby="eg-isa-title">
             <div class="eg-confetti" aria-hidden="true">
@@ -121,62 +460,63 @@
                 </p>
                 <div class="eg-isa__btns">
                     <a class="eg-btn eg-btn--isa" href="/">Ask Isa a question</a>
-                    <a class="eg-btn eg-btn--link">What can Isa do?</a>
+                    <button type="button" class="eg-btn eg-btn--link" aria-expanded="@(_isaInfoOpen ? "true" : "false")"
+                            @onclick="@(() => _isaInfoOpen = !_isaInfoOpen)">@(_isaInfoOpen ? "Show less" : "What can Isa do?")</button>
                 </div>
             </div>
-            <div class="eg-isa__chat" aria-hidden="true">
-                <div class="eg-bubble eg-bubble--you">How many board meetings must a chapter hold each year?</div>
-                <div class="eg-bubble eg-bubble--isa">
+            <div class="eg-isa__chat">
+                <p class="eg-isa__example">Example conversation @(_example + 1) of @Examples.Length</p>
+                @{ var ex = Examples[_example]; }
+                <div class="eg-bubble eg-bubble--you" @key="@($"q{_example}")">@ex.Question</div>
+                <div class="eg-bubble eg-bubble--isa" @key="@($"a{_example}")">
                     <b>Isa</b>
-                    The chapter board should meet regularly throughout the year, with a minimum of four board meetings annually.
-                    <span class="eg-bubble__src">President Guidebook · p. 7</span>
+                    @ex.Answer
+                    <span class="eg-bubble__src">@ex.Source</span>
                 </div>
+                <button type="button" class="eg-isa__next" @onclick="@(() => _example = (_example + 1) % Examples.Length)">
+                    Another example <span aria-hidden="true">→</span>
+                </button>
             </div>
+            @if (_isaInfoOpen)
+            {
+                <div class="eg-isa__info">
+                    <div>
+                        <h3>Isa can</h3>
+                        <ul>
+                            <li>Answer questions about running the chapter from ISACA's approved guidance</li>
+                            <li>Show the document and page every answer comes from</li>
+                            <li>Read ISACA's guidance aloud, word for word, in her Listen Library</li>
+                            <li>Pass a question to the Chapter Experience team, with a reference number</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Isa won't</h3>
+                        <ul>
+                            <li>Guess: if ISACA's guidance doesn't cover it, she says so and finds you a person</li>
+                            <li>Give legal, financial or personal advice</li>
+                            <li>Share your questions with anyone</li>
+                        </ul>
+                    </div>
+                </div>
+            }
         </section>
 
         <div class="eg-grid">
             <div class="eg-col">
-                @* ---- Latest discussions ---- *@
                 <section class="eg-card" aria-labelledby="eg-disc">
                     <div class="eg-cardHead">
                         <h2 id="eg-disc">Latest discussions</h2>
-                        <a class="eg-more">View all</a>
+                        <button type="button" class="eg-more" @onclick="@(() => Go("discussion"))">View all</button>
                     </div>
-                    <ul class="eg-posts">
-                        @foreach (var p in Posts)
-                        {
-                            <li class="eg-post">
-                                <span class="eg-avatar eg-avatar--sm" style="background: @p.Color">@p.Initials</span>
-                                <div class="eg-post__body">
-                                    <a class="eg-post__title">@p.Title</a>
-                                    @if (p.Tag is not null)
-                                    {
-                                        <span class="eg-pill">@p.Tag</span>
-                                    }
-                                    <p class="eg-post__excerpt">@p.Excerpt</p>
-                                    <p class="eg-post__meta"><b>@p.Author</b> · @p.Role · @p.When</p>
-                                </div>
-                                <span class="eg-post__replies" title="Replies"><b>@p.Replies</b> replies</span>
-                            </li>
-                        }
-                    </ul>
+                    @PostList(_posts.Take(5))
                 </section>
 
-                @* ---- Library ---- *@
                 <section class="eg-card" aria-labelledby="eg-lib">
                     <div class="eg-cardHead">
                         <h2 id="eg-lib">Recently added to the library</h2>
-                        <a class="eg-more">Open library</a>
+                        <button type="button" class="eg-more" @onclick="@(() => Go("library"))">Open library</button>
                     </div>
-                    <ul class="eg-files">
-                        @foreach (var (kind, name, meta, color) in Files)
-                        {
-                            <li>
-                                <span class="eg-file" style="--c: @color">@kind</span>
-                                <span><b>@name</b><small>@meta</small></span>
-                            </li>
-                        }
-                    </ul>
+                    @FileList(Files.Take(3))
                 </section>
             </div>
 
@@ -184,98 +524,420 @@
                 <section class="eg-card" aria-labelledby="eg-ev">
                     <div class="eg-cardHead">
                         <h2 id="eg-ev">Upcoming events</h2>
-                        <a class="eg-more">Calendar</a>
+                        <button type="button" class="eg-more" @onclick="@(() => Go("events"))">Calendar</button>
                     </div>
-                    <ul class="eg-events">
-                        @foreach (var e in Events)
-                        {
-                            <li>
-                                <span class="eg-date"><small>@e.Month</small><b>@e.Day</b></span>
-                                <span>
-                                    <b>@e.Title</b>
-                                    <small>@e.When</small>
-                                    @if (e.Cpe is not null)
-                                    {
-                                        <span class="eg-pill eg-pill--green">@e.Cpe</span>
-                                    }
-                                </span>
-                            </li>
-                        }
-                    </ul>
+                    @EventList(Events.Where(e => !e.Past).Take(3), compact: true)
                 </section>
 
                 <section class="eg-card" aria-labelledby="eg-lead">
-                    <h2 id="eg-lead">Chapter leaders</h2>
+                    <div class="eg-cardHead">
+                        <h2 id="eg-lead">Chapter leaders</h2>
+                        <button type="button" class="eg-more" @onclick="@(() => Go("members"))">All members</button>
+                    </div>
                     <ul class="eg-people">
-                        @foreach (var (initials, name, role, color) in Leaders)
+                        @foreach (var m in Members.Where(m => m.Leader && m.Role != "Immediate Past President"))
                         {
                             <li>
-                                <span class="eg-avatar eg-avatar--sm" style="background: @color">@initials</span>
-                                <span><b>@name</b><small>@role</small></span>
+                                <span class="eg-avatar eg-avatar--sm" style="background: @m.Color">@m.Initials</span>
+                                <span><b>@m.Name</b><small>@m.Role</small></span>
                             </li>
                         }
                     </ul>
                 </section>
 
                 <section class="eg-card eg-stats" aria-label="Community at a glance">
-                    <div><b>412</b><small>Members</small></div>
-                    <div><b>38</b><small>Discussions this month</small></div>
+                    <div><b>@MemberCount</b><small>Members</small></div>
+                    <div><b>@(31 + _posts.Count)</b><small>Discussions this month</small></div>
                     <div><b>126</b><small>CPE hours earned this year</small></div>
                 </section>
             </aside>
         </div>
-    </main>
+    </text>;
 
-    <footer class="eg-foot">
-        <span>Engage · sample page made for the Isa prototype</span>
-        <span>Every person, post, event and number on this page is invented</span>
-    </footer>
-</div>
+    // =====================================================================
+    // Discussions
+    // =====================================================================
 
-@code {
-    private record Post(string Initials, string Color, string Title, string? Tag, string Excerpt, string Author, string Role, string When, int Replies);
-    private record Ev(string Month, string Day, string Title, string When, string? Cpe);
+    private string _filter = "All";
+    private string _search = "";
+    private string _topSearch = "";
+    private bool _composing;
+    private string _newTitle = "";
+    private string _newBody = "";
+    private string _newTag = "General";
 
-    // Invented posts. The authors are the prototype's sample Sakura Bay board, plus one invented member.
-    private static readonly Post[] Posts =
+    private static readonly string[] Tags = { "Isa", "Events", "Study group", "Volunteering", "Photos" };
+
+    private void StartPost()
     {
-        new("LJ", "#1b7a66", "Has anyone tried Isa yet? Share your favorite question", "Isa",
-            "I asked how to plan our member welcome calls and got an answer with the page it came from. What have you asked?",
-            "Lee Ji-woo", "Membership Director", "4 hours ago", 12),
-        new("TM", "#3f7d20", "Speakers wanted for our September CPE evening", null,
-            "We're looking for two speakers on cloud audit or privacy engineering. Talks are 30 minutes and earn speaker CPE.",
-            "Takahashi Mei", "Vice President", "Yesterday", 8),
-        new("MH", "#6b2f8f", "CISA study group starting in August", null,
-            "Six weekly sessions, online on Thursday evenings. Reply here if you'd like to join, and say which domains you find hardest.",
-            "Mori Haruka", "Member", "2 days ago", 15),
-        new("NH", "#b0500f", "Photos from our June networking night", null,
-            "Thank you to everyone who came to the bayside networking night! Photos are now in the library.",
-            "Nakamura Hiroshi", "Secretary", "3 days ago", 6),
-        new("WK", "#017dc2", "Volunteers needed to help plan the annual general meeting", null,
-            "We're forming a small team to plan this year's AGM. A few hours a month, and a great way to meet the board.",
-            "Watanabe Kenji", "President", "5 days ago", 4),
-    };
+        _composing = true;
+        Go("discussion");
+    }
 
-    private static readonly Ev[] Events =
+    private void SearchEngage()
     {
-        new("Jul", "16", "CPE Evening: Auditing cloud services", "Thu 18:30 JST · Hybrid, Tokyo", "2 CPE"),
-        new("Jul", "23", "New member welcome", "Thu 19:00 JST · Online", null),
-        new("Aug", "06", "CISA study group: kickoff", "Thu 19:30 JST · Online", "1 CPE"),
-    };
+        _search = _topSearch.Trim();
+        _filter = "All";
+        Go("discussion");
+    }
 
-    private static readonly (string Kind, string Name, string Meta, string Color)[] Files =
+    private async Task Publish()
     {
-        ("PDF", "June board meeting minutes (approved)", "Added by Nakamura Hiroshi · 1 July", "#b0500f"),
-        ("PPT", "Slides: Zero trust in plain words", "From the June CPE evening · 28 June", "#017dc2"),
-        ("XLS", "Chapter calendar 2026-27", "Added by Watanabe Kenji · 2 July", "#3f7d20"),
-    };
+        if (_newTitle.Trim().Length == 0) return;
+        var post = new Post
+        {
+            Id = _nextPostId++, Initials = MyInitials, Color = MyColor, Title = _newTitle.Trim(),
+            Tag = _newTag == "General" ? null : _newTag, Body = _newBody.Trim(),
+            Author = Me, Role = MyRole, When = "Just now",
+        };
+        _posts.Insert(0, post);
+        _composing = false;
+        _newTitle = _newBody = "";
+        _newTag = "General";
+        await Toast("Posted for this demo only: nothing is saved or sent.");
+    }
 
-    private static readonly (string Initials, string Name, string Role, string Color)[] Leaders =
+    private RenderFragment PostList(IEnumerable<Post> posts) => @<ul class="eg-posts">
+        @foreach (var p in posts)
+        {
+            <li>
+                <button type="button" class="eg-post" @onclick="@(() => Go("discussion", post: p.Id))">
+                    <span class="eg-avatar eg-avatar--sm" style="background: @p.Color">@p.Initials</span>
+                    <span class="eg-post__body">
+                        <span class="eg-post__title">@p.Title</span>
+                        @if (p.Tag is not null)
+                        {
+                            <span class="eg-pill">@p.Tag</span>
+                        }
+                        <span class="eg-post__excerpt">@p.Body</span>
+                        <span class="eg-post__meta"><b>@p.Author</b> · @p.Role · @p.When</span>
+                    </span>
+                    <span class="eg-post__replies"><b>@p.ReplyCount</b> @(p.ReplyCount == 1 ? "reply" : "replies")</span>
+                </button>
+            </li>
+        }
+    </ul>;
+
+    private RenderFragment DiscussionView()
     {
-        ("WK", "Watanabe Kenji", "President", "#017dc2"),
-        ("TM", "Takahashi Mei", "Vice President", "#3f7d20"),
-        ("NH", "Nakamura Hiroshi", "Secretary", "#b0500f"),
-        ("DO", "Daniel Okafor", "Treasurer", "#6b2f8f"),
-        ("LJ", "Lee Ji-woo", "Membership Director", "#1b7a66"),
-    };
+        var shown = _posts
+            .Where(p => _filter == "All" || p.Tag == _filter)
+            .Where(p => _search.Length == 0 || p.Title.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                        || p.Body.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        return @<div class="eg-page">
+            <div class="eg-pageHead">
+                <h2>Discussion</h2>
+                @if (!_composing)
+                {
+                    <button type="button" class="eg-btn eg-btn--isa" @onclick="@(() => _composing = true)">New discussion</button>
+                }
+            </div>
+
+            @if (_composing)
+            {
+                <section class="eg-card eg-compose" aria-label="New discussion">
+                    <label for="eg-new-title">Title</label>
+                    <input id="eg-new-title" type="text" maxlength="120" placeholder="What would you like to talk about?" @bind="_newTitle" @bind:event="oninput" />
+                    <label for="eg-new-body">Message</label>
+                    <textarea id="eg-new-body" rows="4" maxlength="1000" placeholder="Write your message" @bind="_newBody" @bind:event="oninput"></textarea>
+                    <div class="eg-compose__row">
+                        <label class="eg-compose__tag">Topic
+                            <select @bind="_newTag">
+                                <option>General</option>
+                                @foreach (var t in Tags)
+                                {
+                                    <option>@t</option>
+                                }
+                            </select>
+                        </label>
+                        <span class="eg-compose__btns">
+                            <button type="button" class="eg-btn eg-btn--plain" @onclick="@(() => _composing = false)">Cancel</button>
+                            <button type="button" class="eg-btn eg-btn--isa" disabled="@(_newTitle.Trim().Length == 0)" @onclick="Publish">Post</button>
+                        </span>
+                    </div>
+                    <p class="eg-compose__note">Sample page: your post shows here until the page is reloaded. Nothing is saved or sent.</p>
+                </section>
+            }
+
+            <div class="eg-toolbar">
+                <label class="eg-filterSearch">
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2" /><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                    <span class="eg-visually-hidden">Search discussions</span>
+                    <input type="search" placeholder="Search discussions" @bind="_search" @bind:event="oninput" />
+                </label>
+                <div class="eg-chips" role="group" aria-label="Topic">
+                    @foreach (var t in new[] { "All" }.Concat(Tags))
+                    {
+                        <button type="button" class="@(_filter == t ? "is-on" : "")" aria-pressed="@(_filter == t ? "true" : "false")"
+                                @onclick="@(() => _filter = t)">@t</button>
+                    }
+                </div>
+            </div>
+
+            <section class="eg-card">
+                @if (shown.Count == 0)
+                {
+                    <p class="eg-empty">No discussions match. Try another word or topic.</p>
+                }
+                else
+                {
+                    @PostList(shown)
+                }
+            </section>
+        </div>;
+    }
+
+    // ---- One thread ----
+
+    private string _replyText = "";
+
+    private void ToggleLike(Post p)
+    {
+        p.LikedByMe = !p.LikedByMe;
+        p.Likes += p.LikedByMe ? 1 : -1;
+    }
+
+    private async Task SendReply(Post p)
+    {
+        if (_replyText.Trim().Length == 0) return;
+        p.Replies.Add(new Reply(MyInitials, MyColor, Me, MyRole, "Just now", _replyText.Trim()));
+        _replyText = "";
+        await Toast("Reply posted for this demo only: nothing is saved or sent.");
+    }
+
+    private RenderFragment ThreadView(Post p) => @<div class="eg-page">
+        <nav class="eg-crumbs" aria-label="Breadcrumb">
+            <button type="button" @onclick="@(() => Go("discussion"))">Discussion</button>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">@p.Title</span>
+        </nav>
+
+        <article class="eg-card eg-thread">
+            <header class="eg-thread__head">
+                <span class="eg-avatar" style="background: @p.Color">@p.Initials</span>
+                <span><b>@p.Author</b><small>@p.Role · @p.When</small></span>
+                @if (p.Tag is not null)
+                {
+                    <span class="eg-pill">@p.Tag</span>
+                }
+            </header>
+            <h2>@p.Title</h2>
+            @if (p.Body.Length > 0)
+            {
+                <p class="eg-thread__body">@p.Body</p>
+            }
+            <div class="eg-thread__actions">
+                <button type="button" class="eg-like @(p.LikedByMe ? "is-on" : "")" aria-pressed="@(p.LikedByMe ? "true" : "false")" @onclick="@(() => ToggleLike(p))">
+                    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 17s-6.5-4-6.5-8.5A3.5 3.5 0 0 1 10 6a3.5 3.5 0 0 1 6.5 2.5C16.5 13 10 17 10 17Z" fill="@(p.LikedByMe ? "currentColor" : "none")" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /></svg>
+                    @p.Likes
+                </button>
+                <span>@p.ReplyCount @(p.ReplyCount == 1 ? "reply" : "replies")</span>
+            </div>
+        </article>
+
+        <section class="eg-replies" aria-label="Replies">
+            @if (p.EarlierReplies > 0)
+            {
+                <p class="eg-replies__earlier">@p.EarlierReplies earlier @(p.EarlierReplies == 1 ? "reply" : "replies")</p>
+            }
+            @foreach (var r in p.Replies)
+            {
+                <div class="eg-reply @(r.Author == Me ? "is-mine" : "")">
+                    <span class="eg-avatar eg-avatar--sm" style="background: @r.Color">@r.Initials</span>
+                    <div class="eg-reply__bubble">
+                        <p class="eg-reply__who"><b>@r.Author</b> · @r.Role · @r.When</p>
+                        <p>@r.Text</p>
+                    </div>
+                </div>
+            }
+        </section>
+
+        <section class="eg-card eg-replyBox" aria-label="Reply">
+            <label for="eg-reply-text">Reply as @Me</label>
+            <textarea id="eg-reply-text" rows="3" maxlength="1000" placeholder="Write a reply" @bind="_replyText" @bind:event="oninput"></textarea>
+            <div class="eg-compose__row">
+                <span class="eg-compose__note">Sample page: nothing is saved or sent.</span>
+                <button type="button" class="eg-btn eg-btn--isa" disabled="@(_replyText.Trim().Length == 0)" @onclick="@(() => SendReply(p))">Reply</button>
+            </div>
+        </section>
+    </div>;
+
+    // =====================================================================
+    // Library
+    // =====================================================================
+
+    private string _folder = "All files";
+
+    private Task OpenFile(LibFile f) =>
+        Toast($"\"{f.Name}\" is a sample file name. Files aren't part of this prototype.");
+
+    private RenderFragment FileList(IEnumerable<LibFile> files) => @<ul class="eg-files">
+        @foreach (var f in files)
+        {
+            <li>
+                <button type="button" @onclick="@(() => OpenFile(f))">
+                    <span class="eg-file" style="--c: @f.Color">@f.Kind</span>
+                    <span><b>@f.Name</b><small>@f.Meta</small></span>
+                </button>
+            </li>
+        }
+    </ul>;
+
+    private RenderFragment LibraryView()
+    {
+        var folders = new[] { "All files" }.Concat(Files.Select(f => f.Folder).Distinct()).ToList();
+        var shown = Files.Where(f => _folder == "All files" || f.Folder == _folder);
+        return @<div class="eg-page">
+            <div class="eg-pageHead"><h2>Library</h2></div>
+            <div class="eg-libGrid">
+                <nav class="eg-card eg-folders" aria-label="Folders">
+                    @foreach (var name in folders)
+                    {
+                        var count = name == "All files" ? Files.Length : Files.Count(f => f.Folder == name);
+                        <button type="button" class="@(_folder == name ? "is-on" : "")" aria-current="@(_folder == name ? "true" : null)"
+                                @onclick="@(() => _folder = name)">
+                            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M2.5 5.5a1 1 0 0 1 1-1h4l1.5 1.5h7.5a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1Z" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+                            <span>@name</span><small>@count</small>
+                        </button>
+                    }
+                </nav>
+                <section class="eg-card">
+                    <h3 class="eg-libTitle">@_folder</h3>
+                    @FileList(shown)
+                </section>
+            </div>
+        </div>;
+    }
+
+    // =====================================================================
+    // Events
+    // =====================================================================
+
+    private readonly HashSet<int> _registered = new();
+
+    private async Task Register(Ev e)
+    {
+        if (!_registered.Add(e.Id)) { _registered.Remove(e.Id); await Toast("Registration cancelled (sample)."); return; }
+        await Toast($"You're registered for \"{e.Title}\" (sample: nothing is saved or sent).");
+    }
+
+    private RenderFragment EventList(IEnumerable<Ev> events, bool compact) => @<ul class="eg-events @(compact ? "" : "eg-events--full")">
+        @foreach (var e in events)
+        {
+            <li>
+                <button type="button" @onclick="@(() => Go("events", ev: e.Id))">
+                    <span class="eg-date"><small>@e.Month</small><b>@e.Day</b></span>
+                    <span class="eg-events__text">
+                        <b>@e.Title</b>
+                        <small>@(compact ? e.When.Split(" · ")[0] + " · " + (e.Where.StartsWith("Online") ? "Online" : e.Where.Split(" · ")[0]) : $"{e.When} · {e.Where}")</small>
+                        <span class="eg-events__tags">
+                            @if (e.Cpe is not null)
+                            {
+                                <span class="eg-pill eg-pill--green">@e.Cpe</span>
+                            }
+                            @if (_registered.Contains(e.Id))
+                            {
+                                <span class="eg-pill eg-pill--blue">✓ Registered</span>
+                            }
+                        </span>
+                    </span>
+                </button>
+            </li>
+        }
+    </ul>;
+
+    private RenderFragment EventsView() => @<div class="eg-page">
+        <div class="eg-pageHead"><h2>Events</h2></div>
+        <section class="eg-card">
+            <h3 class="eg-libTitle">Upcoming</h3>
+            @EventList(Events.Where(e => !e.Past), compact: false)
+        </section>
+        <section class="eg-card">
+            <h3 class="eg-libTitle">Past</h3>
+            @EventList(Events.Where(e => e.Past), compact: false)
+        </section>
+    </div>;
+
+    private RenderFragment EventView(Ev e) => @<div class="eg-page">
+        <nav class="eg-crumbs" aria-label="Breadcrumb">
+            <button type="button" @onclick="@(() => Go("events"))">Events</button>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">@e.Title</span>
+        </nav>
+        <article class="eg-card eg-event">
+            <div class="eg-event__top">
+                <span class="eg-date eg-date--lg"><small>@e.Month</small><b>@e.Day</b></span>
+                <div>
+                    <h2>@e.Title</h2>
+                    <p class="eg-event__meta">@e.When</p>
+                    <p class="eg-event__meta">@e.Where</p>
+                    @if (e.Cpe is not null)
+                    {
+                        <span class="eg-pill eg-pill--green">@e.Cpe</span>
+                    }
+                </div>
+            </div>
+            <p class="eg-event__about">@e.About</p>
+            <p class="eg-event__going">@(e.Going + (_registered.Contains(e.Id) ? 1 : 0)) @(e.Past ? "went" : "going")@(_registered.Contains(e.Id) ? ", including you" : "")</p>
+            @if (!e.Past)
+            {
+                <div class="eg-event__btns">
+                    <button type="button" class="eg-btn @(_registered.Contains(e.Id) ? "eg-btn--done" : "eg-btn--isa")" @onclick="@(() => Register(e))">
+                        @(_registered.Contains(e.Id) ? "✓ Registered" : "Register")
+                    </button>
+                    <button type="button" class="eg-btn eg-btn--plain" @onclick="@(() => Toast("Calendar files aren't part of this prototype."))">Add to calendar</button>
+                </div>
+            }
+            else
+            {
+                <button type="button" class="eg-btn eg-btn--plain" @onclick="@(() => Go("library"))">See the photos in the library</button>
+            }
+        </article>
+    </div>;
+
+    // =====================================================================
+    // Members
+    // =====================================================================
+
+    private string _memberSearch = "";
+
+    private RenderFragment MembersView()
+    {
+        var shown = Members.Where(m => _memberSearch.Length == 0
+            || m.Name.Contains(_memberSearch, StringComparison.OrdinalIgnoreCase)
+            || m.Role.Contains(_memberSearch, StringComparison.OrdinalIgnoreCase)).ToList();
+        return @<div class="eg-page">
+            <div class="eg-pageHead">
+                <h2>Members</h2>
+                <span class="eg-pageHead__note">@MemberCount members · showing the @Members.Length who chose to be listed in the directory</span>
+            </div>
+            <div class="eg-toolbar">
+                <label class="eg-filterSearch">
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2" /><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                    <span class="eg-visually-hidden">Search members</span>
+                    <input type="search" placeholder="Search by name or role" @bind="_memberSearch" @bind:event="oninput" />
+                </label>
+            </div>
+            @if (shown.Count == 0)
+            {
+                <p class="eg-empty">No members match.</p>
+            }
+            <ul class="eg-members">
+                @foreach (var m in shown)
+                {
+                    <li class="eg-card eg-member">
+                        <span class="eg-avatar" style="background: @m.Color">@m.Initials</span>
+                        <b>@m.Name</b>
+                        <small>@m.Role</small>
+                        <small class="eg-member__since">Member since @m.Since</small>
+                        @if (m.Leader)
+                        {
+                            <span class="eg-pill eg-pill--blue">Chapter leader</span>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>;
+    }
 }

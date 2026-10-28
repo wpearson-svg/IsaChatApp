@@ -67,6 +67,9 @@ builder.Services.AddSingleton<NotebookService>();
 // The Library (Feature 5): ISACA's documents to read or listen to, from onboarding/library.json
 // and the approved passages in data/content.db (Components/Shared/LibraryPanel.razor).
 builder.Services.AddSingleton<LibraryService>();
+// ISACA's Chapter 360 documents (onboarding/chapter360.json): the sample Chapter 360 page and
+// the Library's Chapter 360 group.
+builder.Services.AddSingleton<Chapter360Service>();
 // "How to use Isa" (Feature 3): the guide's words, from onboarding/help.json
 // (Components/Shared/HelpPanel.razor and the day-1 tour in TodayPanel.razor).
 builder.Services.AddSingleton<HelpGuideService>();
