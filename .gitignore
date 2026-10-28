@@ -18,6 +18,10 @@ isa.pid
 
 # Local databases (rebuilt by content/build_content_db.py / created at runtime)
 data/*.db
+# Except the onboarding content (journey steps, sample contacts, key dates, handoff
+# checklist, "worth saving?" tags), built by onboarding/build_onboarding_db.py. It holds
+# no one's progress or notes, so it is shared: a merge gives everyone the same version.
+!data/onboarding.db
 data/*.db-wal
 data/*.db-shm
 data/*.db-journal

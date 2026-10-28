@@ -352,7 +352,8 @@ Panels (decided by Matthew, October 20, 2026):
 - Journey steps: phases and day ranges reviewed October 20, 2026 (see "Decided October 20, 2026"). Still worth a read: the "What to do" wording of each step. Notes:
   - The guidebook has no orientation checklist for a new president. Steps J-06 to J-09 use the topics the president must cover when orienting incoming leaders (guidebook p. 13).
   - The prototype counts AGM-based deadlines from the term start date, because the test data has no AGM dates.
-  After any change, run: python onboarding\build_onboarding_db.py
+  After any change, run: python onboarding\build_onboarding_db.py, and commit data/onboarding.db with the CSV.
+- Decided October 28, 2026 (Matthew: teammates' copies should work like his with no extra steps): data/onboarding.db is committed to Git (an exception in .gitignore). It holds content only, never anyone's progress or notes (those are data/progress.db and data/notebook.db, which stay local), and only Matthew changes the onboarding content, so there is nothing to clash with. A merge now gives everyone the same journey steps, contacts, key dates, handoff checklist and "worth saving?" tags.
 
 === STILL TO CONFIRM WITH WILLIS BEFORE WEEK 8 ===
 

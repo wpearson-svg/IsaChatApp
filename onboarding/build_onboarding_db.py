@@ -16,6 +16,10 @@ Things leaders do in Isa, such as marking a step
 complete, will be stored in a separate database that this script never
 touches, so rebuilding never erases anyone's progress.
 
+data/onboarding.db is committed to Git (Matthew, 28 October 2026), so a merge gives
+everyone the same onboarding content without running this script. After changing
+any CSV here, run the script and commit data/onboarding.db along with the CSV.
+
 Usage (from the IsaChatApp folder): python onboarding/build_onboarding_db.py [output.db]"""
 import csv, os, re, sqlite3, sys
 
