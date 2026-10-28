@@ -13,9 +13,11 @@
                   when it falls within the next 30 days)
      [Open Today]  Got it
 
-   - Closed to one line each time Isa opens (27 October 2026); "Show" opens it,
-     "Got it" closes it again. (It used to open in full the first time each
-     day, which is why it could look different on two machines.)
+   - Always opens as one line ("Day 3 · 2 steps for today"), with Show to
+     open the full note and "Got it" to fold it back (Matthew, 27 October
+     2026). It used to open in full the first time each day, remembered in
+     data/progress.db; since that file is local to each computer, the note
+     looked different on each team member's copy.
    - "For today" leaves out steps already done; when nothing is left it
      says so.
    - "Coming up" shows the next two steps only, then "and N more this
@@ -204,7 +206,7 @@ else if (_ctx is not null)
             if (_handoff is null) return;
             _done = Progress.GetCompletedSteps(_handoff.PersonId);
             _handoffNext = _handoff.Steps.FirstOrDefault(s => !_done.ContainsKey(s.StepId));
-            if (first) _compact = true;   // closed until clicked (27 October 2026)
+            if (first) _compact = true;   // always opens as one line
             return;
         }
 
@@ -224,15 +226,11 @@ else if (_ctx is not null)
             .Where(k => k.IsOpen || k.DaysUntil <= KeyDateWindowDays)
             .ToList();
 
-        if (first) _compact = true;   // closed until clicked (27 October 2026); it used to open once a day
+        if (first) _compact = true;   // always opens as one line
     }
 
-    private void GotIt()
-    {
-        if (_ctx is not null) Progress.MarkTodayNoteSeen(_ctx.PersonId, _ctx.Today);
-        else if (_handoff is not null) Progress.MarkTodayNoteSeen(_handoff.PersonId, _handoff.Today);
-        _compact = true;
-    }
+    // Folds the full note back to one line.
+    private void GotIt() => _compact = true;
 
     private string HandoffWhen
     {
