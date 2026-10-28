@@ -13,9 +13,9 @@
                   when it falls within the next 30 days)
      [Open Today]  Got it
 
-   - Shown in full the first time each day (the leader's "today", so the
-     demo date while it is on). "Got it" shrinks it to one line for the
-     rest of that day; the line can be opened again.
+   - Closed to one line each time Isa opens (27 October 2026); "Show" opens it,
+     "Got it" closes it again. (It used to open in full the first time each
+     day, which is why it could look different on two machines.)
    - "For today" leaves out steps already done; when nothing is left it
      says so.
    - "Coming up" shows the next two steps only, then "and N more this
@@ -204,7 +204,7 @@ else if (_ctx is not null)
             if (_handoff is null) return;
             _done = Progress.GetCompletedSteps(_handoff.PersonId);
             _handoffNext = _handoff.Steps.FirstOrDefault(s => !_done.ContainsKey(s.StepId));
-            if (first) _compact = Progress.HasSeenTodayNote(_handoff.PersonId, _handoff.Today);
+            if (first) _compact = true;   // closed until clicked (27 October 2026)
             return;
         }
 
@@ -224,7 +224,7 @@ else if (_ctx is not null)
             .Where(k => k.IsOpen || k.DaysUntil <= KeyDateWindowDays)
             .ToList();
 
-        if (first) _compact = Progress.HasSeenTodayNote(_ctx.PersonId, _ctx.Today);
+        if (first) _compact = true;   // closed until clicked (27 October 2026); it used to open once a day
     }
 
     private void GotIt()

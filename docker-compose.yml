@@ -24,6 +24,17 @@ services:
       timeout: 5s
       retries: 10
 
+  # Isa's spoken voice for the Library's Listen button: Kokoro-82M, on this machine, CPU only.
+  # Isa asks it for one sentence at a time (voice bf_lily, set in appsettings.json "Tts") and keeps
+  # every sentence it makes in data/tts-cache. It is free and runs offline once the model has downloaded.
+  # Before the demo: pin the image to a specific version tag instead of "latest" (viability criterion 5).
+  # If it is not running, Listen falls back to the device's own voice; nothing breaks.
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    ports:
+      - "8880:8880"
+    restart: unless-stopped
+
   # App runs on the host with: dotnet run
   # Data folder is mapped so SQLite files survive restarts.
   # When you containerize the app later, add a service here.
