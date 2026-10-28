@@ -11,7 +11,8 @@
      topic, each with a description, about how long it takes to listen
      to, and Read and Listen (onboarding/library.json).
    - A document: its text, with a player at the top. Listen reads it
-     word for word with the browser's own read-aloud, highlighting the
+     word for word in Isa's own voice (Kokoro, running on this machine;
+     the browser's read-aloud if it is not available), highlighting the
      sentence being read (LibraryPanel.razor.js). Nothing is installed
      and no document is sent anywhere.
 
@@ -89,7 +90,7 @@
 
             <p class="isa-lib__foot">
                 <span aria-hidden="true">&#9432;</span>
-                <span>Listen uses your device's own voices. Keep this page open while it reads; some phones stop reading when the screen locks.</span>
+                <span>Listen uses Isa's own voice, which runs on this machine; if it is not available, your device's own voice reads instead. Keep this page open while it reads; some phones stop reading when the screen locks.</span>
             </p>
         }
         else
@@ -118,7 +119,7 @@
                 <button type="button" class="isa-lib__speed" data-lib="speed" title="Reading speed" aria-label="Reading speed, 1 times">1&times;</button>
             </div>
 
-            <div class="isa-lib__text" data-lib-text>
+            <div class="isa-lib__text" data-lib-text data-doc="@_open.Document.Document">
                 @foreach (var section in _open.Sections)
                 {
                     @if (section.PageMarker is not null)

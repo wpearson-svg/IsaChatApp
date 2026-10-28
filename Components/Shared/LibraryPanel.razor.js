@@ -1,9 +1,11 @@
 // ============================================================
 // LibraryPanel.razor.js -- Listen, for the Library.
 //
-// Reads a document aloud word for word with the browser's own
-// read-aloud (speechSynthesis): the voices already on the leader's
-// computer or phone. Nothing is installed and no text is sent anywhere.
+// Reads a document aloud word for word. The voice is Isa's own: Kokoro-82M
+// (bf_lily), running on the same machine as Isa, one sentence at a time from
+// /api/library/tts (Services/Tts). If that voice is not available, it falls
+// back to the browser's own read-aloud (speechSynthesis), the voices already
+// on the leader's computer or phone. Either way nothing is sent anywhere.
 //
 // It reads one sentence at a time (each <span data-i> in the text), so
 // the sentence being read can be highlighted and kept in view, and so
@@ -67,6 +69,10 @@ let current = 0;        // the sentence being read, or next to read
 let playing = false;
 let speed = 1;
 let runId = 0;          // stops a cancelled sentence from moving on
+let docId = '';         // which Library document this is (for the audio address)
+let kokoroDown = false; // true once the spoken voice has failed: the device's voice is used from then on
+let audio = null;       // the one audio player
+const clips = new Map();// sentence number -> promise of its audio address (made ahead, one sentence early)
 
 const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
@@ -83,22 +89,26 @@ export function attach(body, autoplay) {
             .map(el => sentences.indexOf(el.matches('[data-i]') ? el : el.querySelector('[data-i]')))
             .filter(i => i >= 0);
         if (!sectionStarts.includes(0)) sectionStarts.unshift(0);
+        docId = text.dataset.doc || '';
+        kokoroDown = !docId;
         current = 0;
         root.addEventListener('click', onClick);
-        if (!supported) {
+        if (!supported && kokoroDown) {
             setStatus("This browser can't read aloud. You can still read the text below.");
             root.querySelectorAll('[data-lib]').forEach(b => b.disabled = true);
             return;
         }
         update();
     }
-    if (autoplay && supported) play();
+    if (autoplay && (supported || !kokoroDown)) play();
 }
 
 export function stop() {
     runId++;
     playing = false;
     if (supported) speechSynthesis.cancel();
+    haltAudio();
+    clips.clear();
     if (root) {
         root.removeEventListener('click', onClick);
         sentences.forEach(s => s.classList.remove('is-reading', 'is-read'));
@@ -119,7 +129,7 @@ function onClick(e) {
     }
     // Clicking a sentence reads from there.
     const s = e.target.closest('[data-i]');
-    if (s && supported) {
+    if (s && (supported || !kokoroDown)) {
         current = sentences.indexOf(s);
         play();
     }
@@ -135,13 +145,43 @@ function play() {
 function pause() {
     runId++;
     playing = false;
-    speechSynthesis.cancel();
+    if (supported) speechSynthesis.cancel();
+    haltAudio();
     update();
 }
 
 function speakCurrent() {
     const id = ++runId;
-    speechSynthesis.cancel();
+    if (supported) speechSynthesis.cancel();
+    haltAudio();
+    update(true);
+    if (kokoroDown) { speakWithDevice(id); return; }
+
+    // Isa's own voice: fetch this sentence's audio (and the next one, ahead of time), then play it.
+    const wait = setTimeout(() => { if (id === runId && playing) setStatus('Getting the voice ready…'); }, 700);
+    clip(current).then(url => {
+        clearTimeout(wait);
+        if (id !== runId || !playing) return;
+        if (!url) { kokoroDown = true; speakWithDevice(id); return; }   // not available: the device's voice, from here on
+        audio ??= new Audio();
+        audio.src = url;
+        audio.playbackRate = speed;
+        audio.onended = () => advance(id);
+        audio.onerror = () => { if (id === runId && playing) { kokoroDown = true; speakWithDevice(id); } };
+        audio.play().catch(() => { if (id === runId && playing) { kokoroDown = true; speakWithDevice(id); } });
+        clip(current + 1);   // make the next two sentences ready while this one plays
+        clip(current + 2);
+    });
+}
+
+// The device's own voice (the fallback).
+function speakWithDevice(id) {
+    if (!supported) {
+        playing = false;
+        update();
+        setStatus("This browser can't read aloud. You can still read the text below.");
+        return;
+    }
     update(true);
     const u = new SpeechSynthesisUtterance(sentences[current].textContent.trim());
     u.rate = speed;
@@ -153,12 +193,7 @@ function speakCurrent() {
     } else {
         u.lang = document.documentElement.lang || 'en';   // no local English voice: the device's default
     }
-    u.onend = () => {
-        if (id !== runId || !playing) return;
-        current++;
-        if (current < sentences.length) speakCurrent();
-        else { playing = false; update(); setStatus('Finished. Press play to start again.'); }
-    };
+    u.onend = () => advance(id);
     u.onerror = () => {
         if (id !== runId) return;     // cancelled on purpose (pause, skip)
         playing = false;
@@ -166,6 +201,38 @@ function speakCurrent() {
         setStatus("Reading stopped. Press play to carry on.");
     };
     speechSynthesis.speak(u);
+}
+
+function advance(id) {
+    if (id !== runId || !playing) return;
+    current++;
+    if (current < sentences.length) speakCurrent();
+    else { playing = false; update(); setStatus('Finished. Press play to start again.'); }
+}
+
+// The audio for sentence n: a promise of an address the player can play, or null if the voice is not
+// available. Kept so the next sentence is ready before the current one ends.
+function clip(n) {
+    if (n >= sentences.length) return Promise.resolve(null);
+    if (!clips.has(n)) {
+        const num = sentences[n].dataset.i;
+        const p = fetch(`api/library/tts?doc=${encodeURIComponent(docId)}&i=${encodeURIComponent(num)}`, { credentials: 'same-origin' })
+            .then(r => (r.ok && /audio/.test(r.headers.get('content-type') || '')) ? r.blob() : null)
+            .then(b => b ? URL.createObjectURL(b) : null)
+            .catch(() => null);
+        clips.set(n, p);
+        // keep only a few: drop sentences well behind the one being read
+        for (const [k, v] of clips) if (k < n - 3) { clips.delete(k); v.then(u => u && URL.revokeObjectURL(u)); }
+    }
+    return clips.get(n);
+}
+
+function haltAudio() {
+    if (!audio) return;
+    audio.onended = audio.onerror = null;
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
 }
 
 // Back or forward a section. Back from partway through a section goes to its start.

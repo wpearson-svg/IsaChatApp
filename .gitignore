@@ -32,3 +32,6 @@ dev-keys.json
 
 # Zip made to send the Keycloak folder to a teammate
 keycloak.zip
+
+# Isa's spoken Library audio (made on first play, or by the pre-make step at start)
+data/tts-cache/

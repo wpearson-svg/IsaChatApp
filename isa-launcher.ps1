@@ -134,11 +134,12 @@ Add-Btn $pApp 'Watch problems' 'watch-isa.bat: shows warnings and errors from th
 Add-Btn $pApp 'Watch ALL log lines' 'watch-isa.bat ALL: shows every log line.' { Run-Cmd 'watch-isa.bat ALL' }
 
 $pKc = New-Group $left 'Keycloak (needs Docker Desktop running)' 2
-Add-Btn $pKc 'Start Keycloak' 'docker compose up -d' { Run-Cmd 'docker compose up -d' }
-Add-Btn $pKc 'Stop Keycloak' 'docker compose down (keeps its data)' { Run-Cmd 'docker compose down' }
+Add-Btn $pKc 'Start Keycloak' 'docker compose up -d (starts Keycloak and Isa''s voice for the Library)' { Run-Cmd 'docker compose up -d' }
+Add-Btn $pKc 'Stop Keycloak' 'docker compose down (stops Keycloak and the voice; keeps their data)' { Run-Cmd 'docker compose down' }
 Add-Btn $pKc 'Reset Keycloak' 'reset-keycloak.bat: wipes Keycloak data and re-imports the realm file as it is.' { Run-Bat 'reset-keycloak.bat' }
 Add-Btn $pKc 'Reset + rebuild realm' 'reset-keycloak-rebuild.bat: rebuilds the realm file with Python first, then resets.' { Run-Bat 'reset-keycloak-rebuild.bat' }
 Add-Btn $pKc 'Keycloak logs' 'docker compose logs keycloak (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f keycloak' }
+Add-Btn $pKc 'Voice logs' 'docker compose logs kokoro: Isa''s spoken voice for the Library (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f kokoro' }
 
 $pTest = New-Group $left 'Tests (the app must be running)' 3
 Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks and the test paths (five questions, Spanish, English), signed in as d.whitfield.' { Run-Script 'test-paths.ps1' '' }
@@ -187,6 +188,10 @@ $lblKc.AutoSize = $true
 $lblKc.Margin = New-Object System.Windows.Forms.Padding(6, 8, 20, 4)
 $pStatus.Controls.Add($lblApp)
 $pStatus.Controls.Add($lblKc)
+$lblVoice = New-Object System.Windows.Forms.Label
+$lblVoice.AutoSize = $true
+$lblVoice.Margin = New-Object System.Windows.Forms.Padding(6, 8, 20, 4)
+$pStatus.Controls.Add($lblVoice)
 
 function Update-Status {
     $appUp = Test-Port 5067
@@ -195,6 +200,9 @@ function Update-Status {
     $lblApp.ForeColor = $(if ($appUp) { [System.Drawing.Color]::DarkGreen } else { [System.Drawing.Color]::Firebrick })
     $lblKc.Text = 'Keycloak (port 8080): ' + $(if ($kcUp) { 'UP' } else { 'down' })
     $lblKc.ForeColor = $(if ($kcUp) { [System.Drawing.Color]::DarkGreen } else { [System.Drawing.Color]::Firebrick })
+    $voiceUp = Test-Port 8880
+    $lblVoice.Text = 'Isa voice (port 8880): ' + $(if ($voiceUp) { 'UP' } else { 'down' })
+    $lblVoice.ForeColor = $(if ($voiceUp) { [System.Drawing.Color]::DarkGreen } else { [System.Drawing.Color]::Firebrick })
 }
 Add-Btn $pStatus 'Refresh status' 'Check the app and Keycloak now. It also refreshes every 10 seconds.' { Update-Status }
 
@@ -355,6 +363,16 @@ function Check-Requirements {
         else { Req-Warn 'Keycloak is up, but the isa realm is not loaded'; Req-Hint 'Click "Reset Keycloak".' }
     } else {
         Req-Warn 'Keycloak is not running'; Req-Hint 'Click "Start Keycloak" (or "Reset Keycloak" if it has no realm).'
+    }
+
+    # --- Isa's spoken voice (Kokoro) for the Library's Listen button ---
+    if (Test-Port 8880) {
+        $voices = Get-Json 'http://localhost:8880/v1/models'
+        if ($null -ne $voices) { Req-Ok 'Isa voice (Kokoro, port 8880) is up' }
+        else { Req-Warn 'Something is on port 8880 but it did not answer as the voice'; Req-Hint 'Click "Voice logs".' }
+    } else {
+        Req-Warn 'Isa voice (Kokoro) is not running, so Listen uses the device voice'
+        Req-Hint 'Click "Start Keycloak" (it starts the voice too). The first start downloads the voice, which takes a few minutes.'
     }
 
     $keysPath = Join-Path $script:root 'dev-keys.json'

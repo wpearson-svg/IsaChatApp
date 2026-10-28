@@ -86,6 +86,10 @@ builder.Services.AddSingleton<UsageReportService>();
 builder.Services.AddSingleton<ContentImportService>();
 builder.Services.AddSingleton<DevAccessService>();
 builder.Services.AddHttpClient("salesforce");
+// Isa's spoken voice for the Library's Listen button: Kokoro-82M (voice bf_lily) running on this machine.
+builder.Services.AddHttpClient("tts", client => client.Timeout = Timeout.InfiniteTimeSpan);
+builder.Services.AddSingleton<IsaChatApp.Services.Tts.KokoroTtsService>();
+builder.Services.AddHostedService<IsaChatApp.Services.Tts.LibraryVoiceWarmService>();
 builder.Services.AddSingleton<SalesforceTicketService>();
 builder.Services.AddScoped<PresentPanels>();   // lets Backstage open the /present panels
 // Reads/writes dev-keys.json (Dev Dashboard > Models, RAG, access & ticketing).
@@ -168,6 +172,21 @@ app.MapPost("/api/ask", async (AskRequest req, HttpRequest http, OrchestratorSer
     if (ctx.AccessDenied) return Results.StatusCode(StatusCodes.Status403Forbidden);
     return Results.Ok(result);
 });
+
+// GET /api/library/tts?doc=...&i=N -- the spoken audio (mp3) for one sentence of a Library document.
+// It takes a document and a sentence number, never free text, so it can only read the approved passages.
+// 503 means no spoken voice is available right now: the player then uses the device's own voice.
+app.MapGet("/api/library/tts", async (string doc, int i, LibraryService library, IsaChatApp.Services.Tts.KokoroTtsService tts, HttpContext http) =>
+{
+    var text = library.GetText(doc);
+    if (text is null) return Results.NotFound();
+    var sentence = IsaChatApp.Services.Tts.LibraryVoiceWarmService.Find(text, i);
+    if (sentence is null) return Results.NotFound();
+    var path = await tts.GetOrCreateAsync(sentence, http.RequestAborted);
+    if (path is null) return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    http.Response.Headers.CacheControl = "private, max-age=86400";
+    return Results.File(path, "audio/mpeg");
+}).RequireAuthorization();
 
 // Read the event log for one trace ID (used by the acceptance tests).
 app.MapGet("/api/events/{traceId}", async (string traceId, EventLogService eventLog) =>
