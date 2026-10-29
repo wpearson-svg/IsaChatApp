@@ -43,7 +43,8 @@ export function init(dotnet, questions) {
             e.preventDefault();
             const q = questions[+digit[1] - 1];
             const fill = () => {
-                const box = document.querySelector('.isa-widget .isa-widget__input');
+                // The visible question box (if there were ever two Isa widgets on the page, never pick a hidden one).
+                const box = [...document.querySelectorAll('.isa-widget .isa-widget__input')].find(b => b.offsetParent !== null);
                 if (!box || box.disabled) return false;
                 toast('Alt+' + digit[1] + ': question ' + digit[1] + ' typed. Press Enter.');
                 box.value = q;
@@ -53,7 +54,8 @@ export function init(dotnet, questions) {
             };
             if (!fill()) {
                 // Isa's panel is closed: open it, then type the question once the box is there.
-                document.querySelector('.isa-widget__bubble')?.click();
+                // If the panel is already open, only wait for its box; clicking the bubble then would open a second one.
+                if (!document.querySelector('.isa-widget__panel')) document.querySelector('.isa-widget__bubble')?.click();
                 let tries = 0;
                 const wait = setInterval(() => { if (fill()) clearInterval(wait); else if (++tries > 20) { clearInterval(wait); toast('Alt+' + digit[1] + ': Isa is busy or closed, try again.'); } }, 100);
             }
