@@ -10,6 +10,12 @@
 //
 // "group" puts documents under a heading, in the order they appear
 // here. "title" is the name shown; "date" is optional.
+//
+// "source": "chapter360" (Matthew, 28 October 2026): one of ISACA's
+// Chapter 360 documents, from onboarding/chapter360.json (built by
+// onboarding/build_chapter360.py); "document" is its id there. Isa
+// reads these aloud but doesn't answer questions from them yet, and
+// the Library says so.
 // Read at runtime: edit, save and reopen the Library; no rebuild.
 // Lines starting with // are comments and are ignored.
 // ============================================================
@@ -45,6 +51,55 @@
       "document": "Common Tasks and Navigation Guide",
       "title": "Common Tasks and Navigation Guide",
       "description": "Step-by-step tasks in the Chapter Leader Portal: board information, compliance and CPE."
+    },
+    {
+      "group": "Chapter 360",
+      "source": "chapter360",
+      "document": "c360-intro",
+      "title": "Chapter 360: Introduction",
+      "description": "What Chapter 360 is, how its six Focus Areas are organized, and how the self-assessment is scored."
+    },
+    {
+      "group": "Chapter 360",
+      "source": "chapter360",
+      "document": "c360-op",
+      "title": "Chapter 360: Operations",
+      "description": "Services and programs, budgets, security and privacy, day-to-day operations and vendors."
+    },
+    {
+      "group": "Chapter 360",
+      "source": "chapter360",
+      "document": "c360-mx",
+      "title": "Chapter 360: Member Experience",
+      "description": "Chapter culture, community events, member communications, volunteers, recognition, and requests."
+    },
+    {
+      "group": "Chapter 360",
+      "source": "chapter360",
+      "document": "c360-pd",
+      "title": "Chapter 360: Professional Development",
+      "description": "Training events, program delivery, and promoting ISACA's credentials and knowledge."
+    },
+    {
+      "group": "Chapter 360",
+      "source": "chapter360",
+      "document": "c360-gv",
+      "title": "Chapter 360: Governance",
+      "description": "Chapter strategy, bylaws and board meetings, risk, leadership continuity and compliance."
+    },
+    {
+      "group": "Chapter 360",
+      "source": "chapter360",
+      "document": "c360-ad",
+      "title": "Chapter 360: Advocacy",
+      "description": "Relationships with governments, schools and businesses, and communicating with the community."
+    },
+    {
+      "group": "Chapter 360",
+      "source": "chapter360",
+      "document": "c360-ci",
+      "title": "Chapter 360: Continuous Improvement",
+      "description": "Measuring performance, using resources well, and starting new programs and projects."
     }
   ]
 }

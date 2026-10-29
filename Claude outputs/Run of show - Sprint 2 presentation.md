@@ -141,7 +141,7 @@ Signed in as k.watanabe. The demo questions are the team's own, chosen and check
 
 ### 11 · Next steps · Eliyas · 1:30
 In priority order, six items:
-1. **Real translation:** LibreTranslate / Argos, self-hosted, plus a second self-hosted model for languages it doesn't cover (Amharic, Oromo, Somali, Tigrinya).
+1. **Real translation:** Meta's NLLB-200 model, self-hosted, which covers Amharic, Oromo, Somali and Tigrinya (the team's decision of 26 October).
 2. **Real input rules:** rule-based checks instead of the keyword stub.
 3. **Vector search and RAG:** embedding search instead of the meaning map.
 4. **Knowledge graph:** related topics from linked sections.
@@ -155,8 +155,10 @@ Key point: every stub Willis showed has a plan.
 
 ### 12 · Additional features · Matthew · 0:45
 - "Thanks, Eliyas."
-- **Left, built and being refined:** onboarding (the first 90 days) and the succession notebook. Both work in the app today.
-- **Right, planned:** peer content panel, offline packages, Android app, Chrome extension, multi-model testing. None are built.
+- **Left, built (8):** First 90 days, Today note, Meet your people, Succession notebook, Worth saving?, Handoff checklist, Listen Library, How to use Isa. All work in the app today, with sample data.
+- **Right, planned (7):** terms explained, day 30/60/90 check-ins, ask the last leader, a support team view, more roles, phone and browser (Android app, Chrome extension), and also offline packages, a peer content panel and side-by-side model tests. None are built.
+
+> Updated 28 October: the slide now lists everything built since the sprint began (it used to show only onboarding and the notebook, "In the build, not finished").
 
 ### 13 · Closing · Matthew · 0:20
 - Let them read the line first.
@@ -175,7 +177,7 @@ Key point: every stub Willis showed has a plan.
 - Slide 3: skip the 9 pm story.
 - Slide 5: skip the walk through the stages; keep the three bars.
 - Demo: skip step 6 (Backstage), or show Alt+6 only briefly.
-- Slide 12: one sentence: "The two on the left work today; the right side is planned."
+- Slide 12: one sentence: "Everything on the left works today; the right side is planned."
 
 ## Still to agree at the dry run
 

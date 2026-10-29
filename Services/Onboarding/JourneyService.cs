@@ -1,4 +1,5 @@
 using System.Globalization;
+using IsaChatApp.Services.Orchestrator;
 using Microsoft.Data.Sqlite;
 
 namespace IsaChatApp.Services.Onboarding;
@@ -139,6 +140,43 @@ public class JourneyService
         return list;
     }
 
+    /// <summary>
+    /// The "worth saving?" label for an answer, or null. A fixed rule, not
+    /// the AI model: if the source the answer cites (the first source) is a
+    /// document section tagged in onboarding/save_hints.csv, the save button
+    /// shows that tag ("deadline" or "decision") and its reason. Only the
+    /// cited source counts, so a passage Isa merely looked at never adds a label.
+    /// </summary>
+    public SaveHint? GetSaveHint(IReadOnlyList<SourceRef> sources)
+    {
+        if (!StepsExist || sources.Count == 0) return null;
+        var cited = sources[0];
+
+        using var conn = new SqliteConnection($"Data Source={_dbPath};Mode=ReadOnly");
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT hint_id, label, reason FROM save_hints
+            WHERE document = $document AND section = $section AND page = $page;
+            """;
+        cmd.Parameters.AddWithValue("$document", cited.Document.Trim());
+        cmd.Parameters.AddWithValue("$section", cited.Section.Trim());
+        cmd.Parameters.AddWithValue("$page", cited.Page.Trim());
+        try
+        {
+            using var reader = cmd.ExecuteReader();
+            return reader.Read()
+                ? new SaveHint(reader.GetString(0), reader.GetString(1), reader.GetString(2), cited.Document)
+                : null;
+        }
+        catch (SqliteException)
+        {
+            // data/onboarding.db was built before the save hints existed:
+            // run the onboarding build script again. No label until then.
+            return null;
+        }
+    }
+
     // Places a yearly date range ("11-01" to "12-31") around today: this
     // year's range if today is inside it or before it, otherwise next year's.
     private static KeyDateOnDay OnDay(string id, string title, string starts, string ends, string source, DateOnly today)
@@ -157,6 +195,12 @@ public class JourneyService
             DaysLeft: isOpen ? end.DayNumber - today.DayNumber : 0);
     }
 }
+
+/// <summary>A "worth saving?" label for one answer (onboarding/save_hints.csv).</summary>
+/// <param name="Label">deadline or decision.</param>
+/// <param name="Reason">Plain words that finish "This answer cites ...".</param>
+/// <param name="Document">The cited document, named in the explanation.</param>
+public record SaveHint(string HintId, string Label, string Reason, string Document);
 
 /// <summary>One item of the outgoing president's handoff checklist.</summary>
 /// <param name="Title">A short title in Isa's own words.</param>

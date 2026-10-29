@@ -100,17 +100,17 @@ Enough from me. Willis is going to show you what's actually working, and then le
 
 ## Slide 12: Additional features (about 45 seconds)
 
-> On screen: "Additional features". Left, "In the build, not finished": Onboarding, Succession notebook. Right, "Planned": Peer content panel, Offline packages, Android app wrapper, Chrome extension, Multi-model testing.
+> On screen (updated 28 October): "Additional features". Left, "Built": First 90 days, Today note, Meet your people, Succession notebook, Worth saving?, Handoff checklist, Listen Library, How to use Isa. Right, "Planned": Terms explained, Day 30, 60, 90 check-ins, Ask the last leader, Support team view, More roles, Phone and browser, and "Also" (offline packages, a peer content panel, side-by-side model tests).
 
 *Eliyas clicks to this slide, or you take the clicker back from him.*
 
 Thanks, Eliyas.
 
-The pipeline was this sprint's job, but we've already started building on top of it.
+The pipeline was this sprint's job, but we've already been building on top of it.
 
-*(Left side.)* Every year, chapter leadership turns over, and someone new starts from zero. These two are for that moment. One meets a brand-new president on day one and tells them what to focus on this week. The other lets the outgoing president leave behind what they learned. Both work in the app today; we're still polishing them.
+*(Left side.)* Every year, chapter leadership turns over, and someone new starts from zero. Everything on the left is for that moment, and all of it works in the app today. A new president gets the right steps for where they are in their term, a short note each day, and an introduction to their support contact and their board. The outgoing president leaves what they learned in a notebook for the next one. And any approved document can be read aloud, word for word.
 
-*(Right side.)* And this side is our wish list: getting Isa to leaders wherever they are, on a phone, in a browser, even with a weak connection, plus letting them learn from other chapters, and tools to help us choose the best AI model. Those are ideas for now. None of them are built.
+*(Right side.)* The right side is planned, not built yet: a few more pieces for new leaders, like check-ins at 30, 60 and 90 days, and ways to reach leaders wherever they are, on a phone or in a browser.
 
 **[CLICK]**
 
@@ -130,7 +130,7 @@ Thank you for your time and your support this sprint. We'd love to take your que
 
 - Slide 3: drop the "Picture yourself..." story and start at "Point to the 6".
 - Slide 5: skip the walk through the stages; keep the three bars.
-- Slide 12: say only "The two on the left work today and we're still polishing them; the right side is planned," and click on.
+- Slide 12: say only "Everything on the left works in the app today; the right side is planned," and click on.
 
 ## Remember
 
@@ -138,4 +138,4 @@ Thank you for your time and your support this sprint. We'd love to take your que
 - No model timing (how many seconds an answer takes).
 - Say "planned" for anything not built.
 - Don't restart Isa during the talk: ticket numbers start again at TKT-0001.
-- The slide labels onboarding and the notebook "In the build, not finished". Saying they "work in the app today" and "we're still polishing them" matches that.
+- The slide labels the left side "Built": everything there works in the app today, with sample people and data. Say "planned" for the right side, and don't describe any of it as done.

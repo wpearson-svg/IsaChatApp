@@ -19,15 +19,23 @@
      checked by the sign-in check and the Input Compliance gate first.
    - Afterwards it says "Saved to the notebook" with "Open the notebook".
 
-   Nothing here comes from the AI model. The smart save offer ("Want me
-   to save this?") comes later; this button is always there for anyone
-   who can write, so leaders can always save something themselves.
+   - "Worth saving?" label (Matthew, 28 October 2026; replaces the planned
+     pop-up offer): when the source the answer cites is a document section
+     tagged "deadline" or "decision" in onboarding/save_hints.csv, the
+     button carries a small label, for example "Deadline · worth saving?",
+     and the open box says why ("This answer cites ..."). Nothing pops up
+     and nothing needs dismissing. JourneyService.GetSaveHint does the
+     lookup; Isa's pipeline is not involved.
+
+   Nothing here comes from the AI model. This button is always there for
+   anyone who can write, so leaders can always save something themselves.
    ============================================================ *@
 
 @using IsaChatApp.Services
 @using IsaChatApp.Services.Onboarding
 @using IsaChatApp.Services.Orchestrator
 @inject NotebookService Notebook
+@inject JourneyService Journey
 @inject WidgetSettings Settings
 @inject KeycloakSignInService SignInService
 
@@ -47,11 +55,31 @@
         else if (!_open)
         {
             <button type="button" class="isa-save__btn" @onclick="() => _open = true"
-                    title="Save this question and answer to your chapter's succession notebook">
+                    title="@(_hint is null ? "Save this question and answer to your chapter's succession notebook" : $"Worth saving: this answer cites {_hint.Reason}.")">
                 <svg class="isa-save__icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
                     <path d="M4 2h8v12l-4-3-4 3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
                 </svg>
-                <span>Save to notebook</span>
+                <span class="isa-save__words">Save to notebook</span>
+                @if (_hint is not null)
+                {
+                    @* The quiet label: an icon and words, never color alone. *@
+                    <span class="isa-save__hint">
+                        @if (_hint.Label == "deadline")
+                        {
+                            <svg class="isa-save__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                                <rect x="2.5" y="3.5" width="11" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4" />
+                                <path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg class="isa-save__icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                                <path d="M8 2v12M8 4h4.5l1.5 1.75L12.5 7.5H8M8 8.5H3.5L2 10.25 3.5 12H8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" />
+                            </svg>
+                        }
+                        <span>@HintWord · worth saving?</span>
+                    </span>
+                }
             </button>
         }
         else
@@ -59,6 +87,11 @@
             <div class="isa-save__box" role="group" aria-label="Save to the succession notebook">
                 <p class="isa-save__title">Save to your chapter's succession notebook</p>
                 <p class="isa-save__who">The next president will see your question, this answer and its sources.</p>
+                @if (_hint is not null)
+                {
+                    @* Show the work: why the label appeared, from the tag list. *@
+                    <p class="isa-save__why">Marked as a @HintWord.ToLowerInvariant() because this answer cites @_hint.Reason (@_hint.Document).</p>
+                }
                 <label class="isa-save__label" for="@_inputId">What did you decide? <span>(optional)</span></label>
                 <input id="@_inputId" class="isa-save__input" type="text" maxlength="300"
                        placeholder="For example: we'll hold this year's election online"
@@ -110,6 +143,10 @@
     private bool _share;
     private string _decided = "";
     private string? _problem;
+    private SaveHint? _hint;
+
+    // "Deadline" or "Decision", for the label and the open box.
+    private string HintWord => _hint?.Label == "deadline" ? "Deadline" : "Decision";
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,6 +155,7 @@
         _personId = user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
         _sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
         _canWrite = _personId is not null && Notebook.GetAccess(_personId, Settings.Today).CanWrite;
+        if (_canWrite) _hint = Journey.GetSaveHint(Sources);
     }
 
     private void Cancel()

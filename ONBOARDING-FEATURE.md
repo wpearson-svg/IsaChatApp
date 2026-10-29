@@ -79,6 +79,8 @@ Examples:
 Also:
 - Log whether each offer is accepted or dismissed, counted by category only, never by person. An admin can switch off a category in the Dev Dashboard if leaders keep dismissing it.
 - Show-the-work: the expandable view shows why Isa offered the save, for example "Offered because: deadline question, cites Compliance Framework Q4 timeline."
+- Changed October 28, 2026 (Matthew): no pop-up offer. A leader often asks again just to remind themselves, and a question after the answer would get in the way; the "Save to notebook" button is already under every answer. Instead, the button itself carries a quiet label when the answer cites a deadline or decision section, for example "Deadline · worth saving?". Nothing pops up and nothing needs dismissing. The tags live in our own list in onboarding/ (document and section, label, reason), matched against the sources the save button already receives, so Willis's pipeline, the content database and the stages are not changed. Rules 3 and 4 above (chapter wording, frequency cap) are not needed for a label that never interrupts.
+- Built October 28, 2026 (Matthew asked Claude to build it directly): onboarding/save_hints.csv tags 13 of the 45 sections in Isa's content (7 deadline, 6 decision; each row has the reason shown to the leader and a "Why tagged" note for reviewers). Tagged: the compliance review window and the Common Tasks compliance page; President Guidebook pp. 3 (elections, committees), 5 (financial controls), 6 (reporting deadlines), 7 (board meetings), 8 (after the AGM), 9 (handover records), 10 (how to list leaders online), 11 (President-Elect role), 12 (turnover timeline), 13 and 14 (annual checklist, AGM-relative dates). Not tagged: role summaries, systems overview, Engage features, CPE upload, purpose statements, and the guidebook's general pages (pp. 2 and 4). Only the source the answer cites (the first one) counts. Built into data/onboarding.db (save_hints table); the build script warns if a tagged section is missing from data/content.db, for example after the content is rebuilt with new section names. JourneyService.GetSaveHint, Components/Shared/SaveToNotebook.razor. The open save box explains it: "Marked as a deadline because this answer cites ...". Not built: counting how often labelled answers are saved (would need the shared event log).
 
 === FEATURE 3: "HOW TO USE ISA" HELP SECTION ===
 
@@ -151,6 +153,44 @@ E. Day 30, 60 and 90 check-ins
   - Listen in the succession notebook: the new president can listen to the notes the previous president left. These are the chapter's own words, read word for word, so they need no ISACA approval.
   - Documents we don't have yet, such as the Chapter Affiliation Agreement (ISACA question 4), are still listed, marked "Requested from ISACA," with no Listen button until the document arrives. This shows it is part of the solution without pretending we have it.
 - Built October 23, 2026 (Matthew's approved mockup, Claude outputs/Library mockups.html): a Library button on the rail (ISACA Purple) opens the Library in the notebook's place on the right. For now it lists only ISACA's five documents that Isa answers from (Matthew's choice), from onboarding/library.json, grouped by topic, with Read and Listen. Listen reads the approved passages from data/content.db word for word, one sentence at a time, highlighting the sentence being read; pause, back and forward by section, speed, and click a sentence to read from there. Shown to anyone signed in. Components/Shared/LibraryPanel.razor, Services/Onboarding/LibraryService.cs. Not yet: Listen on journey steps and in the notebook, opening the original file, the team's governance guides, and the Chapter Affiliation Agreement (Camille has since sent it; it isn't in Isa's content yet).
+- Added October 28, 2026 (Matthew): a "Chapter 360" group in the Library with ISACA's seven Chapter 360 documents (Introduction and the six Focus Areas), Read and Listen like the others. A note under the group says Isa doesn't answer questions from them yet (they aren't in her approved content; adding them is a team decision with Willis). The text comes from ISACA's Word files through onboarding/build_chapter360.py into onboarding/chapter360.json; left out are ISACA's internal "[Node]" codes, the leftover text of a diagram in the Introduction, and the asterisk after template names (its meaning isn't known). "TBD" entries stay, so the text is word for word. library.json marks them "source": "chapter360". Willis's voice warm-up (Tts:PreGenerate) now also pre-makes audio for these documents, about 11,000 more words, once, in the background.
+
+=== SAMPLE PAGES AND THE RFP (DECIDED OCTOBER 28, 2026) ===
+
+- Willis pointed out that the sample Engage and Chapter 360 pages are outside the RFP, and Matthew agreed: the RFP asks for an AI agent that answers from ISACA-approved content and hands off to people; it never asks to rebuild or redesign ISACA's own products, and none of its evaluation criteria reward that.
+- So: no more building on the sample pages. They stay as they are, as backdrop that makes the demo feel real (the rail buttons pointing leaders to the tools they already use do fit the RFP's "Interface" goal). Show them briefly at most, and never present them as something the team is offering ISACA.
+- The onboarding feature stays (Matthew): it is an important part of the team's work. Present it in the RFP's terms: it reduces repetitive questions from new leaders ("Automate"), supports the Chapter Experience team rather than replacing it, and keeps knowledge through the yearly handover.
+- Remaining time goes to what ISACA scores: the AI-use register (required), testing and the QA report, the pilot measurement slide, and answer quality once RAG is in.
+
+=== CHAPTER 360 SAMPLE PAGE (BUILT OCTOBER 27-28, 2026) ===
+
+- The Chapter 360 button on the rail opens /sample/chapter-360 in a new tab: a look-alike of ISACA's Chapter 360 for the sample Sakura Bay Chapter (the real one is behind ISACA's login).
+- October 28, 2026 (Matthew: "it doesn't have to work ENTIRELY, but it needs to LOOK like it works"): parts of it now work.
+  - Overview: the "360 view" chart, self-assessment progress, the six Focus Area cards (each opens its Focus Area), recommendations, the leadership-continuity tip (opens Governance at Chapter Leadership Continuity) and the board.
+  - A Focus Area: what it is, why it matters, and its Practice Areas, each opening to its numbered practices with their benefits and tools; "Read & listen" plays the whole document in Isa's voice with the Library's player.
+  - Tools & templates: all 271 tools and templates the documents name, searchable and filtered by kind. Opening one shows a note that templates are in ISACA's real Chapter 360, not the prototype.
+  - Self-assessment: rate each Practice Area 1 to 5; the chart reshapes as you go; the Focus Area score is the average (ISACA's own scoring rule). Saved only on the page: reloading starts over. Advocacy and Continuous Improvement start unassessed, so the demo can fill one in.
+  - Help: ISACA's Chapter 360 introduction, to read or listen to.
+- Changed later on October 28, 2026 (Matthew asked for the chart to focus on the leader; decided together):
+  - The chapter's 360 view stays ISACA's design. ISACA's introduction: each leader rates the chapter on their own and "the scores will be averaged into one final score". In the sample, 3 of 6 board members have rated four Focus Areas; nobody has rated Advocacy or Continuous Improvement. The self-assessment is now "Your rating of the chapter": the signed-in leader's rating is averaged in (each row shows the board average so far). The board card shows who has rated ("✓ Rated", "Not yet"), never anyone's own scores. Rating individuals was considered and set aside: it would change what ISACA's own tool measures, and scoring volunteers could feel like a performance review.
+  - "My Chapter 360": the leader's own learning, private to them. It records which Focus Areas they've opened, which Practice Areas they've opened, and whether they've read or listened, on the page only. A card lists all six with a bar and suggests the chapter's lowest-rated area they haven't opened yet. The chart shows it as a dashed purple shape; Focus Area cards and pages show "✓ Explored".
+  - The chart is clickable: hovering over or focusing a point shows a card (the chapter's level, how many ratings, the lowest Practice Area, the leader's own exploring, and "Open" and "Add your rating"); clicking a point opens that Focus Area, or in the self-assessment picks it to rate. Keyboard: Tab to a point, Enter to open. On a phone the card sits under the chart.
+  - Later, optional (not built): "Who can help", showing on each Focus Area what board members said they'd enjoy helping with, from the planned board profile form, shared only if each member chooses.
+- The ribbon says: sample page, not ISACA's real Chapter 360, some parts work, nothing is saved. The chapter, scores, progress and people are invented; the one-line summary on each Focus Area card is the team's wording; everything else is ISACA's.
+- Files: Components/Pages/SampleChapter360.razor (+ .razor.css, .razor.js), Services/Onboarding/Chapter360Service.cs.
+
+=== ENGAGE SAMPLE PAGE (BUILT OCTOBER 27-28, 2026) ===
+
+- The Engage button on the rail opens /sample/engage in a new tab: a look-alike of the Sakura Bay Chapter's community on ISACA's Engage, with the "Say hello to Isa" announcement.
+- October 28, 2026 (Matthew): parts now work, like the Chapter 360 page.
+  - Home: the announcement's example conversation steps through two real questions Isa answers from ISACA's text, word for word (board meetings, President Guidebook p. 7; the yearly compliance report, Common Tasks and Navigation Guide). "What can Isa do?" opens a short, honest list of what she does and won't do. "Post a message" and "Following" work.
+  - Discussion: seven invented threads with filters (Isa, Events, Study group, Volunteering, Photos), search, and "New discussion". A thread opens with its replies; you can like it and reply. Replies about Isa describe only what she really does (answers with the page it came from; passes a local-tax question to the Chapter Experience team with a reference number).
+  - Library: folders and eight invented files; opening a file shows a note that files aren't in the prototype.
+  - Events: upcoming and past events; each opens with details, Register (the count goes up, "including you") and Add to calendar.
+  - Members: 16 invented members "who chose to be listed in the directory", names and roles only, searchable.
+  - The search box in the header searches discussions. Connect and Volunteer show a note that they're part of ISACA's real Engage.
+- Anything typed stays on the page until it is reloaded: nothing is saved or sent, and none of it goes through Isa. The ribbon says: sample page, not ISACA's real Engage, some parts work, nothing is saved.
+- Files: Components/Pages/SampleEngage.razor (+ .razor.css; it uses the Chapter 360 page's small scrolling script).
 
 === OPEN NOTEBOOK: WHERE IT FITS AND WHERE IT DOESN'T ===
 
@@ -193,7 +233,7 @@ If we fall behind, cut from the bottom of this list first:
 7. "Meet your board" step
 8. Document library with "Listen" button
 9. "Ask the outgoing president" (fallback: roadmap slide)
-10. Smart save offer (fallback: the plain save icon)
+10. Smart save offer, now a quiet "worth saving?" label on the save button (fallback: the plain save icon)
 11. Day 30/60/90 check-ins (fallback: roadmap slide)
 12. Full help section (fallback: a short static page)
 
@@ -319,7 +359,8 @@ Panels (decided by Matthew, October 20, 2026):
 - Journey steps: phases and day ranges reviewed October 20, 2026 (see "Decided October 20, 2026"). Still worth a read: the "What to do" wording of each step. Notes:
   - The guidebook has no orientation checklist for a new president. Steps J-06 to J-09 use the topics the president must cover when orienting incoming leaders (guidebook p. 13).
   - The prototype counts AGM-based deadlines from the term start date, because the test data has no AGM dates.
-  After any change, run: python onboarding\build_onboarding_db.py
+  After any change, run: python onboarding\build_onboarding_db.py, and commit data/onboarding.db with the CSV.
+- Decided October 28, 2026 (Matthew: teammates' copies should work like his with no extra steps): data/onboarding.db is committed to Git (an exception in .gitignore). It holds content only, never anyone's progress or notes (those are data/progress.db and data/notebook.db, which stay local), and only Matthew changes the onboarding content, so there is nothing to clash with. A merge now gives everyone the same journey steps, contacts, key dates, handoff checklist and "worth saving?" tags.
 
 === STILL TO CONFIRM WITH WILLIS BEFORE WEEK 8 ===
 

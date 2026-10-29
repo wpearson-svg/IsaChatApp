@@ -102,6 +102,43 @@ Still a best guess: what new leaders actually struggle with is worth confirming 
 - Still open: how much of the 15 minutes the team gives the onboarding feature compared with the rest of Isa.
 - A presentation note for the setup phase (no survey figures in this file): "We designed the setup phase around quick wins. In week two, new presidents complete tasks they can finish on their own, so they see progress right away. Tasks that depend on other people, like bank signers and records updates, get weeks three and four. We built it this way because volunteer leader onboarding is the area ISACA's own research rated weakest." Matthew should check the exact survey figure against the original document before presenting it.
 
+=== THE SPRINT 1 PRESENTATION: ITS STRUCTURE (READ OCTOBER 28, 2026) ===
+
+Matthew's copy: C:\Users\MatthewBrady\Downloads\ISACA AI-Enabled Chapter Support Presentation.pptx (not in the project folder). "Isa: AI-Enabled Chapter Knowledge and Support Agent. A proposal for ISACA's Chapter Experience Team", Second Star Collective, 24 September 2026, 43 slides. Team roles on slide 2: Willis Pearson (Project Lead, Solution Architecture), Eliyas Eshta (Solutions Analyst, Technical Stack), A'keyrah Stevenson (Quality Engineer, Risk & Success Metrics), Matthew Brady (Client Liaison, Governance & Escalation Design).
+
+It was NOT built on COBIT. It used five sections, with a tracker across the top of the slides showing which one was current:
+1. Business Impact: hours spent on questions with documented answers, multiplied across chapters, volunteer leaders, every annual rotation and a growing network. Slides 9 and 10 name "New Chapter Leader Onboarding" and "Annual Leadership Rotation & Handoff" as business impacts. Closing line: "Unlocking thousands of volunteer & team hours through instant, verified chapter support."
+2. Intended Outcome, "in your words" (Camille quote: "the types of questions you need to ask in order to get to what someone is not saying"): (1) Leaders doing strategy, (2) Answers that survive the rotation, (3) A team freed for the work that needs them.
+3. Solution & Cost: the Isa diagram built up step by step (chapter leader, Isa, ISACA-approved content; sign-in and roles; translation; Check 1 reads the question, Check 2 reads the answer; search first, AI only if search isn't enough; contact the team always on screen; ticket), then "What it costs to run": search first, least expensive model that can answer, every call logged, your controls, running lean.
+4. Risk & Controls: a risk register, "a control for every line": (1) a wrong answer (Check 2), (2) a sensitive question reaching the AI (Check 1 and an always-to-a-person list), (3) a leader seeing content outside their role (role filter at retrieval), (4) the tool showing the team too much (trends only, never a named individual), (5) a leader who can't get to a person (three paths to a person).
+5. Success Metrics, "defined before the build": (1) accuracy (weekly sample checked by ISACA's team), (2) the right kind of use, (3) escalation quality, not rate, (4) hours returned. Baseline before the pilot, target agreed in writing, live on the dashboard.
+Close: "The ask: a pilot. A small set of chapters, a defined window, your Chapter Experience team as the judges."
+
+Fix before reusing: slides 6 and 11 to 16 still say "[NUMBER] hours". Fill in the real figure or reword.
+
+Plan for Sprint 3 (proposed October 28, 2026; Matthew said to save it for when the presentation is developed): bring back the same five sections and the same tracker, and close the loop: "here's what we promised in each section, and here's what we built". The story: "In Sprint 1 we named the problem (onboarding and the annual handoff were business impacts). In Sprint 3 we show what we built for it." The three intended outcomes match the build: leaders doing strategy (the 90-day journey, Today note, key dates); answers that survive the rotation (succession notebook, handoff checklist); a team freed (hand-offs, the contact step, the "worth saving?" label). Repeat the five risks with "built" beside each control, and end with the same ask: a pilot.
+
+=== FRAMING THE WORK IN THE RFP'S TERMS (OCTOBER 28, 2026) ===
+
+For the supplement page "How our work maps to the RFP" (Matthew agreed to build it) and the Sprint 3 presentation. The test for any piece of work: does it help Isa help a leader find, understand, or get help with ISACA-approved information? The sample Engage and Chapter 360 pages fail that test (redesigning ISACA's own products) and are not presented as an offering; see ONBOARDING-FEATURE.md, "Sample pages and the RFP".
+
+Three framing moves:
+1. Onboarding answers Phase 1: the RFP asks for "prioritized use cases" and a "recommended pilot scope". New presidents are the recommended pilot group: they change every year, need the most help early, and are a clear group to measure.
+2. A measurable pilot: the RFP wants "evidence-based go/no-go decisions". The 90-day journey gives natural measures: time to first contact with the Chapter Experience team, repetitive questions in the first 90 days, steps leaders get stuck on, hand-offs by topic.
+3. A Phase 2 content finding: the RFP asks vendors to "inventory and assess" knowledge sources and handle conflicting content. Extracting ISACA's Chapter 360 documents found "TBD" entries, practices with no number (Member Experience 1.5, Continuous Improvement 3.8), a numbering slip in Advocacy (4.8 used twice, no 4.7) and unexplained asterisks after template names. Present it as helpful evidence that the team does Phase 2 work, not as criticism.
+
+Each piece in the RFP's words:
+- Succession notebook: knowledge transfer and sustainability; content governance. "Knowledge survives every yearly handover, and leaders' notes never become a source for Isa's answers."
+- "Worth saving?" label: answer quality, source transparency. "Fixed rules, not AI guesswork; every label shows why."
+- Listen Library: accessibility, user experience. "ISACA's words read aloud, word for word; nothing rewritten."
+- Today note and key dates: Automate, answer quality. "Dates come from the database, never from AI."
+- Contact step and hand-offs: Redirect, supplementing human support. "Isa connects leaders to people; she never replaces them."
+- Progress-sharing switch, privacy line: security and privacy, Adminable. "We built it; ISACA decides whether to switch it on."
+- Show the work: uncertainty, source transparency.
+- Rail links to Engage and Chapter 360: Interface. "Isa is the one place to start."
+- Local AI, no paid services: commercial clarity, no technology lock-in.
+The overall story: "In miniature, we did the RFP's first three phases: found the use cases, checked the content, built a working prototype. Here's what Phase 4 would test and how Phase 5 would decide go or no-go." The AI-use register shows the team followed the RFP's own rules while doing it.
+
 === THE SUPPLEMENT DOCUMENT ===
 
 Matthew's idea: a detailed, attractive "pitch" document that supplements the presentation. He doesn't expect other teams to provide one, and sees it as a way to set the team apart and help sway ISACA's vote.

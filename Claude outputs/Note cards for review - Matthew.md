@@ -108,7 +108,7 @@ Matthew Brady's speaking notes for the Sprint 2 presentation of **Isa**, by the 
 
 ## Card 6 · Slide 12: "Additional features" (~45 sec)
 
-**On screen:** "Additional features". Left, labelled "In the build, not finished": Onboarding (the Today panel and the first-90-days journey) and Succession notebook (leaders leave notes for the person who takes over). Right, labelled "Planned": Peer content panel, Offline packages, Android app wrapper, Chrome extension, Multi-model testing.
+**On screen (updated 28 October):** "Additional features". Left, labelled "Built": First 90 days, Today note, Meet your people (support contact and board), Succession notebook, Worth saving?, Handoff checklist, Listen Library, How to use Isa. Right, labelled "Planned": Terms explained, Day 30, 60, 90 check-ins, Ask the last leader, Support team view, More roles, Phone and browser (Android app, Chrome extension), and "Also" (offline packages, a peer content panel, side-by-side model tests).
 
 **Card:**
 
@@ -116,11 +116,11 @@ Matthew Brady's speaking notes for the Sprint 2 presentation of **Isa**, by the 
 >
 > Thanks, Eliyas.
 >
-> The pipeline was this sprint's job, but we've already started building on top of it.
+> The pipeline was this sprint's job, but we've already been building on top of it.
 >
-> *(Left side.)* Every year, chapter leadership turns over, and someone new starts from zero. These two are for that moment. One meets a brand-new president on day one and tells them what to focus on this week. The other lets the outgoing president leave behind what they learned. Both work in the app today; we're still polishing them.
+> *(Left side.)* Every year, chapter leadership turns over, and someone new starts from zero. Everything on the left is for that moment, and all of it works in the app today. A new president gets the right steps for where they are in their term, a short note each day, and an introduction to their support contact and their board. The outgoing president leaves what they learned in a notebook for the next one. And any approved document can be read aloud, word for word.
 >
-> *(Right side.)* And this side is our wish list: getting Isa to leaders wherever they are, on a phone, in a browser, even with a weak connection, plus letting them learn from other chapters, and tools to help us choose the best AI model. Those are ideas for now. None of them are built.
+> *(Right side.)* The right side is planned, not built yet: a few more pieces for new leaders, like check-ins at 30, 60 and 90 days, and ways to reach leaders wherever they are, on a phone or in a browser.
 >
 > **CLICK**
 
@@ -148,7 +148,7 @@ Matthew Brady's speaking notes for the Sprint 2 presentation of **Isa**, by the 
 **If you're running long**
 - Slide 3: skip the "Picture yourself" story; start at the 6.
 - Slide 5: skip the walk through the stages; keep the three bars.
-- Slide 12: "The two on the left work today and we're still polishing them; the right side is planned." Then click.
+- Slide 12: "Everything on the left works in the app today; the right side is planned." Then click.
 
 **Your timing**
 - Opening (intro, slides 1 to 5): about 3 minutes.

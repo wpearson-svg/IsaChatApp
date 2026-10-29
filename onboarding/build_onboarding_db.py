@@ -10,9 +10,15 @@ journey steps (journey_steps.csv), the invented sample Chapter
 Experience contacts (contacts.csv), the key calendar dates from
 ISACA documents, such as the compliance window (key_dates.csv), and the
 outgoing president's handoff checklist, word for word from the President
-Guidebook (handoff_steps.csv). Things leaders do in Isa, such as marking a step
+Guidebook (handoff_steps.csv), and the document sections whose answers
+get a quiet "worth saving?" label on the save button (save_hints.csv).
+Things leaders do in Isa, such as marking a step
 complete, will be stored in a separate database that this script never
 touches, so rebuilding never erases anyone's progress.
+
+data/onboarding.db is committed to Git (Matthew, 28 October 2026), so a merge gives
+everyone the same onboarding content without running this script. After changing
+any CSV here, run the script and commit data/onboarding.db along with the CSV.
 
 Usage (from the IsaChatApp folder): python onboarding/build_onboarding_db.py [output.db]"""
 import csv, os, re, sqlite3, sys
@@ -35,6 +41,11 @@ with open(os.path.join(here, "key_dates.csv"), encoding="utf-8-sig", newline="")
 # with a short title for each item (Matthew's choice, 20 October 2026).
 with open(os.path.join(here, "handoff_steps.csv"), encoding="utf-8-sig", newline="") as f:
     handoff = list(csv.DictReader(f))
+
+# Document sections tagged "deadline" or "decision": an answer that cites one
+# gets a quiet "worth saving?" label on its save button (Matthew, 28 October 2026).
+with open(os.path.join(here, "save_hints.csv"), encoding="utf-8-sig", newline="") as f:
+    hints = list(csv.DictReader(f))
 
 # ---- Check the data before building -------------------------------------
 problems = []
@@ -98,6 +109,24 @@ for h in handoff:
     if kind and kind not in ("decision", "contact", "worked", "unfinished", "other"):
         problems.append(f"handoff_steps.csv {hid}: Notebook kind must be empty or a notebook note kind")
 
+hint_ids = [h["Hint ID"] for h in hints]
+if len(set(hint_ids)) != len(hint_ids):
+    problems.append("save_hints.csv: duplicate Hint ID")
+hint_keys = set()
+for h in hints:
+    hid = h["Hint ID"]
+    if not re.fullmatch(r"S-\d{2}", hid):
+        problems.append(f"save_hints.csv: bad Hint ID {hid!r} (use S- and two digits, like S-01)")
+    for field in ("Document", "Section", "Page", "Reason"):
+        if not h[field].strip():
+            problems.append(f"save_hints.csv {hid}: {field} is empty")
+    if h["Label"].strip() not in ("deadline", "decision"):
+        problems.append(f"save_hints.csv {hid}: Label must be deadline or decision")
+    key = (h["Document"].strip(), h["Section"].strip(), h["Page"].strip())
+    if key in hint_keys:
+        problems.append(f"save_hints.csv {hid}: the same document, section and page is tagged twice")
+    hint_keys.add(key)
+
 if problems:
     print("DATA PROBLEMS:")
     for p in problems:
@@ -142,6 +171,14 @@ CREATE TABLE key_dates(
   ends     TEXT,              -- month-day, or empty for a single day
   source   TEXT NOT NULL      -- the ISACA document it comes from
 );
+CREATE TABLE save_hints(
+  hint_id  TEXT PRIMARY KEY,
+  document TEXT NOT NULL,     -- exactly as in data/content.db (passages.document)
+  section  TEXT NOT NULL,     -- exactly as in data/content.db (passages.section)
+  page     TEXT NOT NULL,     -- exactly as in data/content.db, e.g. 7 or n/a
+  label    TEXT NOT NULL,     -- deadline or decision
+  reason   TEXT NOT NULL      -- shown to the leader: "This answer cites ..."
+);
 CREATE TABLE contact_chapters(
   chapter_id TEXT PRIMARY KEY,  -- each chapter has one contact
   contact_id TEXT NOT NULL REFERENCES contacts(contact_id)
@@ -160,6 +197,26 @@ db.executemany("INSERT INTO handoff_steps VALUES(?,?,?,?,?)", [
 db.executemany("INSERT INTO key_dates VALUES(?,?,?,?,?)", [
     (k["Date ID"], k["Title"].strip(), k["Starts (month-day)"].strip(),
      k["Ends (month-day)"].strip() or None, k["Source"].strip()) for k in key_dates])
+db.executemany("INSERT INTO save_hints VALUES(?,?,?,?,?,?)", [
+    (h["Hint ID"], h["Document"].strip(), h["Section"].strip(), h["Page"].strip(),
+     h["Label"].strip(), h["Reason"].strip()) for h in hints])
 db.commit()
 db.close()
-print(f"built {out}: {len(steps)} journey steps, {len(contacts)} sample contacts, {len(key_dates)} key dates, {len(handoff)} handoff steps")
+print(f"built {out}: {len(steps)} journey steps, {len(contacts)} sample contacts, {len(key_dates)} key dates, "
+      f"{len(handoff)} handoff steps, {len(hints)} save hints")
+
+# A tagged section that Isa's content no longer has never gets its label
+# (for example after the content is rebuilt with new section names). Not an
+# error, so the build still succeeds, but say so.
+content_db = os.path.join(here, "..", "data", "content.db")
+if os.path.exists(content_db):
+    cdb = sqlite3.connect(f"file:{content_db}?mode=ro", uri=True)
+    found = set(cdb.execute("SELECT DISTINCT document, section, page FROM passages"))
+    cdb.close()
+    missing = [h["Hint ID"] for h in hints
+               if (h["Document"].strip(), h["Section"].strip(), h["Page"].strip()) not in found]
+    if missing:
+        print("NOTE: these save hints name a section data/content.db doesn't have, so their label "
+              "won't show: " + ", ".join(missing))
+    else:
+        print(f"all {len(hints)} save hints match a section in data/content.db")

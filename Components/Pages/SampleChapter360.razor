@@ -1,116 +1,390 @@
 @page "/sample/chapter-360"
 @layout AuthLayout
+@rendermode InteractiveServer
 @using System.Globalization
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject Chapter360Service C360
+@inject LibraryService Library
+@inject WidgetSettings Settings
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 @* ============================================================
    SampleChapter360.razor
 
    The sample Chapter 360 page, opened in a new tab by the Chapter 360
    button on Isa's rail (IsaRail.razor). The real Chapter 360 is behind
-   ISACA's login, so the prototype shows this look-alike instead
-   (Matthew, 27 October 2026: "they don't need to function, but they
-   should look really good").
+   ISACA's login, so the prototype shows this look-alike instead.
 
-   What it is built from: the structure in ISACA's own Chapter 360
-   documents (content/Chapter 360): six Focus Areas with their codes
-   (OP, MX, PD, GV, AD, CI), their Practice Areas, the self-assessment
-   that gives a chapter its "360 view", and template names those
-   documents list. The chapter (Sakura Bay), its maturity levels and its
-   progress are invented sample data.
+   27 October 2026: built as a picture ("they don't need to function,
+   but they should look really good").
+   28 October 2026 (Matthew): parts now work, so it looks like the real
+   thing in the presentation ("it doesn't have to work ENTIRELY, but it
+   needs to LOOK like it works"):
+   - Overview: the 360 view, the six Focus Area cards (each opens its
+     Focus Area), "My Chapter 360", recommendations and the board.
+   - A Focus Area: what it is, why it matters, and its Practice Areas,
+     each opening to its numbered practices, benefits and tools; plus
+     Read & listen, the whole document read aloud word for word with
+     the Library's player (LibraryPanel.razor.js, Isa's own voice).
+   - Focus areas: all six with their Practice Areas.
+   - Tools & templates: every tool the documents name, searchable.
+     Opening one shows a note that templates aren't in the prototype.
+   - Self-assessment: the signed-in leader adds their own rating of the
+     chapter, 1 to 5 per Practice Area.
+   - Help: ISACA's Chapter 360 introduction, to read or listen to.
 
-   Honest by design: a ribbon at the top says it is a sample, nothing
-   on it works, there are no sign-in fields, and it uses no ISACA logo.
+   Two layers, decided with Matthew on 28 October 2026:
+   - The chapter's 360 view stays ISACA's design: each board member
+     rates the chapter on their own, and the ratings are averaged ("If
+     one or more leaders from your chapter have taken the survey
+     independently, the scores will be averaged into one final score",
+     ISACA's Chapter 360 introduction). The board card shows WHO has
+     rated, never anyone's own scores.
+   - "My Chapter 360" is the leader's own learning: which Focus Areas
+     they have opened, read or listened to. Progress, not a grade, and
+     for the leader only. It shows on the chart as a dashed ring.
+   The chart is clickable: hover or focus a point for a card with the
+   details, click it to open that Focus Area (in the self-assessment,
+   to rate that area).
+
+   Where the words come from: ISACA's Chapter 360 documents
+   (content/Chapter 360), through onboarding/chapter360.json
+   (Chapter360Service). ISACA's internal "[Node]" codes, the asterisks
+   after template names and tool lists that only say "TBD" are not
+   shown here; Read & listen keeps "TBD" word for word. The chapter
+   (Sakura Bay), its ratings, progress and people are invented sample
+   data. The short summary on each Focus Area card is our own wording.
+
+   Honest by design: a ribbon says it is a sample and nothing is saved
+   (everything lives on this page until it is reloaded); there are no
+   sign-in fields and no ISACA logo. Nothing here comes from the AI
+   model, and Isa does not answer from these documents.
    ============================================================ *@
 
 <PageTitle>Chapter 360 (sample) · Sakura Bay Chapter</PageTitle>
 
 <div class="c3">
     <div class="c3-ribbon" role="note">
-        <strong>Sample page</strong> for the Isa prototype · not ISACA's real Chapter 360 · links and buttons don't work
+        <strong>Sample page</strong> for the Isa prototype · not ISACA's real Chapter 360 · some parts work, nothing is saved
     </div>
 
     <header class="c3-top">
         <div class="c3-top__inner">
-            <a class="c3-brand" aria-label="Chapter 360 (sample)">
+            <button type="button" class="c3-brand" aria-label="Chapter 360 (sample): overview" @onclick="@(() => Go("overview"))">
                 <svg class="c3-brand__mark" viewBox="0 0 40 40" aria-hidden="true">
                     <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="80 15" stroke-linecap="round" transform="rotate(-60 20 20)" />
                     <path d="M33 9.5l1.6 6.2-6.2-1.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                     <circle cx="20" cy="20" r="4.5" fill="currentColor" />
                 </svg>
                 <span class="c3-brand__name">Chapter <b>360</b></span>
-            </a>
-            <nav class="c3-nav" aria-label="Chapter 360 sections">
-                <a class="is-on">Overview</a>
-                <a>Self-assessment</a>
-                <a>Focus areas</a>
-                <a>Tools &amp; templates</a>
-                <a>Help</a>
-            </nav>
+            </button>
             <div class="c3-user">
                 <span class="c3-chapterPick">Sakura Bay Chapter <span aria-hidden="true">▾</span></span>
                 <span class="c3-avatar" aria-label="Signed in as Watanabe Kenji">WK</span>
             </div>
+            <nav class="c3-nav" aria-label="Chapter 360 sections">
+                @foreach (var (key, label) in NavItems)
+                {
+                    <button type="button" class="@(NavOn(key) ? "is-on" : "")" aria-current="@(NavOn(key) ? "page" : null)"
+                            @onclick="@(() => Go(key))">@label</button>
+                }
+            </nav>
         </div>
     </header>
 
     <main class="c3-main">
-        @* ---- Hero: the chapter's 360 view ---- *@
+        @switch (CurrentView)
+        {
+            case "area" when ShownArea is not null:
+                @AreaView(ShownArea)
+                break;
+            case "areas":
+                @AreasView()
+                break;
+            case "tools":
+                @ToolsView()
+                break;
+            case "assess":
+                @AssessView()
+                break;
+            case "help":
+                @HelpView()
+                break;
+            default:
+                @OverviewView()
+                break;
+        }
+    </main>
+
+    <footer class="c3-foot">
+        <span>Chapter 360 · sample page made for the Isa prototype</span>
+        <span>Words from ISACA's Chapter 360 documents · chapter, people and ratings are invented</span>
+    </footer>
+
+    @if (_toast is not null)
+    {
+        <div class="c3-toast" role="status" aria-live="polite">
+            <span>@_toast</span>
+            <button type="button" aria-label="Close" @onclick="@(() => _toast = null)">&times;</button>
+        </div>
+    }
+</div>
+
+@code {
+    // ---- Where we are (in the address, so the browser's Back button works) ----
+
+    [SupplyParameterFromQuery(Name = "view")] public string? View { get; set; }
+    [SupplyParameterFromQuery(Name = "area")] public string? AreaCode { get; set; }
+    [SupplyParameterFromQuery(Name = "pa")] public int? OpenPractice { get; set; }
+
+    private string CurrentView => string.IsNullOrEmpty(View) ? "overview" : View;
+    private C360FocusArea? ShownArea => C360.GetArea(AreaCode);
+    private IReadOnlyList<C360FocusArea> Areas => C360.Data.FocusAreas;
+
+    private static readonly (string Key, string Label)[] NavItems =
+    {
+        ("overview", "Overview"), ("assess", "Self-assessment"), ("areas", "Focus areas"),
+        ("tools", "Tools & templates"), ("help", "Help"),
+    };
+
+    private bool NavOn(string key) => CurrentView == key || (key == "areas" && CurrentView == "area");
+
+    private void Go(string view, string? area = null, int? pa = null)
+    {
+        var query = new Dictionary<string, object?>
+        {
+            ["view"] = view == "overview" ? null : view,
+            ["area"] = area,
+            ["pa"] = pa,
+        };
+        Nav.NavigateTo(Nav.GetUriWithQueryParameters(query));
+    }
+
+    private string? _shownFor;   // the view the page was last opened on, to reset per-view state
+    private bool _scrollTop;     // a new view opens at the top of the page
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = $"{CurrentView}|{AreaCode}|{OpenPractice}";
+        if (key == _shownFor) return;
+        _scrollTop = _shownFor is not null;
+        _shownFor = key;
+        _hover = null;
+        await StopReading();
+        _readTab = CurrentView == "help";
+        _autoplay = false;
+        _openPractices.Clear();
+        if (CurrentView == "area" && ShownArea is { } shown)
+        {
+            Mark(shown.Code, "page");
+            if (OpenPractice is int p) { _openPractices.Add(p); Mark(shown.Code, $"pa:{p}"); }
+        }
+        // The area being rated stays put after saving, so "Added" and "Next" can show.
+        if (CurrentView == "assess") { _assessCode = ShownArea?.Code ?? NextToRate() ?? _assessCode; _justSaved = null; }
+    }
+
+    // =====================================================================
+    // Sample data: the look of each Focus Area, and the board's ratings
+    // =====================================================================
+
+    // Colors, and a one-line summary in our own words, per Focus Area.
+    private static readonly Dictionary<string, (string Color, string Summary)> Look = new()
+    {
+        ["OP"] = ("#017dc2", "Plan, run and assess the chapter's services and experiences, with sound budgets and secure data."),
+        ["MX"] = ("#3f7d20", "A welcoming community where members connect, volunteer and have their achievements recognized."),
+        ["PD"] = ("#6b2f8f", "Timely, relevant training and events that help members grow their careers."),
+        ["GV"] = ("#1d2d5c", "Equip the board to set strategy, manage risk, stay compliant and plan for leadership continuity."),
+        ["AD"] = ("#b0500f", "Strong ties with local businesses, governments and schools that support the chapter's goals."),
+        ["CI"] = ("#1b7a66", "Small, steady improvements to processes and services, measured and celebrated."),
+    };
+
+    private static string ColorOf(string code) => Look.TryGetValue(code, out var l) ? l.Color : "#017dc2";
+
+    // The board's ratings so far: the average of the board members who have rated,
+    // per Practice Area (1 to 5). Invented. Three members have rated four Focus Areas;
+    // nobody has rated Advocacy or Continuous Improvement yet.
+    private static readonly Dictionary<string, double?[]> BoardAverage = new()
+    {
+        ["OP"] = new double?[] { 3, 3.7, 3, 3.3, 2 },
+        ["MX"] = new double?[] { 4, 4.3, 4.7, 4, 3, 3.7 },
+        ["PD"] = new double?[] { 3.3, 2.7, 3 },
+        ["GV"] = new double?[] { 2.3, 2, 2.7, 1.3, 2 },
+    };
+    private const int BoardRaters = 3;   // how many board members the averages above come from
+
+    // Sakura Bay Chapter's board, from the prototype's invented directory. Rated: has added
+    // their rating of the chapter. Their own scores are never shown, only that they rated.
+    private static readonly (string Initials, string Name, string Role, string Color, bool Rated)[] Board =
+    {
+        ("WK", "Watanabe Kenji", "President", "#017dc2", false),
+        ("TM", "Takahashi Mei", "Vice President", "#3f7d20", true),
+        ("NH", "Nakamura Hiroshi", "Secretary", "#6b2f8f", true),
+        ("DO", "Daniel Okafor", "Treasurer", "#b0500f", false),
+        ("LJ", "Lee Ji-woo", "Membership Director", "#1b7a66", false),
+        ("SY", "Sato Yumiko", "Immediate Past President", "#1d2d5c", true),
+    };
+    private const string Me = "Watanabe Kenji";
+
+    // The signed-in leader's own ratings (Watanabe Kenji), and the Focus Areas they've added.
+    private readonly Dictionary<string, int?[]> _mine = new();
+    private readonly HashSet<string> _myRated = new();
+    private string _lastUpdated = "28 June 2026 by Sato Yumiko";
+
+    private int?[] Mine(C360FocusArea a)
+    {
+        if (!_mine.TryGetValue(a.Code, out var s) || s.Length != a.PracticeAreas.Count)
+            _mine[a.Code] = s = new int?[a.PracticeAreas.Count];
+        return s;
+    }
+
+    private static double? BoardPa(C360FocusArea a, int i) =>
+        BoardAverage.TryGetValue(a.Code, out var s) && i < s.Length ? s[i] : null;
+
+    /// <summary>How many board members' ratings a Focus Area's score comes from.</summary>
+    private int Raters(C360FocusArea a) =>
+        (BoardAverage.ContainsKey(a.Code) ? BoardRaters : 0) + (_myRated.Contains(a.Code) ? 1 : 0);
+
+    // One Practice Area's chapter score: everyone's ratings averaged. `draft` counts the
+    // leader's rating before they press Add, so the chart can move while they rate.
+    private double? PaScore(C360FocusArea a, int i, bool draft = false)
+    {
+        var board = BoardPa(a, i);
+        var n = board is null ? 0 : BoardRaters;
+        int? mine = _myRated.Contains(a.Code) || draft ? Mine(a)[i] : null;
+        if (mine is null) return board;
+        return board is null ? mine : (board.Value * n + mine.Value) / (n + 1);
+    }
+
+    // A Focus Area's score is the average of its Practice Area scores (ISACA's Chapter 360
+    // introduction, "Interpreting Your Score"). Null when nobody has rated it.
+    private double? Level(C360FocusArea a, bool draft = false)
+    {
+        var scores = Enumerable.Range(0, a.PracticeAreas.Count).Select(i => PaScore(a, i, draft))
+            .Where(x => x is not null).Select(x => x!.Value).ToList();
+        return scores.Count == 0 ? null : scores.Average();
+    }
+
+    // The chapter's overall score: the average of all Practice Area scores (same source).
+    private double? Overall()
+    {
+        var all = Areas.SelectMany(a => Enumerable.Range(0, a.PracticeAreas.Count).Select(i => PaScore(a, i)))
+            .Where(x => x is not null).Select(x => x!.Value).ToList();
+        return all.Count == 0 ? null : all.Average();
+    }
+
+    private int RatedAreas => Areas.Count(a => Level(a) is not null);
+    private int BoardMembersRated => Board.Count(b => b.Rated) + (_myRated.Count > 0 ? 1 : 0);
+
+    // The lowest-scoring Practice Area of a Focus Area, for the chart's card.
+    private (string Name, double Score)? Lowest(C360FocusArea a)
+    {
+        var all = a.PracticeAreas.Select((p, i) => (p.Name, Score: PaScore(a, i))).Where(x => x.Score is not null).ToList();
+        if (all.Count == 0) return null;
+        var low = all.MinBy(x => x.Score!.Value);
+        return (low.Name, low.Score!.Value);
+    }
+
+    // A score to one decimal place, without a trailing ".0" (3.95 shows as 4, 3.3 as 3.3).
+    private static string L(double v) => Math.Round(v, 1).ToString("0.#", CultureInfo.InvariantCulture);
+
+    // Template and tool names as listed in ISACA's Chapter 360 documents.
+    private static readonly (string Type, string Name, string Code)[] Recommended =
+    {
+        ("Task Checklist", "Event Planning Template", "PD"),
+        ("Presentation", "Sample Event Strategy", "PD"),
+        ("Template", "Satisfaction Surveys", "OP"),
+        ("Template", "Sample Value Proposition", "AD"),
+        ("List", "Sample Performance Measurements", "CI"),
+    };
+
+    // =====================================================================
+    // My Chapter 360: what the signed-in leader has explored, on this page
+    // =====================================================================
+
+    // Per Focus Area: "page" (opened it), "pa:N" (opened Practice Area N), "read" (read or listened).
+    private readonly Dictionary<string, HashSet<string>> _explored = new();
+
+    private void Mark(string code, string item)
+    {
+        if (!_explored.TryGetValue(code, out var set)) _explored[code] = set = new();
+        set.Add(item);
+    }
+
+    private bool Opened(C360FocusArea a) => _explored.TryGetValue(a.Code, out var s) && s.Contains("page");
+    private bool Listened(C360FocusArea a) => _explored.TryGetValue(a.Code, out var s) && s.Contains("read");
+    private int PracticesOpened(C360FocusArea a) => _explored.TryGetValue(a.Code, out var s) ? s.Count(x => x.StartsWith("pa:")) : 0;
+
+    // 0 to 1: opening the Focus Area, each of its Practice Areas, and reading or listening to it.
+    private double Explored(C360FocusArea a) =>
+        ((Opened(a) ? 1 : 0) + PracticesOpened(a) + (Listened(a) ? 1 : 0)) / (double)(a.PracticeAreas.Count + 2);
+
+    private int AreasExplored => Areas.Count(Opened);
+
+    private string ExploredText(C360FocusArea a)
+    {
+        if (!Opened(a)) return "Not opened yet";
+        var parts = new List<string> { $"{PracticesOpened(a)} of {a.PracticeAreas.Count} Practice Areas" };
+        if (Listened(a)) parts.Add("read or listened");
+        return string.Join(" · ", parts);
+    }
+
+    // A gentle suggestion: the chapter's lowest-scoring Focus Area the leader hasn't opened yet.
+    private C360FocusArea? SuggestNext() =>
+        Areas.Where(a => !Opened(a)).OrderBy(a => Level(a) ?? 0).FirstOrDefault();
+
+    // ---- A small note at the bottom of the screen ----
+
+    private string? _toast;
+    private int _toastId;
+
+    private async Task Toast(string text)
+    {
+        _toast = text;
+        var id = ++_toastId;
+        StateHasChanged();
+        await Task.Delay(4500);
+        if (id == _toastId) { _toast = null; StateHasChanged(); }
+    }
+
+    private Task NotInPrototype(string name) =>
+        Toast($"\"{name}\" opens in ISACA's real Chapter 360. Templates aren't part of this prototype.");
+
+    // =====================================================================
+    // Overview
+    // =====================================================================
+
+    private RenderFragment OverviewView() => @<text>
         <section class="c3-hero">
             <div class="c3-hero__text">
                 <p class="c3-kicker">Sakura Bay Chapter · Asia-Pacific</p>
                 <h1>Your chapter's 360 view</h1>
                 <p class="c3-lede">
                     Chapter 360 helps volunteer leaders run a strong, sustainable chapter.
-                    Assess each Focus Area, see where you're thriving and where to grow,
-                    and find the tools and templates for the next step.
+                    Each board member rates the chapter's Focus Areas; together, the ratings show
+                    where you're thriving and where to grow. Hover over the chart to explore it.
                 </p>
-                <div class="c3-progress" aria-label="Self-assessment: 4 of 6 focus areas done">
-                    <div class="c3-progress__row">
-                        <span>Self-assessment</span>
-                        <b>4 of 6 Focus Areas</b>
-                    </div>
-                    <div class="c3-progress__bar"><span style="width: 66.7%"></span></div>
-                    <p class="c3-progress__note">Last updated 28 June 2026 by Sato Yumiko · Advocacy and Continuous Improvement still to assess</p>
-                </div>
+                @Progress()
                 <div class="c3-hero__btns">
-                    <a class="c3-btn c3-btn--primary">Continue self-assessment</a>
-                    <a class="c3-btn c3-btn--ghost">How maturity levels work</a>
+                    @if (_myRated.Count < Areas.Count)
+                    {
+                        <button type="button" class="c3-btn c3-btn--primary" @onclick="@(() => Go("assess", NextToRate()))">
+                            @(_myRated.Count == 0 ? "Add your rating" : "Continue your rating")
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="c3-btn c3-btn--primary" @onclick="@(() => Go("assess"))">Review your rating</button>
+                    }
+                    <button type="button" class="c3-btn c3-btn--ghost" @onclick="@(() => Go("help"))">How Chapter 360 works</button>
                 </div>
             </div>
-
-            <figure class="c3-radar" aria-label="Maturity by focus area, from 1 to 5">
-                <svg viewBox="0 0 320 320" role="img" aria-hidden="true">
-                    @for (var level = 5; level >= 1; level--)
-                    {
-                        <polygon class="c3-radar__ring @(level % 2 == 0 ? "is-alt" : "")" points="@Ring(level)" />
-                    }
-                    @for (var i = 0; i < Areas.Length; i++)
-                    {
-                        var (x, y) = Point(i, 5);
-                        <line class="c3-radar__axis" x1="160" y1="160" x2="@F(x)" y2="@F(y)" />
-                    }
-                    <polygon class="c3-radar__shape" points="@Shape()" />
-                    @for (var i = 0; i < Areas.Length; i++)
-                    {
-                        var a = Areas[i];
-                        @if (a.Level is double level)
-                        {
-                            var (x, y) = Point(i, level);
-                            <circle cx="@F(x)" cy="@F(y)" r="6" class="c3-radar__dot" style="--c: @a.Color" />
-                        }
-                        @* An SVG <text> label, written as plain markup because Razor reserves <text>. *@
-                        @Label(i, a.Code, assessed: a.Level is not null)
-                    }
-                </svg>
-                <figcaption>
-                    <span><i class="c3-key c3-key--done"></i> Assessed</span>
-                    <span><i class="c3-key c3-key--open"></i> Grey: not yet assessed</span>
-                </figcaption>
-            </figure>
+            @Radar(inAssess: false, draftCode: null)
         </section>
 
         <div class="c3-grid">
-            @* ---- The six Focus Areas ---- *@
             <section aria-labelledby="c3-areas">
                 <div class="c3-sectionHead">
                     <h2 id="c3-areas">Focus Areas</h2>
@@ -119,54 +393,31 @@
                 <div class="c3-areas">
                     @foreach (var a in Areas)
                     {
-                        <article class="c3-area" style="--c: @a.Color">
-                            <div class="c3-area__top">
-                                <span class="c3-code">@a.Code</span>
-                                @if (a.Level is double lvl)
-                                {
-                                    <span class="c3-level" title="Maturity level @lvl of 5">Level @lvl.ToString("0", CultureInfo.InvariantCulture)<small> / 5</small></span>
-                                }
-                                else
-                                {
-                                    <span class="c3-level is-open">Not assessed</span>
-                                }
-                            </div>
-                            <h3>@a.Name</h3>
-                            <p>@a.Summary</p>
-                            <div class="c3-meter" aria-hidden="true">
-                                @for (var n = 1; n <= 5; n++)
-                                {
-                                    <span class="@(a.Level >= n ? "is-on" : "")"></span>
-                                }
-                            </div>
-                            <ul class="c3-practices" aria-label="Practice Areas">
-                                @foreach (var p in a.Practices)
-                                {
-                                    <li>@p</li>
-                                }
-                            </ul>
-                            <a class="c3-area__link">Explore @a.Name <span aria-hidden="true">→</span></a>
-                        </article>
+                        @AreaCard(a)
                     }
                 </div>
             </section>
 
-            @* ---- Side column ---- *@
-            <aside class="c3-side" aria-label="For your chapter">
+            <aside class="c3-side" aria-label="For you and your chapter">
+                @MyCard()
+
                 <section class="c3-card">
                     <h2>Recommended for you</h2>
-                    <p class="c3-card__sub">Based on your self-assessment</p>
+                    <p class="c3-card__sub">Based on your chapter's 360 view</p>
                     <ul class="c3-recs">
                         @foreach (var r in Recommended)
                         {
+                            var area = C360.GetArea(r.Code);
                             <li>
-                                <span class="c3-recs__type" style="--c: @r.Color">@r.Type</span>
-                                <span class="c3-recs__name">@r.Name</span>
-                                <span class="c3-recs__area">@r.Area</span>
+                                <button type="button" class="c3-recs__item" @onclick="@(() => NotInPrototype(r.Name))">
+                                    <span class="c3-recs__type" style="--c: @ColorOf(r.Code)">@r.Type</span>
+                                    <span class="c3-recs__name">@r.Name</span>
+                                    <span class="c3-recs__area">@(area?.Name ?? r.Code)</span>
+                                </button>
                             </li>
                         }
                     </ul>
-                    <a class="c3-btn c3-btn--ghost c3-btn--full">Browse all tools &amp; templates</a>
+                    <button type="button" class="c3-btn c3-btn--ghost c3-btn--full" @onclick="@(() => Go("tools"))">Browse all tools &amp; templates</button>
                 </section>
 
                 <section class="c3-card c3-card--tip">
@@ -175,76 +426,266 @@
                         New board this year? The Governance Focus Area's <b>Chapter Leadership Continuity</b>
                         practice helps outgoing and incoming leaders hand over smoothly.
                     </p>
-                    <a class="c3-area__link" style="--c: #1d2d5c">Open the practice <span aria-hidden="true">→</span></a>
+                    <button type="button" class="c3-area__link" style="--c: #8fd0f5" @onclick="@(() => Go("area", "GV", ContinuityNumber()))">
+                        Open the practice <span aria-hidden="true">→</span>
+                    </button>
                 </section>
 
-                <section class="c3-card">
-                    <h2>Your board in Chapter 360</h2>
-                    <ul class="c3-board">
-                        @foreach (var (initials, name, role, color) in Board)
-                        {
-                            <li>
-                                <span class="c3-avatar c3-avatar--sm" style="background: @color">@initials</span>
-                                <span><b>@name</b><small>@role</small></span>
-                            </li>
-                        }
-                    </ul>
-                </section>
+                @BoardCard()
             </aside>
         </div>
-    </main>
+    </text>;
 
-    <footer class="c3-foot">
-        <span>Chapter 360 · sample page made for the Isa prototype</span>
-        <span>Structure from ISACA's Chapter 360 documents · chapter, people and scores are invented</span>
-    </footer>
-</div>
+    private int? ContinuityNumber() =>
+        C360.GetArea("GV")?.PracticeAreas.FirstOrDefault(p => p.Name.Contains("Continuity"))?.Number;
 
-@code {
-    private record Area(string Code, string Name, string Summary, string[] Practices, double? Level, string Color);
-    private record Rec(string Type, string Name, string Area, string Color);
+    // The next Focus Area for the leader to rate: one nobody has rated first, then the rest.
+    private string? NextToRate() =>
+        Areas.Where(a => !_myRated.Contains(a.Code)).OrderBy(a => Level(a) is null ? 0 : 1).FirstOrDefault()?.Code;
 
-    // The six Focus Areas and their Practice Areas, as ISACA's Chapter 360
-    // documents name them. The levels are invented sample data; null means
-    // not assessed yet.
-    private static readonly Area[] Areas =
+    private RenderFragment Progress() => @<div class="c3-progress">
+        <div class="c3-progress__row">
+            <span>Chapter self-assessment</span>
+            <b>@RatedAreas of @Areas.Count Focus Areas rated</b>
+        </div>
+        <div class="c3-progress__bar"><span style="width: @Pct(RatedAreas, Areas.Count)%"></span></div>
+        <div class="c3-progress__row c3-progress__row--mine">
+            <span>Your rating</span>
+            <b>@_myRated.Count of @Areas.Count</b>
+        </div>
+        <div class="c3-progress__bar c3-progress__bar--mine"><span style="width: @Pct(_myRated.Count, Areas.Count)%"></span></div>
+        <p class="c3-progress__note">
+            Rated by @BoardMembersRated of @Board.Length board members, averaged · last updated @_lastUpdated
+            @if (RatedAreas == Areas.Count && Overall() is double o)
+            {
+                <text> · overall score @L(o) of 5</text>
+            }
+        </p>
+    </div>;
+
+    private static string Pct(int part, int whole) =>
+        (whole == 0 ? 0 : 100.0 * part / whole).ToString("0.#", CultureInfo.InvariantCulture);
+
+    // "My Chapter 360": the leader's own exploring, private to them.
+    private RenderFragment MyCard() => @<section class="c3-card c3-card--mine" aria-labelledby="c3-mine">
+        <div class="c3-mine__head">
+            <h2 id="c3-mine">My Chapter 360</h2>
+            <span class="c3-mine__count">@AreasExplored of @Areas.Count explored</span>
+        </div>
+        <p class="c3-card__sub">What you've opened, read and listened to. Just for you: your board doesn't see it.</p>
+        <ul class="c3-mine__list">
+            @foreach (var a in Areas)
+            {
+                <li>
+                    <button type="button" style="--c: @ColorOf(a.Code)" @onclick="@(() => Go("area", a.Code))">
+                        <span class="c3-code">@a.Code</span>
+                        <span class="c3-mine__text">
+                            <b>@a.Name</b>
+                            <small>@ExploredText(a)</small>
+                        </span>
+                        <span class="c3-mine__bar" aria-hidden="true"><span style="width: @((Explored(a) * 100).ToString("0", CultureInfo.InvariantCulture))%"></span></span>
+                    </button>
+                </li>
+            }
+        </ul>
+        @if (SuggestNext() is { } next)
+        {
+            <p class="c3-mine__next">
+                Suggested next: <button type="button" class="c3-area__link" style="--c: @ColorOf(next.Code)" @onclick="@(() => Go("area", next.Code))">@next.Name <span aria-hidden="true">→</span></button>
+                <small>@(Level(next) is double lv ? $"your chapter's lowest-rated area you haven't opened (level {L(lv)})" : "not rated by anyone yet")</small>
+            </p>
+        }
+    </section>;
+
+    // Who on the board has added their rating. Never their scores.
+    private RenderFragment BoardCard() => @<section class="c3-card">
+        <h2>Your board in Chapter 360</h2>
+        <p class="c3-card__sub">Who has added their rating of the chapter. Their own scores stay private.</p>
+        <ul class="c3-board">
+            @foreach (var b in Board)
+            {
+                var isMe = b.Name == Me;
+                var rated = isMe ? _myRated.Count > 0 : b.Rated;
+                <li>
+                    <span class="c3-avatar c3-avatar--sm" style="background: @b.Color">@b.Initials</span>
+                    <span class="c3-board__who"><b>@b.Name@(isMe ? " (you)" : "")</b><small>@b.Role</small></span>
+                    @if (isMe && rated && _myRated.Count < Areas.Count)
+                    {
+                        <span class="c3-board__state is-part">@_myRated.Count of @Areas.Count rated</span>
+                    }
+                    else if (rated)
+                    {
+                        <span class="c3-board__state is-done">✓ Rated</span>
+                    }
+                    else
+                    {
+                        <span class="c3-board__state">Not yet</span>
+                    }
+                </li>
+            }
+        </ul>
+    </section>;
+
+    private RenderFragment AreaCard(C360FocusArea a) => @<button type="button" class="c3-area" style="--c: @ColorOf(a.Code)"
+                                                                  @onclick="@(() => Go("area", a.Code))" aria-label="@($"Open {a.Name}")">
+        <span class="c3-area__top">
+            <span class="c3-code">@a.Code</span>
+            @if (Level(a) is double lvl)
+            {
+                <span class="c3-level" title="@($"Chapter level {L(lvl)} of 5, from {Raters(a)} ratings")">Level @L(lvl)<small> / 5</small></span>
+            }
+            else
+            {
+                <span class="c3-level is-open">Not rated yet</span>
+            }
+        </span>
+        <span class="c3-area__name">@a.Name @if (Opened(a)) { <span class="c3-area__seen" title="You've explored this Focus Area">✓ Explored</span> }</span>
+        <span class="c3-area__sum">@Look.GetValueOrDefault(a.Code).Summary</span>
+        @Meter(Level(a))
+        <span class="c3-practices" aria-label="Practice Areas">
+            @foreach (var p in a.PracticeAreas)
+            {
+                <span>@p.Name</span>
+            }
+        </span>
+        <span class="c3-area__link">Explore @a.Name <span aria-hidden="true">→</span></span>
+    </button>;
+
+    private static RenderFragment Meter(double? level) => @<span class="c3-meter" aria-hidden="true">
+        @for (var n = 1; n <= 5; n++)
+        {
+            <span class="@(level >= n - 0.25 ? "is-on" : "")"></span>
+        }
+    </span>;
+
+    // =====================================================================
+    // The 360 chart: six axes, levels 1 to 5, centre (160,160), radius 110.
+    // Blue: the chapter's level (everyone's ratings averaged). Dashed purple:
+    // how much of each Focus Area the leader has explored. Each point can be
+    // hovered or focused for a card, and clicked: on the overview it opens the
+    // Focus Area; in the self-assessment it picks that area to rate.
+    // `draftCode` is the area being rated right now, shown with the leader's
+    // unsaved rating so the shape moves as they click.
+    // =====================================================================
+
+    private string? _hover;       // the Focus Area whose card is showing
+    private int _hoverToken;      // lets the card stay while the pointer moves onto it
+
+    private void HoverOn(string code) { _hover = code; _hoverToken++; }
+
+    private async Task HoverOff()
     {
-        new("OP", "Operations", "Plan, run and assess the chapter's services and experiences, with sound budgets and secure data.",
-            new[] { "Service & Program Portfolio", "Budget & Costs", "Security & Privacy", "Operations", "Vendors" }, 3, "#017dc2"),
-        new("MX", "Member Experience", "A welcoming community where members connect, volunteer and have their achievements recognized.",
-            new[] { "ISACA Culture", "Community & Networking Events", "Member Communications", "Volunteers", "Recognition", "Requests & Incidents" }, 4, "#3f7d20"),
-        new("PD", "Professional Development", "Timely, relevant training and events that help members grow their careers.",
-            new[] { "Training Events", "Program Delivery", "Knowledge & Resources" }, 3, "#6b2f8f"),
-        new("GV", "Governance", "Equip the board to set strategy, manage risk, stay compliant and plan for leadership continuity.",
-            new[] { "Chapter Strategy", "Chapter Governance", "Risk Management", "Leadership Continuity", "Compliance" }, 2, "#1d2d5c"),
-        new("AD", "Advocacy", "Strong ties with local businesses, governments and schools that support the chapter's goals.",
-            new[] { "Government Relationships", "Academic Relationships", "Enterprise Relationships", "Community Communications" }, null, "#b0500f"),
-        new("CI", "Continuous Improvement", "Small, steady improvements to processes and services, measured and celebrated.",
-            new[] { "Performance Management", "Resource Optimization", "New Programs & Projects" }, null, "#1b7a66"),
-    };
+        var token = ++_hoverToken;
+        await Task.Delay(220);
+        if (token == _hoverToken) _hover = null;
+    }
 
-    // Template and tool names as listed in ISACA's Chapter 360 documents.
-    private static readonly Rec[] Recommended =
+    private void PointClick(C360FocusArea a, bool inAssess)
     {
-        new("Template", "Event Planning Template", "Professional Development", "#6b2f8f"),
-        new("Presentation", "Sample Event Strategy", "Professional Development", "#6b2f8f"),
-        new("Template", "Satisfaction Surveys", "Operations", "#017dc2"),
-        new("Template", "Sample Value Proposition", "Advocacy", "#b0500f"),
-        new("List", "Sample Performance Measurements", "Continuous Improvement", "#1b7a66"),
-    };
+        if (inAssess) { _assessCode = a.Code; _justSaved = null; _hover = null; }
+        else Go("area", a.Code);
+    }
 
-    // Sakura Bay Chapter's board, from the prototype's invented directory.
-    private static readonly (string Initials, string Name, string Role, string Color)[] Board =
+    private void PointKey(KeyboardEventArgs e, C360FocusArea a, bool inAssess)
     {
-        ("WK", "Watanabe Kenji", "President", "#017dc2"),
-        ("TM", "Takahashi Mei", "Vice President", "#3f7d20"),
-        ("NH", "Nakamura Hiroshi", "Secretary", "#6b2f8f"),
-        ("DO", "Daniel Okafor", "Treasurer", "#b0500f"),
-        ("LJ", "Lee Ji-woo", "Membership Director", "#1b7a66"),
-        ("SY", "Sato Yumiko", "Immediate Past President", "#1d2d5c"),
-    };
+        if (e.Key is "Enter" or " ") PointClick(a, inAssess);
+        else if (e.Key == "Escape") _hover = null;
+    }
 
-    // ---- The radar chart: six axes, levels 1 to 5, centre (160,160), radius 110 ----
+    private RenderFragment Radar(bool inAssess, string? draftCode) => @<figure class="c3-radar" aria-label="Your chapter's 360 view, by Focus Area, from 1 to 5">
+        <svg viewBox="0 0 320 320" role="group" aria-label="Focus Areas on the chart">
+            @for (var level = 5; level >= 1; level--)
+            {
+                <polygon class="c3-radar__ring @(level % 2 == 0 ? "is-alt" : "")" points="@Ring(level)" />
+            }
+            @for (var i = 0; i < 6; i++)
+            {
+                var (x, y) = Point(i, 5);
+                <line class="c3-radar__axis" x1="160" y1="160" x2="@F(x)" y2="@F(y)" />
+            }
+            @{ var d = ShapePath(draftCode); }
+            <path class="c3-radar__shape" d="@d" style="d: path('@d')" />
+            @if (AreasExplored > 0)
+            {
+                var explore = ExplorePath();
+                <path class="c3-radar__explore" d="@explore" style="d: path('@explore')" />
+            }
+            @for (var i = 0; i < Areas.Count && i < 6; i++)
+            {
+                var a = Areas[i];
+                var lvl = Level(a, draft: a.Code == draftCode);
+                var (px, py) = Point(i, lvl ?? 0.35);
+                var (lx, ly) = Point(i, 6.15);
+                var on = _hover == a.Code;
+                <g class="c3-radar__hit @(on ? "is-on" : "")" tabindex="0" role="button"
+                   aria-label="@($"{a.Name}: {(lvl is double v ? $"level {L(v)} of 5" : "not rated yet")}. {(inAssess ? "Rate this area." : "Open it.")}")"
+                   @onmouseenter="@(() => HoverOn(a.Code))" @onmouseleave="HoverOff"
+                   @onfocus="@(() => HoverOn(a.Code))" @onblur="HoverOff"
+                   @onclick="@(() => PointClick(a, inAssess))" @onkeydown="@(e => PointKey(e, a, inAssess))">
+                    <line class="c3-radar__hitLine" x1="160" y1="160" x2="@F(lx)" y2="@F(ly)" />
+                    <circle class="c3-radar__hitArea" cx="@F(lx)" cy="@F(ly)" r="16" />
+                    <circle class="c3-radar__hitArea" cx="@F(px)" cy="@F(py)" r="14" />
+                    @if (lvl is not null)
+                    {
+                        <circle cx="@F(px)" cy="@F(py)" r="@(on ? 8 : 6)" class="c3-radar__dot" style="--c: @ColorOf(a.Code); cx: @F(px)px; cy: @F(py)px" />
+                    }
+                    @Label(i, a.Code, assessed: lvl is not null, on)
+                </g>
+            }
+        </svg>
+        @if (_hover is not null && C360.GetArea(_hover) is { } h && Areas.ToList().IndexOf(h) is int hi and >= 0 and < 6)
+        {
+            @PointCard(h, hi, inAssess, draftCode)
+        }
+        <figcaption>
+            <span><i class="c3-key c3-key--done"></i> Chapter level (board ratings, averaged)</span>
+            <span><i class="c3-key c3-key--explore"></i> What you've explored</span>
+        </figcaption>
+    </figure>;
+
+    // The card beside a hovered point: the chapter's level, who rated it, the weakest
+    // Practice Area, and the leader's own exploring, with buttons to open or rate it.
+    private RenderFragment PointCard(C360FocusArea a, int i, bool inAssess, string? draftCode)
+    {
+        var lvl = Level(a, draft: a.Code == draftCode);
+        // The card opens to the left of the point (the chart sits on the right of the page),
+        // below it for points in the top half and above it for the bottom half.
+        var (x, y) = Point(i, Math.Max(lvl ?? 0, 2.5));
+        var below = y < 160;
+        var style = $"--c: {ColorOf(a.Code)}; left: {F(x / 3.2)}%; top: {F(y / 3.2)}%; " +
+                    $"transform: translate(calc(-100% - 14px), {(below ? "-12px" : "calc(-100% + 12px)")})";
+        var low = Lowest(a);
+        return @<div class="c3-pcard" style="@style" role="group" aria-label="@a.Name"
+                     @onmouseenter="@(() => HoverOn(a.Code))" @onmouseleave="HoverOff">
+            <div class="c3-pcard__head"><span class="c3-code">@a.Code</span> <b>@a.Name</b></div>
+            @if (lvl is double v)
+            {
+                <p class="c3-pcard__level">Chapter level <b>@L(v)</b> of 5 <small>· @Raters(a) rating@(Raters(a) == 1 ? "" : "s")</small></p>
+                @Meter(v)
+                @if (low is { } lw)
+                {
+                    <p class="c3-pcard__low">Lowest: @lw.Name (@L(lw.Score))</p>
+                }
+            }
+            else
+            {
+                <p class="c3-pcard__level">Not rated yet. Your rating would be the first.</p>
+            }
+            <p class="c3-pcard__mine"><span aria-hidden="true">◌</span> You: @ExploredText(a)@(_myRated.Contains(a.Code) ? " · rated ✓" : "")</p>
+            <div class="c3-pcard__btns">
+                @if (!inAssess)
+                {
+                    <button type="button" class="c3-pcard__btn is-main" @onclick="@(() => Go("area", a.Code))">Open @a.Name</button>
+                }
+                @if (!_myRated.Contains(a.Code) || inAssess)
+                {
+                    <button type="button" class="c3-pcard__btn" @onclick="@(() => { if (inAssess) PointClick(a, true); else Go("assess", a.Code); })">
+                        @(_myRated.Contains(a.Code) ? "Review your rating" : "Add your rating")
+                    </button>
+                }
+            </div>
+        </div>;
+    }
 
     private static (double X, double Y) Point(int i, double level)
     {
@@ -255,20 +696,565 @@
 
     private static string F(double v) => v.ToString("0.#", CultureInfo.InvariantCulture);
 
-    // A Focus Area code just outside the chart's outer ring; grey when that area isn't assessed yet.
-    private static MarkupString Label(int i, string code, bool assessed)
+    // A Focus Area code just outside the chart's outer ring; grey when nobody has rated it.
+    private static MarkupString Label(int i, string code, bool assessed, bool on)
     {
         var (x, y) = Point(i, 6.15);
-        var colour = assessed ? "#1d2d5c" : "#9aa5b1";
+        var colour = on ? "#017dc2" : assessed ? "#1d2d5c" : "#9aa5b1";
         return new MarkupString(
             $"<text x=\"{F(x)}\" y=\"{F(y)}\" text-anchor=\"middle\" dominant-baseline=\"middle\" " +
-            $"style=\"font: 700 13px Roboto, Arial, sans-serif; fill: {colour}; letter-spacing: 0.04em\">{code}</text>");
+            $"style=\"font: 700 {(on ? 15 : 13)}px Roboto, Arial, sans-serif; fill: {colour}; letter-spacing: 0.04em\">{code}</text>");
     }
 
     private static string Ring(int level) =>
         string.Join(" ", Enumerable.Range(0, 6).Select(i => { var (x, y) = Point(i, level); return $"{F(x)},{F(y)}"; }));
 
-    // The chapter's shape: an assessed area at its level; one not yet assessed close to the centre.
-    private static string Shape() =>
-        string.Join(" ", Areas.Select((a, i) => { var (x, y) = Point(i, a.Level ?? 0.35); return $"{F(x)},{F(y)}"; }));
+    // The chapter's shape: a rated area at its level; one nobody has rated close to the centre.
+    private string ShapePath(string? draftCode) =>
+        Path(i => Level(Areas[i], draft: Areas[i].Code == draftCode) ?? 0.35);
+
+    // The leader's exploring: 0 at the centre, 5 when a Focus Area is fully explored.
+    private string ExplorePath() => Path(i => Math.Max(0.2, Explored(Areas[i]) * 5));
+
+    private string Path(Func<int, double> level)
+    {
+        var pts = Enumerable.Range(0, Math.Min(6, Areas.Count)).Select(i =>
+        {
+            var (x, y) = Point(i, level(i));
+            return $"{F(x)} {F(y)}";
+        }).ToList();
+        return pts.Count == 0 ? "M160 160Z" : "M" + string.Join(" L", pts) + " Z";
+    }
+
+    // =====================================================================
+    // One Focus Area
+    // =====================================================================
+
+    private bool _readTab;        // "Read & listen" instead of the Practice Areas
+    private bool _autoplay;       // Listen was pressed: start reading when the text is shown
+    private readonly HashSet<int> _openPractices = new();
+
+    // A link to one Practice Area ("Open the practice") scrolls to it: a marker just before it.
+    private ElementReference _linkedPa;
+
+    private void TogglePractice(C360FocusArea a, int n)
+    {
+        if (!_openPractices.Remove(n))
+        {
+            _openPractices.Add(n);
+            Mark(a.Code, $"pa:{n}");
+        }
+    }
+
+    private void ShowRead(C360FocusArea? a, bool listen)
+    {
+        if (a is not null) Mark(a.Code, "read");
+        if (_readTab && listen) { _autoplay = true; return; }
+        _readTab = true;
+        _autoplay = listen;
+    }
+
+    private async Task ShowPractices()
+    {
+        await StopReading();
+        _readTab = false;
+    }
+
+    private RenderFragment AreaView(C360FocusArea a) => @<text>
+        <nav class="c3-crumbs" aria-label="Breadcrumb">
+            <button type="button" @onclick="@(() => Go("areas"))">Focus areas</button>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">@a.Name</span>
+        </nav>
+
+        <section class="c3-areaHero" style="--c: @ColorOf(a.Code)">
+            <div class="c3-areaHero__main">
+                <div class="c3-areaHero__top">
+                    <span class="c3-code c3-code--lg">@a.Code</span>
+                    @if (Level(a) is double lvl)
+                    {
+                        <span class="c3-areaHero__level">Chapter level @L(lvl)<small> / 5 · @Raters(a) ratings</small></span>
+                        @Meter(lvl)
+                    }
+                    else
+                    {
+                        <span class="c3-areaHero__level is-open">Not rated yet</span>
+                    }
+                </div>
+                <h1>@a.Name</h1>
+                @foreach (var p in a.Intro)
+                {
+                    <p class="c3-lede">@p</p>
+                }
+                <p class="c3-areaHero__mine">
+                    <span class="c3-mine__bar" aria-hidden="true"><span style="width: @((Explored(a) * 100).ToString("0", CultureInfo.InvariantCulture))%"></span></span>
+                    <span>You've explored @PracticesOpened(a) of @a.PracticeAreas.Count Practice Areas@(Listened(a) ? " and read or listened" : "")</span>
+                </p>
+                <div class="c3-hero__btns">
+                    <button type="button" class="c3-btn c3-btn--primary" style="--btn: @ColorOf(a.Code)" @onclick="@(() => ShowRead(a, true))">
+                        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M4 2l10 6-10 6z" /></svg>
+                        Listen to @a.Name
+                    </button>
+                    <button type="button" class="c3-btn c3-btn--ghost" @onclick="@(() => Go("assess", a.Code))">
+                        @(_myRated.Contains(a.Code) ? "Review your rating" : "Add your rating")
+                    </button>
+                </div>
+            </div>
+            @if (a.Why.Count > 0)
+            {
+                <div class="c3-why">
+                    <h2>Why it matters</h2>
+                    <ul>
+                        @foreach (var w in a.Why)
+                        {
+                            <li>@if (w.Title.Length > 0) { <b>@w.Title:</b> }@(" ")@w.Text</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </section>
+
+        <div class="c3-tabs" role="tablist" aria-label="@a.Name">
+            <button type="button" role="tab" aria-selected="@(!_readTab ? "true" : "false")" class="@(!_readTab ? "is-on" : "")"
+                    @onclick="ShowPractices">Practice Areas <span class="c3-count">@a.PracticeAreas.Count</span></button>
+            <button type="button" role="tab" aria-selected="@(_readTab ? "true" : "false")" class="@(_readTab ? "is-on" : "")"
+                    @onclick="@(() => ShowRead(a, false))">Read &amp; listen</button>
+        </div>
+
+        @if (_readTab)
+        {
+            @Reader("c360-" + a.Code.ToLowerInvariant(), a.Name)
+        }
+        else
+        {
+            <div class="c3-pas">
+                @foreach (var pa in a.PracticeAreas)
+                {
+                    var open = _openPractices.Contains(pa.Number);
+                    var seen = _explored.TryGetValue(a.Code, out var ex) && ex.Contains($"pa:{pa.Number}");
+                    var id = $"c3-pa-{a.Code}-{pa.Number}";
+                    @if (pa.Number == OpenPractice)
+                    {
+                        <span class="c3-anchor" @ref="_linkedPa"></span>
+                    }
+                    <article class="c3-pa @(open ? "is-open" : "")" style="--c: @ColorOf(a.Code)">
+                        <button type="button" class="c3-pa__head" aria-expanded="@(open ? "true" : "false")" aria-controls="@id"
+                                @onclick="@(() => TogglePractice(a, pa.Number))">
+                            <span class="c3-pa__num">@a.Code.@pa.Number.ToString("00")</span>
+                            <span class="c3-pa__title">
+                                <b>@pa.Name @if (seen && !open) { <span class="c3-area__seen">✓ Explored</span> }</b>
+                                <small>@pa.Practices.Count practices@(ScoreText(a, pa.Number))</small>
+                            </span>
+                            <span class="c3-pa__chev" aria-hidden="true"></span>
+                        </button>
+                        @if (open)
+                        {
+                            <div class="c3-pa__body" id="@id">
+                                @if (pa.WhatItIs.Length > 0)
+                                {
+                                    <p class="c3-pa__what"><b>What it is:</b> @pa.WhatItIs</p>
+                                }
+                                @if (pa.Why.Count > 0)
+                                {
+                                    <ul class="c3-pa__why">
+                                        @foreach (var w in pa.Why)
+                                        {
+                                            <li>@if (w.Title.Length > 0) { <b>@w.Title:</b> }@(" ")@w.Text</li>
+                                        }
+                                    </ul>
+                                }
+                                <h3 class="c3-pa__how">How to do it</h3>
+                                <ol class="c3-steps">
+                                    @foreach (var pr in pa.Practices)
+                                    {
+                                        var tools = pr.Tools.Where(t => !t.IsTbd).ToList();
+                                        <li class="c3-step">
+                                            <span class="c3-step__num">@pr.Number</span>
+                                            <div class="c3-step__main">
+                                                <b class="c3-step__title">@pr.Title</b>
+                                                @if (pr.Text.Length > 0 && pr.Text != "TBD")
+                                                {
+                                                    <p>@pr.Text</p>
+                                                }
+                                                @if (pr.Benefit.Length > 0 && pr.Benefit != "TBD")
+                                                {
+                                                    <p class="c3-step__benefit"><span>Benefit</span> @pr.Benefit</p>
+                                                }
+                                                @if (tools.Count > 0)
+                                                {
+                                                    <div class="c3-chips" aria-label="Tools and resources">
+                                                        @foreach (var t in tools)
+                                                        {
+                                                            <button type="button" class="c3-chip" @onclick="@(() => NotInPrototype(t.Name))">
+                                                                @if (t.Type.Length > 0) { <span class="c3-chip__type">@t.Type</span> }
+                                                                <span>@t.Name</span>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </li>
+                                    }
+                                </ol>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+
+        <section class="c3-more" aria-label="Other Focus Areas">
+            <h2>Other Focus Areas</h2>
+            <div class="c3-more__row">
+                @foreach (var other in Areas.Where(o => o.Code != a.Code))
+                {
+                    <button type="button" class="c3-mini" style="--c: @ColorOf(other.Code)" @onclick="@(() => Go("area", other.Code))">
+                        <span class="c3-code">@other.Code</span> @other.Name
+                        @if (Opened(other)) { <span class="c3-area__seen" aria-label="explored">✓</span> }
+                    </button>
+                }
+            </div>
+        </section>
+    </text>;
+
+    private string ScoreText(C360FocusArea a, int number)
+    {
+        var i = a.PracticeAreas.FindIndex(p => p.Number == number);
+        return i >= 0 && PaScore(a, i) is double v ? $" · chapter score {L(v)} of 5" : "";
+    }
+
+    // =====================================================================
+    // All six Focus Areas
+    // =====================================================================
+
+    private RenderFragment AreasView() => @<text>
+        <div class="c3-pageHead">
+            <h1>Focus Areas</h1>
+            <p class="c3-lede">
+                The Chapter 360 tool comprises six key Focus Areas, and within each Focus Area, there are three to six Practice Areas.
+            </p>
+        </div>
+        <div class="c3-areas c3-areas--wide">
+            @foreach (var a in Areas)
+            {
+                @AreaCard(a)
+            }
+        </div>
+    </text>;
+
+    // =====================================================================
+    // Tools & templates
+    // =====================================================================
+
+    private string _search = "";
+    private string _typeFilter = "All";
+
+    private record ToolRow(C360FocusArea Area, C360Practice Practice, C360Tool Tool, string Kind);
+
+    // Kinds shown as filters; anything else is "Other".
+    private static readonly string[] Kinds = { "Template", "List", "Task Checklist", "Presentation", "Report", "Website Link" };
+
+    private static string KindOf(C360Tool t)
+    {
+        var k = System.Text.RegularExpressions.Regex.Replace(t.Type, @"\s*\(.*\)$", "").Trim();
+        if (k.EndsWith('s') && Kinds.Contains(k[..^1])) k = k[..^1];
+        if (k == "Weblink" || k == "Link") k = "Website Link";
+        return Kinds.Contains(k) ? k : "Other";
+    }
+
+    private List<ToolRow> AllTools() => Areas
+        .SelectMany(a => a.PracticeAreas.SelectMany(pa => pa.Practices.SelectMany(pr =>
+            pr.Tools.Where(t => !t.IsTbd).Select(t => new ToolRow(a, pr, t, KindOf(t))))))
+        .DistinctBy(r => (r.Area.Code, r.Tool.Type, r.Tool.Name))
+        .ToList();
+
+    private RenderFragment ToolsView()
+    {
+        var all = AllTools();
+        var shown = all
+            .Where(r => _typeFilter == "All" || r.Kind == _typeFilter)
+            .Where(r => _search.Length == 0 || r.Tool.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                        || r.Practice.Title.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        return @<text>
+            <div class="c3-pageHead">
+                <h1>Tools &amp; templates</h1>
+                <p class="c3-lede">Every tool, template and resource named in the six Focus Areas, @all.Count in all.</p>
+            </div>
+            <div class="c3-toolbar">
+                <label class="c3-search">
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5L14 14" stroke-linecap="round" /></svg>
+                    <span class="c3-visually-hidden">Search tools and templates</span>
+                    <input type="search" placeholder="Search, for example budget or volunteer" @bind="_search" @bind:event="oninput" />
+                </label>
+                <div class="c3-filters" role="group" aria-label="Kind of resource">
+                    @foreach (var k in new[] { "All" }.Concat(Kinds).Append("Other"))
+                    {
+                        var count = k == "All" ? all.Count : all.Count(r => r.Kind == k);
+                        if (count == 0) continue;
+                        <button type="button" class="@(_typeFilter == k ? "is-on" : "")" aria-pressed="@(_typeFilter == k ? "true" : "false")"
+                                @onclick="@(() => _typeFilter = k)">@k <span>@count</span></button>
+                    }
+                </div>
+            </div>
+            @if (shown.Count == 0)
+            {
+                <p class="c3-empty">Nothing matches "@_search". Try a shorter word.</p>
+            }
+            @foreach (var group in shown.GroupBy(r => r.Area))
+            {
+                <section class="c3-toolGroup" style="--c: @ColorOf(group.Key.Code)">
+                    <h2><span class="c3-code">@group.Key.Code</span> @group.Key.Name <small>@group.Count()</small></h2>
+                    <ul class="c3-toolList">
+                        @foreach (var r in group)
+                        {
+                            <li>
+                                <button type="button" @onclick="@(() => NotInPrototype(r.Tool.Name))">
+                                    <span class="c3-toolList__kind">@(r.Tool.Type.Length > 0 ? r.Tool.Type : "Resource")</span>
+                                    <span class="c3-toolList__name">@r.Tool.Name</span>
+                                    <span class="c3-toolList__where">@r.Practice.Number @r.Practice.Title</span>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+        </text>;
+    }
+
+    // =====================================================================
+    // Self-assessment: the leader adds their own rating of the chapter
+    // =====================================================================
+
+    private string? _assessCode;
+    private string? _justSaved;
+
+    private RenderFragment AssessView()
+    {
+        var a = C360.GetArea(_assessCode) ?? C360.GetArea(NextToRate()) ?? Areas.FirstOrDefault();
+        if (a is null) return @<p class="c3-empty">The Chapter 360 documents aren't loaded.</p>;
+        var mine = Mine(a);
+        var done = mine.All(s => s is not null);
+        var myAvg = mine.Any(s => s is not null) ? mine.Where(s => s is not null).Average(s => (double)s!.Value) : (double?)null;
+        var withMine = Level(a, draft: true);
+        var ratersAfter = (BoardAverage.ContainsKey(a.Code) ? BoardRaters : 0) + 1;
+        return @<text>
+            <div class="c3-pageHead">
+                <h1>Your rating of the chapter</h1>
+                <p class="c3-lede">
+                    Each board member rates the chapter on their own, and Chapter 360 averages everyone's ratings
+                    into the chapter's score. Each practice area is assessed on a scale of 1 to 5.
+                </p>
+            </div>
+            <div class="c3-assessTabs" role="tablist" aria-label="Focus Areas">
+                @foreach (var f in Areas)
+                {
+                    var on = f.Code == a.Code;
+                    <button type="button" role="tab" aria-selected="@(on ? "true" : "false")" class="@(on ? "is-on" : "")" style="--c: @ColorOf(f.Code)"
+                            @onclick="@(() => { _assessCode = f.Code; _justSaved = null; })">
+                        <span class="c3-code">@f.Code</span>
+                        <span class="c3-assessTabs__name">@f.Name</span>
+                        <span class="c3-assessTabs__state">@(_myRated.Contains(f.Code) ? "✓ You rated it" : BoardAverage.ContainsKey(f.Code) ? $"Rated by {BoardRaters} · you: to do" : "Nobody yet · you: to do")</span>
+                    </button>
+                }
+            </div>
+
+            <div class="c3-assess">
+                <section class="c3-assess__form" style="--c: @ColorOf(a.Code)" aria-labelledby="c3-assess-title">
+                    <h2 id="c3-assess-title"><span class="c3-code">@a.Code</span> @a.Name</h2>
+                    <p class="c3-assess__hint">How well do you think Sakura Bay Chapter does each of these today? 1 is the lowest, 5 the highest. Your own scores stay private; only the average is shared.</p>
+                    <ol class="c3-rates">
+                        @for (var i = 0; i < a.PracticeAreas.Count; i++)
+                        {
+                            var index = i;
+                            var pa = a.PracticeAreas[i];
+                            var board = BoardPa(a, i);
+                            <li class="c3-rate">
+                                <div class="c3-rate__text">
+                                    <b>@pa.Name</b>
+                                    @if (pa.WhatItIs.Length > 0)
+                                    {
+                                        <small>@FirstSentence(pa.WhatItIs)</small>
+                                    }
+                                    <small class="c3-rate__board">@(board is double bv ? $"Board average so far: {L(bv)}" : "No ratings yet")</small>
+                                </div>
+                                <div class="c3-rate__scale" role="radiogroup" aria-label="@($"{pa.Name}, 1 to 5")">
+                                    @for (var n = 1; n <= 5; n++)
+                                    {
+                                        var value = n;
+                                        var on = mine[index] == value;
+                                        <button type="button" role="radio" aria-checked="@(on ? "true" : "false")" class="@(on ? "is-on" : "") @(mine[index] >= value ? "is-filled" : "")"
+                                                @onclick="@(() => { mine[index] = value; _justSaved = null; })">@value</button>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                    <div class="c3-assess__foot">
+                        <span class="c3-assess__score">
+                            @if (myAvg is double v)
+                            {
+                                <text>Your score: <b>@L(v)</b> · chapter with yours: <b>@(withMine is double w ? L(w) : "–")</b> of 5 <small>(@ratersAfter rating@(ratersAfter == 1 ? "" : "s"))</small></text>
+                            }
+                            else
+                            {
+                                <text>Rate each Practice Area to see your score.</text>
+                            }
+                        </span>
+                        <button type="button" class="c3-btn c3-btn--primary" disabled="@(!done)" @onclick="@(() => AddRating(a))">
+                            @(_myRated.Contains(a.Code) ? "Update your rating" : "Add your rating")
+                        </button>
+                    </div>
+                    @if (_justSaved == a.Code)
+                    {
+                        <div class="c3-saved" role="status">
+                            <span>Added to the chapter's 360 view, now from @Raters(a) rating@(Raters(a) == 1 ? "" : "s"). Saved for this demo only: reloading the page starts over.</span>
+                            @if (NextToRate() is string next)
+                            {
+                                <button type="button" class="c3-area__link" @onclick="@(() => { _assessCode = next; _justSaved = null; })">Next: @C360.GetArea(next)?.Name <span aria-hidden="true">→</span></button>
+                            }
+                            else
+                            {
+                                <button type="button" class="c3-area__link" @onclick="@(() => Go("overview"))">See your chapter's 360 view <span aria-hidden="true">→</span></button>
+                            }
+                        </div>
+                    }
+                </section>
+                <aside class="c3-assess__side">
+                    @Radar(inAssess: true, draftCode: a.Code)
+                    @Progress()
+                </aside>
+            </div>
+        </text>;
+    }
+
+    private void AddRating(C360FocusArea a)
+    {
+        _myRated.Add(a.Code);
+        _justSaved = a.Code;
+        _lastUpdated = $"{Settings.Today.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)} by Watanabe Kenji";
+    }
+
+    private static string FirstSentence(string text)
+    {
+        var i = text.IndexOf(". ", StringComparison.Ordinal);
+        return i > 0 ? text[..(i + 1)] : text;
+    }
+
+    // =====================================================================
+    // Help: ISACA's Chapter 360 introduction
+    // =====================================================================
+
+    private RenderFragment HelpView() => @<text>
+        <div class="c3-pageHead">
+            <h1>How Chapter 360 works</h1>
+            <p class="c3-lede">ISACA's introduction to Chapter 360, word for word. Read it here, or press play to listen.</p>
+        </div>
+        @Reader("c360-intro", "the introduction")
+    </text>;
+
+    // =====================================================================
+    // Read & listen: the Library's player and text, for one document.
+    // The buttons and highlighting are worked by LibraryPanel.razor.js.
+    // =====================================================================
+
+    private ElementReference _readerRef;
+    private IJSObjectReference? _js;     // the Library's reader
+    private IJSObjectReference? _page;   // this page's scrolling (SampleChapter360.razor.js)
+    private string? _attachedDoc;
+
+    private RenderFragment Reader(string docId, string name)
+    {
+        var text = Library.GetText(docId);
+        if (text is null) return @<p class="c3-empty">This document isn't loaded yet.</p>;
+        return @<div class="c3-reader" @key="docId" @ref="_readerRef">
+            <div class="c3-player" data-lib-player>
+                <button type="button" class="c3-pbtn" data-lib="prev" title="Back a section" aria-label="Back a section">
+                    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M3 2h2v12H3zM14 2v12L6 8z" /></svg>
+                </button>
+                <button type="button" class="c3-pbtn c3-pbtn--main" data-lib="toggle" title="Listen" aria-label="Listen">
+                    <svg class="c3-iconPlay" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M4 2l10 6-10 6z" /></svg>
+                    <svg class="c3-iconPause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z" /></svg>
+                </button>
+                <button type="button" class="c3-pbtn" data-lib="next" title="Forward a section" aria-label="Forward a section">
+                    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M11 2h2v12h-2zM2 2v12l8-6z" /></svg>
+                </button>
+                <div class="c3-track">
+                    <span class="c3-status" data-lib-status aria-live="polite">Press play to listen to @name</span>
+                    <span class="c3-bar"><span data-lib-bar></span></span>
+                </div>
+                <button type="button" class="c3-speed" data-lib="speed" title="Reading speed" aria-label="Reading speed, 1 times">1&times;</button>
+            </div>
+            <p class="c3-reader__meta">Read word for word in Isa's own voice · about @text.Document.Minutes minutes · also in Isa's Listen Library</p>
+            <div class="c3-text" data-lib-text data-doc="@docId">
+                @foreach (var section in text.Sections)
+                {
+                    @if (section.Heading is not null)
+                    {
+                        <h3 class="c3-text__sec"><span class="c3-s" data-i="@section.HeadingIndex" data-section>@section.Heading</span></h3>
+                    }
+                    @foreach (var para in section.Paragraphs)
+                    {
+                        <p class="c3-text__para @(para.Bullet ? "is-bullet" : "")" data-section="@(section.Heading is null && para == section.Paragraphs[0] ? "" : null)">
+                            @foreach (var s in para.Sentences)
+                            {
+                                <span class="c3-s" data-i="@s.Index">@s.Text</span>
+                                @(" ")
+                            }
+                        </p>
+                    }
+                }
+            </div>
+        </div>;
+    }
+
+    private bool ReaderShown => _readTab && (CurrentView == "help" || (CurrentView == "area" && ShownArea is not null));
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_scrollTop)
+        {
+            _scrollTop = false;
+            try
+            {
+                _page ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/SampleChapter360.razor.js");
+                if (OpenPractice is not null && CurrentView == "area" && !_readTab && _linkedPa.Context is not null)
+                    await _page.InvokeVoidAsync("scrollToElement", _linkedPa);   // the linked Practice Area
+                else
+                    await _page.InvokeVoidAsync("scrollToTop");
+            }
+            catch (JSException) { }   // scrolling is a nicety: never let it break the page
+        }
+        if (!ReaderShown)
+        {
+            if (_attachedDoc is not null) await StopReading();
+            return;
+        }
+        var doc = CurrentView == "help" ? "c360-intro" : "c360-" + ShownArea!.Code.ToLowerInvariant();
+        _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/LibraryPanel.razor.js");
+        if (_attachedDoc != doc || _autoplay)
+        {
+            await _js.InvokeVoidAsync("attach", _readerRef, _autoplay);
+            _attachedDoc = doc;
+            _autoplay = false;
+        }
+    }
+
+    private async Task StopReading()
+    {
+        _attachedDoc = null;
+        try { if (_js is not null) await _js.InvokeVoidAsync("stop"); }
+        catch (JSDisconnectedException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await StopReading();
+        try
+        {
+            if (_js is not null) await _js.DisposeAsync();
+            if (_page is not null) await _page.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+    }
 }

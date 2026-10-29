@@ -4,7 +4,7 @@
 
 ## Your part
 
-- Slides 11 and 12: "What comes next" (about 2 minutes).
+- Slide 11: "Next steps" (about 1½ minutes). Slide 12 is now Matthew's (28 October).
 - **Takes over from:** Willis, right after the live demo. The audience has just seen Isa answer questions, refuse an off-topic one, and hand questions to a person with a reference number.
 - **Hands over to:** Matthew, who closes.
 
@@ -38,7 +38,9 @@
 
 ## Slide 12: "Additional features"
 
-**On screen:** two groups. "In the build, not finished": onboarding (the Today panel and first-90-days journey) and the succession notebook. "Planned": peer content panel, offline packages, Android app wrapper, Chrome extension, multi-model testing.
+> **Update, 28 October:** Matthew now presents slide 12, so Eliyas hands over after slide 11. The slide has also changed: "Built" lists First 90 days, Today note, Meet your people, Succession notebook, Worth saving?, Handoff checklist, Listen Library and How to use Isa; "Planned" lists terms explained, day 30/60/90 check-ins, ask the last leader, a support team view, more roles, phone and browser, and also offline packages, a peer content panel and side-by-side model tests. The points below are kept as background on the older version of the slide.
+
+**On screen (old version):** two groups. "In the build, not finished": onboarding (the Today panel and first-90-days journey) and the succession notebook. "Planned": peer content panel, offline packages, Android app wrapper, Chrome extension, multi-model testing.
 
 **Points to get across:**
 - **In the build, not finished:**
