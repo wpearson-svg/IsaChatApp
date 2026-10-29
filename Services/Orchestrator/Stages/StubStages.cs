@@ -135,12 +135,32 @@ public class RagStage : IStage
             ctx.Passages = await StandInAsync(ctx.Question);
 
         if (ctx.Passages.Count == 0)
-            return new StageResult(StageOutcome.Escalate, "no approved content found", "no_context; passages=0; retrieved=none");
+            // The question text is never logged. Only how close it came to a meaning-map question (in letters changed) is, so a
+            // near miss such as a speech-to-text mishearing can be told apart from a real gap in the content.
+            return new StageResult(StageOutcome.Escalate, "no approved content found", $"no_context; passages=0; retrieved=none; nearest_map_distance={_nearestDistance}; map_error={_mapError}; nearest_diff={_nearestDiff}");
 
         ctx.Sources = ctx.Passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).Distinct().ToList();
         var retrieved = string.Join(", ", ctx.Passages.Select(p => $"{p.Document} {p.Section}".Replace(';', ',')).Distinct());
         return new StageResult(StageOutcome.Pass, null,
             $"passages={ctx.Passages.Count}; retrieved={retrieved}; stub=meaning_map");
+    }
+
+    private int _nearestDistance = -1;
+    private string _mapError = "none";
+    private string _nearestDiff = "";
+
+    /// <summary>Letters that differ between two strings (Levenshtein).</summary>
+    private static int Distance(string a, string b)
+    {
+        var prev = Enumerable.Range(0, b.Length + 1).ToArray();
+        for (var i = 1; i <= a.Length; i++)
+        {
+            var cur = new int[b.Length + 1]; cur[0] = i;
+            for (var j = 1; j <= b.Length; j++)
+                cur[j] = Math.Min(Math.Min(cur[j - 1] + 1, prev[j] + 1), prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1));
+            prev = cur;
+        }
+        return prev[b.Length];
     }
 
     private static string Normalize(string value) =>
@@ -150,7 +170,8 @@ public class RagStage : IStage
     private async Task<List<Passage>> StandInAsync(string question)
     {
         var found = new List<Passage>();
-        if (!File.Exists(_contentDbPath)) return found;
+        _mapError = "none";
+        if (!File.Exists(_contentDbPath)) { _mapError = "content db not found"; return found; }
         try
         {
             await using var conn = new SqliteConnection($"Data Source={_contentDbPath};Mode=ReadOnly");
@@ -162,14 +183,28 @@ public class RagStage : IStage
                 JOIN passages p ON p.id = m.passage_id;
                 """;
             var wanted = Normalize(question);
+            _nearestDistance = -1;
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
-                if (Normalize(reader.GetString(0)) == wanted)
+            {
+                var d = Distance(Normalize(reader.GetString(0)), wanted);
+                if (_nearestDistance < 0 || d < _nearestDistance)
+                {
+                    _nearestDistance = d;
+                    // Only the letters that differ are kept (position, the map's letter, the received letter) - never the whole question.
+                    var m = Normalize(reader.GetString(0));
+                    _nearestDiff = m.Length != wanted.Length ? $"lengths {m.Length} vs {wanted.Length}"
+                        : string.Join(",", Enumerable.Range(0, m.Length).Where(i => m[i] != wanted[i]).Take(8).Select(i => $"{i}:{m[i]}>{(int)wanted[i]:x}"));
+                }
+                if (d == 0)
                     found.Add(new Passage(reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4)));
+            }
         }
-        catch (SqliteException)
+        catch (SqliteException ex)
         {
-            // No meaning map in this database: a normal miss. rag escalates.
+            // No meaning map in this database: a normal miss. rag escalates. The reason is kept so a locked or unreadable
+            // database can be told apart from a question that is simply not in the map.
+            _mapError = ex.Message.Replace(';', ',');
         }
         return found.DistinctBy(p => (p.Document, p.Section, p.Page)).Take(5).ToList();
     }

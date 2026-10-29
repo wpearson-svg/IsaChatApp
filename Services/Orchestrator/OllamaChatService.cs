@@ -18,11 +18,32 @@ public sealed class OllamaChatService
     private readonly IConfiguration _config;
     private readonly ILogger<OllamaChatService> _log;
 
+    /// <summary>
+    /// Presentation mode (Isa Configuration, or Presentation:Mode in appsettings.json). On: the model is loaded
+    /// at start and kept for Ollama:KeepAlive (60 minutes). Off (the default): it loads when a question needs it
+    /// and is let go after Ollama:IdleKeepAlive (2 minutes), so it does not hold memory the rest of the time.
+    /// </summary>
+    public bool PresentationMode { get; private set; }
+
+    /// <summary>The keep-alive for a request right now, by mode.</summary>
+    private string KeepAliveNow() => PresentationMode
+        ? _config["Ollama:KeepAlive"] ?? "60m"
+        : _config["Ollama:IdleKeepAlive"] ?? "2m";
+
+    /// <summary>Switches presentation mode. On loads the model in the background; off unloads it at once.</summary>
+    public void SetPresentationMode(bool on)
+    {
+        if (PresentationMode == on) return;
+        PresentationMode = on;
+        _ = Task.Run(async () => { if (on) await WarmAsync(); else await UnloadAsync(); });
+    }
+
     public OllamaChatService(IHttpClientFactory clients, IConfiguration config, ILogger<OllamaChatService> log)
     {
         _clients = clients;
         _config = config;
         _log = log;
+        PresentationMode = config.GetValue("Presentation:Mode", false);
     }
 
     /// <summary>
@@ -33,7 +54,7 @@ public sealed class OllamaChatService
     {
         var endpoint = _config["Ollama:Endpoint"] ?? "http://localhost:11434";
         var model = _config["Ollama:Model"] ?? "phi4-mini";
-        var keepAlive = _config["Ollama:KeepAlive"] ?? "10m";
+        var keepAlive = KeepAliveNow();
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -114,7 +135,7 @@ public sealed class OllamaChatService
         var model = _config["Ollama:Model"] ?? "phi4-mini";
         var timeoutSeconds = Math.Clamp(_config.GetValue<int?>("Ollama:TimeoutSeconds") ?? 30, 5, 180);
         var numPredict = Math.Clamp(_config.GetValue<int?>("Ollama:NumPredict") ?? 300, 50, 2000);
-        var keepAlive = _config["Ollama:KeepAlive"] ?? "10m";
+        var keepAlive = KeepAliveNow();
 
         var client = _clients.CreateClient("ollama");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
