@@ -34,7 +34,7 @@
            checked="@Ollama.PresentationMode"
            @onchange="@(e => { Ollama.SetPresentationMode((bool)e.Value!); StateHasChanged(); })" />
     <label class="form-check-label" for="presentationMode">
-        Presentation mode: load the model now and keep it loaded (60 minutes after each question)
+        Model warm-up (&ldquo;presentation mode&rdquo;): load the model now and keep it loaded (60 minutes after each question)
     </label>
 </div>
 
@@ -236,7 +236,7 @@
    journey steps their role sees on that day. *@
 @* ---- Presentation page (/present): off by default, so chapter leaders
    never come across it. See WidgetSettings.PresentationEnabled. *@
-<h2 class="h4">Presentation</h2>
+<h2 class="h4">Presentation slides</h2>
 <div class="form-check form-switch">
     <input class="form-check-input" type="checkbox" role="switch" id="presentationEnabled"
            checked="@Settings.PresentationEnabled"
