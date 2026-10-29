@@ -13,8 +13,9 @@
                   that aren't done yet
      Notebook     opens the succession notebook (only for someone who
                   may read their chapter's notebook)
-     Library      opens the Library: ISACA's documents to read or
-                  listen to (anyone signed in)
+     Listen Library  opens the Library: ISACA's documents to read or
+                  listen to (anyone signed in). Labelled "Listen Library"
+                  (Matthew, 27 October 2026).
      ----         a line between Isa's own tools and ISACA's sites
      Chapter 360  opens the sample Chapter 360 page in a new tab
      Engage       opens the sample Engage page in a new tab
@@ -80,14 +81,14 @@
             <li>
                 <button type="button" class="isa-rail__btn isa-rail__btn--library" @onclick="OnToggleLibrary"
                         aria-pressed="@(LibraryOpen ? "true" : "false")"
-                        title="@(LibraryOpen ? "Close the Library" : "Open the Library: read or listen to ISACA's documents")"
-                        aria-label="Library">
+                        title="@(LibraryOpen ? "Close the Listen Library" : "Open the Listen Library: read or listen to ISACA's documents")"
+                        aria-label="Listen Library">
                     <span class="isa-rail__tile">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M4 4h3.5v16H4zM9.5 4H13v16H9.5zM15 5l3.4-.9 3.6 15-3.4.9z" />
                         </svg>
                     </span>
-                    <span class="isa-rail__label">Library</span>
+                    <span class="isa-rail__label">Listen Library</span>
                 </button>
             </li>
         }
