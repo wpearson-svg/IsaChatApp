@@ -194,21 +194,31 @@
       "presenter": "Matthew Brady",
       "title": "Additional features",
       "groups": [
+        // Updated 28 October 2026 (Matthew): everything built since sprint 2 started.
+        // "Built" means it works in the prototype today; "Planned" is not built yet.
         {
-          "label": "In the build, not finished",
+          "label": "Built",
           "items": [
-            { "title": "Onboarding", "text": "The Today panel and the first-90-days journey: steps matched to where a leader is in their term, with progress." },
-            { "title": "Succession notebook", "text": "Leaders leave notes for the person who takes over." }
+            { "title": "First 90 days", "text": "Steps for each leader's day of term." },
+            { "title": "Today note", "text": "Today's steps and key dates." },
+            { "title": "Meet your people", "text": "Your support contact and your board." },
+            { "title": "Succession notebook", "text": "Notes left for the next leader." },
+            { "title": "Worth saving?", "text": "Flags deadline and decision answers." },
+            { "title": "Handoff checklist", "text": "The guidebook's handover list." },
+            { "title": "Listen Library", "text": "Documents read aloud, word for word." },
+            { "title": "How to use Isa", "text": "A five-card tour and a help guide." }
           ]
         },
         {
           "label": "Planned",
           "items": [
-            { "title": "Peer content panel", "text": "Always on, alongside the chat." },
-            { "title": "Offline packages", "text": "Custom packages for specific remote chapters." },
-            { "title": "Android app wrapper", "text": "Isa as an app icon on a phone. Same server and API." },
-            { "title": "Chrome extension", "text": "A quick-access popup of the chat. Same server and API." },
-            { "title": "Multi-model testing", "text": "Side-by-side model tests on the Dev Dashboard." }
+            { "title": "Terms explained", "text": "A glossary of words new leaders meet early." },
+            { "title": "Day 30, 60, 90 check-ins", "text": "\"What's still unclear?\" Shared only by choice." },
+            { "title": "Ask the last leader", "text": "Questions answered in the notebook." },
+            { "title": "Support team view", "text": "Who may need a check-in; never their questions." },
+            { "title": "More roles", "text": "Journeys for treasurers, secretaries and other board roles." },
+            { "title": "Phone and browser", "text": "An Android app and a Chrome extension." },
+            { "title": "Also", "text": "Offline packages, a peer content panel, side-by-side model tests." }
           ]
         }
       ]
