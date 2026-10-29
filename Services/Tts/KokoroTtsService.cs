@@ -33,11 +33,12 @@ public sealed class KokoroTtsService
     public string Voice => _config["Tts:Voice"] ?? "bf_lily";
 
     /// <summary>The audio file (mp3) for this text, from the cache or newly made. Null if it can't be made.</summary>
-    public async Task<string?> GetOrCreateAsync(string text, CancellationToken ct = default, bool background = false)
+    /// <param name="noCache">Speed tests only: make it fresh into a temporary file the caller deletes, so the time is real.</param>
+    public async Task<string?> GetOrCreateAsync(string text, CancellationToken ct = default, bool background = false, bool noCache = false)
     {
         if (!Enabled || string.IsNullOrWhiteSpace(text)) return null;
-        var path = PathFor(text);
-        if (File.Exists(path)) return path;
+        var path = noCache ? Path.Combine(Path.GetTempPath(), "isa-tts-" + Guid.NewGuid().ToString("N") + ".mp3") : PathFor(text);
+        if (!noCache && File.Exists(path)) return path;
 
         // Someone listening comes first: the background pre-making waits while any listener is waiting,
         // so Listen is never stuck behind it (it was making every second sentence slow).
@@ -50,7 +51,7 @@ public sealed class KokoroTtsService
         if (counted) { Interlocked.Decrement(ref _listenersWaiting); counted = false; }
         try
         {
-            if (File.Exists(path)) return path;   // made while this call waited its turn
+            if (!noCache && File.Exists(path)) return path;   // made while this call waited its turn
             var endpoint = (_config["Tts:Endpoint"] ?? "http://localhost:8880").TrimEnd('/');
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
             timeout.CancelAfter(TimeSpan.FromSeconds(60));
@@ -77,6 +78,39 @@ public sealed class KokoroTtsService
             return null;
         }
         finally { _one.Release(); }
+    }
+
+    /// <summary>
+    /// Streaming test: opens Kokoro's audio stream (raw 24 kHz 16-bit mono, sent as it is made) for this text.
+    /// The caller copies it on and disposes the response. Null if the voice is off or does not answer.
+    /// </summary>
+    public async Task<HttpResponseMessage?> StartStreamAsync(string text, CancellationToken ct = default)
+    {
+        if (!Enabled || string.IsNullOrWhiteSpace(text)) return null;
+        try
+        {
+            var endpoint = (_config["Tts:Endpoint"] ?? "http://localhost:8880").TrimEnd('/');
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{endpoint}/v1/audio/speech")
+            {
+                Content = JsonContent.Create(new
+                {
+                    model = _config["Tts:Model"] ?? "kokoro",
+                    input = text.Trim(),
+                    voice = Voice,
+                    response_format = "pcm",
+                    speed = 1.0,
+                    stream = true,
+                }),
+            };
+            var response = await _clients.CreateClient("tts").SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            if (!response.IsSuccessStatusCode) { response.Dispose(); return null; }
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _log.LogInformation(ex, "Speech service did not answer the streaming request");
+            return null;
+        }
     }
 
     /// <summary>Is the speech service answering right now. Never throws.</summary>

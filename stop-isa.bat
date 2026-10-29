@@ -19,9 +19,11 @@ if exist isa.pid (
 )
 
 echo.
-echo Checking port 5067 for anything still listening...
+echo Checking port 5067 for anything still listening (Tailscale forwarding is left alone)...
 set FOUND=0
 for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":5067" ^| findstr "LISTENING"') do (
+    tasklist /FI "PID eq %%P" /NH | findstr /I "tailscaled" >nul
+    if errorlevel 1 (
     set FOUND=1
     echo Port 5067 is held by PID %%P:
     tasklist /FI "PID eq %%P" /NH
@@ -31,6 +33,7 @@ for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":5067" ^| findstr "LISTENING
         echo taskkill failed; trying PowerShell Stop-Process...
         powershell -NoProfile -Command "Stop-Process -Id %%P -Force -ErrorAction Continue"
     )
+    )
 )
 if "!FOUND!"=="0" echo Nothing was listening on port 5067.
 
@@ -39,11 +42,14 @@ echo Waiting 3 seconds, then checking again...
 timeout /t 3 /nobreak >nul
 set STILL=0
 for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":5067" ^| findstr "LISTENING"') do (
+    tasklist /FI "PID eq %%P" /NH | findstr /I "tailscaled" >nul
+    if errorlevel 1 (
     set STILL=1
     echo STILL RUNNING: PID %%P is listening on port 5067 again.
     echo If the PID is a new number each time, something is restarting it
     echo  (dotnet watch, VS Code debugger, or another terminal running the app^).
     echo If the same PID survives, right-click this file and Run as administrator.
+    )
 )
 if "!STILL!"=="0" echo Port 5067 is free.
 

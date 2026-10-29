@@ -48,6 +48,15 @@ function Clean-Text($text) {
 }
 
 function Test-Port($port) {
+    # Tailscale forwarding (tailscale-phone.ps1) makes tailscaled listen on 5067 and 8080 too.
+    # If tailscaled is the only listener, the real service is down, so do not report it as up.
+    try {
+        $l = @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue)
+        if ($l.Count -gt 0) {
+            $real = @($l | Where-Object { (Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName -ne 'tailscaled' })
+            if ($real.Count -eq 0) { return $false }
+        }
+    } catch { }
     try {
         $client = New-Object System.Net.Sockets.TcpClient
         $result = $client.BeginConnect('localhost', $port, $null, $null)
@@ -147,6 +156,9 @@ Add-Btn $pTest 'Run test paths (no token)' 'test-paths.ps1 -NoToken: sends no to
 Add-Btn $pTest 'Run test paths (model off)' 'test-paths.ps1 -ModelOff: sends the model call to a dead address (no need to quit Ollama). Checks a failed model call gives an error and a ticket, not a hang.' { Run-Script 'test-paths.ps1' '-ModelOff' }
 Add-Btn $pTest 'Run test paths (forced failure)' 'test-paths.ps1 -ForcedFailure: start Isa with the button Start Isa (force AI-check failure) first. Checks a source that was not retrieved is escalated.' { Run-Script 'test-paths.ps1' '-ForcedFailure' }
 Add-Btn $pTest 'Run failure tests' 'test-failures.ps1: system errors and fail states (bad requests, odd questions, bad tokens, load, a stage crashing), NOT step pass/fail. Signed in as d.whitfield.' { Run-Script 'test-failures.ps1' '' }
+Add-Btn $pTest 'Run token tests (forged)' 'test-tokens.ps1: sends forged and tampered tokens; every one must be refused (401), a real one accepted. Signed in as d.whitfield.' { Run-Script 'test-tokens.ps1' '-User d.whitfield' }
+Add-Btn $pTest 'Run token tests (Keycloak restart)' 'test-tokens.ps1 -Mode Restart: restarts the Keycloak container, then checks a new token works without restarting Isa.' { Run-Script 'test-tokens.ps1' '-User d.whitfield -Mode Restart' }
+Add-Btn $pTest 'Run token tests (Keycloak reset)' 'test-tokens.ps1 -Mode Reset: you click Reset Keycloak (new signing keys), press Enter, and it checks again.' { Run-Script 'test-tokens.ps1' '-User d.whitfield -Mode Reset' }
 Add-Btn $pTest 'Test the model (timing)' 'test-model.ps1: checks Ollama and phi4-mini, times the miss-path question (1 cold + 5 warm), checks memory with Isa and Keycloak up, suggests a time limit. Start Isa and Keycloak first.' { Run-Script 'test-model.ps1' '' }
 Add-Btn $pTest 'Test Salesforce' 'test-salesforce.ps1: creates one test Case using dev-keys.json.' { Run-Script 'test-salesforce.ps1' '' }
 

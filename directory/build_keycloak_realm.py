@@ -127,6 +127,18 @@ CHAT_CLIENT = {
 WEB_CLIENT = dict(CHAT_CLIENT, clientId="isa-web", name="Isa web sign-in", publicClient=True)
 WEB_CLIENT.pop("secret")
 
+# isa-android: public client for the Android app (docs/isa-android plan, 28 October 2026). Signs in with the
+# code flow and PKCE through the system browser, and comes back to the app by its own address (no web page).
+# No secret, no password grant. Its tokens carry the same claims and roles as the web client's.
+ANDROID_CLIENT = dict(CHAT_CLIENT, clientId="isa-android", name="Isa Android app", publicClient=True,
+                      directAccessGrantsEnabled=False)
+ANDROID_CLIENT.pop("secret")
+ANDROID_CLIENT.pop("rootUrl")
+ANDROID_CLIENT["redirectUris"] = ["com.example.isa:/oauth2redirect"]
+ANDROID_CLIENT["webOrigins"] = []
+ANDROID_CLIENT["attributes"] = {"pkce.code.challenge.method": "S256",
+                                "post.logout.redirect.uris": "com.example.isa:/signed-out"}
+
 realm = {
     "realm": "isa", "enabled": True, "sslRequired": "external",
     "registrationAllowed": False, "loginWithEmailAllowed": True, "duplicateEmailsAllowed": False,
@@ -134,7 +146,7 @@ realm = {
     "roles": {"client": {"isa-chat": [{"name": r, "description": d} for r, d in zip(ROLES, [
         "Base role: ordinary chat access (everyone gets it)", "Sees the Developer Dashboard link",
         "Sees the Content Health Dashboard link", "Review role"])]}},
-    "clients": [CHAT_CLIENT, WEB_CLIENT],
+    "clients": [CHAT_CLIENT, WEB_CLIENT, ANDROID_CLIENT],
     "components": {"org.keycloak.userprofile.UserProfileProvider": [{
         "providerId": "declarative-user-profile", "subComponents": {},
         "config": {"kc.user.profile.config": [json.dumps(profile)]}}]},

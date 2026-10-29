@@ -57,7 +57,10 @@ if ($sdkOk) {
 
 # --- 2. Port 5067 free (REQUIRED) ---------------------------------------
 $portBusy = $false
-$net = @(netstat -ano | Select-String ':5067\s' | Select-String 'LISTENING')
+# Tailscale forwarding (tailscale-phone.ps1) also listens on 5067 through tailscaled; that is not Isa, so it is ignored.
+$net = @(Get-NetTCPConnection -LocalPort 5067 -State Listen -ErrorAction SilentlyContinue | Where-Object {
+    $owner = (Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName
+    $owner -ne 'tailscaled' })
 if ($net.Count -gt 0) { $portBusy = $true }
 if ($portBusy) {
     $hardFail = $true
