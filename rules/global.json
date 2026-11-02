@@ -1,0 +1,101 @@
+{
+  "layer": "global",
+  "scope": "",
+  "version": 1,
+  "approved_by": "SAMPLE: not reviewed by ISACA",
+  "approval_reference": "SAMPLE",
+  "approved_on": "2026-10-30",
+  "status": "active",
+  "sample": true,
+  "notes": "Sample rules written by the team to show Isa's policy adapter working (docs/Isa_Rules_Design.md). Not ISACA policy. In a real deployment ISACA writes and approves its own rules.",
+  "rules": [
+    {
+      "id": "E-02",
+      "title": "A member asks to see or delete their personal data",
+      "group": "E",
+      "kinds": ["K1", "K2"],
+      "outcome": "answer_then_point",
+      "route": "chapter_experience",
+      "flags": [],
+      "applies_to_roles": "all",
+      "topic_signals": [
+        "personal data",
+        "their data",
+        "my data",
+        "delete their",
+        "erase their",
+        "data we hold",
+        "data we have about",
+        "right to be forgotten",
+        "data request",
+        "privacy request"
+      ],
+      "kind_signals": [
+        "what do we do",
+        "what should we do",
+        "how do we handle",
+        "how should we handle",
+        "asked us to",
+        "wants a copy",
+        "do we have to"
+      ],
+      "unless": [
+        "breach",
+        "hacked",
+        "lost",
+        "stolen",
+        "leaked"
+      ],
+      "message": "",
+      "point_line": "How to handle this request under your country's law is a question for a person.",
+      "offer_handoff": true,
+      "answer_must_not": [
+        "you don't have to delete",
+        "you do not have to delete",
+        "you can refuse",
+        "you can ignore",
+        "you must delete it within",
+        "under gdpr",
+        "under the law, you"
+      ],
+      "reason": "ISACA requires chapters to keep privacy policies that comply with applicable laws and ISACA's requirements; how one request is handled under a country's law needs a person.",
+      "source": "Annual Chapter Compliance Framework, Annual Review (privacy policies); hand-off proposal, group E (Matthew, October 20, 2026)",
+      "tests": {
+        "questions": [
+          {
+            "text": "A member asked us to delete their personal data. What do we do?",
+            "as_chapter": "C-009",
+            "as_role": "President",
+            "expect": "answer_then_point",
+            "note": "The rule tester's demo question, answered under the global rule"
+          },
+          {
+            "text": "A member wants a copy of the data we hold about them. How do we handle that?",
+            "as_chapter": "C-009",
+            "as_role": "President",
+            "expect": "answer_then_point"
+          },
+          {
+            "text": "Does ISACA require us to have a privacy policy?",
+            "as_chapter": "C-009",
+            "as_role": "President",
+            "expect": "answer",
+            "note": "A plain fact question: E-02 must not catch it"
+          },
+          {
+            "text": "Our members' personal data was stolen. What do we do?",
+            "as_chapter": "C-009",
+            "as_role": "President",
+            "expect": "not E-02",
+            "note": "A breach is an incident (group E, happening now), not a data request; the 'unless' list keeps E-02 out of it"
+          }
+        ],
+        "answers_must_be_stopped": [
+          "You don't have to delete a member's data if they are still a member.",
+          "You can refuse the request if it is too much work.",
+          "Under GDPR, you must delete it within 30 days."
+        ]
+      }
+    }
+  ]
+}

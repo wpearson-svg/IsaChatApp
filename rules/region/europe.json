@@ -1,0 +1,43 @@
+{
+  "layer": "region",
+  "scope": "Europe",
+  "version": 1,
+  "approved_by": "SAMPLE: not reviewed by ISACA",
+  "approval_reference": "SAMPLE",
+  "approved_on": "2026-10-30",
+  "status": "active",
+  "sample": true,
+  "notes": "Sample region file showing a region tightening a global rule. States no law: it only changes what Isa does with the question. Not ISACA policy.",
+  "rules": [
+    {
+      "id": "EU-01",
+      "title": "Personal data requests in Europe go to a person",
+      "tightens": "E-02",
+      "outcome": "hand_off",
+      "route": "chapter_experience",
+      "flags": [],
+      "applies_to_roles": "all",
+      "message": "handoff.sensitive",
+      "reason": "Sample: shows a region file making a global rule stricter for its chapters.",
+      "source": "Sample written by the team, October 30, 2026",
+      "tests": {
+        "questions": [
+          {
+            "text": "A member asked us to delete their personal data. What do we do?",
+            "as_chapter": "C-005",
+            "as_role": "President",
+            "expect": "hand_off",
+            "note": "The rule tester's demo question, tested as a chapter in Germany"
+          },
+          {
+            "text": "A member asked us to delete their personal data. What do we do?",
+            "as_chapter": "C-009",
+            "as_role": "President",
+            "expect": "answer_then_point",
+            "note": "Outside Europe this file must not apply"
+          }
+        ]
+      }
+    }
+  ]
+}
