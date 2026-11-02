@@ -93,7 +93,7 @@ Notes:
 
 **How the gate tells the topic and the kind.** Two ways, one decided and one proposed:
 
-1. **Phrase signals (in this design).** Fixed phrases in each rule (`topic_signals` and `kind_signals`, section 6), matched after the text is cleaned up (lower case, "t@xes" and "t a x" made into "taxes"). A rule fires only when **both** a topic signal and a kind signal match, so "when is our tax filing due?" (C × K1) is answered, while "do we have to pay tax on event income in our country?" (C × K3) goes to a person. To be plain about it: **this is still word matching.** It is smarter than a keyword list (two signals, exceptions, clean-up, tests), but it will miss wordings nobody thought of.
+1. **Phrase signals (in this design).** Fixed phrases in each rule (`topic_signals` and `kind_signals`, section 6), matched after the text is cleaned up (lower case, "t@xes" and "t a x" made into "taxes"). A rule fires only when **both** a topic signal and a kind signal match, so "when is our tax filing due?" (C × K1) is answered, while "do we have to pay tax on event income in our country?" (C × K3) goes to a person. A signal matches **at the start of a word**: "tax" matches "taxes" but not "syntax", and "harass" matches "harassing". (ISACA is a security organization, so words like "threat" or "crypto" on their own are never signals: they would catch "threat modeling" or "cryptography".) To be plain about it: **this is still word matching.** It is smarter than a keyword list (two signals, exceptions, clean-up, tests), but it will miss wordings nobody thought of.
 2. **Meaning match (LATER UPGRADE, decided by Matthew October 30, 2026; not part of Milestone 1).** It waits on the embeddings for RAG search (one of Eliyas's open Milestone 1 decisions); Isa's code has no embeddings yet. Two conditions if it is ever added: it can only **tighten** (turn an answer into a hand-off, never the other way round), and it runs in **shadow mode** first (it records what it would have done, changes nothing, and is compared against the test list before it goes live). The rules need no change to take it later, because every rule already carries example questions. What it would do: Isa also compares the meaning of the question with each rule's example questions (the same embeddings the RAG search uses), so "Is sales tax owed on what members pay for our summit?" fires C-03 through its example "Do we have to charge VAT on our conference tickets?" with no phrase in common. Nothing is generated: it is a fixed measurement, the same question gives the same result every time, and each decision names the rule, the closest example and the similarity score. Adding an example question teaches the rule a new wording and adds a test at the same time. The cut-off is set and checked against the test list. It uses a model, though not to judge, and would share Eliyas's embedding model rather than add a second one. Willis wants it in the solution (October 30, 2026); his only concern was not yet knowing how to build it. Matthew and Claude add this layer together with Willis when he is ready; until then, everything else comes first.
 
 Either way, two more layers catch what detection misses: the output checkpoint (section 4) and the safety net (group H).
@@ -159,10 +159,11 @@ The four outcomes are from the hand-off proposal, agreed by Willis on October 21
 | `flags` | `urgent`, `potential_fraud` | `[]` |
 | `applies_to_roles` | `all`, or a list of roles | `all` |
 | `topic_signals` | Words or phrases that mark the topic | "tax", "VAT", "GST" |
-| `kind_signals` | Words or phrases that mark the kind of ask | "do we have to", "is it legal" |
+| `kind_signals` | Words or phrases that mark the kind of ask. **Empty means the topic alone is enough**: used for rules stricter than the grid (safety, sanctions, money emergencies, the Stop list, out of scope) | "do we have to", "is it legal" |
 | `unless` | Phrases that mean the rule should NOT fire | "compliance report due" |
 | `message` | A key from the wording table, never new text | `handoff.sensitive` |
 | `point_line` | Only for `answer_then_point`: the extra line | "Whether this meets your country's law is a question for a person." |
+| `extra_line` | A wording-table key for a fixed line added after the message, for example the emergency-services line on safety hand-offs | `handoff.safety_line` |
 | `offer_handoff` | Only for `answer_then_point`: after the answer, Isa offers a button to pass the question to ISACA's Chapter Experience team. Nothing is sent unless the leader taps it; tapping it creates the same hand-off (with a reference number) as any other. REQUEST FOR WILLIS: this uses the real hand-off path, the same one the "Talk to a person" link needs (a Milestone 1 hole) | `true` |
 | `answer_must_not` | Output checkpoint: phrases an answer must never contain under this rule | "is tax-deductible" |
 | `tightens` | Only in a lower layer: the ID of the higher rule it makes stricter. The lower rule fires whenever the higher rule would, for leaders in its scope: it inherits the higher rule's signals and exceptions, and may add signals of its own (never remove them). Its outcome must be at least as careful | `E-02` |
@@ -302,6 +303,13 @@ The 50 to 80 tricky questions (Willis's task P2 in Milestone 2) are built from t
 - the same question in another language (translation is still a placeholder)
 
 Results are reported honestly, including what fails.
+
+### Protecting the rehearsed demo (Matthew, November 2, 2026)
+
+- **rules/tests/rehearsed_demo.json** lists every question the team has rehearsed or shows on screen (the five demo questions, Alt+1 to Alt+5; the chat's suggestion buttons; the landing page), with the result each gets at the rules check **today**. Tested as Watanabe Kenji (C-001, President).
+- **The switch waits until every one passes.** Input Compliance moves from the placeholder (StubStages.cs) to the rule engine only when all rehearsed questions get exactly today's result. Keeping the old placeholder selectable as a way back is Willis's call.
+- The sample rules A-01 (harassment, with the safety line), S-01 (breaking Isa's rules), S-02 (restricted content) and O-01 (out of scope) exist to reproduce today's four placeholder checks. Demo question 4 ("What is the cryptocurrency policy?") must pass the rules check as today and reach the safety net, so C-04 is written so it does not catch it.
+- **rules/check_rules.py** is a reference check, not Isa's engine: Isa never runs it. It reads the files and checks the headers, the approval records, tighten-only, every rule's question and answer tests, and the rehearsed questions. Run `python rules\check_rules.py` from the project folder. On November 2: 61 checks, 0 problems; all seven rehearsed questions behave as today. Willis's engine should give the same results; where it differs, one of the two is wrong.
 
 ## 10. Logging
 

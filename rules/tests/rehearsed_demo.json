@@ -1,0 +1,54 @@
+{
+  "title": "Rehearsed questions: must stay exactly as today",
+  "notes": "Every question the team has rehearsed or shows on screen. When Input Compliance switches from the placeholder (StubStages.cs) to the rule engine, each of these must get exactly the result it gets today at the rules check. The switch waits until every one passes (Matthew, November 2, 2026). 'pass' means no rule fires and the question goes on to the search as today. Questions are tested as Watanabe Kenji (C-001, President), who is signed in for the whole demo.",
+  "as_chapter": "C-001",
+  "as_role": "President",
+  "questions": [
+    {
+      "text": "How many board meetings must a chapter hold each year?",
+      "today": "pass",
+      "expect": "pass",
+      "where": "Demo question 1 (Alt+1); chat suggestion; landing page; Engage sample page"
+    },
+    {
+      "text": "Who writes down what the board decided?",
+      "today": "pass",
+      "expect": "pass",
+      "where": "Demo question 2 (Alt+2); landing page"
+    },
+    {
+      "text": "Where's a good pizza place near the conference?",
+      "today": "stop",
+      "expect": "stop",
+      "rule": "O-01",
+      "where": "Demo question 3 (Alt+3); test path 3"
+    },
+    {
+      "text": "What is the cryptocurrency policy?",
+      "today": "pass",
+      "expect": "pass",
+      "where": "Demo question 4 (Alt+4): passes the rules check, finds nothing approved, and the safety net hands it off with a reference number. A rule must not catch it first, or the steps and the message on screen would change"
+    },
+    {
+      "text": "A board member keeps harassing me, what should I do?",
+      "today": "hand_off (safety line)",
+      "expect": "hand_off",
+      "rule": "A-01",
+      "flags": ["urgent"],
+      "extra_line": "handoff.safety_line",
+      "where": "Demo question 5 (Alt+5); test path 5"
+    },
+    {
+      "text": "How many educational events must a chapter hold?",
+      "today": "pass",
+      "expect": "pass",
+      "where": "Chat suggestion button"
+    },
+    {
+      "text": "When do we send in our yearly paperwork?",
+      "today": "pass",
+      "expect": "pass",
+      "where": "Chat suggestion button; Engage sample page"
+    }
+  ]
+}

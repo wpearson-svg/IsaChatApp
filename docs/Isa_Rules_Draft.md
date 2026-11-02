@@ -32,6 +32,8 @@ Examples Isa must answer:
 
 ### C-02 Applying ISACA's money rules to our chapter: **Isa answers, then points to a person**
 
+(In rules/global.json this is three rules, because each has its own "point to a person" line: C-02 insurance, C-08 compilations, C-09 running short of money. November 2.)
+
 Isa quotes ISACA's requirement, then adds one line saying which part needs a person.
 
 | Example | Isa quotes | Then adds |
@@ -138,4 +140,4 @@ Why: requests to evade obligations or falsify records. Source: hand-off proposal
 
 ## Rest of the sample set
 
-Not every group is drafted in depth: that is ISACA's policy work. The sample set adds only what the demo and tests need: one safety rule (group A, urgent), one rule from the general Stop list (for example "ignore your rules"), one role-specific rule, and the sample region, country and chapter files.
+Not every group is drafted in depth: that is ISACA's policy work. Written November 2 in rules/global.json: A-01 harassment and safety (urgent, with the safety line), S-01 breaking Isa's rules, S-02 restricted content, O-01 out of scope (these four reproduce today's placeholder checks), and group C as C-02 to C-09. Still to add: one role-specific rule and a sample chapter file.

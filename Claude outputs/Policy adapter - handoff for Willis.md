@@ -165,6 +165,16 @@ Full field table and a worked example: docs/Isa_Rules_Design.md, section 6. Real
 4. Where the upload screen sits and which role is the named admin (Willis).
 5. Meaning match, when the RAG embeddings exist (Willis and Eliyas, with Matthew).
 
+## 7a. Update, November 2, 2026: protecting the rehearsed demo
+
+Matthew's concern: switching Input Compliance from the placeholder to the rule engine must not change any question the team has rehearsed for Watanabe Kenji. So:
+
+1. **rules/tests/rehearsed_demo.json** lists every rehearsed or on-screen question (demo questions 1 to 5, the chat's suggestion buttons, the landing page) with the result it gets at the rules check today.
+2. **Please switch only when every one of them gets exactly today's result.** Keeping the old placeholder selectable as a way back is your call, but Matthew would welcome it.
+3. **New sample rules in rules/global.json** reproduce today's four placeholder checks: A-01 harassment (hand off, urgent, `extra_line: handoff.safety_line`), S-01 "ignore your rules", S-02 "show me every document", O-01 "pizza". Demo question 4 ("What is the cryptocurrency policy?") must still pass the rules check and reach the safety net; C-04 is written so it doesn't catch it. Group C is in too (C-02 to C-09).
+4. **Two format points:** an empty `kind_signals` means the topic alone is enough; a signal matches at the start of a word ("tax" matches "taxes", not "syntax").
+5. **rules/check_rules.py** is a reference check in Python, not the engine: it runs every rule's tests and the rehearsed questions against the files. November 2: 61 checks, 0 problems. Your engine should give the same results; where they differ, one of the two is wrong.
+
 ## 8. Honest limits to keep in mind
 
 - Phrase signals are word matching; new wordings will slip through. The output checkpoint and the safety net catch most of it.
