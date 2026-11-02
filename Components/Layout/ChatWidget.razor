@@ -291,7 +291,9 @@
 
                 @foreach (var msg in MessagesNewestFirst)
                 {
-                    <div id="@msg.DomId" class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
+                    @* @key keeps each message's buttons (Not quite, Save to notebook)
+                       in their state when a newer message is added above them. *@
+                    <div @key="msg.DomId" id="@msg.DomId" class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
                         <div class="isa-widget__who">
                             @msg.DisplayName
                             @if (ShowDeveloperTools && Settings.ShowResponseTime && msg.ElapsedMs is not null)
@@ -338,7 +340,8 @@
                                             OnSaved="NotebookChanged" OnOpenNotebook="OpenNotebook" />
                             @* Content Health Dashboard: "Yes, this answered my
                                question" / "Not quite", logged by trace ID. *@
-                            <AnswerFeedback @key="@("fb-" + msg.TraceId)" TraceId="@(msg.TraceId ?? "")" />
+                            <AnswerFeedback @key="@("fb-" + msg.TraceId)" TraceId="@(msg.TraceId ?? "")"
+                                            OnPassToPerson="() => OpenPersonCard(IsaChatApp.Services.PersonRequestService.Doors.NotQuite, msg)" />
                         }
                         @if (msg.ShowReference && ShowDeveloperTools && !string.IsNullOrEmpty(msg.TraceId))
                         {
@@ -384,6 +387,16 @@
                 <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenChecklist" Version="@_notebookVersion" />
             </div>
 
+            @* Paths to a person (docs/Paths_To_A_Person.md): the "connect me"
+               card, opened by "Talk to a person" in the footer or "Not quite"
+               under an answer. It sits just above the question box. *@
+            @if (_personCard is not null)
+            {
+                <PersonRequestCard @key="_personCard" Door="@_personCard.Door" FromTraceId="@_personCard.FromTraceId"
+                                   Question="@_personCard.Question" Answer="@_personCard.Answer" Sources="@_personCard.Sources"
+                                   EarlierQuestions="@_personCard.Earlier" OnClose="ClosePersonCard" OnSent="PersonRequestSent" />
+            }
+
             @* Input row, matching wireframe "Expanded": the ring icon
                sits inside the left edge of the input pill, a dark
                arrow button sends, on the right. While IsSending, the
@@ -415,12 +428,12 @@
             </div>
 
             @* Footer: a plain promise about where answers come from, and
-               the way to reach a person. "Talk to a person" (@Title) is
-               still the placeholder for the future ticketing bridge --
-               not wired up yet; add the click handler once it exists. *@
+               the way to reach a person. "Talk to a person" (@Title) opens
+               the "connect me" card (docs/Paths_To_A_Person.md, November 2,
+               2026), always on screen as the Sprint 1 proposal promised. *@
             <div class="isa-widget__footer">
                 <span class="isa-widget__footerNote">Answers come from approved ISACA documents.</span>
-                <a href="#" class="isa-widget__directSupportLink" @onclick:preventDefault="true">@Title &rsaquo;</a>
+                <a href="#" class="isa-widget__directSupportLink" @onclick="OpenPersonCardFromFooter" @onclick:preventDefault="true">@Title &rsaquo;</a>
             </div>
         </div>
 
@@ -848,6 +861,45 @@
     // chat, so an open notebook panel reads its entries again.
     private int _notebookVersion;
     private void NotebookChanged() => _notebookVersion++;
+
+    // ---- Paths to a person: the "connect me" card --------------------------
+
+    // What the open card is about; null while it's closed.
+    private sealed record PersonCardState(string Door, string? FromTraceId, string? Question, string? Answer,
+        IReadOnlyList<IsaChatApp.Services.Orchestrator.SourceRef> Sources, IReadOnlyList<string> Earlier);
+
+    private PersonCardState? _personCard;
+
+    // Opens the card about one answer ("Not quite", or the footer link with an answer to offer).
+    private void OpenPersonCard(string door, ChatEntry answer)
+    {
+        var index = Messages.IndexOf(answer);
+        var asked = Messages.Take(Math.Max(index, 0)).Where(m => m.Role == "you").Select(m => m.Text).ToList();
+        if (asked.Count > 0) asked.RemoveAt(asked.Count - 1);   // the question this answer is for
+        _personCard = new PersonCardState(door, answer.TraceId, answer.Question, answer.Text,
+            answer.Sources ?? new(), asked);
+    }
+
+    // "Talk to a person": offers the latest answered question, if there is one.
+    private void OpenPersonCardFromFooter()
+    {
+        var door = IsaChatApp.Services.PersonRequestService.Doors.TalkToPerson;
+        var latest = Messages.LastOrDefault(m => m.Question is not null);
+        if (latest is not null) { OpenPersonCard(door, latest); return; }
+        var asked = Messages.Where(m => m.Role == "you").Select(m => m.Text).ToList();
+        _personCard = new PersonCardState(door, null, null, null, Array.Empty<IsaChatApp.Services.Orchestrator.SourceRef>(), asked);
+    }
+
+    private void ClosePersonCard() => _personCard = null;
+
+    // After sending: the confirmation joins the conversation like any reply.
+    private void PersonRequestSent(string message)
+    {
+        _personCard = null;
+        var reply = new ChatEntry("ai", Settings.UseIsaLabel ? "Isa" : "pipeline", message);
+        Messages.Add(reply);
+        _scrollToId = reply.DomId;
+    }
 
     // Whether the signed-in person gets the Notebook and Today buttons on the rail.
     private bool CanOpenNotebook { get; set; }

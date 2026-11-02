@@ -140,4 +140,4 @@ Why: requests to evade obligations or falsify records. Source: hand-off proposal
 
 ## Rest of the sample set
 
-Not every group is drafted in depth: that is ISACA's policy work. Written November 2 in rules/global.json: A-01 harassment and safety (urgent, with the safety line), S-01 breaking Isa's rules, S-02 restricted content, O-01 out of scope (these four reproduce today's placeholder checks), and group C as C-02 to C-09. Still to add: one role-specific rule and a sample chapter file.
+Not every group is drafted in depth: that is ISACA's policy work. Written November 2 in rules/global.json: A-01 harassment and safety (urgent, with the safety line), S-01 breaking Isa's rules, S-02 restricted content, O-01 out of scope (these four reproduce today's placeholder checks), and group C as C-02 to C-09. Not built, by decision (Matthew, November 2): a role-specific rule and a sample chapter file. Both are designed (docs/Isa_Rules_Design.md: the `applies_to_roles` field, section 7; the chapter layer, section 7) and go in the supplement document labelled "designed", like the output checks. The presentation is unchanged.

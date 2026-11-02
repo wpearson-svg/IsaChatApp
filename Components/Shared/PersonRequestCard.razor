@@ -1,0 +1,190 @@
+@* ============================================================
+   PersonRequestCard.razor
+
+   Paths to a person (docs/Paths_To_A_Person.md, Matthew, November 2,
+   2026): the one "connect me" card behind the doors to a person:
+   "Talk to a person" in the chat footer and "Not quite" under an
+   answer (and later the "answer, then point" button).
+
+   Before anything is sent, the card shows plainly what will go to
+   ISACA's Chapter Experience team:
+   - the leader's name, chapter and role (from the sign-in);
+   - this question and Isa's answer: ticked, and the leader can untick it;
+   - earlier questions in the conversation: only if the leader ticks it
+     ("your questions to Isa stay private unless you choose to share them");
+   - an optional note (required when there's no question to send), checked
+     by the sign-in check and the Input Compliance gate.
+
+   Sending goes through PersonRequestService (the pipeline's own text
+   check and ticketing). One hand-off per answer: if this answer was
+   already passed on, the card shows its reference number instead.
+   Wording: Services/ShowTheWork/Wording.cs (draft, for Matthew's approval).
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@using IsaChatApp.Services.Orchestrator
+@inject PersonRequestService Requests
+@inject LeaderTermService Terms
+@inject WidgetSettings Settings
+@inject KeycloakSignInService SignInService
+
+<div class="isa-person" role="dialog" aria-modal="false" aria-labelledby="@_titleId">
+    <p id="@_titleId" class="isa-person__title" tabindex="-1" @ref="_titleEl">@IsaChatApp.Services.ShowTheWork.Wording.PersonCardTitle</p>
+
+    @if (_existing is not null)
+    {
+        <p class="isa-person__done" role="status">This was already passed on. Your reference number is <strong>@_existing</strong>.</p>
+        <div class="isa-person__btns">
+            <button type="button" class="isa-person__cancel" @onclick="OnClose">Close</button>
+        </div>
+    }
+    else
+    {
+        @* No promise of a follow-up: the agreed hand-off wording promises none (October 21). *@
+        <p class="isa-person__intro">Here's what will be sent:</p>
+        <ul class="isa-person__list">
+            <li>@_who</li>
+            @if (HasQuestion)
+            {
+                <li>
+                    <label class="isa-person__check">
+                        <input type="checkbox" @bind="_includeQuestion" disabled="@_sending" aria-label="Include this question and Isa's answer" />
+                        <span>This question and Isa's answer: <em>&ldquo;@Short(Question!)&rdquo;</em></span>
+                    </label>
+                </li>
+            }
+            @if (EarlierQuestions.Count > 0)
+            {
+                <li>
+                    <label class="isa-person__check">
+                        <input type="checkbox" @bind="_includeEarlier" disabled="@_sending" aria-label="Include earlier questions in this conversation" />
+                        <span>Earlier questions in this conversation (@EarlierQuestions.Count)</span>
+                    </label>
+                </li>
+            }
+        </ul>
+
+        <label class="isa-person__label" for="@_noteId">
+            @if (NoteRequired)
+            {
+                <text>What would you like help with?</text>
+            }
+            else
+            {
+                <text>Anything you'd like to add? <span>(optional)</span></text>
+            }
+        </label>
+        <textarea id="@_noteId" class="isa-person__note" rows="2" maxlength="500"
+                  @bind="_note" @bind:event="oninput" disabled="@_sending"></textarea>
+
+        <div class="isa-person__btns">
+            <button type="button" class="isa-person__cancel" @onclick="OnClose" disabled="@_sending">Cancel</button>
+            <button type="button" class="isa-person__primary" @onclick="SendAsync" disabled="@(_sending || !CanSend)">
+                @(_sending ? "Sending..." : "Send to the team")
+            </button>
+        </div>
+
+        @if (_problem is not null)
+        {
+            <p class="isa-person__problem" role="status">@_problem</p>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>Which door opened the card (PersonRequestService.Doors), for counting.</summary>
+    [Parameter, EditorRequired] public string Door { get; set; } = "";
+
+    /// <summary>The answer's trace ID, so each answer is passed on only once. Null when there's no answer.</summary>
+    [Parameter] public string? FromTraceId { get; set; }
+
+    /// <summary>The question being asked about, or null (for example "Talk to a person" before any question).</summary>
+    [Parameter] public string? Question { get; set; }
+
+    /// <summary>Isa's answer to that question, as shown.</summary>
+    [Parameter] public string? Answer { get; set; }
+
+    /// <summary>The answer's sources.</summary>
+    [Parameter] public IReadOnlyList<SourceRef> Sources { get; set; } = Array.Empty<SourceRef>();
+
+    /// <summary>Earlier questions in this conversation (not sent unless ticked).</summary>
+    [Parameter] public IReadOnlyList<string> EarlierQuestions { get; set; } = Array.Empty<string>();
+
+    /// <summary>Called by Cancel or Close.</summary>
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    /// <summary>Called after sending, with the message for the chat.</summary>
+    [Parameter] public EventCallback<string> OnSent { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    private readonly string _titleId = "isa-person-t-" + Guid.NewGuid().ToString("N");
+    private readonly string _noteId = "isa-person-n-" + Guid.NewGuid().ToString("N");
+    private ElementReference _titleEl;
+    private bool _includeQuestion = true;
+    private bool _includeEarlier;
+    private string _note = "";
+    private bool _sending;
+    private string? _problem;
+    private string? _existing;
+    private string? _sessionId;
+    private string _who = "Your name and role, from your sign-in";
+
+    private bool HasQuestion => !string.IsNullOrWhiteSpace(Question);
+
+    // With no question going (none, or unticked), the note is what the team needs.
+    private bool NoteRequired => !HasQuestion || !_includeQuestion;
+
+    private bool CanSend => !NoteRequired || !string.IsNullOrWhiteSpace(_note);
+
+    private static string Short(string text) => text.Length <= 90 ? text : text[..87].TrimEnd() + "...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _existing = Requests.ExistingTicket(FromTraceId);
+        if (AuthState is null) return;
+        var user = (await AuthState).User;
+        _sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+        var name = user.Identity?.Name;
+        var personId = user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
+        var term = personId is null ? null : Terms.GetCurrentTerms(personId, Settings.Today).FirstOrDefault();
+        _who = term is not null
+            ? $"Your name, chapter and role: {term.Name}, {term.Role}, {term.ChapterName}"
+            : name is not null ? $"Your name, from your sign-in: {name}" : _who;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Move focus into the card so keyboard and screen-reader users land on it.
+        if (firstRender) { try { await _titleEl.FocusAsync(); } catch { } }
+    }
+
+    private async Task SendAsync()
+    {
+        if (_sending || !CanSend) return;
+        _sending = true;
+        _problem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(_sessionId);
+            var share = HasQuestion && _includeQuestion;
+            var result = await Requests.SendAsync(new PersonRequestService.Request(
+                Door,
+                FromTraceId,
+                share ? Question : null,
+                share ? Answer : null,
+                share ? Sources : null,
+                _includeEarlier ? EarlierQuestions : null,
+                _note), token is null ? null : $"Bearer {token}");
+
+            if (result.AlreadySent) _existing = result.Ticket;
+            else if (result.Sent) await OnSent.InvokeAsync(result.Message);
+            else _problem = result.Message;
+        }
+        finally
+        {
+            _sending = false;
+        }
+    }
+}

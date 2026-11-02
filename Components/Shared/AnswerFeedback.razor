@@ -10,6 +10,11 @@
 
    Feeds the "self-resolution trend" and the "Not quite" escalation reason.
    One click per answer; afterwards it just says "Thanks".
+
+   Paths to a person (docs/Paths_To_A_Person.md, November 2, 2026): after
+   "Not quite", Isa also offers to pass the question to a person ("Yes,
+   pass it on" opens the connect card through OnPassToPerson; "No thanks"
+   ends it). The feedback is recorded either way, as before.
    ============================================================ *@
 
 @using IsaChatApp.Services
@@ -21,6 +26,12 @@
         <button type="button" class="isa-fb__btn" @onclick='() => Send("resolved")'>Yes, this answered my question</button>
         <button type="button" class="isa-fb__btn" @onclick='() => Send("not_quite")'>Not quite</button>
     }
+    else if (_kind == "not_quite" && OnPassToPerson.HasDelegate && !_offerClosed)
+    {
+        <span class="isa-fb__thanks" role="status">@IsaChatApp.Services.ShowTheWork.Wording.NotQuiteOffer</span>
+        <button type="button" class="isa-fb__btn" @onclick="PassOnAsync">Yes, pass it on</button>
+        <button type="button" class="isa-fb__btn" @onclick="() => _offerClosed = true">No thanks</button>
+    }
     else
     {
         <span class="isa-fb__thanks" role="status">Thanks for letting us know.</span>
@@ -31,12 +42,22 @@
     /// <summary>The answer's trace ID, so the click is tied to the right question.</summary>
     [Parameter, EditorRequired] public string TraceId { get; set; } = "";
 
+    /// <summary>Opens the "connect me" card for this answer. Without it, "Not quite" only says thanks.</summary>
+    [Parameter] public EventCallback OnPassToPerson { get; set; }
+
     private string? _kind;
+    private bool _offerClosed;
 
     private async Task Send(string kind)
     {
         if (_kind is not null) return;
         _kind = kind;
         await Usage.RecordFeedbackAsync(TraceId, kind);
+    }
+
+    private async Task PassOnAsync()
+    {
+        _offerClosed = true;
+        await OnPassToPerson.InvokeAsync();
     }
 }
