@@ -26,6 +26,7 @@
 @using IsaChatApp.Services
 @inject WidgetSettings Settings
 @inject DevKeysStore DevKeys
+@inject OutputComplianceSettings OutputSettings
 @inject DevAccessService DevAccess
 @rendermode InteractiveServer
 
@@ -78,8 +79,7 @@ else
                 @if (_savedMessageVisible)
                 {
                     <div class="dd__toast">
-                        Changes saved &mdash; not actually persisted; this resets on restart,
-                        same as the rest of the demo.
+                        @_saveMessage
                     </div>
                 }
 
@@ -114,6 +114,33 @@ else
                             <span class="dd__sliderValue">@ConfidenceThreshold%</span>
                             <span>More handoffs</span>
                         </div>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Answer-support (NLI) pass mark</h3>
+                            <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            Each sentence of an AI-written answer is scored against the approved
+                            passage it cites. A sentence scoring below this mark fails the check
+                            and the answer goes to a person. Default @OutputSettings.NliDefault.ToString("0.00").
+                        </p>
+                        <input type="range" class="dd__slider" min="0" max="100" step="1"
+                               value="@NliThresholdPct"
+                               @oninput="OnNliChanged" />
+                        <div class="dd__sliderLabels">
+                            <span>Accepts looser answers</span>
+                            <span class="dd__sliderValue">@((NliThresholdPct / 100.0).ToString("0.00"))</span>
+                            <span>Stricter</span>
+                        </div>
+                        <p class="dd__tableHint">
+                            Applies to the next question after you press Save changes. Direct
+                            database answers are ISACA's own words and are not scored.
+                        </p>
+                        <button type="button" class="dd__btn dd__btn--ghost" @onclick="ResetOutputSettings">
+                            Reset to defaults
+                        </button>
                     </div>
 
                     <div class="dd__card">
@@ -325,6 +352,7 @@ else
     {
         _isDev = await DevAccess.HasDevRoleAsync(AuthState);
         LoadSalesforce();
+        LoadOutputSettings();
     }
 
     private void LoadSalesforce()
@@ -366,7 +394,33 @@ else
 
     // ---- Compliance policy state ---------------------------------
 
-    private int ConfidenceThreshold = 62;
+    // Real settings: the two Output Compliance thresholds are saved by OutputComplianceSettings
+    // and read by the output compliance stage on every answer.
+    private int ConfidenceThreshold = (int)Math.Round(OutputComplianceSettings.DefaultConfidence * 100);
+    private int NliThresholdPct = (int)Math.Round(OutputComplianceSettings.DefaultNli * 100);
+    private string _saveMessage = "";
+
+    private void LoadOutputSettings()
+    {
+        ConfidenceThreshold = (int)Math.Round(OutputSettings.ConfidenceThreshold * 100);
+        NliThresholdPct = (int)Math.Round(OutputSettings.NliThreshold * 100);
+    }
+
+    private void OnNliChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value))
+        {
+            NliThresholdPct = value;
+        }
+    }
+
+    private void ResetOutputSettings()
+    {
+        if (!Settings.CanAccessDevDashboard && !_isDev) return;
+        OutputSettings.ResetToDefaults();
+        LoadOutputSettings();
+        _saveMessage = "Output Compliance settings reset to the appsettings.json values.";
+    }
 
     private void OnConfidenceChanged(ChangeEventArgs e)
     {
@@ -446,9 +500,21 @@ else
 
     private async Task SaveChanges()
     {
+        if (!Settings.CanAccessDevDashboard && !_isDev) return;
+        try
+        {
+            OutputSettings.Save(NliThresholdPct / 100.0, ConfidenceThreshold / 100.0);
+            _saveMessage = "Saved: NLI pass mark " + (NliThresholdPct / 100.0).ToString("0.00")
+                + ", confidence threshold " + (ConfidenceThreshold / 100.0).ToString("0.00")
+                + ". Applies to the next question. The other controls on this page are still illustrative.";
+        }
+        catch (Exception ex)
+        {
+            _saveMessage = "Could not save: " + ex.Message;
+        }
         _savedMessageVisible = true;
         StateHasChanged();
-        await Task.Delay(2500);
+        await Task.Delay(5000);
         _savedMessageVisible = false;
         await InvokeAsync(StateHasChanged);
     }

@@ -39,3 +39,9 @@ keycloak.zip
 
 # Isa's spoken Library audio (made on first play, or by the pre-make step at start)
 data/tts-cache/
+
+# Model files for the NLI check (about 420 MB, downloaded once, see docs/HHEM_Setup.md)
+data/models/
+
+# Output Compliance thresholds saved from the Dev Dashboard
+output-compliance-settings.json

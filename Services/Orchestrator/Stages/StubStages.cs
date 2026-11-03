@@ -116,9 +116,11 @@ public class RagStage : IStage
 {
     public string Name => "rag";
     private readonly string _contentDbPath;
+    private readonly IConfiguration _config;
 
     public RagStage(IConfiguration config)
     {
+        _config = config;
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
     }
 
@@ -127,7 +129,7 @@ public class RagStage : IStage
         if (ctx.DirectHit)
         {
             if (ctx.Passages.Count > 0 && string.IsNullOrEmpty(ctx.AnswerText))
-                AnswerExtract.Apply(ctx);   // best-matching sentence, its source first
+                AnswerExtract.Apply(ctx, _config);   // the best whole thought in ISACA's own words, its source first
             return new StageResult(StageOutcome.Pass, null, "direct hit", Skipped: true);
         }
 
