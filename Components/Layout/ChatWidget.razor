@@ -385,6 +385,18 @@
                    chat, above the welcome message. Shows only for a
                    signed-in leader in their first 90 days. *@
                 <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenChecklist" Version="@_notebookVersion" />
+
+                @* "Ask the outgoing president" (3 November 2026): a former president
+                   with a question waiting in the notebook sees one line here, at
+                   the top of the chat, when they open Isa. Nothing is emailed. *@
+                @if (_waitingQuestions.Count > 0)
+                {
+                    var askers = _waitingQuestions.Select(q => q.AuthorName).Distinct().ToList();
+                    <div class="isa-widget__askNote" role="note">
+                        <span>@(askers.Count == 1 ? askers[0] : "Your chapter's president") asked you @(_waitingQuestions.Count == 1 ? "a question" : $"{_waitingQuestions.Count} questions") in the succession notebook.</span>
+                        <button type="button" class="isa-widget__askNoteBtn" @onclick="OpenNotebook">Open the notebook</button>
+                    </div>
+                }
             </div>
 
             @* Paths to a person (docs/Paths_To_A_Person.md): the "connect me"
@@ -457,7 +469,8 @@
         {
             <TodayPanel OnClose="CloseToday" Style="@SidePanelStyle(SidePanel.Today)" Rightmost="@(!IsRightPanelOpen)"
                         Enlarged="@(Enlarged == SidePanel.Today)" OnToggleEnlarge="() => ToggleEnlarge(SidePanel.Today)"
-                        OnOpenNotebook="OpenNotebook" OnProgressChanged="RefreshStepsLeft" OnOpenHelp="OpenHelp" />
+                        OnOpenNotebook="OpenNotebook" OnProgressChanged="RefreshStepsLeft" OnOpenHelp="OpenHelp"
+                        OnListen="ListenFromStep" />
         }
 
         @* Onboarding: the succession notebook, always the rightmost panel
@@ -465,7 +478,8 @@
         if (IsNotebookOpen)
         {
             <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion" OnChecklistChanged="NotebookChanged"
-                           Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest" />
+                           Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest"
+                           OnAskTeam="OpenPersonCardFromFooter" OnQuestionsChanged="RefreshWaitingQuestions" />
         }
 
         @* The Library (Feature 5; Components/Shared/LibraryPanel.razor). It
@@ -474,7 +488,7 @@
         if (IsLibraryOpen)
         {
             <LibraryPanel OnClose="CloseLibrary" Style="@SidePanelStyle(SidePanel.Notebook)"
-                          Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" />
+                          Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" Request="@_listenRequest" />
         }
 
         @* "How to use Isa" (Feature 3; Components/Shared/HelpPanel.razor), in
@@ -827,7 +841,17 @@
         IsLibraryOpen = !IsLibraryOpen;
         if (!IsLibraryOpen) Unenlarge(SidePanel.Notebook);
     }
-    private void CloseLibrary() { IsLibraryOpen = false; Unenlarge(SidePanel.Notebook); }
+    private void CloseLibrary() { IsLibraryOpen = false; _listenRequest = null; Unenlarge(SidePanel.Notebook); }
+
+    // A journey step's Listen button (3 November 2026): opens the Library beside
+    // Today, at the part the step points to, and reads it.
+    private IsaChatApp.Services.Onboarding.ListenRequest? _listenRequest;
+    private void ListenFromStep(IsaChatApp.Services.Onboarding.ListenRequest request)
+    {
+        if (!IsLibraryOpen) { _notebookSmall = false; IsNotebookOpen = false; IsHelpOpen = false; _checklistRequest = 0; }
+        IsLibraryOpen = true;
+        _listenRequest = request;
+    }
 
     // ---- "How to use Isa" (Feature 3) ------------------------------------
     //
@@ -861,6 +885,11 @@
     // chat, so an open notebook panel reads its entries again.
     private int _notebookVersion;
     private void NotebookChanged() => _notebookVersion++;
+
+    // Questions in the notebook waiting for this person's answer (a former president).
+    private IReadOnlyList<IsaChatApp.Services.Onboarding.NotebookEntry> _waitingQuestions = [];
+    private void RefreshWaitingQuestions() =>
+        _waitingQuestions = _personId is null ? [] : Notebook.GetWaitingQuestions(_personId, Settings.Today);
 
     // ---- Paths to a person: the "connect me" card --------------------------
 
@@ -917,6 +946,7 @@
         _personId = AuthState is null ? null
             : (await AuthState).User.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
         CanOpenNotebook = _personId is not null && Notebook.GetAccess(_personId, Settings.Today).CanRead;
+        RefreshWaitingQuestions();
         HasJourney = _personId is not null && JourneyContexts.GetFor(_personId) is not null;
         if (_personId is not null) RefreshStepsLeft();
 

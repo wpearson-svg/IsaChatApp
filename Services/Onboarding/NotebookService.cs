@@ -30,9 +30,17 @@ namespace IsaChatApp.Services.Onboarding;
 ///     includes a former president after the handoff window, for example
 ///     an Immediate Past President (decided 20 October 2026).
 ///   - Anyone who has left the board sees nothing.
-///   - Planned next: "Ask the outgoing president", question-and-answer
-///     threads between the two presidents that stay open while the former
-///     president is on the board.
+///   - "Ask the outgoing president" (built 3 November 2026): the chapter's
+///     president asks the president before them a question, kept as an
+///     entry of kind "question". It waits inside Isa (never emailed) until
+///     the former president opens Isa and answers; the answer is saved on
+///     the same entry, so the presidents after them have it too. It is
+///     open while the former president is in the 30-day handoff window or
+///     holds any board role in the chapter. The two of them see it; only
+///     the president who asked can share it with the board (Matthew,
+///     3 November 2026: only the sitting president decides what the board
+///     sees). Both the question and the answer pass the sign-in check and
+///     Input Compliance before they are saved.
 ///
 /// Entries are never erased. "Remove" hides an entry from the notebook
 /// and records the date, so the notebook keeps an honest record, like the
@@ -100,6 +108,23 @@ public class NotebookService
         AddColumnIfMissing(conn, "shared_on", "TEXT");
         AddColumnIfMissing(conn, "parent_id", "INTEGER");
         FillInOlderEntries(conn);
+
+        // Added 3 November 2026 for "Ask the outgoing president" (questions
+        // are entries of kind "question"; "question" holds what was asked and
+        // "answer" the former president's answer):
+        //   asked_of       person_id of the former president asked
+        //   asked_of_name  their name at the time
+        //   about_id       the entry the question is about, if any
+        //   about_text     that entry's title when asked, so the former
+        //                  president can read what the question is about
+        //   answered_on    the former president's "today" when they answered
+        //   answered_at    the real time they answered, UTC
+        AddColumnIfMissing(conn, "asked_of", "TEXT");
+        AddColumnIfMissing(conn, "asked_of_name", "TEXT");
+        AddColumnIfMissing(conn, "about_id", "INTEGER");
+        AddColumnIfMissing(conn, "about_text", "TEXT");
+        AddColumnIfMissing(conn, "answered_on", "TEXT");
+        AddColumnIfMissing(conn, "answered_at", "TEXT");
 
         // "Email this record": in the prototype nothing is emailed; each
         // request is kept here instead, like the introduction on the contact
@@ -219,25 +244,30 @@ public class NotebookService
         cmd.CommandText = """
             SELECT e.entry_id, e.chapter_id, e.author_id, e.author_name, e.author_role, e.kind, e.category,
                    e.question, e.answer, e.sources_json, e.note, e.shared, e.on_date,
-                   e.topic, e.shared_on, e.parent_id, e.recorded_at
+                   e.topic, e.shared_on, e.parent_id, e.recorded_at,
+                   e.asked_of, e.asked_of_name, e.about_id, e.about_text, e.answered_on
             FROM notebook_entries e
             LEFT JOIN notebook_entries p ON p.entry_id = e.parent_id
             WHERE e.chapter_id = $c
               AND e.removed_on IS NULL
               AND (e.parent_id IS NULL OR p.removed_on IS NULL)
-              AND ($all = 1 OR e.shared = 1)
+              AND ($all = 1 OR e.shared = 1 OR e.asked_of = $me OR p.asked_of = $me)
             ORDER BY e.on_date DESC, e.entry_id DESC;
             """;
         cmd.Parameters.AddWithValue("$c", access.ChapterId);
         cmd.Parameters.AddWithValue("$all", access.SeesAll ? 1 : 0);
+        // A former president also sees the questions asked of them, and their follow-ups.
+        cmd.Parameters.AddWithValue("$me", personId);
         using var r = cmd.ExecuteReader();
         while (r.Read())
         {
             var entry = ReadEntry(r);
-            // A saved answer includes the president's own question, which is
-            // private. Other board members see a shared entry without it
-            // (the "Board copy" rule, Matthew's approved mockup, 22 October 2026).
-            list.Add(access.SeesAll ? entry : entry with { Question = null });
+            // A saved answer includes the president's own question to Isa,
+            // which is private. Other board members see a shared entry without
+            // it (the "Board copy" rule, Matthew's approved mockup, 22 October
+            // 2026). A question to the former president is different: it is
+            // the entry itself, written for another person to read.
+            list.Add(access.SeesAll || entry.Kind != "saved_answer" ? entry : entry with { Question = null });
         }
         return list;
     }
@@ -260,7 +290,14 @@ public class NotebookService
         SharedOn: r.IsDBNull(14) ? null : DateOnly.ParseExact(r.GetString(14), "yyyy-MM-dd", CultureInfo.InvariantCulture),
         ParentId: r.IsDBNull(15) ? null : r.GetInt64(15),
         RecordedAtUtc: DateTime.SpecifyKind(DateTime.Parse(r.GetString(16), CultureInfo.InvariantCulture,
-            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal), DateTimeKind.Utc));
+            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal), DateTimeKind.Utc))
+    {
+        AskedOf = r.IsDBNull(17) ? null : r.GetString(17),
+        AskedOfName = r.IsDBNull(18) ? null : r.GetString(18),
+        AboutId = r.IsDBNull(19) ? null : r.GetInt64(19),
+        AboutText = r.IsDBNull(20) ? null : r.GetString(20),
+        AnsweredOn = r.IsDBNull(21) ? null : DateOnly.ParseExact(r.GetString(21), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+    };
 
     // ---- Topics --------------------------------------------------------------
 
@@ -385,6 +422,109 @@ public class NotebookService
         return NoteResult.Saved(Insert(access, personId, onDate, "note", category, null, null, null, note, shareWithBoard,
             topic, parentId));
     }
+
+    // ---- Ask the outgoing president ----------------------------------------
+
+    /// <summary>
+    /// Who this person can ask: for the chapter's president, the president
+    /// before them, and whether that is still open (the former president is
+    /// in their 30-day handoff window, or holds any board role in the
+    /// chapter). Null for anyone who isn't the chapter's president, who never
+    /// gets the button. When it isn't open (or there is no earlier president
+    /// on record), the notebook offers the Chapter Experience team instead.
+    /// </summary>
+    public AskTarget? GetAskTarget(string personId, DateOnly onDate)
+    {
+        var president = _terms.GetCurrentTerms(personId, onDate).FirstOrDefault(t => t.Role == "President");
+        if (president is null) return null;
+        var before = _terms.GetPreviousPresident(president.ChapterId, president.TermStart);
+        if (before is null || before.PersonId == personId) return new AskTarget(null, null, Open: false);
+        return new AskTarget(before.PersonId, before.Name, CanBeAsked(before.PersonId, president.ChapterId, onDate));
+    }
+
+    // A former president can be asked (and can answer) while they are in their
+    // handoff window or hold any board role in the chapter.
+    private bool CanBeAsked(string personId, string chapterId, DateOnly onDate) =>
+        _terms.GetRecentlyEndedTerms(personId, onDate, HandoffDays).Any(t => t.Role == "President" && t.ChapterId == chapterId)
+        || _terms.GetCurrentTerms(personId, onDate).Any(t => t.Permission == "Leadership" && t.ChapterId == chapterId);
+
+    /// <summary>
+    /// The president asks the president before them a question, optionally
+    /// about one entry in the notebook. Checked with Isa's sign-in check and
+    /// Input Compliance gate first. Nothing is emailed: it waits in the
+    /// notebook until the former president opens Isa.
+    /// </summary>
+    public async Task<NoteResult> AskAsync(string personId, DateOnly onDate, string text, long? aboutId, string? bearerToken)
+    {
+        var target = GetAskTarget(personId, onDate);
+        var access = GetAccess(personId, onDate);
+        var question = Clean(text);
+        if (target is not { Open: true, PersonId: not null }) return NoteResult.Refused("There's no earlier president to ask right now.");
+        if (question is null) return NoteResult.Refused("Write your question first.");
+
+        string? aboutText = null;
+        if (aboutId is long id)
+        {
+            var about = GetEntries(personId, onDate).FirstOrDefault(e => e.EntryId == id && e.ParentId is null);
+            if (about is null) return NoteResult.Refused("That entry isn't in the notebook any more.");
+            aboutText = about.Title;
+        }
+
+        var problem = await CheckAsync(question, "notebook_question", bearerToken,
+            "This sounds like something to talk through with a person, so it wasn't sent. Your Chapter Experience contact can help.",
+            "That question is outside what the notebook is for, so it wasn't sent. Questions are for running your chapter.");
+        if (problem is not null) return NoteResult.Refused(problem);
+
+        var entryId = Insert(access, personId, onDate, "question", category: null, question, answer: null, sourcesJson: null,
+            note: null, shared: false, topic: TopicFor(question, aboutText), parentId: null);
+
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE notebook_entries SET asked_of = $who, asked_of_name = $name, about_id = $about, about_text = $aboutText WHERE entry_id = $e;";
+        cmd.Parameters.AddWithValue("$who", target.PersonId);
+        cmd.Parameters.AddWithValue("$name", target.Name);
+        cmd.Parameters.AddWithValue("$about", (object?)aboutId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$aboutText", (object?)aboutText ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$e", entryId);
+        cmd.ExecuteNonQuery();
+        return NoteResult.Saved(entryId);
+    }
+
+    /// <summary>
+    /// The former president answers a question asked of them, once, while
+    /// they can still be asked. Checked like a note first. The answer is
+    /// saved on the question's entry.
+    /// </summary>
+    public async Task<NoteResult> AnswerAsync(string personId, DateOnly onDate, long entryId, string text, string? bearerToken)
+    {
+        var entry = GetEntries(personId, onDate).FirstOrDefault(e => e.EntryId == entryId && e.Kind == "question");
+        var answer = Clean(text);
+        if (entry is null || entry.AskedOf != personId) return NoteResult.Refused("This question isn't waiting for your answer.");
+        if (entry.Answer is not null) return NoteResult.Refused("You've already answered this question.");
+        if (!CanBeAsked(personId, entry.ChapterId, onDate)) return NoteResult.Refused("You can't answer questions in this notebook any more.");
+        if (answer is null) return NoteResult.Refused("Write your answer first.");
+
+        var problem = await CheckAsync(answer, "notebook_answer", bearerToken,
+            "This sounds like something to talk through with a person, so it wasn't saved. The Chapter Experience team can help.",
+            "That answer is outside what the notebook is for, so it wasn't saved. Answers are for running the chapter.");
+        if (problem is not null) return NoteResult.Refused(problem);
+
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE notebook_entries SET answer = $a, answered_on = $d, answered_at = $t WHERE entry_id = $e AND asked_of = $p AND answer IS NULL AND removed_on IS NULL;";
+        cmd.Parameters.AddWithValue("$a", answer);
+        cmd.Parameters.AddWithValue("$d", Day(onDate));
+        cmd.Parameters.AddWithValue("$t", Now());
+        cmd.Parameters.AddWithValue("$e", entryId);
+        cmd.Parameters.AddWithValue("$p", personId);
+        return cmd.ExecuteNonQuery() == 1 ? NoteResult.Saved(entryId) : NoteResult.Refused("This question isn't waiting for your answer.");
+    }
+
+    /// <summary>Questions waiting for this person's answer (for the line at the top of their chat).</summary>
+    public IReadOnlyList<NotebookEntry> GetWaitingQuestions(string personId, DateOnly onDate) =>
+        GetEntries(personId, onDate)
+            .Where(e => e.Kind == "question" && e.AskedOf == personId && e.Answer is null && CanBeAsked(personId, e.ChapterId, onDate))
+            .ToList();
 
     // Checks typed text with Isa's sign-in check and Input Compliance gate
     // (through the orchestrator, which logs it). Returns null if it passed,
@@ -573,6 +713,12 @@ public record NotebookAccess(string? ChapterId, string? ChapterName, string? Per
     public bool CanRead => ChapterId is not null;
 }
 
+/// <summary>
+/// Who a president can ask in the notebook: the president before them (PersonId and Name, or
+/// null when there is none on record), and whether that is open now.
+/// </summary>
+public record AskTarget(string? PersonId, string? Name, bool Open);
+
 /// <summary>One entry in a chapter's succession notebook.</summary>
 public record NotebookEntry(
     long EntryId,
@@ -593,11 +739,20 @@ public record NotebookEntry(
     long? ParentId,         // for a follow-up: the entry it follows up on
     DateTime RecordedAtUtc) // the real time it was saved
 {
+    // A question to the former president (kind "question"): who was asked,
+    // the entry it is about, and when it was answered (the answer is Answer).
+    public string? AskedOf { get; init; }
+    public string? AskedOfName { get; init; }
+    public long? AboutId { get; init; }
+    public string? AboutText { get; init; }
+    public DateOnly? AnsweredOn { get; init; }
+
     /// <summary>
     /// How the notebook names this entry: a saved answer with a "what we
     /// decided" line counts as a decision, like a typed decision note.
     /// </summary>
-    public string KindLabel => Kind == "saved_answer"
+    public string KindLabel => Kind == "question" ? "Question"
+        : Kind == "saved_answer"
         ? (string.IsNullOrEmpty(Note) ? "Saved answer" : "Decision")
         : Category switch
         {

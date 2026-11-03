@@ -12,6 +12,8 @@
 //   once real input rules are built.
 // - "questions" lists only questions Isa answered correctly when
 //   tested. Add more as answers improve; test each one first.
+// Added 3 November 2026, checked against the app the same day: Listen
+// on journey steps, and asking the president before you in the notebook.
 //
 // In "points" and "text": **bold**, *italics*, and `TKT-0012` (shown
 // as a reference-number chip). Lines starting with // are ignored.
@@ -24,7 +26,7 @@
       "short": "What Isa helps with",
       "points": [
         "**Answers from ISACA's guidance.** Ask about running your chapter. Isa looks only in ISACA's approved documents for chapter leaders, and every answer lists its sources. Open \"Show the steps\" on an answer to see how she found it.",
-        "**Your first 90 days.** *Today* shows your steps for where you are in your term. Mark them done as you go.",
+        "**Your first 90 days.** *Today* shows your steps for where you are in your term. Mark them done as you go. A step that points to an ISACA document has a **Listen** button that reads that part aloud.",
         "**The succession notebook.** Notes and decisions that pass from one president to the next.",
         "**The Library.** Read ISACA's documents, or listen to them read aloud."
       ]
@@ -55,7 +57,8 @@
       "points": [
         "Under an answer, **Save to notebook** keeps the question, Isa's answer, its sources and the date. You can add a line about what you decided.",
         "In the notebook, **+ Add a note** for contacts, what worked, or what's unfinished.",
-        "Notes are private to you. **Share with the board** on a note lets your board members see it."
+        "Notes are private to you. **Share with the board** on a note lets your board members see it.",
+        "Presidents can also ask the president before them a question in the notebook, while that person is still on the board. They see it the next time they open Isa (nothing is emailed), and their answer stays in the notebook for the presidents after you. Only you can share it with the board."
       ]
     },
     {
@@ -75,7 +78,7 @@
       "points": [
         "Isa's logs don't keep the text of your questions. A question is only kept if you save it to your notebook.",
         "Your Chapter Experience contact sees your chapter, role and term dates. Your questions to Isa stay private.",
-        "Your notebook is private to you unless you share a note with your board.",
+        "Your notebook is private to you unless you share a note with your board. A question you ask the president before you is seen by the two of you.",
         "Introductions you write in Isa are saved in Isa; Isa never emails them."
       ]
     }

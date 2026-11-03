@@ -462,6 +462,45 @@
 }
 
 /* The ISACA document a step comes from, like the source chips in the chat. */
+.isa-today__listen {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: -0.4rem 0 1rem;
+}
+.isa-today__listenHead { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #5f6b7a; }
+.isa-today__listenBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 44px;
+    padding: 0.45rem 0.75rem;
+    border: 1.5px solid #6558b1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #2f2a6b;
+    font: inherit;
+    font-size: 0.82rem;
+    text-align: left;
+    cursor: pointer;
+}
+.isa-today__listenBtn:hover { background: #f3f1fb; }
+.isa-today__listenBtn:focus-visible { outline: 2px solid #6558b1; outline-offset: 2px; }
+.isa-today__listenIcon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: #6558b1;
+    color: #ffffff;
+    font-size: 0.65rem;
+}
+.isa-today__listenText { flex: 1; font-weight: 600; }
+.isa-today__listenTime { flex: none; font-size: 0.74rem; color: #5f6b7a; }
+
 .isa-today__source {
     display: flex;
     align-items: flex-start;

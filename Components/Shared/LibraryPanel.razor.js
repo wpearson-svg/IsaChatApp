@@ -14,6 +14,10 @@
 //
 // Player buttons (data-lib="..."): prev / next section, toggle
 // (play and pause), speed (0.75x, 1x, 1.25x, 1.5x).
+//
+// From a journey step (3 November 2026), attach is given the first and
+// last sentence of the part the step points to: reading starts there and
+// stops after the last one. Play then carries on through the rest.
 // ============================================================
 
 const SPEEDS = [0.75, 1, 1.25, 1.5];
@@ -66,6 +70,7 @@ let sentences = [];     // the sentence spans, in reading order
 let sectionStarts = []; // sentence numbers where each section starts
 let words = [];         // words per sentence, for the time left
 let current = 0;        // the sentence being read, or next to read
+let stopAfter = -1;     // from a journey step: stop after this sentence (-1: read to the end)
 let playing = false;
 let speed = 1;
 let runId = 0;          // stops a cancelled sentence from moving on
@@ -77,7 +82,7 @@ const clips = new Map();// sentence number -> promise of its audio address (made
 const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
 // Called by LibraryPanel.razor after a document is shown.
-export function attach(body, autoplay) {
+export function attach(body, autoplay, from, to) {
     const text = body?.querySelector('[data-lib-text]');
     if (!text) return;
     if (root !== body) {
@@ -100,6 +105,17 @@ export function attach(body, autoplay) {
         }
         update();
     }
+    if (from != null) {
+        const first = sentences.findIndex(s => Number(s.dataset.i) === from);
+        const last = sentences.findIndex(s => Number(s.dataset.i) === to);
+        if (first >= 0) {
+            current = first;
+            stopAfter = last >= first ? last : -1;
+            if (!autoplay || !(supported || !kokoroDown)) update(true);
+        }
+    } else {
+        stopAfter = -1;
+    }
     if (autoplay && (supported || !kokoroDown)) play();
 }
 
@@ -115,6 +131,7 @@ export function stop() {
     }
     root = null;
     sentences = [];
+    stopAfter = -1;
 }
 
 function onClick(e) {
@@ -127,9 +144,10 @@ function onClick(e) {
         else if (action === 'speed') cycleSpeed(btn);
         return;
     }
-    // Clicking a sentence reads from there.
+    // Clicking a sentence reads from there (to the end: the leader chose where to go).
     const s = e.target.closest('[data-i]');
     if (s && (supported || !kokoroDown)) {
+        stopAfter = -1;
         current = sentences.indexOf(s);
         play();
     }
@@ -205,6 +223,16 @@ function speakWithDevice(id) {
 
 function advance(id) {
     if (id !== runId || !playing) return;
+    if (current === stopAfter) {
+        // The end of the part the journey step points to.
+        stopAfter = -1;
+        current++;
+        playing = false;
+        update();
+        if (current < sentences.length) setStatus('That was the part this step points to. Press play to keep listening.');
+        else setStatus('Finished. Press play to start again.');
+        return;
+    }
     current++;
     if (current < sentences.length) speakCurrent();
     else { playing = false; update(); setStatus('Finished. Press play to start again.'); }
@@ -237,6 +265,7 @@ function haltAudio() {
 
 // Back or forward a section. Back from partway through a section goes to its start.
 function jump(dir) {
+    stopAfter = -1;     // skipping means the leader is choosing where to go
     let target;
     if (dir < 0) {
         const before = sectionStarts.filter(i => i < current);
