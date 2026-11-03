@@ -243,7 +243,8 @@ public class InputComplianceStage : IStage
             ));
         }
 
-        if (q.Contains("harass") || q.Contains("harassment"))
+        // Harassment, or the softer wording used in the demo ("a colleague keeps bothering me"): a person should see it.
+        if (q.Contains("harass") || q.Contains("keeps bothering") || q.Contains("keep bothering"))
         {
             ctx.SafetyTopic = true;   // a safety topic: the hand-off adds the emergency-services line
             return Task.FromResult(new StageResult(

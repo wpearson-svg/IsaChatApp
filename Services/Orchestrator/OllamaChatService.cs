@@ -55,19 +55,28 @@ public sealed class OllamaChatService
         var endpoint = _config["Ollama:Endpoint"] ?? "http://localhost:11434";
         var model = _config["Ollama:Model"] ?? "phi4-mini";
         var keepAlive = KeepAliveNow();
+        var clock = Stopwatch.StartNew();
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromSeconds(90));
             using var response = await _clients.CreateClient("ollama").PostAsJsonAsync(
                 $"{endpoint.TrimEnd('/')}/api/generate",
-                new { model, prompt = "Reply with OK.", stream = false, keep_alive = keepAlive, options = new { temperature = 0, num_predict = 1 } },
+                new { model, prompt = "Reply with OK.", stream = false, keep_alive = keepAlive, options = new { temperature = 0, num_predict = 3 } },
                 timeout.Token);
+            var body = await response.Content.ReadAsStringAsync(timeout.Token);
+            // The model's own reply is written to the Isa log, so a warm-up can be checked afterwards:
+            // look for "Model warm-up" in isa-run.log. Then it asks Ollama whether the model is loaded and until when.
+            var reply = "";
+            try { using var j = JsonDocument.Parse(body); reply = j.RootElement.TryGetProperty("response", out var r) ? r.GetString() ?? "" : ""; } catch { }
+            var status = await StatusAsync(cancellationToken);
+            _log.LogInformation("Model warm-up: http={Status} model={Model} reply='{Reply}' took={Ms}ms keep_alive_sent={KeepAlive} loaded_now={Loaded} ollama_expires_at={Expires} now_utc={Now:O}",
+                (int)response.StatusCode, model, reply.Trim(), clock.ElapsedMilliseconds, keepAlive, status.ModelLoaded, status.ExpiresAt, DateTime.UtcNow);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            _log.LogInformation(ex, "Model warm-up did not complete");
+            _log.LogInformation(ex, "Model warm-up did not complete after {Ms}ms (model={Model}, endpoint={Endpoint})", clock.ElapsedMilliseconds, model, endpoint);
             return false;
         }
     }
@@ -114,17 +123,23 @@ public sealed class OllamaChatService
             using var tags = JsonDocument.Parse(await client.GetStringAsync($"{endpoint}/api/tags", timeout.Token));
             var installed = Has(tags.RootElement);
             var loaded = false;
+            string? expires = null;
             try
             {
                 using var ps = JsonDocument.Parse(await client.GetStringAsync($"{endpoint}/api/ps", timeout.Token));
                 loaded = Has(ps.RootElement);
+                // Ollama's own answer to "until when is it kept": the expires_at it applied, not what Isa asked for.
+                if (loaded && ps.RootElement.TryGetProperty("models", out var arr))
+                    foreach (var m in arr.EnumerateArray())
+                        if (m.TryGetProperty("name", out var n) && (n.GetString() ?? "").StartsWith(model, StringComparison.OrdinalIgnoreCase)
+                            && m.TryGetProperty("expires_at", out var e)) expires = e.GetString();
             }
             catch { /* older Ollama without /api/ps: treat as not loaded */ }
-            return new OllamaStatus(true, installed, loaded);
+            return new OllamaStatus(true, installed, loaded, expires);
         }
         catch
         {
-            return new OllamaStatus(false, false, false);
+            return new OllamaStatus(false, false, false, null);
         }
     }
 
@@ -156,11 +171,18 @@ public sealed class OllamaChatService
             int? promptTokens = root.TryGetProperty("prompt_eval_count", out var pe) && pe.TryGetInt32(out var p) ? p : null;
             int? completionTokens = root.TryGetProperty("eval_count", out var ec) && ec.TryGetInt32(out var c) ? c : null;
             clock.Stop();
+            long Ms(string name) => root.TryGetProperty(name, out var d) && d.TryGetInt64(out var ns) ? ns / 1_000_000 : -1;
+            _log.LogInformation("Ollama answer: took={Ms}ms load={Load}ms prompt_eval={PromptEval}ms eval={Eval}ms prompt_tokens={PT} keep_alive_sent={KeepAlive} presentation_mode={Mode}",
+                clock.ElapsedMilliseconds, Ms("load_duration"), Ms("prompt_eval_duration"), Ms("eval_duration"), promptTokens, keepAlive, PresentationMode);
             return new OllamaAnswer(model, text.Trim(), clock.ElapsedMilliseconds, null, promptTokens, completionTokens);
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
             clock.Stop();
+            // What Ollama says about the model right now, so a timeout can be told apart from "the model was unloaded".
+            var st = await StatusAsync();
+            _log.LogWarning("Ollama timed out after {Ms}ms: keep_alive_sent={KeepAlive} presentation_mode={Mode} loaded_now={Loaded} ollama_expires_at={Expires} now_utc={Now:O}",
+                clock.ElapsedMilliseconds, keepAlive, PresentationMode, st.ModelLoaded, st.ExpiresAt, DateTime.UtcNow);
             return new OllamaAnswer(model, "", clock.ElapsedMilliseconds, "timeout", null, null);
         }
         catch (Exception ex)
@@ -178,4 +200,4 @@ public sealed class OllamaChatService
 /// <param name="Error">null when it worked; otherwise "timeout" or "unavailable" (the contract's error values).</param>
 public sealed record OllamaAnswer(string Model, string Text, long ElapsedMs, string? Error, int? PromptTokens, int? CompletionTokens, string? Detail = null);
 
-public sealed record OllamaStatus(bool Reachable, bool ModelInstalled, bool ModelLoaded);
+public sealed record OllamaStatus(bool Reachable, bool ModelInstalled, bool ModelLoaded, string? ExpiresAt = null);

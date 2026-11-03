@@ -126,7 +126,7 @@ $cases = @(
     @{ Id = "2";  Name = "2. Model path";                Q = "Who writes down what the board decided?";                            Status = "answered";  Lang = "en"; Ticket = $false },
     @{ Id = "3";  Name = "3. Stopped";                   Q = "Where's a good pizza place near the conference?";                    Status = "stopped";   Lang = "en"; Ticket = $false },
     @{ Id = "4";  Name = "4. Escalated (no content)";    Q = "What is the cryptocurrency policy?";                                 Status = "escalated"; Lang = "en"; Ticket = $true  },
-    @{ Id = "5";  Name = "5. Escalated (sensitive)";     Q = "A board member keeps harassing me, what should I do?";               Status = "escalated"; Lang = "en"; Ticket = $true  },
+    @{ Id = "5";  Name = "5. Escalated (sensitive)";     Q = "A colleague keeps bothering me, what should I do?";               Status = "escalated"; Lang = "en"; Ticket = $true  },
     @{ Id = "6";  Name = "6. Non-English question";      Q = $spanish;                                                             Status = $null;       Lang = "es"; Ticket = $null  },
     @{ Id = "7";  Name = "7. English question";          Q = "How many board meetings must a chapter hold each year?";            Status = $null;       Lang = "en"; Ticket = $null  }
 )

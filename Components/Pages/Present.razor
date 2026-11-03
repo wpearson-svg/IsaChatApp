@@ -515,6 +515,7 @@ else
         IsaChatApp.Services.ShowTheWork.MockStageFeed.Cases.Take(5).Select(c => c.Question).ToArray();
 
     // The opening screen. Stays until the next-slide key is pressed, then fades and the intro plays.
+    private DateTime _warmStartedAt = DateTime.MinValue;
     private enum Gate { Off, Checking, Ready, NotReady }
     private Gate _gate = Gate.Off;
     private bool _gateLeaving;
@@ -757,11 +758,21 @@ else
     {
         _gateCts = new CancellationTokenSource();
         var ct = _gateCts.Token;
+        // Opening the slides keeps the model loaded for the whole talk (the same as the Isa Configuration switch).
+        Ollama.SetPresentationMode(true);
         try
         {
             while (!ct.IsCancellationRequested)
             {
-                ApplyGate(await RunReadinessCheckAsync());
+                var report = await RunReadinessCheckAsync();
+                // Ollama is up but the model is not in memory: load it now, so question 2 is not the one that waits.
+                // Tried again if a load has not finished after 100 seconds.
+                if (report is { OllamaReachable: true, ModelInstalled: true, ModelLoaded: false } && DateTime.UtcNow - _warmStartedAt > TimeSpan.FromSeconds(100))
+                {
+                    _warmStartedAt = DateTime.UtcNow;
+                    _ = Task.Run(async () => { await Ollama.WarmAsync(); });
+                }
+                ApplyGate(report);
                 await InvokeAsync(StateHasChanged);
                 if (_gate == Gate.Ready) return;
                 await Task.Delay(3000, ct);
@@ -778,6 +789,7 @@ else
         {
             if (!r.OllamaReachable) problems.Add("Ollama is not running");
             else if (!r.ModelInstalled) problems.Add("The model is not installed");
+            else if (!r.ModelLoaded) problems.Add("Isa's model is loading into memory (up to a minute)");
             if (!r.SignedInAsDev) problems.Add("Not signed in with the developer role");
             if (r.Salesforce is not ("ok" or "off")) problems.Add(r.Salesforce == "not_configured" ? "Salesforce is not configured" : $"Salesforce: {r.Salesforce}");
         }

@@ -54,7 +54,7 @@ public static class MockStageFeed
         new Case(2, "Who writes down what the board decided?", "Not found, then related topics, passages, the model: answered"),
         new Case(3, "Where's a good pizza place near the conference?", "Input compliance stops it: nothing after"),
         new Case(4, "What is the cryptocurrency policy?", "Nothing approved found: escalated with a ticket"),
-        new Case(5, "A board member keeps harassing me, what should I do?", "Sensitive: escalated at input compliance, with a ticket"),
+        new Case(5, "A colleague keeps bothering me, what should I do?", "Sensitive: escalated at input compliance, with a ticket"),
         new Case(6, "\u00bfCu\u00e1ntas reuniones de la junta debe celebrar un cap\u00edtulo cada a\u00f1o?", "Not English: the language step runs; then a direct hit"),
     };
 

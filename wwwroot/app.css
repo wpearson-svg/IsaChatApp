@@ -58,3 +58,6 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+/* Isa's bubble is never shown while an Isa panel is open anywhere on the page, even if a second widget is
+   present (a second widget's bubble used to stay on screen beside the open panel). */
+body:has(.isa-widget__panel) .isa-widget__bubble { display: none !important; }
