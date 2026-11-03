@@ -33,6 +33,15 @@
    follow-ups are checked by Isa's sign-in check and Input Compliance gate
    before they are saved (NotebookService.AddNoteAsync). Nothing here
    comes from the AI model.
+
+   "Ask the outgoing president" (built 3 November 2026): the president
+   has "Ask [name]" beside "Add a note", and "Ask [name] about this" on an
+   entry page. The question waits in the notebook (never emailed); the
+   former president sees "Waiting for your answer" at the top of the
+   index, and a line in their chat. Their answer is saved on the same
+   entry. Only the president who asked can share it with the board. When
+   there is no earlier president to ask, the button is "Ask the Chapter
+   Experience team" and opens the chat's "Talk to a person" card.
    ============================================================ *@
 
 @using System.Globalization
@@ -122,7 +131,49 @@
            for 30 days after it ends). "Open the checklist" opens its page. *@
         <HandoffChecklist Summary="true" OnOpenFull="OpenChecklist" CanAddToNotebook="@_access.CanWrite" />
 
-        @if (_access.CanWrite && _adding)
+        @* Questions the president has asked this person (a former president). *@
+        var waiting = WaitingForMe;
+        @if (waiting.Count > 0)
+        {
+            <section class="isa-nb__waiting" aria-label="Waiting for your answer">
+                <p class="isa-nb__sectionHead">Waiting for your answer</p>
+                @foreach (var q in waiting)
+                {
+                    <button type="button" class="isa-nb__waitingRow" @onclick="() => OpenEntry(q)">
+                        <span><b>@q.AuthorName asked:</b> @q.Question</span>
+                        <span class="isa-nb__chev" aria-hidden="true">›</span>
+                    </button>
+                }
+            </section>
+        }
+
+        @if (_asking && _askTarget is { Open: true })
+        {
+            @* ---- Ask the president before you ---- *@
+            <section class="isa-nb__add" aria-label="@($"Ask {_askTarget.Name}")">
+                <h2 class="isa-nb__addTitle">Ask @_askTarget.Name</h2>
+                @if (_askAbout is not null)
+                {
+                    <p class="isa-nb__about">About: &ldquo;@_askAbout.Title&rdquo;</p>
+                }
+                <textarea @ref="_askBox" class="isa-nb__text" rows="3" maxlength="1000" aria-label="Your question"
+                          placeholder="What would you like to know?" @bind="_draft" @bind:event="oninput" disabled="@_saving"></textarea>
+                <p class="isa-nb__askHint">@_askTarget.Name will see it the next time they open Isa. Nothing is emailed. The answer stays in the notebook for the presidents after you, and only you can share it with the board.</p>
+                <div class="isa-nb__addRow">
+                    <span class="isa-nb__grow"></span>
+                    <span class="isa-nb__btnPair">
+                        <button type="button" class="isa-nb__linkBtn" @onclick="CancelNote" disabled="@_saving">Cancel</button>
+                        <button type="button" class="isa-nb__saveBtn" @onclick="AskAsync"
+                                disabled="@(_saving || string.IsNullOrWhiteSpace(_draft))">@(_saving ? "Checking..." : "Send question")</button>
+                    </span>
+                </div>
+                @if (_problem is not null)
+                {
+                    <p class="isa-nb__problem" role="status">@_problem</p>
+                }
+            </section>
+        }
+        else if (_access.CanWrite && _adding)
         {
             @* ---- Add a note ---- *@
             <section class="isa-nb__add" aria-label="Add a note">
@@ -159,7 +210,16 @@
             <div class="isa-nb__bar">
                 @if (_access.CanWrite)
                 {
-                    <button type="button" class="isa-nb__saveBtn" @onclick="() => { _adding = true; _justSaved = false; }">+ Add a note</button>
+                    <button type="button" class="isa-nb__saveBtn" @onclick="() => { _adding = true; _justSaved = false; _justAsked = false; }">+ Add a note</button>
+                }
+                @if (_askTarget is { Open: true })
+                {
+                    <button type="button" class="isa-nb__ghostBtn" @onclick="() => StartAsk(null)">Ask @_askTarget.Name</button>
+                }
+                else if (_askTarget is not null)
+                {
+                    @* No earlier president to ask: a person at ISACA instead. *@
+                    <button type="button" class="isa-nb__ghostBtn" @onclick="OnAskTeam">Ask the Chapter Experience team</button>
                 }
                 <span class="isa-nb__grow"></span>
                 @MoreMenu("index", IndexMenu())
@@ -167,6 +227,10 @@
             @if (_justSaved)
             {
                 <p class="isa-nb__saved" role="status">Saved to the notebook.</p>
+            }
+            @if (_justAsked && _askTarget is not null)
+            {
+                <p class="isa-nb__saved" role="status">Sent. It's waiting in the notebook for @_askTarget.Name.</p>
             }
         }
 
@@ -222,7 +286,7 @@
                                 <span class="isa-nb__rowMain">
                                     <span class="isa-nb__rowTitle">@e.Title</span>
                                     <span class="isa-nb__rowMeta">
-                                        @e.KindLabel · @e.Topic · @ShortDate(e.OnDate)@(followUps == 0 ? "" : followUps == 1 ? " · 1 follow-up" : $" · {followUps} follow-ups")
+                                        @e.KindLabel · @e.Topic · @ShortDate(e.OnDate)@(followUps == 0 ? "" : followUps == 1 ? " · 1 follow-up" : $" · {followUps} follow-ups")@(e.Kind != "question" ? "" : e.Answer is null ? " · waiting for an answer" : " · answered")
                                         @if (e.Shared && _access.SeesAll)
                                         {
                                             <span class="isa-nb__shared"><span class="isa-nb__dot" aria-hidden="true"></span>Shared with the board</span>
@@ -267,9 +331,20 @@
         </div>
 
         <article class="isa-nb__page" aria-labelledby="isa-nb-entry-title">
-            <p class="isa-nb__kindLine">@e.KindLabel</p>
+            <p class="isa-nb__kindLine">@(e.Kind == "question" ? $"Question for {e.AskedOfName}" : e.KindLabel)</p>
             <h2 class="isa-nb__headline" id="isa-nb-entry-title">@e.Title</h2>
             <p class="isa-nb__byline">@e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) · @e.AuthorName · @e.Topic</p>
+            @if (e.AboutText is not null)
+            {
+                var about = e.AboutId is long aid ? _entries.FirstOrDefault(x => x.EntryId == aid) : null;
+                <p class="isa-nb__about">
+                    About: &ldquo;@e.AboutText&rdquo;
+                    @if (about is not null)
+                    {
+                        <button type="button" class="isa-nb__linkBtn" @onclick="() => OpenEntry(about)">Open it</button>
+                    }
+                </p>
+            }
 
             @if (_changingTopic && mine)
             {
@@ -324,6 +399,37 @@
                 </section>
             }
 
+            @if (e.Kind == "question")
+            {
+                <section class="isa-nb__section" aria-label="Answer">
+                    <p class="isa-nb__sectionHead">@(e.AskedOfName)'s answer</p>
+                    @if (e.Answer is not null)
+                    {
+                        <p class="isa-nb__a">@e.Answer</p>
+                        <p class="isa-nb__meta">@(e.AnsweredOn?.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)) · @e.AskedOfName</p>
+                    }
+                    else if (e.AskedOf == _personId)
+                    {
+                        <textarea @ref="_answerBox" class="isa-nb__text" rows="4" maxlength="2000" aria-label="Your answer"
+                                  placeholder="Your answer" @bind="_draft" @bind:event="oninput" disabled="@_saving"></textarea>
+                        <p class="isa-nb__askHint">Your answer is saved in the chapter's notebook, for @e.AuthorName and the presidents after them.</p>
+                        <div class="isa-nb__addRow">
+                            <span class="isa-nb__grow"></span>
+                            <button type="button" class="isa-nb__saveBtn" @onclick="() => AnswerAsync(e)"
+                                    disabled="@(_saving || string.IsNullOrWhiteSpace(_draft))">@(_saving ? "Checking..." : "Send answer")</button>
+                        </div>
+                        @if (_problem is not null)
+                        {
+                            <p class="isa-nb__problem" role="status">@_problem</p>
+                        }
+                    }
+                    else
+                    {
+                        <p class="isa-nb__status">Waiting for an answer. @e.AskedOfName will see the question the next time they open Isa. Nothing is emailed.</p>
+                    }
+                </section>
+            }
+
             @if (followUps.Count > 0)
             {
                 <section class="isa-nb__section" aria-label="Follow-ups">
@@ -363,13 +469,20 @@
             else
             {
                 <p class="isa-nb__status">
-                    @(!_access.SeesAll ? "Your president shared this with the board."
+                    @(e.Kind == "question" && e.AskedOf == _personId
+                        ? (e.Shared ? $"{e.AuthorName} shared this with the board." : $"Between you and {e.AuthorName}. Only {e.AuthorName} can share it with the board.")
+                      : !_access.SeesAll ? "Your president shared this with the board."
                       : e.Shared ? "Shared with the board by the person who wrote it."
                       : "Private: only presidents see it.")
                 </p>
             }
 
-            @if (_access.CanWrite)
+            @if (e.Kind != "question" && _askTarget is { Open: true } && !_addingFollowUp)
+            {
+                <button type="button" class="isa-nb__addLink" @onclick="() => StartAsk(e)">Ask @_askTarget.Name about this</button>
+            }
+
+            @if (_access.CanWrite && !(e.Kind == "question" && e.Answer is null))
             {
                 @if (!_addingFollowUp)
                 {
@@ -463,8 +576,12 @@
 
     private List<MenuItem> EntryMenu(NotebookEntry e, bool mine)
     {
-        var items = new List<MenuItem> { new("Print or save as PDF", () => OpenSheet(PrintOne, e)) };
-        if (_access.CanWrite) items.Add(new("Email this record", () => OpenSheet(EmailOne, e)));
+        var items = new List<MenuItem>();
+        if (e.Kind != "question")
+        {
+            items.Add(new("Print or save as PDF", () => OpenSheet(PrintOne, e)));
+            if (_access.CanWrite) items.Add(new("Email this record", () => OpenSheet(EmailOne, e)));
+        }
         if (mine) items.Add(new("Change the topic", () => { _changingTopic = true; _showDetails = false; }));
         items.Add(new("Record details", () => { _showDetails = true; _changingTopic = false; }));
         if (mine) items.Add(new("Remove from the notebook", () => _confirmRemove = e.EntryId, Danger: true));
@@ -642,6 +759,12 @@
     /// <summary>Goes up when something is saved to the notebook from the chat, so this panel reads its entries again.</summary>
     [Parameter] public int Version { get; set; }
 
+    /// <summary>"Ask the Chapter Experience team", when there is no earlier president to ask: the chat opens its "Talk to a person" card.</summary>
+    [Parameter] public EventCallback OnAskTeam { get; set; }
+
+    /// <summary>Called when a question is asked or answered, so the chat's "question waiting" line can update.</summary>
+    [Parameter] public EventCallback OnQuestionsChanged { get; set; }
+
     /// <summary>Width and position, worked out by the chat widget so the panels sit side by side.</summary>
     [Parameter] public string Style { get; set; } = "";
 
@@ -686,6 +809,17 @@
     private ElementReference _noteBox;
     private ElementReference _followUpBox;
 
+    // Asking the president before you, and answering (a former president).
+    private AskTarget? _askTarget;          // null unless the signed-in person is the chapter's president
+    private bool _asking;
+    private NotebookEntry? _askAbout;       // "Ask ... about this": the entry the question is about
+    private bool _justAsked;
+    private ElementReference _askBox;
+    private ElementReference _answerBox;
+
+    private List<NotebookEntry> WaitingForMe =>
+        _entries.Where(e => e.Kind == "question" && e.AskedOf == _personId && e.Answer is null).ToList();
+
     // Entries that stand on their own (follow-ups show under their entry instead).
     private List<NotebookEntry> TopLevel => _entries.Where(e => e.ParentId is null).ToList();
 
@@ -695,7 +829,7 @@
     private static readonly (string Filter, string Label)[] Filters =
     {
         ("all", "All"), ("decision", "Decisions"), ("saved", "Saved answers"), ("unfinished", "Unfinished"),
-        ("contact", "Contacts"), ("worked", "What worked"), ("other", "Other"), ("shared", "Shared"),
+        ("contact", "Contacts"), ("worked", "What worked"), ("other", "Other"), ("question", "Questions"), ("shared", "Shared"),
     };
 
     private static bool Matches(NotebookEntry e, string filter) => filter switch
@@ -707,6 +841,7 @@
         "contact" => e.KindLabel == "Contact",
         "worked" => e.KindLabel == "What worked",
         "other" => e.KindLabel == "Other",
+        "question" => e.Kind == "question",
         "shared" => e.Shared,
         _ => true,
     };
@@ -794,6 +929,8 @@
     {
         _adding = false;
         _addingFollowUp = false;
+        _asking = false;
+        _askAbout = null;
         _draft = "";
         _shareDraft = false;
         _problem = null;
@@ -821,13 +958,16 @@
     {
         _access = _personId is null ? NotebookAccess.None : Notebook.GetAccess(_personId, Settings.Today);
         _entries = _personId is null ? Array.Empty<NotebookEntry>() : Notebook.GetEntries(_personId, Settings.Today);
+        _askTarget = _personId is null ? null : Notebook.GetAskTarget(_personId, Settings.Today);
         if (_openId is not null && Open is null) _openId = null;   // it was removed, or is no longer visible
     }
 
     private string PrivacyLine =>
-        !_access.SeesAll ? "You're seeing the entries your president shared with the board."
+        !_access.SeesAll ? (WaitingForMe.Count > 0 || _entries.Any(e => e.AskedOf == _personId)
+            ? "You're seeing the entries your president shared with the board, and the questions they asked you."
+            : "You're seeing the entries your president shared with the board.")
         : _access.HandoffEnds is DateOnly ends ? $"Only presidents see this notebook, unless an entry is shared with the board. You can add to it until {DayLabel(ends)}."
-        : "Only you see this notebook, unless you share an entry with the board. The outgoing president can also see it for 30 days after their term.";
+        : "Only you see this notebook, unless you share an entry with the board. The outgoing president can also see it for 30 days after their term. A question you ask the president before you is seen by the two of you, unless you share it.";
 
     // The one quiet line at the bottom of the index (PrivacyLine is the full rule).
     private string ShortPrivacyLine =>
@@ -836,7 +976,10 @@
 
     // Under "Share with the board" on an entry page.
     private static string ShareHint(NotebookEntry e) =>
-        e.Shared && e.SharedOn is DateOnly day
+        e.Kind == "question"
+            ? (e.Shared && e.SharedOn is DateOnly asked ? $"Shared on {asked.ToString("d MMMM", CultureInfo.InvariantCulture)}. Board members see the question and the answer."
+               : "Board members would see the question and the answer.")
+        : e.Shared && e.SharedOn is DateOnly day
             ? $"Shared on {day.ToString("d MMMM", CultureInfo.InvariantCulture)}.{(e.Question is null ? "" : " Board members see it without your question.")}"
         : e.Question is not null ? "Board members would see it without your question."
         : "Other board members would see this entry.";
@@ -858,6 +1001,76 @@
     // "Showing decisions only", "Showing shared entries only" (a filter chosen from "⋯").
     private static string FilterPhrase(string filter) =>
         filter == "shared" ? "shared entries" : (Filters.FirstOrDefault(f => f.Filter == filter).Label ?? "all entries").ToLowerInvariant();
+
+    // "Ask [name]" or "Ask [name] about this": the question box at the top of the index.
+    private async Task StartAsk(NotebookEntry? about)
+    {
+        _openId = null;
+        _checklistOpen = false;
+        ResetPage();
+        _asking = true;
+        _askAbout = about;
+        _justSaved = false;
+        _justAsked = false;
+        StateHasChanged();
+        await Task.Yield();
+        await _askBox.FocusAsync();
+    }
+
+    // Sends the question, after Isa's sign-in check and Input Compliance gate (NotebookService.AskAsync).
+    private async Task AskAsync()
+    {
+        if (_personId is null || _saving) return;
+        _saving = true;
+        _problem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(_sessionId);
+            var result = await Notebook.AskAsync(_personId, Settings.Today, _draft, _askAbout?.EntryId, token is null ? null : $"Bearer {token}");
+            if (result.IsSaved)
+            {
+                CancelNote();
+                _justAsked = true;
+                Reload();
+                await OnQuestionsChanged.InvokeAsync();
+            }
+            else
+            {
+                _problem = result.Problem;
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    // The former president's answer, checked the same way (NotebookService.AnswerAsync).
+    private async Task AnswerAsync(NotebookEntry e)
+    {
+        if (_personId is null || _saving) return;
+        _saving = true;
+        _problem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(_sessionId);
+            var result = await Notebook.AnswerAsync(_personId, Settings.Today, e.EntryId, _draft, token is null ? null : $"Bearer {token}");
+            if (result.IsSaved)
+            {
+                CancelNote();
+                Reload();
+                await OnQuestionsChanged.InvokeAsync();
+            }
+            else
+            {
+                _problem = result.Problem;
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
 
     private Task SaveNoteAsync() => SaveAsync(parentId: null);
 

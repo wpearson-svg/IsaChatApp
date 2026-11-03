@@ -16,6 +16,15 @@
 // onboarding/build_chapter360.py); "document" is its id there. Isa
 // reads these aloud but doesn't answer questions from them yet, and
 // the Library says so.
+//
+// "source": "text" (Matthew, 3 November 2026): a document in
+// onboarding/library_texts/, named "<document>.json", built from ISACA's
+// own file by a script in onboarding/ (the Chapter Affiliation Agreement:
+// build_affiliation_agreement.py). Read and Listen only, like Chapter 360.
+//
+// "note" is optional: a line shown under the title in the list and at the
+// top of the document, for example that a template may differ from what
+// a chapter signed.
 // Read at runtime: edit, save and reopen the Library; no rebuild.
 // Lines starting with // are comments and are ignored.
 // ============================================================
@@ -33,6 +42,15 @@
       "document": "Core Chapter Leader Roles and Responsibilities",
       "title": "Core Chapter Leader Roles and Responsibilities",
       "description": "What the president, vice president, secretary and treasurer each look after."
+    },
+    {
+      "group": "Your chapter and ISACA",
+      "source": "text",
+      "document": "affiliation-agreement",
+      "title": "Chapter Affiliation Agreement",
+      "date": "2024 template",
+      "description": "The agreement between ISACA and each chapter: the chapter's duties and minimum standards, its benefits, ISACA's trademarks, and how members' personal data is handled. The template's address and signature blocks are left out.",
+      "note": "This is ISACA's template. Your chapter's signed agreement may differ, for example in its country-specific exhibit (Exhibit D). For questions about your chapter's agreement, ask ISACA's Chapter Experience team."
     },
     {
       "group": "Deadlines and compliance",

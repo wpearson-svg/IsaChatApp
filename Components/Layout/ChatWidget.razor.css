@@ -957,3 +957,34 @@
     display: flex;
     padding: 0 1.25rem 0.6rem;
 }
+
+/* "Ask the outgoing president" (3 November 2026): one line at the top of a
+   former president's chat when a question waits for them in the notebook. */
+.isa-widget__askNote {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    margin: 0 0 0.6rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #c9d7e8;
+    border-left: 4px solid #1d2d5c;
+    border-radius: 8px;
+    background: #f3f7fb;
+    color: #1d2d5c;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+.isa-widget__askNote > span { flex: 1 1 12rem; }
+.isa-widget__askNoteBtn {
+    min-height: 36px;
+    padding: 0.35rem 0.8rem;
+    border: 1.5px solid #1d2d5c;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}

@@ -62,6 +62,23 @@ public static class Wording
     public const string SafetyLine =
         "If you or anyone else is in immediate danger, please contact your local emergency services.";
 
+    // ---------- Paths to a person: the "connect me" card (docs/Paths_To_A_Person.md) ----------
+    // Approved by Matthew, November 2, 2026. Used by Components/Shared/PersonRequestCard.razor
+    // and AnswerFeedback.razor. Additions only; nothing above changes.
+
+    /// <summary>The card's title.</summary>
+    public const string PersonCardTitle = "Pass this to ISACA's Chapter Experience team?";
+
+    /// <summary>After "Not quite": the offer to pass the question on.</summary>
+    public const string NotQuiteOffer = "Sorry that didn't help. Want me to pass it to a person?";
+
+    /// <summary>The message after a leader asks for a person themselves.</summary>
+    public static string PersonRequestSent(string ticket, bool safetyTopic = false)
+    {
+        var text = $"I've passed this to ISACA's Chapter Experience team. Your reference number is {ticket}. {KeepItHandy}";
+        return safetyTopic ? text + " " + SafetyLine : text;
+    }
+
     /// <summary>Why a run was passed to a person. Picks the message.</summary>
     public enum HandoffKind
     {

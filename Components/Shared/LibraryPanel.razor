@@ -21,6 +21,11 @@
    summarised. Nothing here comes from the AI model. The Chapter 360
    group (28 October 2026) is ISACA's Chapter 360 documents, read the
    same way; a note says Isa doesn't answer questions from them yet.
+
+   Listen on journey steps (3 November 2026): a step's Listen button sends
+   a Request; the Library opens that document and reads only the part the
+   step points to (a guidebook page, or the whole document), then stops.
+   Pressing play again carries on from there.
    ============================================================ *@
 
 @using IsaChatApp.Services.Onboarding
@@ -80,6 +85,10 @@
                             <div class="isa-lib__docMain">
                                 <span class="isa-lib__docTitle">@doc.Title</span>
                                 <span class="isa-lib__docDesc">@doc.Description</span>
+                                @if (doc.Note is not null)
+                                {
+                                    <span class="isa-lib__docNote">@doc.Note</span>
+                                }
                                 <span class="isa-lib__docMeta">@(doc.Date is null ? "" : $"{doc.Date} · ")about @Minutes(doc.Minutes) to listen</span>
                             </div>
                             <div class="isa-lib__docBtns">
@@ -105,6 +114,15 @@
             <button type="button" class="isa-lib__back" @onclick="Back">&lsaquo; All documents</button>
             <h2 class="isa-lib__title">@_open.Document.Title</h2>
             <p class="isa-lib__meta">ISACA@(_open.Document.Date is null ? "" : $" · {_open.Document.Date}") · read word for word, nothing rewritten</p>
+            @if (_range is not null)
+            {
+                <p class="isa-lib__part"><span aria-hidden="true">&#9654;</span> From your journey step: @_rangeLabel</p>
+            }
+            @if (_open.Document.Note is not null)
+            {
+                @* Shown, not read aloud: it is Isa's line, not ISACA's text. *@
+                <p class="isa-lib__note"><span aria-hidden="true">&#9432;</span> @_open.Document.Note</p>
+            }
 
             @* The player. Its buttons are worked by LibraryPanel.razor.js, which
                also keeps the progress line and the time left up to date. *@
@@ -159,14 +177,31 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnToggleEnlarge { get; set; }
     [Parameter] public bool Enlarged { get; set; }
+    /// <summary>From a journey step's Listen button: open this document and read this part.</summary>
+    [Parameter] public ListenRequest? Request { get; set; }
 
     private IReadOnlyList<LibraryDocument> _documents = [];
     private LibraryText? _open;
     private bool _playWhenShown;
+    private (int From, int To)? _range;     // the part a journey step asked for, if any
+    private string? _rangeLabel;
+    private int _handledRequest;
     private ElementReference _body;
     private IJSObjectReference? _js;
 
     protected override void OnInitialized() => _documents = Library.GetDocuments();
+
+    // A new press of a step's Listen button: open the document and read that part.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Request is null || Request.Number == _handledRequest) return;
+        _handledRequest = Request.Number;
+        await Stop();
+        _open = Library.GetText(Request.Document);
+        _range = _open is null ? null : LibraryService.GetRange(_open, Request.Pages);
+        _rangeLabel = Request.Label;
+        _playWhenShown = _open is not null;
+    }
 
     private static string Minutes(int m) => m == 1 ? "1 minute" : $"{m} minutes";
 
@@ -175,6 +210,7 @@
     {
         await Stop();
         _open = Library.GetText(doc.Document);
+        _range = null;
         _playWhenShown = listen && _open is not null;
     }
 
@@ -182,6 +218,7 @@
     {
         await Stop();
         _open = null;
+        _range = null;
     }
 
     private async Task Close()
@@ -196,7 +233,9 @@
         _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/LibraryPanel.razor.js");
         // Hands the newly shown document to the reader (it does nothing if this
         // document is already attached), and starts it if Listen was pressed.
-        await _js.InvokeVoidAsync("attach", _body, _playWhenShown);
+        // A journey step's part is passed only once, with the press that asked for it.
+        await _js.InvokeVoidAsync("attach", _body, _playWhenShown,
+            _playWhenShown ? _range?.From : null, _playWhenShown ? _range?.To : null);
         _playWhenShown = false;
     }
 

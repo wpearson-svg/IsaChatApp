@@ -52,6 +52,7 @@
 @inject ProgressService Progress
 @inject LeaderTermService Terms
 @inject HelpGuideService Guide
+@inject LibraryService Library
 @inject IJSRuntime JS
 
 <aside class="isa-today @(Rightmost ? "" : "is-inner")" style="@Style" aria-label="Today">
@@ -309,6 +310,26 @@
                     </div>
                 }
 
+                @* Listen (3 November 2026, onboarding/step_listen.json): one button for each
+                   place the step cites. It opens the Library beside this window and reads
+                   that part word for word. *@
+                var listens = Library.GetStepListens(_selected.StepId);
+                @if (listens.Count > 0)
+                {
+                    <div class="isa-today__listen">
+                        <span class="isa-today__listenHead">Listen to the source</span>
+                        @foreach (var l in listens)
+                        {
+                            <button type="button" class="isa-today__listenBtn" @onclick="() => Listen(l)"
+                                    aria-label="@($"Listen to {l.Label}, about {MinutesLabel(l.Minutes)}")">
+                                <span class="isa-today__listenIcon" aria-hidden="true">&#9654;</span>
+                                <span class="isa-today__listenText">@l.Label</span>
+                                <span class="isa-today__listenTime">about @MinutesLabel(l.Minutes)</span>
+                            </button>
+                        }
+                    </div>
+                }
+
                 @if (_selected.StepId == TourStepId)
                 {
                     @* "Get to know Isa": the day-1 tour, one card at a time
@@ -454,6 +475,17 @@
 
     /// <summary>"Read the full guide" at the end of the tour: the chat widget opens "How to use Isa".</summary>
     [Parameter] public EventCallback OnOpenHelp { get; set; }
+
+    // ---- Listen on journey steps ----
+
+    /// <summary>A step's Listen button: the chat widget opens the Library at that part and reads it.</summary>
+    [Parameter] public EventCallback<ListenRequest> OnListen { get; set; }
+    private int _listenPresses;
+
+    private Task Listen(StepListen l) =>
+        OnListen.InvokeAsync(new ListenRequest(l.Document, l.Pages, l.Label, ++_listenPresses));
+
+    private static string MinutesLabel(int m) => m == 1 ? "1 minute" : $"{m} minutes";
 
     // ---- "Meet your board" (J-05) ----
     private const string BoardStepId = "J-05";
