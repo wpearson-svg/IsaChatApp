@@ -103,6 +103,7 @@ builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapte
 // front_end is logged by the orchestrator itself; ticketing runs only on Escalate.
 builder.Services.AddSingleton<IStage, AccessControlStage>();
 builder.Services.AddSingleton<IStage, TranslationStage>();
+builder.Services.AddSingleton<IsaChatApp.Services.Rules.RuleEngine>();   // reads ISACA's rules files (rules/)
 builder.Services.AddSingleton<IStage, InputComplianceStage>();
 builder.Services.AddSingleton<IStage, DatabaseSearchStage>();
 builder.Services.AddSingleton<IStage, KnowledgeGraphStage>();

@@ -199,6 +199,9 @@ public static class WorkStepText
                 var backed = Number(step.DataText, "sources") is int s ? Wording.BackedBy(s) : null;
                 var passed = directHit ? Wording.ExactWording + (backed is null ? "" : " · " + backed) : Capitalize(backed);
                 if (!directHit && support is not null) passed = string.IsNullOrEmpty(passed) ? support : passed + " · " + support;
+                // The answer was stepped down: Isa's own wording failed a check, so ISACA's exact words are shown (a strength, not an apology).
+                if (step.DataText.Contains("step_down=isaca_words")) passed = Wording.ShownInOwnWords + (backed is null ? "" : " · " + backed) + (support is null ? "" : " · " + support);
+                else if (step.DataText.Contains("step_down=trimmed")) passed = Wording.SentencesRemoved + (passed is null ? "" : " · " + passed);
                 return L(Wording.StepAnswerCheck, passed);
             }
 
