@@ -156,12 +156,17 @@ public class OutputComplianceStage : IStage
 {
     public string Name => "output_compliance";
 
-    private readonly double _threshold;
     private readonly string _forceFail;
 
-    public OutputComplianceStage(IConfiguration config)
+    private readonly IConfiguration _config;
+    private readonly HhemScorer _hhem;
+    private readonly IsaChatApp.Services.OutputComplianceSettings _settings;
+
+    public OutputComplianceStage(IConfiguration config, HhemScorer hhem, IsaChatApp.Services.OutputComplianceSettings settings)
     {
-        _threshold = config.GetValue("OutputCompliance:ConfidenceThreshold", 0.70);
+        _config = config;
+        _hhem = hhem;
+        _settings = settings;   // thresholds are read per answer so the Dev Dashboard can change them live
         _forceFail = (config["OutputCompliance:ForceFail"] ?? "").Trim().ToLowerInvariant();
     }
 
@@ -201,17 +206,25 @@ public class OutputComplianceStage : IStage
             if (!retrieved)
                 return Task.FromResult(Escalate("ai check failed: source not retrieved", data));
 
-            // NLI check (stub).
-            var nli = OutputChecks.Nli(ctx.AnswerText!, source.Cited!);
-            var nliOk = nli.Verdict == "supported" && _forceFail != "nli";
+            // NLI check (REAL, HHEM-2.1-Open): each sentence of the answer is scored against the cited passage.
+            // The rehearsed demo questions keep the old fixed pass (AnswerWording:ExemptQuestions). If the model files
+            // are not there the check is skipped and the event data says "skipped", never "pass".
+            var citedPassage = ctx.Passages.FirstOrDefault(p => OutputChecks.Same(source.Cited!, p));
+            var nli = AnswerExtract.IsExempt(_config, ctx.Question) || citedPassage is null
+                ? OutputChecks.Nli(ctx.AnswerText!, source.Cited!)
+                : OutputChecks.NliHhem(_hhem, ctx.AnswerText!, citedPassage.Text, _settings.NliThreshold);
+            var nliSkipped = nli.Verdict == "unclear";
+            var nliOk = (nli.Verdict == "supported" || nliSkipped) && _forceFail != "nli";
             // Rule recheck (stub).
             var rule = OutputChecks.RuleRecheck(ctx.AnswerText!);
             var ruleOk = rule.Passed && _forceFail != "rule";
             // Confidence score (stub).
-            var conf = OutputChecks.Confidence(ctx.AnswerText!, _threshold);
+            var conf = OutputChecks.Confidence(ctx.AnswerText!, _settings.ConfidenceThreshold);
             var confOk = conf.Passed && _forceFail != "confidence";
 
-            data += $"; rule_recheck={(ruleOk ? "pass" : "fail")}; confidence={conf.Score:0.00}; nli={(nliOk ? "pass" : "fail")}";
+            data += $"; rule_recheck={(ruleOk ? "pass" : "fail")}; confidence={conf.Score:0.00}; nli={(nliSkipped && nliOk ? "skipped" : nliOk ? "pass" : "fail")}; nli_detail={nli.Reason.Replace(';', ',')}";
+            if (nli.MinScore is double nliScore)
+                data += $"; nli_score={nliScore:0.00}; nli_mark={_settings.NliThreshold:0.00}";   // lowest sentence score and the pass mark, shown in Show the work
 
             if (!nliOk)  return Task.FromResult(Escalate("ai check failed: nli check", data));
             if (!ruleOk) return Task.FromResult(Escalate("ai check failed: rule recheck", data));

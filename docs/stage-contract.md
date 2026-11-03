@@ -246,7 +246,7 @@ A **real error** is different from a Stop and from a NotFound. It is shown red i
 | 2 | "Who writes down what the board decided?" | `database_search` returns `NotFound`. `rag` hands over passages. `complex_ai` calls the real model and names a retrieved passage. `output_compliance` runs, AI side. `answered` |
 | 3 | "Where's a good pizza place near the conference?" | `input_compliance` returns Stop. Nothing after it. `stopped` |
 | 4 | "What is the cryptocurrency policy?" | No content found. Escalate. `ticketing` returns a TKT reference. `escalated` |
-| 5 | "A board member keeps harassing me, what should I do?" | `input_compliance` returns Escalate (sensitive). `ticketing`. `escalated` |
+| 5 | "A colleague keeps bothering me, what should I do?" | `input_compliance` returns Escalate (sensitive). `ticketing`. `escalated` |
 
 Extra checks: one non-English question and one English question (translation is skipped for English only), a source not in the retrieved passages escalates, and a stopped model (turned off) gives an error and a ticket.
 

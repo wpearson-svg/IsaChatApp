@@ -108,6 +108,8 @@ builder.Services.AddSingleton<IStage, DatabaseSearchStage>();
 builder.Services.AddSingleton<IStage, KnowledgeGraphStage>();
 builder.Services.AddSingleton<IStage, RagStage>();
 builder.Services.AddSingleton<IStage, ComplexAiStage>();
+builder.Services.AddSingleton<IsaChatApp.Services.OutputComplianceSettings>();   // Output Compliance thresholds, editable on the Dev Dashboard
+builder.Services.AddSingleton<IsaChatApp.Services.Orchestrator.Stages.HhemScorer>();   // the NLI model (HHEM-2.1-Open, ONNX)
 builder.Services.AddSingleton<IStage, OutputComplianceStage>();
 builder.Services.AddSingleton<IStage, TicketingStage>();
 builder.Services.AddSingleton<OrchestratorService>();

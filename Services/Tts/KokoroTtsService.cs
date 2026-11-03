@@ -57,7 +57,7 @@ public sealed class KokoroTtsService
             timeout.CancelAfter(TimeSpan.FromSeconds(60));
             using var response = await _clients.CreateClient("tts").PostAsJsonAsync(
                 $"{endpoint}/v1/audio/speech",
-                new { model = _config["Tts:Model"] ?? "kokoro", input = text.Trim(), voice = Voice, response_format = "mp3", speed = 1.0 },
+                new { model = _config["Tts:Model"] ?? "kokoro", input = Spoken(text.Trim()), voice = Voice, response_format = "mp3", speed = 1.0 },
                 timeout.Token);
             if (!response.IsSuccessStatusCode)
             {
@@ -95,7 +95,7 @@ public sealed class KokoroTtsService
                 Content = JsonContent.Create(new
                 {
                     model = _config["Tts:Model"] ?? "kokoro",
-                    input = text.Trim(),
+                    input = Spoken(text.Trim()),
                     voice = Voice,
                     response_format = "pcm",
                     speed = 1.0,
@@ -128,9 +128,25 @@ public sealed class KokoroTtsService
         catch { return false; }
     }
 
+    /// <summary>
+    /// The words as the voice should say them. Names the voice would spell out letter by letter are respelled
+    /// (ISACA is said "eyesocka"). The respellings are in appsettings (Tts:Pronunciations), so they can be tuned
+    /// without a code change. They are part of the cache key, so changing one makes the audio again.
+    /// </summary>
+    public string Spoken(string text)
+    {
+        var map = _config.GetSection("Tts:Pronunciations").GetChildren().ToDictionary(c => c.Key, c => c.Value ?? "");
+        if (map.Count == 0) map["ISACA"] = "Eyesocka";
+        foreach (var (word, say) in map)
+            if (!string.IsNullOrWhiteSpace(say))
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"\b" + System.Text.RegularExpressions.Regex.Escape(word) + @"\b", say,
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        return text;
+    }
+
     private string PathFor(string text)
     {
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Voice + "|" + text.Trim()))).ToLowerInvariant();
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Voice + "|" + Spoken(text.Trim())))).ToLowerInvariant();
         return Path.Combine(_cacheDir, Voice, hash[..24] + ".mp3");
     }
 }

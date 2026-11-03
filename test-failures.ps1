@@ -130,7 +130,7 @@ $emoji = [char]::ConvertFromUtf32(0x1F642)
 $japanese = -join ([char[]](0x7406, 0x4E8B, 0x4F1A, 0x306F, 0x4F55, 0x56DE))
 $direct = "How many board meetings must a chapter hold each year?"
 $miss = "Who writes down what the board decided?"
-$esc = "A board member keeps harassing me, what should I do?"
+$esc = "A colleague keeps bothering me, what should I do?"
 
 # ---------- is the app up, and who are we? ----------
 $probe = Send-Raw "GET" "/" $null $null

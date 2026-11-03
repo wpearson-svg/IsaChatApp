@@ -160,6 +160,7 @@ public static class Wording
     public const string DivingDeeperDone = "Put the answer together using only ISACA's guidance";
     public const string DivingDeeperNothing = "There was nothing approved to write from";
     public const string ExactWording = "Uses ISACA's exact wording";
+    public static string SupportScore(string score, string mark) => $"Support score {score} (pass mark {mark})";
     public static string BackedBy(int n) => $"{n} {(n == 1 ? "source" : "sources")}";
     public static string Reference(string ticket) => $"Reference {ticket}";
 

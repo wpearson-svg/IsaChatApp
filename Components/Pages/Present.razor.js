@@ -41,10 +41,23 @@ export function init(dotnet, questions) {
         const digit = /^Digit([1-9])$/.exec(e.code || '') || (/^[1-9]$/.test(e.key || '') ? [null, e.key] : null);
         if ((e.altKey || e.ctrlKey) && !e.metaKey && !e.shiftKey && digit && questions && questions[+digit[1] - 1]) {
             e.preventDefault();
+            // What the page holds right now, written to the console (F12), never shown on screen, so a shortcut that
+            // opens a second panel can be explained: how many Isa widgets, panels, bubbles and question boxes exist.
+            const count = (s) => document.querySelectorAll(s).length;
+            const diag = 'widgets=' + count('.isa-widget') + ' panels=' + count('.isa-widget__panel') + ' bubbles=' + count('.isa-widget__bubble') + ' boxes=' + count('.isa-widget__input') + ' focus=' + (document.activeElement?.className || document.activeElement?.tagName);
+            console.info('[Isa present] Alt+' + digit[1] + ' ' + diag);
+            // There is only ever one Isa on the page. If a second widget has appeared, hide the extras and keep the one
+            // with the open panel (or the last one), so a shortcut never opens a second panel beside a bubble.
+            const widgets = [...document.querySelectorAll('.isa-widget')];
+            if (widgets.length > 1) {
+                const keep = widgets.find(w => w.querySelector('.isa-widget__panel')) || widgets[widgets.length - 1];
+                widgets.forEach(w => { if (w !== keep) w.style.display = 'none'; });
+                console.warn('[Isa present] ' + widgets.length + ' Isa widgets found; extras hidden');
+            }
             const q = questions[+digit[1] - 1];
             const fill = () => {
                 // The visible question box (if there were ever two Isa widgets on the page, never pick a hidden one).
-                const box = [...document.querySelectorAll('.isa-widget .isa-widget__input')].find(b => b.offsetParent !== null);
+                const box = [...document.querySelectorAll('.isa-widget .isa-widget__input')].find(b => b.offsetParent !== null && !b.closest('.isa-widget').style.display);
                 if (!box || box.disabled) return false;
                 toast('Alt+' + digit[1] + ': question ' + digit[1] + ' typed. Press Enter.');
                 box.value = q;
@@ -55,7 +68,7 @@ export function init(dotnet, questions) {
             if (!fill()) {
                 // Isa's panel is closed: open it, then type the question once the box is there.
                 // If the panel is already open, only wait for its box; clicking the bubble then would open a second one.
-                if (!document.querySelector('.isa-widget__panel')) document.querySelector('.isa-widget__bubble')?.click();
+                if (!document.querySelector('.isa-widget__panel')) [...document.querySelectorAll('.isa-widget')].filter(w => w.style.display !== 'none').pop()?.querySelector('.isa-widget__bubble')?.click();
                 let tries = 0;
                 const wait = setInterval(() => { if (fill()) clearInterval(wait); else if (++tries > 20) { clearInterval(wait); toast('Alt+' + digit[1] + ': Isa is busy or closed, try again.'); } }, 100);
             }

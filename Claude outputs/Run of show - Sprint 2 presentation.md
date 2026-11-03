@@ -132,7 +132,7 @@ Signed in as k.watanabe. The demo questions are the team's own, chosen and check
 | 2 A question the AI helps with | Alt+2 | Who writes down what the board decided? | The AI path, written only from the passages found |
 | 3 An off-topic question | Alt+3 | Where's a good pizza place near the conference? | The question check stops it; no ticket |
 | 4 A question Isa's content doesn't cover | Alt+4 | What is the cryptocurrency policy? | Passed to a person with a reference number; Alt+C shows the Salesforce Case |
-| 5 A sensitive topic | Alt+5 | A board member keeps harassing me, what should I do? | Careful wording, a safety line, a ticket |
+| 5 A sensitive topic | Alt+5 | A colleague keeps bothering me, what should I do? | Careful wording, a safety line, a ticket |
 | 6 Backstage: tracing one question | Alt+6 | (none) | Trace lookup: one question, stage by stage |
 
 - Open "show the work" on at least one answer.

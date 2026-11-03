@@ -187,15 +187,19 @@ public static class WorkStepText
 
             case "output_compliance":
             {
+                var support = Match(step.DataText, @"\bnli_score=([0-9.]+)") is string sc && Match(step.DataText, @"\bnli_mark=([0-9.]+)") is string mk
+                    ? Wording.SupportScore(sc, mk) : null;
                 if (state == StepState.ToPerson)
-                    return L(Wording.StepAnswerCheck,
-                        step.Reason == "no approved content found" ? Wording.AnswerToPersonNoContent
+                {
+                    var failed = step.Reason == "no approved content found" ? Wording.AnswerToPersonNoContent
                         : step.Reason == "answer has no approved source" ? Wording.AnswerToPersonNoSource
-                        : Wording.AnswerToPersonCheckFailed);
+                        : Wording.AnswerToPersonCheckFailed;
+                    return L(Wording.StepAnswerCheck, support is null ? failed : failed + " · " + support);
+                }
                 var backed = Number(step.DataText, "sources") is int s ? Wording.BackedBy(s) : null;
-                return L(Wording.StepAnswerCheck,
-                    directHit ? Wording.ExactWording + (backed is null ? "" : " · " + backed)
-                    : Capitalize(backed));
+                var passed = directHit ? Wording.ExactWording + (backed is null ? "" : " · " + backed) : Capitalize(backed);
+                if (!directHit && support is not null) passed = string.IsNullOrEmpty(passed) ? support : passed + " · " + support;
+                return L(Wording.StepAnswerCheck, passed);
             }
 
             case "ticketing":

@@ -240,7 +240,7 @@
 <div class="form-check form-switch">
     <input class="form-check-input" type="checkbox" role="switch" id="presentationEnabled"
            checked="@Settings.PresentationEnabled"
-           @onchange="@(e => Settings.PresentationEnabled = (bool)e.Value!)" />
+           @onchange="@(e => { Settings.PresentationEnabled = (bool)e.Value!; if (Settings.PresentationEnabled) Ollama.SetPresentationMode(true); StateHasChanged(); })" />
     <label class="form-check-label" for="presentationEnabled">
         Show the presentation slides at <a href="/present" data-enhance-nav="false">/present</a>
     </label>
