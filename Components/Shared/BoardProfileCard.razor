@@ -1,0 +1,120 @@
+@* ============================================================
+   BoardProfileCard.razor
+
+   The board's optional four-question profile form (ONBOARDING-FEATURE.md,
+   "Board introduction email and board roster", decided 20 October 2026;
+   built 3 November 2026). It opens above the question box when a board
+   member taps "Fill it in" on the invitation line at the top of the chat
+   (Components/Layout/ChatWidget.razor), after their president saved an
+   introduction to the board (step J-19).
+
+   Every question is optional. Only the president who asked sees the
+   answers, and the member can change or withdraw them any time. The two
+   written answers pass Isa's sign-in check and Input Compliance gate
+   before they are saved (Services/Onboarding/BoardIntroService.cs).
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject BoardIntroService BoardIntro
+@inject WidgetSettings Settings
+@inject KeycloakSignInService SignInService
+
+<section class="isa-profile" aria-labelledby="isa-profile-title">
+    <div class="isa-profile__head">
+        <h2 class="isa-profile__title" id="isa-profile-title">Your board profile <span>(optional)</span></h2>
+        <button type="button" class="isa-profile__close" @onclick="OnClose" aria-label="Close the profile form" disabled="@_saving">&times;</button>
+    </div>
+    <p class="isa-profile__lede">@Request.PresidentName asked the board four short questions. Answer any you like. Only @Request.PresidentName sees your answers, and you can change or withdraw them any time.</p>
+
+    <label class="isa-profile__label" for="isa-profile-good">What are you good at?</label>
+    <textarea id="isa-profile-good" class="isa-profile__text" rows="2" maxlength="400" @bind="_goodAt" @bind:event="oninput" disabled="@_saving"
+              placeholder="For example: budgets, event planning, writing"></textarea>
+
+    <label class="isa-profile__label" for="isa-profile-enjoy">What would you enjoy helping with this year?</label>
+    <textarea id="isa-profile-enjoy" class="isa-profile__text" rows="2" maxlength="400" @bind="_enjoy" @bind:event="oninput" disabled="@_saving"></textarea>
+
+    <p class="isa-profile__label" id="isa-profile-time">About how much time can you give each month?</p>
+    <div class="isa-profile__choices" role="radiogroup" aria-labelledby="isa-profile-time">
+        @foreach (var c in BoardIntroService.TimeChoices)
+        {
+            <button type="button" role="radio" aria-checked="@(_time == c ? "true" : "false")" class="isa-profile__choice @(_time == c ? "is-on" : "")"
+                    @onclick="() => _time = _time == c ? null : c" disabled="@_saving">@c</button>
+        }
+    </div>
+
+    <p class="isa-profile__label" id="isa-profile-contact">How do you prefer to be contacted?</p>
+    <div class="isa-profile__choices" role="radiogroup" aria-labelledby="isa-profile-contact">
+        @foreach (var c in BoardIntroService.ContactChoices)
+        {
+            <button type="button" role="radio" aria-checked="@(_contact == c ? "true" : "false")" class="isa-profile__choice @(_contact == c ? "is-on" : "")"
+                    @onclick="() => _contact = _contact == c ? null : c" disabled="@_saving">@c</button>
+        }
+    </div>
+
+    @if (_problem is not null)
+    {
+        <p class="isa-profile__problem" role="status">@_problem</p>
+    }
+
+    <div class="isa-profile__btns">
+        @if (Request.Mine is { Status: "answered" })
+        {
+            <button type="button" class="isa-profile__link" @onclick="Withdraw" disabled="@_saving">Withdraw my answers</button>
+        }
+        <span class="isa-profile__grow"></span>
+        <button type="button" class="isa-profile__cancel" @onclick="OnClose" disabled="@_saving">Cancel</button>
+        <button type="button" class="isa-profile__save" @onclick="Save" disabled="@(_saving || Empty)">@(_saving ? "Checking..." : "Save my answers")</button>
+    </div>
+</section>
+
+@code {
+    /// <summary>The invitation: who asked, for which chapter, and any earlier answers.</summary>
+    [Parameter, EditorRequired] public ProfileRequest Request { get; set; } = default!;
+    [Parameter] public string PersonId { get; set; } = "";
+    [Parameter] public string? SessionId { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    /// <summary>Called after the answers are saved or withdrawn, so the chat can update its line.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private string? _goodAt, _enjoy, _time, _contact, _problem;
+    private bool _saving;
+
+    private bool Empty => string.IsNullOrWhiteSpace(_goodAt) && string.IsNullOrWhiteSpace(_enjoy) && _time is null && _contact is null;
+
+    protected override void OnInitialized()
+    {
+        // Changing earlier answers: start from them.
+        if (Request.Mine is { Status: "answered" } m)
+        {
+            _goodAt = m.GoodAt;
+            _enjoy = m.Enjoy;
+            _time = m.TimePerMonth;
+            _contact = m.ContactBy;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (_saving) return;
+        _saving = true;
+        _problem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(SessionId);
+            _problem = await BoardIntro.SaveProfileAsync(PersonId, Settings.Today, _goodAt, _enjoy, _time, _contact,
+                token is null ? null : $"Bearer {token}");
+            if (_problem is null) await OnChanged.InvokeAsync();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task Withdraw()
+    {
+        BoardIntro.Withdraw(PersonId, Settings.Today);
+        await OnChanged.InvokeAsync();
+    }
+}

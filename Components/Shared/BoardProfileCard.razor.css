@@ -1,0 +1,91 @@
+/* The board's optional profile form (3 November 2026). Matches the
+   "connect me" card: ISACA Dark Blue text on a pale blue panel, 44px tap
+   targets, and never red. It can be taller than the chat, so it scrolls. */
+
+.isa-profile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 70vh;
+    overflow-y: auto;
+    margin: 0.5rem 0.75rem 0;
+    padding: 0.75rem;
+    border: 1px solid #c9d6e2;
+    border-radius: 10px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-size: 0.82rem;
+}
+
+.isa-profile__head { display: flex; align-items: center; gap: 0.5rem; }
+.isa-profile__title { flex: 1; margin: 0; font-size: 0.9rem; font-weight: 700; }
+.isa-profile__title span { font-weight: 400; color: #5f6b7a; }
+.isa-profile__close {
+    min-width: 36px;
+    min-height: 36px;
+    border: none;
+    background: none;
+    color: #1d2d5c;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+.isa-profile__lede { margin: 0 0 0.2rem; color: #323e48; line-height: 1.45; }
+
+.isa-profile__label { margin: 0.3rem 0 0; font-size: 0.78rem; font-weight: 600; }
+.isa-profile__text {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 8px;
+    background: #ffffff;
+    font: inherit;
+    color: #323e48;
+    resize: vertical;
+}
+
+.isa-profile__choices { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.isa-profile__choice {
+    min-height: 36px;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+.isa-profile__choice.is-on { border-color: #1d2d5c; background: #1d2d5c; color: #ffffff; }
+.isa-profile__choice:focus-visible,
+.isa-profile__save:focus-visible,
+.isa-profile__cancel:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+.isa-profile__problem { margin: 0.2rem 0 0; color: #8a4b00; }
+
+.isa-profile__btns { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+.isa-profile__grow { flex: 1; }
+.isa-profile__save,
+.isa-profile__cancel {
+    min-height: 44px;
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+.isa-profile__save { border: 1px solid #1d2d5c; background: #1d2d5c; color: #ffffff; }
+.isa-profile__save:disabled { border-color: #9fb3c8; background: #9fb3c8; cursor: not-allowed; }
+.isa-profile__cancel { border: 1px solid #1d2d5c; background: #ffffff; color: #1d2d5c; }
+.isa-profile__link {
+    min-height: 44px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #07649d;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}

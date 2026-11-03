@@ -1,0 +1,184 @@
+// ============================================================
+// onboarding/glossary.json -- "ISACA terms explained"
+// (piece D in ONBOARDING-FEATURE.md; built 3 November 2026).
+//
+// RULE (Matthew, 3 November 2026): ISACA's words only. Every "quote"
+// is copied word for word from an ISACA document that the Library
+// shows, and onboarding/check_glossary.py checks each one against that
+// text. A term ISACA's documents use but don't define is left out and
+// goes on the request list instead (docs/Glossary_Terms_To_Request.md).
+//
+//   "term"     the word or phrase, as the documents write it
+//   "quote"    one or more exact passages from the document; shown in
+//              order ("bullets": true shows them as a list)
+//   "document" the document's "document" value in onboarding/library.json
+//   "pages"    optional: the President Guidebook page it is on
+//   "where"    the part of the document, as shown under the quote
+//
+// Read at runtime: edit, save and reopen; no rebuild. Run the check
+// after any change: python onboarding/check_glossary.py
+// Lines starting with // are comments and are ignored.
+// ============================================================
+{
+  "terms": [
+    {
+      "term": "AGM",
+      "quote": ["Annual General Meeting (AGM)"],
+      "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "8",
+      "where": "Turnover duties"
+    },
+    {
+      "term": "Board and Leader Roster Management",
+      "quote": ["Supports the maintenance and updating of chapter leadership records and authorized chapter contacts."],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "Chapter Reporting Tools"
+    },
+    {
+      "term": "Chapter 360 (C360)",
+      "quote": ["C360 (Chapter 360) is ISACA's chapter enablement and management framework designed to support volunteer chapter leaders in operating effective, sustainable chapters. It helps leaders understand chapter operations, governance practices, and organizational maturity across key areas of chapter management."],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "C360, Purpose"
+    },
+    {
+      "term": "Chapter 360 self-assessment",
+      "quote": ["Through the Chapter 360 self-assessment tool, ISACA Global can ensure volunteer chapter leaders have the most important and relevant resources based on their chapter’s unique needs and challenges."],
+      "document": "c360-intro",
+      "where": "Why it Matters"
+    },
+    {
+      "term": "Chapter Compliance Reporting",
+      "quote": ["Used to submit annual chapter compliance information and demonstrate adherence to the requirements of the Chapter Affiliation Agreement. Compliance reports are submitted annually through designated reporting systems."],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "Chapter Reporting Tools"
+    },
+    {
+      "term": "Chapter Information Repository",
+      "quote": ["“Chapter Information Repository” means the portion of ISACA’s website or other repository of information for Chapters, as designated by ISACA to the Chapters."],
+      "document": "affiliation-agreement",
+      "where": "Clause I, Definitions"
+    },
+    {
+      "term": "Chapter Leader Portal",
+      "quote": ["The Chapter Leader Portal serves as the primary operational resource center for ISACA chapter leaders. It provides access to chapter management tools, compliance resources, reports, forms, guidance, and chapter administration functions."],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "Chapter Leader Portal, Purpose"
+    },
+    {
+      "term": "Chapter President",
+      "quote": ["The chapter president serves as the chief elected officer of the chapter and the primary local representative of ISACA."],
+      "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "2",
+      "where": "Welcome!"
+    },
+    {
+      "term": "Chapter Secretary",
+      "quote": ["Maintains chapter records.", "Supports governance documentation.", "Documents board decisions."],
+      "bullets": true,
+      "document": "Core Chapter Leader Roles and Responsibilities",
+      "where": "Chapter Secretary, Primary Responsibilities"
+    },
+    {
+      "term": "Chapter Treasurer",
+      "quote": ["Oversees chapter finances.", "Supports financial compliance.", "Provides financial reporting to the board."],
+      "bullets": true,
+      "document": "Core Chapter Leader Roles and Responsibilities",
+      "where": "Chapter Treasurer, Primary Responsibilities"
+    },
+    {
+      "term": "Chapter Vice President",
+      "quote": ["Supports the President.", "Assists with strategic initiatives.", "Acts on behalf of the President when required.", "Supports board and committee coordination."],
+      "bullets": true,
+      "document": "Core Chapter Leader Roles and Responsibilities",
+      "where": "Chapter Vice President, Primary Responsibilities"
+    },
+    {
+      "term": "Chapter’s Organization Documents",
+      "quote": ["“Chapter’s Organization Documents” means the Chapter’s articles of incorporation, operating agreement or other organizational documents."],
+      "document": "affiliation-agreement",
+      "where": "Clause I, Definitions"
+    },
+    {
+      "term": "Charter",
+      "quote": ["During the Term, ISACA hereby grants to Chapter authorization to be an independent chapter of ISACA (“Charter”)."],
+      "document": "affiliation-agreement",
+      "where": "Clause III, Grant of Authorization to Chapter"
+    },
+    {
+      "term": "CPE",
+      "quote": ["continuing professional education (CPE)"],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "CPE Upload Tool"
+    },
+    {
+      "term": "CPE Upload Tool",
+      "quote": ["Allows chapter leaders to upload continuing professional education (CPE) attendance information for chapter event participants. This helps members receive appropriate educational credit for participation in chapter events."],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "Chapter Reporting Tools"
+    },
+    {
+      "term": "Engage",
+      "quote": ["Engage is ISACA's online community and collaboration platform. It enables chapter leaders, volunteers, and members to connect, communicate, share knowledge, manage chapter websites, and support chapter activities."],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "Engage, Purpose"
+    },
+    {
+      "term": "Event Reporting",
+      "quote": ["Used to record chapter educational events and maintain chapter activity records. Event reporting supports chapter compliance requirements and member engagement tracking."],
+      "document": "ISACA Chapter Systems Overview",
+      "where": "Chapter Reporting Tools"
+    },
+    {
+      "term": "Focus Area",
+      "quote": ["The Chapter 360 tool comprises six key Focus Areas, and within each Focus Area, there are three to six Practice Areas.", "Focus area scores are an average of the practice area scores it includes."],
+      "document": "c360-intro",
+      "where": "How it is Organized; Interpreting Your Score"
+    },
+    {
+      "term": "Hosted Web Site",
+      "quote": ["ISACA shall provide Chapter with the option to maintain a hosted web site that is designed by ISACA and customized by Chapter, as described in ISACA’s Policies and Procedures."],
+      "document": "affiliation-agreement",
+      "where": "Clause VII, Chapter’s Benefits"
+    },
+    {
+      "term": "ISACA’s Policies and Procedures",
+      "quote": ["“ISACA’s Policies and Procedures” means all ISACA Board-approved chapter-related policies, procedures, handbooks, or other written guidance heretofore or hereafter promulgated by ISACA, all of which are available on ISACA’s Chapter Information Repository, and which are incorporated herein by reference."],
+      "document": "affiliation-agreement",
+      "where": "Clause I, Definitions"
+    },
+    {
+      "term": "Membership Roster",
+      "quote": ["“Membership Roster” means ISACA’s list of ISACA Members that are also members of the Chapter."],
+      "document": "affiliation-agreement",
+      "where": "Clause I, Definitions"
+    },
+    {
+      "term": "Minimum Performance Standards",
+      "quote": ["“Minimum Performance Standards” means the minimum service and administrative standards that must be met by Chapter in accordance with paragraph A. (Chapter’s Performance Standards) of Clause VIII. (Chapter’s Duties) of this Agreement and ISACA’s Policies and Procedures."],
+      "document": "affiliation-agreement",
+      "where": "Clause I, Definitions"
+    },
+    {
+      "term": "Personal Data",
+      "quote": ["“Personal Data” means any information or data that alone or together with any other information relates to an identified or identifiable natural person, or data considered to be personal data or personal information as defined under applicable Data Protection Legislation including, but not limited to, the personal identifiable information contained in the Membership Roster."],
+      "document": "affiliation-agreement",
+      "where": "Clause I, Definitions"
+    },
+    {
+      "term": "Practice Area",
+      "quote": ["The Chapter 360 tool comprises six key Focus Areas, and within each Focus Area, there are three to six Practice Areas.", "Each practice area is assessed on a scale of 1 to 5."],
+      "document": "c360-intro",
+      "where": "How it is Organized; Interpreting Your Score"
+    },
+    {
+      "term": "President-Elect",
+      "quote": ["One approach is to create a President-Elect, Deputy Director, or similar leadership development position that allows an emerging leader to gain experience and prepare for future service as Chapter President."],
+      "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "11",
+      "where": "Succession Planning"
+    },
+    {
+      "term": "Regional Strategic Advisory Council (SAC)",
+      "quote": ["All chapter presidents are ex-officio members of ISACA’s Regional Strategic Advisory Council (SAC). The SAC provides a forum for chapter leaders to share insights, identify regional needs and opportunities, and inform the development of initiatives that support members, chapters, and the profession."],
+      "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "2",
+      "where": "Regional Strategic Advisory Council"
+    }
+  ]
+}

@@ -26,6 +26,13 @@
    a Request; the Library opens that document and reads only the part the
    step points to (a guidebook page, or the whole document), then stops.
    Pressing play again carries on from there.
+
+   Terms explained (3 November 2026): a card at the top of the list opens
+   the glossary, terms ISACA's documents define, each quoted word for
+   word with its source (onboarding/glossary.json). "Read it" opens the
+   document at that passage; nothing plays until the leader presses play.
+   Terms the documents use without defining are left out
+   (docs/Glossary_Terms_To_Request.md).
    ============================================================ *@
 
 @using IsaChatApp.Services.Onboarding
@@ -60,10 +67,26 @@
     </div>
 
     @* @key: each view gets a fresh scrolling area, so a document opens at its top. *@
-    <div class="isa-lib__body" @key="@(_open?.Document.Document ?? "list")" @ref="_body">
-        @if (_open is null)
+    <div class="isa-lib__body" @key="@(_open?.Document.Document ?? (_glossaryOpen ? "glossary" : "list"))" @ref="_body">
+        @if (_open is null && _glossaryOpen)
+        {
+            @GlossaryView()
+        }
+        else if (_open is null)
         {
             <p class="isa-lib__intro">ISACA's guidance for chapter leaders. Read it here, or listen to it word for word, for example on your way to work.</p>
+
+            @if (_glossary.Count > 0)
+            {
+                <button type="button" class="isa-lib__termsCard" @onclick="OpenGlossary">
+                    <span class="isa-lib__termsIcon" aria-hidden="true">Aa</span>
+                    <span class="isa-lib__termsText">
+                        <span class="isa-lib__termsTitle">Terms explained</span>
+                        <span class="isa-lib__termsSub">@_glossary.Count terms, in ISACA's own words</span>
+                    </span>
+                    <span class="isa-lib__termsChev" aria-hidden="true">&rsaquo;</span>
+                </button>
+            }
 
             @if (_documents.Count == 0)
             {
@@ -111,10 +134,10 @@
         }
         else
         {
-            <button type="button" class="isa-lib__back" @onclick="Back">&lsaquo; All documents</button>
+            <button type="button" class="isa-lib__back" @onclick="Back">&lsaquo; @(_fromGlossary ? "Terms explained" : "All documents")</button>
             <h2 class="isa-lib__title">@_open.Document.Title</h2>
             <p class="isa-lib__meta">ISACA@(_open.Document.Date is null ? "" : $" · {_open.Document.Date}") · read word for word, nothing rewritten</p>
-            @if (_range is not null)
+            @if (_range is not null && _rangeLabel is not null)
             {
                 <p class="isa-lib__part"><span aria-hidden="true">&#9654;</span> From your journey step: @_rangeLabel</p>
             }
@@ -181,15 +204,102 @@
     [Parameter] public ListenRequest? Request { get; set; }
 
     private IReadOnlyList<LibraryDocument> _documents = [];
+    private IReadOnlyList<GlossaryTerm> _glossary = [];
+    private bool _glossaryOpen;
+    private bool _fromGlossary;      // the open document came from "Read it" in the glossary
+    private string _termSearch = "";
+    private string? _returnToTerm;   // back from "Read it": the term to show again
     private LibraryText? _open;
     private bool _playWhenShown;
+    private bool _placeOnly;       // "Read it" from the glossary: go to the passage without playing
     private (int From, int To)? _range;     // the part a journey step asked for, if any
     private string? _rangeLabel;
     private int _handledRequest;
     private ElementReference _body;
     private IJSObjectReference? _js;
 
-    protected override void OnInitialized() => _documents = Library.GetDocuments();
+    protected override void OnInitialized()
+    {
+        _documents = Library.GetDocuments();
+        _glossary = Library.GetGlossary();
+    }
+
+    // ---- Terms explained ----
+
+    private RenderFragment GlossaryView() => __builder =>
+    {
+        var words = _termSearch.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var shown = _glossary.Where(t => words.All(w =>
+            t.Term.Contains(w, StringComparison.OrdinalIgnoreCase) || t.Quote.Any(q => q.Contains(w, StringComparison.OrdinalIgnoreCase)))).ToList();
+
+        <button type="button" class="isa-lib__back" @onclick="CloseGlossary">&lsaquo; All documents</button>
+        <h2 class="isa-lib__title">Terms explained</h2>
+        <p class="isa-lib__meta">From ISACA's documents, word for word. Terms they use without defining are left out for now.</p>
+        <input type="search" class="isa-lib__termSearch" placeholder="Search terms" aria-label="Search terms"
+               @bind="_termSearch" @bind:event="oninput" />
+
+        @if (shown.Count == 0)
+        {
+            <p class="isa-lib__empty">No terms match. Try another word, or ask Isa in the chat.</p>
+        }
+        <dl class="isa-lib__terms">
+            @foreach (var t in shown)
+            {
+                <div class="isa-lib__term" id="@TermId(t)">
+                    <dt>@t.Term</dt>
+                    <dd>
+                        @if (t.Bullets)
+                        {
+                            <ul class="isa-lib__termList">
+                                @foreach (var q in t.Quote)
+                                {
+                                    <li>@q</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            @foreach (var q in t.Quote)
+                            {
+                                <p class="isa-lib__termQuote">&ldquo;@q&rdquo;</p>
+                            }
+                        }
+                        <p class="isa-lib__termSource">
+                            @t.Document.Title@(t.Pages is null ? "" : $", p. {t.Pages}")@(t.Where is null ? "" : $" · {t.Where}")
+                            <button type="button" class="isa-lib__termRead" @onclick="() => ReadTerm(t)"
+                                    aria-label="@($"Read {t.Term} in {t.Document.Title}")">Read it &rsaquo;</button>
+                        </p>
+                    </dd>
+                </div>
+            }
+        </dl>
+    };
+
+    private static string TermId(GlossaryTerm t) =>
+        "term-" + System.Text.RegularExpressions.Regex.Replace(t.Term.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+
+    private async Task OpenGlossary()
+    {
+        await Stop();
+        _glossaryOpen = true;
+        _termSearch = "";
+        _returnToTerm = null;
+    }
+
+    private void CloseGlossary() => _glossaryOpen = false;
+
+    // "Read it": the document, at the quote (or its page), ready to read or listen from there.
+    private async Task ReadTerm(GlossaryTerm t)
+    {
+        await Stop();
+        _open = Library.GetText(t.Document.Document);
+        if (_open is null) return;
+        _range = LibraryService.GetQuoteRange(_open, t.Quote, t.Pages) ?? LibraryService.GetRange(_open, t.Pages);
+        _rangeLabel = null;
+        _fromGlossary = true;
+        _returnToTerm = TermId(t);
+        _placeOnly = true;
+    }
 
     // A new press of a step's Listen button: open the document and read that part.
     protected override async Task OnParametersSetAsync()
@@ -198,6 +308,7 @@
         _handledRequest = Request.Number;
         await Stop();
         _open = Library.GetText(Request.Document);
+        _fromGlossary = false;
         _range = _open is null ? null : LibraryService.GetRange(_open, Request.Pages);
         _rangeLabel = Request.Label;
         _playWhenShown = _open is not null;
@@ -211,6 +322,7 @@
         await Stop();
         _open = Library.GetText(doc.Document);
         _range = null;
+        _fromGlossary = false;
         _playWhenShown = listen && _open is not null;
     }
 
@@ -219,6 +331,9 @@
         await Stop();
         _open = null;
         _range = null;
+        // Back from "Read it" returns to the glossary, at the term that was open.
+        _glossaryOpen = _fromGlossary;
+        _fromGlossary = false;
     }
 
     private async Task Close()
@@ -229,14 +344,29 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (_open is null && _glossaryOpen && _returnToTerm is not null)
+        {
+            // Back from "Read it": show the term the leader was reading about.
+            var id = _returnToTerm;
+            _returnToTerm = null;
+            try
+            {
+                _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/LibraryPanel.razor.js");
+                await _js.InvokeVoidAsync("showTerm", id);
+            }
+            catch (JSDisconnectedException) { }
+            return;
+        }
         if (_open is null) return;
         _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/LibraryPanel.razor.js");
         // Hands the newly shown document to the reader (it does nothing if this
         // document is already attached), and starts it if Listen was pressed.
         // A journey step's part is passed only once, with the press that asked for it.
+        var place = _playWhenShown || _placeOnly;
         await _js.InvokeVoidAsync("attach", _body, _playWhenShown,
-            _playWhenShown ? _range?.From : null, _playWhenShown ? _range?.To : null);
+            place ? _range?.From : null, place ? _range?.To : null);
         _playWhenShown = false;
+        _placeOnly = false;
     }
 
     private async Task Stop()

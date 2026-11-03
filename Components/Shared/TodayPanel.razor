@@ -53,6 +53,8 @@
 @inject LeaderTermService Terms
 @inject HelpGuideService Guide
 @inject LibraryService Library
+@inject BoardIntroService BoardIntro
+@inject KeycloakSignInService SignInService
 @inject IJSRuntime JS
 
 <aside class="isa-today @(Rightmost ? "" : "is-inner")" style="@Style" aria-label="Today">
@@ -406,9 +408,99 @@
                     if (nextStep is not null)
                     {
                         <button type="button" class="isa-today__boardNext" @onclick="() => OpenStep(nextStep)">
-                            <b>Coming up, @DaysLabel(nextStep).ToLowerInvariant():</b> @nextStep.Title.ToLowerInvariant() &rsaquo;
+                            <b>Next:</b> @nextStep.Title.ToLowerInvariant() &rsaquo;
                         </button>
                     }
+                }
+
+                @if (_selected.StepId == BoardIntroService.IntroStepId)
+                {
+                    @* "Introduce yourself to your board" (3 November 2026): a draft Isa
+                       fills in from ISACA's records, which the president edits and saves.
+                       Saved in Isa, never emailed. Saving it invites the board to the
+                       optional profile form (Services/Onboarding/BoardIntroService.cs). *@
+                    var intro = BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId);
+                    if (_writingBoard)
+                    {
+                        <label class="isa-today__label" for="isa-today-boardintro">To: your board</label>
+                        <textarea id="isa-today-boardintro" class="isa-today__textarea isa-today__boardDraft" rows="11"
+                                  @bind="_boardDraft" @bind:event="oninput" disabled="@_savingBoard"></textarea>
+                        <p class="isa-today__hint">Change it any way you like. In this prototype it's saved in Isa; nothing is sent by email. When board members open Isa, they'll see your invitation to the optional profile form.</p>
+                        <div class="isa-today__btnRow isa-today__boardBtns">
+                            <button type="button" class="isa-today__primaryBtn" @onclick="SaveBoardIntro"
+                                    disabled="@(_savingBoard || string.IsNullOrWhiteSpace(_boardDraft))">@(_savingBoard ? "Checking..." : "Save introduction")</button>
+                            <button type="button" class="isa-today__linkBtn" @onclick="() => _writingBoard = false" disabled="@_savingBoard">Cancel</button>
+                        </div>
+                        @if (_boardProblem is not null)
+                        {
+                            <p class="isa-today__boardProblem" role="status">@_boardProblem</p>
+                        }
+                    }
+                    else if (intro is not null)
+                    {
+                        <div class="isa-today__savedIntro">
+                            <p class="isa-today__label">Your introduction, saved @FormatDate(intro.OnDate)</p>
+                            <p class="isa-today__introText">@intro.Message</p>
+                            <button type="button" class="isa-today__linkBtn" @onclick="StartBoardIntro">Edit</button>
+                        </div>
+                        <p class="isa-today__hint">Saved in Isa; nothing is sent by email. Board members see your invitation to the optional profile form when they open Isa. Their replies appear in "See your board's profile replies".</p>
+                    }
+                    else
+                    {
+                        <button type="button" class="isa-today__notebookBtn" @onclick="StartBoardIntro">Write your introduction</button>
+                    }
+                }
+
+                @if (_selected.StepId == RepliesStepId)
+                {
+                    @* "See your board's profile replies": whatever has arrived so far.
+                       Anyone who hasn't answered shows as "No reply yet": the president
+                       never learns who said no, and Isa never chases anyone. *@
+                    var replies = BoardIntro.GetReplies(_ctx.PersonId, _ctx.Today);
+                    if (BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId) is null)
+                    {
+                        var introStep = _ctx.AllSteps.FirstOrDefault(s => s.StepId == BoardIntroService.IntroStepId);
+                        <p class="isa-today__hint">Your board sees the profile form once you've saved your introduction.</p>
+                        @if (introStep is not null)
+                        {
+                            <button type="button" class="isa-today__boardNext" @onclick="() => OpenStep(introStep)">
+                                <b>First:</b> @introStep.Title.ToLowerInvariant() &rsaquo;
+                            </button>
+                        }
+                    }
+                    <p class="isa-today__boardHead">
+                        @_ctx.Term.ChapterName
+                        <span>@replies.Count(r => r.Profile is not null) of @replies.Count replied</span>
+                    </p>
+                    <ul class="isa-today__board">
+                        @foreach (var r in replies)
+                        {
+                            <li class="isa-today__member isa-today__reply">
+                                <span class="isa-today__avatar" aria-hidden="true">@Initials(r.Member.Name)</span>
+                                <span class="isa-today__memberMain">
+                                    <span class="isa-today__memberName">@r.Member.Name</span>
+                                    <span class="isa-today__memberRole">@r.Member.Role</span>
+                                    @if (r.Profile is { } p)
+                                    {
+                                        <dl class="isa-today__answers">
+                                            @if (p.GoodAt is not null) { <dt>Good at</dt><dd>@p.GoodAt</dd> }
+                                            @if (p.Enjoy is not null) { <dt>Would enjoy</dt><dd>@p.Enjoy</dd> }
+                                            @if (p.TimePerMonth is not null) { <dt>Time each month</dt><dd>@p.TimePerMonth</dd> }
+                                            @if (p.ContactBy is not null) { <dt>Prefers</dt><dd>@p.ContactBy</dd> }
+                                        </dl>
+                                    }
+                                    else
+                                    {
+                                        <span class="isa-today__noReply">No reply yet</span>
+                                    }
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                    <p class="isa-today__boardPrivacy">
+                        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
+                        Only you see these answers. Each member chose what to share, and can change or withdraw it.
+                    </p>
                 }
 
                 @if (_selected.StepId == NotebookStepId)
@@ -486,6 +578,46 @@
         OnListen.InvokeAsync(new ListenRequest(l.Document, l.Pages, l.Label, ++_listenPresses));
 
     private static string MinutesLabel(int m) => m == 1 ? "1 minute" : $"{m} minutes";
+
+    // ---- "Introduce yourself to your board" (J-19) and the replies (J-25) ----
+    private const string RepliesStepId = "J-25";
+    private bool _writingBoard;
+    private string _boardDraft = "";
+    private bool _savingBoard;
+    private string? _boardProblem;
+    private string? _sessionId;   // for the sign-in token the Input Compliance check needs
+
+    // Opens the introduction: the saved one to edit, or Isa's draft from ISACA's records.
+    private void StartBoardIntro()
+    {
+        if (_ctx is null) return;
+        _boardDraft = BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId)?.Message ?? BoardIntroService.Draft(_ctx.Term);
+        _boardProblem = null;
+        _writingBoard = true;
+    }
+
+    // Saves it after Isa's sign-in check and Input Compliance gate; saving completes J-19.
+    private async Task SaveBoardIntro()
+    {
+        if (_ctx is null || _savingBoard) return;
+        _savingBoard = true;
+        _boardProblem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(_sessionId);
+            _boardProblem = await BoardIntro.SaveIntroductionAsync(_ctx.PersonId, _ctx.Today, _boardDraft,
+                token is null ? null : $"Bearer {token}");
+            if (_boardProblem is null)
+            {
+                _writingBoard = false;
+                await ProgressChanged();
+            }
+        }
+        finally
+        {
+            _savingBoard = false;
+        }
+    }
 
     // ---- "Meet your board" (J-05) ----
     private const string BoardStepId = "J-05";
@@ -573,6 +705,7 @@
         if (AuthState is null) return;
         var user = (await AuthState).User;
         _ctx = JourneyContexts.GetFor(user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value);
+        _sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
         Reload();
     }
 
@@ -614,6 +747,8 @@
         _selected = step;
         _openedFromProgress = fromProgress;
         _writing = false;
+        _writingBoard = false;
+        _boardProblem = null;
         _showSession = false;
         _notice = null;
         Reload();

@@ -75,6 +75,7 @@ Update email of November 2, 2026 (sent by Matthew to the same four people, word 
 
 To ask in the update of Wednesday, November 4, 2026 (Matthew, November 3):
 - May Isa's Library include the Chapter Affiliation Agreement template Camille sent, for leaders to read and listen to word for word? Shown with the line "This is ISACA's template. Your chapter's signed agreement may differ, for example in its country-specific exhibit (Exhibit D)." Isa doesn't answer questions from it. Word it about the Library only, never the onboarding feature (still a surprise). It sits naturally beside the waiting request to approve the governance guides. When the email is sent, note here whether this went out.
+- To ask in a weekly update (Matthew to choose which; November 3): would ISACA provide or approve short definitions for the terms its documents use without defining? The list, with where each term appears, and suggested wording are in docs/Glossary_Terms_To_Request.md. No tax terms, and not the Chapter Success Manager. Never mention the onboarding feature.
 
 Decided instead of asked (Matthew, October 21, 2026; his position for Willis's review of docs/Handoff_and_Refusal_Rules_Proposal.md):
 - Every question Isa passes to a person goes to the Chapter Experience team.

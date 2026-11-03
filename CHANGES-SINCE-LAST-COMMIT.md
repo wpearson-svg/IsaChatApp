@@ -1,39 +1,36 @@
 # Changes since the last commit
 
-A running list of every change made since Matthew's last commit (November 2, 2026: e3677f6, "hand-off to a person, some output compliance notes", pushed to Matthew's-Branch: "Talk to a person" and "Not quite" wired up, the promise inventory, and the role filter, output compliance and promise notes for Willis). Use it to write the Git commit message and to tell Willis what changed. When Matthew commits, this list is cleared and starts again.
+A running list of every change made since Matthew's last commit (November 3, 2026: 5490b45, merged into main and Willis-Pearson: "Ask the outgoing president", Listen on journey steps, the Chapter Affiliation Agreement in the Library, and the help guide). Use it to write the Git commit message and to tell Willis what changed. When Matthew commits, this list is cleared and starts again.
 
-- **The Chapter Affiliation Agreement in the Library** (November 3, Sprint 3 M4, Matthew's choice): a new "Your chapter and ISACA" group with ISACA's 2024 template, to read and listen to word for word, with the note that Isa doesn't answer questions from it yet (adding it to her approved content is a decision with Willis).
-  - **onboarding/build_affiliation_agreement.py** (new): turns content/Chapter Affiliation Agreement-2024-template.docx into **onboarding/library_texts/affiliation-agreement.json** (new). Keeps ISACA's words and the template's blanks; puts back the clause numbers and letters Word shows, checked against the agreement's own cross-references; leaves out the address and signature tables and the header and footer. Run it again if ISACA sends a new version.
-  - **Services/Onboarding/LibraryService.cs**: a new kind of Library document, "source": "text", read from onboarding/library_texts/.
-  - **onboarding/library.json**: the new entry and a comment explaining "text".
-  - **ONBOARDING-FEATURE.md**, Feature 5: a dated note on all of the above.
-  - Checked on screen as Watanabe Kenji: the Library lists it (about 57 minutes), it opens and plays, and the 16 clauses and four exhibits show as headings. Willis's voice warm-up will also pre-make its audio, once, in the background.
-  - A line with it, in the list and at the top of the document: it is ISACA's template, a chapter's signed agreement may differ (Exhibit D), and questions about a chapter's own agreement go to the Chapter Experience team. Shown, never read aloud (library.json "note"; LibraryPanel.razor and .css).
-- **ISA-PROJECT-CONTEXT.md**: a question for the November 4 update to ISACA: may the Library include the Affiliation Agreement template? Worded about the Library only.
+- **"Terms explained", a glossary in the Library** (November 3, Sprint 3 M4; ISACA's words only, Matthew's rule): a card at the top of the Library opens 26 terms that ISACA's documents define, A to Z, with search. Each shows ISACA's words exactly, with its document, page and part; "Read it" opens the document at that passage without playing, and Back returns to the term.
+  - **onboarding/glossary.json** (new): the 26 terms, each with its quote and source. Read while Isa runs.
+  - **onboarding/check_glossary.py** (new): checks every quote word for word against the text the Library shows. Run it after any change: `python onboarding\check_glossary.py` (now: 26 terms, 0 problems).
+  - **Services/Onboarding/LibraryService.cs**: GetGlossary, and GetQuoteRange (finds a quote's sentences, on its page).
+  - **Components/Shared/LibraryPanel.razor** (+ .css, .js): the card, the glossary view, "Read it" and Back. The message at the end of a part now reads "That is the end of that part. Press play to keep listening." (it was worded for journey steps only).
+  - **onboarding/help.json**: the Library point mentions *Terms explained*.
+  - **docs/Glossary_Terms_To_Request.md** (new): the terms ISACA's documents use but don't define, with where each appears and suggested wording, to send to ISACA. Written so it can be forwarded without mentioning the onboarding feature.
+  - **ONBOARDING-FEATURE.md** (piece D and cut list item 6) and **ISA-PROJECT-CONTEXT.md** (the request, for a weekly update).
+  - Checked on screen as Watanabe: the card, the list and search ("charter"), "Read it" on Charter (Affiliation Agreement, lands on the sentence, not playing) and on AGM (lands on guidebook page 8), and Back to the term. No pipeline change. Build: 0 warnings, 0 errors.
 
-- **Listen on journey steps** (November 3, Sprint 3 M4): each step that cites an ISACA document in the Library has a "Listen to the source" box, one button per place it cites, with about how long it takes. It opens the Library beside Today, reads that guidebook page (or the whole document) word for word, and stops at the end of it; play carries on from there.
-  - **onboarding/step_listen.json** (new): which step points to which document and page (23 buttons on 18 steps; none on steps from Isa's own onboarding plan, so the rehearsed day-3 screens don't change).
-  - **Services/Onboarding/LibraryService.cs**: GetStepListens and GetRange; each guidebook section now knows its page.
-  - **Components/Shared/TodayPanel.razor** (+ .css): the Listen box on a step.
-  - **Components/Shared/LibraryPanel.razor** (+ .css, .js): opens at the part a step asks for, shows "From your journey step: ...", and stops at its end.
-  - **Components/Layout/ChatWidget.razor**: passes the step's request to the Library and opens it.
-  - Checked on screen as Ana Beatriz Souza (day 60): J-15's button opens the guidebook at page 14 and reads it; stopping at the end of a page checked on page 8. Build: 0 warnings, 0 errors.
+- **Board introduction and profile form** (November 3, Sprint 3 M4, Matthew's choice):
+  - **Step J-19 moved into week 1** (days 6-7, beside "Meet your board"; Matthew: a president shouldn't wait a week to introduce themselves). **onboarding/journey_steps.csv** and **data/onboarding.db** (rebuilt; every day 1 to 90 still has a step). "Meet your board" now points to it as "Next".
+  - J-19: "Write your introduction" opens a draft filled in from ISACA's records; the president edits and saves it (sign-in check and Input Compliance first); saving completes the step. Saved in Isa, never emailed.
+  - Board members then see an invitation line at the top of their chat, and an optional four-question profile form. Only the president sees the answers; members can change or withdraw them. J-25 shows the replies so far, or "No reply yet" (never who said no).
+  - **Services/Onboarding/BoardIntroService.cs** (new; registered in **Program.cs**), **Components/Shared/BoardProfileCard.razor** (+ .css, new), **Components/Shared/TodayPanel.razor** (+ .css), **Components/Layout/ChatWidget.razor** (+ .css).
+  - Sign-in wording: a typed note, question, introduction or profile refused by the sign-in check now says "You're not signed in any more…" instead of blaming the words (**NotebookService.cs** too).
+  - Checked on screen in a separate test copy (throwaway databases): Watanabe saved the introduction and J-19 was marked complete; Sato saw the invitation, filled in the form and got the "shared with" line; Watanabe's J-25 showed her answers and "No reply yet" for the other four. Build: 0 warnings, 0 errors.
+- **Notebook reminders** (November 3, Sprint 3 M4, Matthew's choice): a check-in card at the top of the chat, for the chapter's president from week 2: "Anything from this week your successor should know?", or, if they already saved something, "You saved 1 note this week. Anything else your successor should know?" (Matthew's change: ask for more instead of skipping). One line and Save (saved to the notebook through the same checks as a note), "Nothing this week" / "That's everything", "Ask me later", and ×. How often (every week, two weeks or four weeks; weekly in the last three months of a term) in the notebook's ⋯ menu. Inside Isa only.
+  - **Services/Onboarding/NotebookReminderService.cs** (new; registered in **Program.cs**), **Components/Shared/NotebookCheckInCard.razor** (+ .css, new), **Components/Layout/ChatWidget.razor**, **Components/Shared/NotebookPanel.razor** (the ⋯ choice; saving a note now updates the chat's check-in).
+  - **onboarding/help.json**: "Saving decisions and notes" explains the check-in.
+  - Checked on screen in a separate test copy: Watanabe (day 3) sees no check-in, so the rehearsed demo is unchanged; Ana (day 60) saw it, the wording changed after she saved a note, a line saved from the card went into her notebook (private) and the card went away; switching to every two weeks didn't ask again straight away. Build: 0 warnings, 0 errors.
+- **docs/Supplement_Items.md** (new): a running list of what is designed but not built, for the ISACA supplement. It starts with the prompt after each board meeting (Matthew: not built), the answer checks, the role-specific rule, a chapter's own rules file, and meaning match.
+- **ONBOARDING-FEATURE.md**: J-19's new days, the board introduction as built, and the reminder decisions (ask "Anything else…?" instead of skipping, starting in week 2; the meeting prompt to the supplement).
 
-- **"Ask the outgoing president"** (November 3, Sprint 3 M4): the president asks the president before them a question in the succession notebook; it waits there (nothing is emailed) until the former president opens Isa and answers. The question and answer stay in the notebook for the presidents after them.
-  - Who: open while the former president is in the 30-day handoff window or holds any board role in the chapter. Only the president who asked can share it with the board (Matthew's rule, November 3); the former president answers but never shares, and sees only the questions asked of them. No earlier president to ask: the button is "Ask the Chapter Experience team", which opens the "Talk to a person" card.
-  - Both the question and the answer pass the sign-in check and Input Compliance before they are saved (purposes notebook_question and notebook_answer; the event log records their length, not their words).
-  - **Services/Onboarding/NotebookService.cs**: questions as a new kind of entry; GetAskTarget, AskAsync, AnswerAsync, GetWaitingQuestions; six new columns added to data/notebook.db without touching saved entries; a former president also sees the questions asked of them.
-  - **Services/Onboarding/LeaderTermService.cs**: GetPreviousPresident.
-  - **Components/Shared/NotebookPanel.razor** (+ .css): "Ask [name]" beside "Add a note", "Ask [name] about this" on entries, the question box, "Waiting for your answer", the answer box, a "Questions" filter, and the matching privacy and sharing lines. No print or email for questions.
-  - **Components/Layout/ChatWidget.razor** (+ .css): a line at the top of a former president's chat when a question waits for them; the notebook's "Ask the Chapter Experience team" opens the "Talk to a person" card.
-  - **ONBOARDING-FEATURE.md**: what was built, and cut list item 9 marked built.
-  - Checked on screen in a separate test copy (port 5068, throwaway copies of the notebook, progress and event log, Salesforce off), so nothing was added to the real notebook: Watanabe asked about the online-elections decision; Sato saw the line in her chat and the waiting card, answered, and the line went away; Ana got the Chapter Experience team button and the card opened (nothing sent). Build: 0 warnings, 0 errors.
-  - Demo note: Watanabe's notebook now shows "Ask Sato Yumiko" beside "Add a note", and "Ask Sato Yumiko about this" on each entry.
-
-- **onboarding/help.json** ("How to use Isa"), so the guide matches what Isa does: "Your first 90 days" mentions the Listen button on steps; "Saving decisions and notes" explains asking the president before you (seen next time they open Isa, nothing emailed, the answer stays for later presidents, only you can share it); "What happens to your information" says such a question is seen by the two of you. Checked in the Help panel as Watanabe.
+- **M3 closed** (Matthew, November 3): ONBOARDING-FEATURE.md's cut list now says what was built and what is planned (day 30/60/90 check-ins, "Coming up", progress sharing and the staff view, Listen in the notebook, other board roles); the planned items are added to **docs/Supplement_Items.md**.
+- **Claude outputs/M3 and M4 - for Willis.md** (new): the M3 decisions and the six M4 builds, in Markdown for Willis's Claude, including what touches his pipeline (nothing) and two questions for him.
 
 ## Suggested commit message
 
 ```
-Add Ask the outgoing president, Listen on journey steps and the Chapter Affiliation Agreement in the Library; update the help guide
+Sprint 3 M3 and M4: Terms explained, the board introduction and profile form, notebook check-ins, J-19 in week 1, the supplement list and a note for Willis
 ```
