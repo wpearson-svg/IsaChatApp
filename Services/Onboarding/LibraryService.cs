@@ -18,6 +18,17 @@ namespace IsaChatApp.Services.Onboarding;
 /// instead from ISACA's Chapter 360 documents (Chapter360Service, onboarding/chapter360.json).
 /// They are read and played the same way, but Isa doesn't answer questions from them yet,
 /// so the Library says so.
+///
+/// Documents marked "source": "text" (Matthew, 3 November 2026) come from a file in
+/// onboarding/library_texts/, named after the document's id, built from ISACA's own file by a
+/// script beside it (the first is the Chapter Affiliation Agreement,
+/// onboarding/build_affiliation_agreement.py). Read and played the same way; Isa doesn't
+/// answer questions from them either.
+///
+/// Listen on journey steps (3 November 2026): onboarding/step_listen.json says which part of
+/// which Library document each step points to (a guidebook page, or a whole document).
+/// GetStepListens gives a step's buttons; GetRange gives the sentences to read, so the Library
+/// reads that part and stops.
 /// </summary>
 public class LibraryService
 {
@@ -39,14 +50,21 @@ public class LibraryService
     private static readonly Regex PageSection = new(@"^Guidebook page (\d+)$", RegexOptions.Compiled);
 
     private const string Chapter360Source = "chapter360";
+    private const string TextSource = "text";
+
+    private static readonly JsonSerializerOptions TextOptions = new() { PropertyNameCaseInsensitive = true };
 
     private readonly string _listPath;
+    private readonly string _textsFolder;
+    private readonly string _stepListenPath;
     private readonly string _contentDbPath;
     private readonly Chapter360Service _chapter360;
 
     public LibraryService(IWebHostEnvironment env, IConfiguration config, Chapter360Service chapter360)
     {
         _listPath = Path.Combine(env.ContentRootPath, "onboarding", "library.json");
+        _textsFolder = Path.Combine(env.ContentRootPath, "onboarding", "library_texts");
+        _stepListenPath = Path.Combine(env.ContentRootPath, "onboarding", "step_listen.json");
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
         _chapter360 = chapter360;
     }
@@ -70,11 +88,16 @@ public class LibraryService
         var list = new List<LibraryDocument>();
         foreach (var e in entries)
         {
-            var fromChapter360 = e.Source == Chapter360Source;
-            var count = fromChapter360 ? c360.GetValueOrDefault(e.Document) : words.GetValueOrDefault(e.Document);
+            var count = e.Source switch
+            {
+                Chapter360Source => c360.GetValueOrDefault(e.Document),
+                TextSource => LoadText(e.Document)?.Words ?? 0,
+                _ => words.GetValueOrDefault(e.Document),
+            };
             if (count == 0) continue;   // not loaded: never offer text the Library can't play
             list.Add(new LibraryDocument(e.Document, e.Title ?? e.Document, e.Group ?? "", e.Description ?? "", e.Date,
-                Math.Max(1, (int)Math.Round(count / WordsPerMinute)), AnswersFrom: !fromChapter360));
+                Math.Max(1, (int)Math.Round(count / WordsPerMinute)), AnswersFrom: e.Source is not (Chapter360Source or TextSource),
+                Source: e.Source, Note: e.Note));
         }
         return list;
     }
@@ -85,8 +108,71 @@ public class LibraryService
     {
         var doc = GetDocuments().FirstOrDefault(d => d.Document == document);
         if (doc is null) return null;
-        var sections = doc.AnswersFrom ? ContentDbSections(document) : Chapter360Sections(document);
+        var sections = doc.Source switch
+        {
+            Chapter360Source => Chapter360Sections(document),
+            TextSource => TextSections(document),
+            _ => ContentDbSections(document),
+        };
         return sections is null ? null : new LibraryText(doc, Number(sections));
+    }
+
+    // ---- Listen on journey steps ----------------------------------------------
+
+    /// <summary>A journey step's Listen buttons, in the order onboarding/step_listen.json lists
+    /// them, each with about how long it takes. A document not in the Library, or a page it
+    /// doesn't have, gets no button, so a step never offers something that can't play.</summary>
+    public IReadOnlyList<StepListen> GetStepListens(string stepId)
+    {
+        List<StepListenEntry> entries;
+        try
+        {
+            entries = JsonSerializer.Deserialize<StepListenFile>(File.ReadAllText(_stepListenPath), Options)?.Listen ?? [];
+        }
+        catch
+        {
+            return [];   // a missing or broken file shows no buttons rather than breaking the step
+        }
+
+        var list = new List<StepListen>();
+        foreach (var e in entries.Where(e => e.Step == stepId))
+        {
+            var text = GetText(e.Document);
+            if (text is null) continue;
+            var range = GetRange(text, e.Pages);
+            if (range is null) continue;
+            var words = text.Sections
+                .SelectMany(s => (s.Heading is null ? [] : new[] { new LibrarySentence(s.HeadingIndex ?? -1, s.Heading) })
+                    .Concat(s.Paragraphs.SelectMany(p => p.Sentences)))
+                .Where(x => x.Index >= range.Value.From && x.Index <= range.Value.To)
+                .Sum(x => x.Text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+            list.Add(new StepListen(e.Document, e.Pages, e.Label ?? text.Document.Title,
+                Math.Max(1, (int)Math.Round(words / WordsPerMinute))));
+        }
+        return list;
+    }
+
+    /// <summary>The first and last sentence numbers to read: the given guidebook page or pages
+    /// ("13" or "13-14"), or the whole document when pages is empty. Null if the document has
+    /// no such page.</summary>
+    public static (int From, int To)? GetRange(LibraryText text, string? pages)
+    {
+        var numbers = text.Sections
+            .Where(s => InPages(s.Page, pages))
+            .SelectMany(s => (s.HeadingIndex is int h ? new[] { h } : [])
+                .Concat(s.Paragraphs.SelectMany(p => p.Sentences.Select(x => x.Index))))
+            .ToList();
+        return numbers.Count == 0 ? null : (numbers.Min(), numbers.Max());
+    }
+
+    private static bool InPages(int? page, string? pages)
+    {
+        if (string.IsNullOrWhiteSpace(pages)) return true;
+        if (page is null) return false;
+        var parts = pages.Split('-', StringSplitOptions.TrimEntries);
+        if (!int.TryParse(parts[0], out var from)) return false;
+        var to = parts.Length > 1 && int.TryParse(parts[1], out var t) ? t : from;
+        return page >= from && page <= to;
     }
 
     // A Chapter 360 document: its sections and paragraphs as onboarding/chapter360.json has them.
@@ -103,6 +189,36 @@ public class LibraryService
             sections.Add(section);
         }
         return sections;
+    }
+
+    // A document from onboarding/library_texts/ (for example the Chapter Affiliation Agreement).
+    private List<LibrarySection>? TextSections(string id)
+    {
+        var source = LoadText(id);
+        if (source is null) return null;
+        var sections = new List<LibrarySection>();
+        var key = 0;
+        foreach (var s in source.Sections)
+        {
+            var section = new LibrarySection($"s{key++}", s.Heading, null, []);
+            foreach (var p in s.Paragraphs) AddLine(section, p.Bullet, p.Text);
+            sections.Add(section);
+        }
+        return sections;
+    }
+
+    // Reads onboarding/library_texts/<id>.json; null if it is missing or broken.
+    private LibraryFileText? LoadText(string id)
+    {
+        if (id.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return null;
+        try
+        {
+            return JsonSerializer.Deserialize<LibraryFileText>(File.ReadAllText(Path.Combine(_textsFolder, id + ".json")), TextOptions);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     // An approved document from data/content.db, in its stored order.
@@ -122,6 +238,7 @@ public class LibraryService
         while (reader.Read())
         {
             var section = reader.IsDBNull(0) ? "" : reader.GetString(0);
+            var pageNumber = !reader.IsDBNull(1) && int.TryParse(reader.GetValue(1)?.ToString(), out var pg) ? pg : (int?)null;
             var text = reader.IsDBNull(2) ? "" : reader.GetString(2);
 
             if (current is null || current.Key != section)
@@ -130,7 +247,7 @@ public class LibraryService
                 var heading = section.Split(" > ").Last().Trim();
                 var page = PageSection.Match(heading);
                 current = new LibrarySection(section, page.Success ? null : heading,
-                    page.Success ? $"Page {page.Groups[1].Value}" : null, []);
+                    page.Success ? $"Page {page.Groups[1].Value}" : null, []) { Page = pageNumber };
                 sections.Add(current);
             }
 
@@ -199,6 +316,19 @@ public class LibraryService
         return counts;
     }
 
+    private sealed class StepListenFile
+    {
+        public List<StepListenEntry> Listen { get; set; } = [];
+    }
+
+    private sealed class StepListenEntry
+    {
+        public string Step { get; set; } = "";
+        public string Document { get; set; } = "";
+        public string? Pages { get; set; }
+        public string? Label { get; set; }
+    }
+
     private sealed class LibraryFile
     {
         public List<LibraryEntry> Documents { get; set; } = [];
@@ -211,16 +341,25 @@ public class LibraryService
         public string? Group { get; set; }
         public string? Description { get; set; }
         public string? Date { get; set; }
-        /// <summary>"chapter360" for a Chapter 360 document; empty for one in content.db.</summary>
+        /// <summary>"chapter360" for a Chapter 360 document, "text" for one in onboarding/library_texts/;
+        /// empty for one in content.db.</summary>
         public string? Source { get; set; }
+        /// <summary>Optional line shown with the document, for example "This is ISACA's template".</summary>
+        public string? Note { get; set; }
     }
 }
 
-/// <summary>A document in the Library: its title in content.db (or its Chapter 360 id), the name
-/// shown, its group, its description, an optional date, about how many minutes it takes to listen
-/// to, and whether Isa answers questions from it.</summary>
+/// <summary>A document in the Library: its title in content.db (or its Chapter 360 or library_texts
+/// id), the name shown, its group, its description, an optional date, about how many minutes it
+/// takes to listen to, whether Isa answers questions from it, where its text comes from, and an
+/// optional note shown with it.</summary>
 public record LibraryDocument(string Document, string Title, string Group, string Description, string? Date, int Minutes,
-    bool AnswersFrom = true);
+    bool AnswersFrom = true, string? Source = null, string? Note = null);
+
+/// <summary>A document in onboarding/library_texts/, as its build script writes it.</summary>
+public record LibraryFileText(string Id, string Title, int Words, List<LibraryFileSection> Sections);
+public record LibraryFileSection(string? Heading, List<LibraryFileParagraph> Paragraphs);
+public record LibraryFileParagraph(bool Bullet, string Text);
 
 /// <summary>A document's text, ready to show and read aloud.</summary>
 public record LibraryText(LibraryDocument Document, IReadOnlyList<LibrarySection> Sections);
@@ -230,7 +369,17 @@ public record LibraryText(LibraryDocument Document, IReadOnlyList<LibrarySection
 public record LibrarySection(string Key, string? Heading, string? PageMarker, List<LibraryParagraph> Paragraphs)
 {
     public int? HeadingIndex { get; init; }
+    /// <summary>The page the section is on, for a document from content.db that has pages.</summary>
+    public int? Page { get; init; }
 }
+
+/// <summary>One Listen button on a journey step: the Library document, the pages to read (empty
+/// for the whole document), what the button says, and about how many minutes it takes.</summary>
+public record StepListen(string Document, string? Pages, string Label, int Minutes);
+
+/// <summary>A request from a journey step to the Library: open this document and read this part.
+/// Number changes with every press, so pressing the same button again starts it again.</summary>
+public record ListenRequest(string Document, string? Pages, string Label, int Number);
 
 public record LibraryParagraph(bool Bullet, List<LibrarySentence> Sentences);
 

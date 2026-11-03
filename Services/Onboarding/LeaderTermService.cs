@@ -94,6 +94,36 @@ public class LeaderTermService
         return list.OrderBy(m => Rank(m.Role)).ThenBy(m => m.Name).ToList();
     }
 
+    /// <summary>
+    /// The chapter's president before the given date: whoever held the
+    /// President role there with the latest term that ended before it.
+    /// Used by "Ask the outgoing president" in the succession notebook.
+    /// Null if there is none on record.
+    /// </summary>
+    public LeaderTerm? GetPreviousPresident(string chapterId, DateOnly before)
+    {
+        if (!DirectoryExists) return null;
+        using var conn = new SqliteConnection($"Data Source={_dbPath};Mode=ReadOnly");
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT r.person_id, p.latin_name, r.term_start, r.term_end, p.time_zone, c.chapter_name
+            FROM role_assignments r
+            JOIN people p   ON p.person_id  = r.person_id
+            JOIN chapters c ON c.chapter_id = r.chapter_id
+            WHERE r.chapter_id = $chapter AND r.role = 'President' AND r.term_end < $before
+            ORDER BY r.term_end DESC
+            LIMIT 1;
+            """;
+        cmd.Parameters.AddWithValue("$chapter", chapterId);
+        cmd.Parameters.AddWithValue("$before", before.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        using var r = cmd.ExecuteReader();
+        if (!r.Read()) return null;
+        var start = ParseDate(r.GetString(2));
+        return new LeaderTerm(r.GetString(0), r.GetString(1), "President", chapterId, r.GetString(5), start,
+            ParseDate(r.GetString(3)), r.GetString(4), DayOfTerm: before.DayNumber - start.DayNumber + 1, Permission: "Leadership");
+    }
+
     private IReadOnlyList<LeaderTerm> Query(DateOnly onDate, string? personId, int? endedWithinDays = null)
     {
         var list = new List<LeaderTerm>();

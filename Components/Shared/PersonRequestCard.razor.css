@@ -1,0 +1,89 @@
+/* The "connect me" card (docs/Paths_To_A_Person.md). Matches the
+   "Save to notebook" box: ISACA Dark Blue text on a pale blue panel,
+   44px tap targets, and never red (show-the-work rule). */
+
+.isa-person {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0.5rem 0.75rem 0;
+    padding: 0.75rem;
+    border: 1px solid #c9d6e2;
+    border-radius: 10px;
+    background: #e7f0f5;
+    color: #1d2d5c;
+    font-size: 0.82rem;
+}
+
+.isa-person__title { margin: 0; font-weight: 700; outline: none; }
+.isa-person__intro { margin: -0.2rem 0 0; color: #323e48; }
+
+.isa-person__list {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    color: #323e48;
+}
+
+.isa-person__check {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    min-height: 28px;
+    cursor: pointer;
+}
+
+.isa-person__check input { margin-top: 0.15rem; width: 16px; height: 16px; accent-color: #07649d; flex: 0 0 auto; }
+.isa-person__check em { font-style: normal; color: #1d2d5c; }
+
+.isa-person__label { font-size: 0.78rem; font-weight: 500; }
+.isa-person__label span { font-weight: 400; color: #5f6b7a; }
+
+.isa-person__note {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid #9fb3c8;
+    border-radius: 8px;
+    background: #ffffff;
+    font: inherit;
+    color: #323e48;
+    resize: vertical;
+}
+
+.isa-person__btns { display: flex; justify-content: flex-end; gap: 0.4rem; flex-wrap: wrap; }
+
+.isa-person__primary,
+.isa-person__cancel {
+    min-height: 44px;
+    padding: 0.35rem 0.9rem;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.isa-person__primary { border: none; background: #1d2d5c; color: #ffffff; }
+.isa-person__primary:hover:not(:disabled) { background: #07649d; }
+.isa-person__cancel { border: 1px solid #9fb3c8; background: #ffffff; color: #1d2d5c; }
+.isa-person__primary:disabled,
+.isa-person__cancel:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.isa-person__primary:focus-visible,
+.isa-person__cancel:focus-visible,
+.isa-person__note:focus-visible,
+.isa-person__check input:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }
+
+.isa-person__done { margin: 0; }
+
+/* Not sent: blue, handled, never red. */
+.isa-person__problem {
+    margin: 0;
+    padding: 0.45rem 0.6rem;
+    border-left: 3px solid #07649d;
+    border-radius: 4px;
+    background: #ffffff;
+    font-size: 0.78rem;
+}

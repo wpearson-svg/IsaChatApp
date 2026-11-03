@@ -111,6 +111,10 @@ builder.Services.AddSingleton<IStage, ComplexAiStage>();
 builder.Services.AddSingleton<IStage, OutputComplianceStage>();
 builder.Services.AddSingleton<IStage, TicketingStage>();
 builder.Services.AddSingleton<OrchestratorService>();
+// PersonRequestService: a hand-off the leader asks for themselves ("Talk to a
+// person", "Not quite"), checked and ticketed through the pipeline's own
+// stages (docs/Paths_To_A_Person.md).
+builder.Services.AddSingleton<PersonRequestService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

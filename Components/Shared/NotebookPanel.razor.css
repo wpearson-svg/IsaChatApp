@@ -645,6 +645,39 @@ span.isa-nb__saveBtn { display: inline-flex; align-items: center; text-decoratio
 
 .isa-nb__status { margin: 0; font-size: 0.8rem; color: #5f6b7a; }
 
+/* Ask the outgoing president (3 November 2026). */
+.isa-nb__about { margin: 0; font-size: 0.8rem; color: #4a5562; font-style: italic; }
+.isa-nb__about .isa-nb__linkBtn { font-style: normal; margin-left: 0.3rem; }
+.isa-nb__askHint { margin: 0; font-size: 0.76rem; line-height: 1.4; color: #5f6b7a; }
+.isa-nb__waiting {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0 0 0.9rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #c9d7e8;
+    border-left: 4px solid #1d2d5c;
+    border-radius: 8px;
+    background: #f3f7fb;
+}
+.isa-nb__waitingRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.35rem 0;
+    border: 0;
+    border-top: 1px solid #dde6f0;
+    background: none;
+    color: #1d2d5c;
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+}
+.isa-nb__waitingRow:first-of-type { border-top: 0; }
+.isa-nb__waitingRow > span:first-child { flex: 1; }
+
 .isa-nb__addLink {
     align-self: flex-start;
     min-height: 40px;

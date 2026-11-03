@@ -291,7 +291,9 @@
 
                 @foreach (var msg in MessagesNewestFirst)
                 {
-                    <div id="@msg.DomId" class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
+                    @* @key keeps each message's buttons (Not quite, Save to notebook)
+                       in their state when a newer message is added above them. *@
+                    <div @key="msg.DomId" id="@msg.DomId" class="isa-widget__message isa-widget__message--@msg.Role" style="@BubbleStyle(msg.Role)">
                         <div class="isa-widget__who">
                             @msg.DisplayName
                             @if (ShowDeveloperTools && Settings.ShowResponseTime && msg.ElapsedMs is not null)
@@ -338,7 +340,8 @@
                                             OnSaved="NotebookChanged" OnOpenNotebook="OpenNotebook" />
                             @* Content Health Dashboard: "Yes, this answered my
                                question" / "Not quite", logged by trace ID. *@
-                            <AnswerFeedback @key="@("fb-" + msg.TraceId)" TraceId="@(msg.TraceId ?? "")" />
+                            <AnswerFeedback @key="@("fb-" + msg.TraceId)" TraceId="@(msg.TraceId ?? "")"
+                                            OnPassToPerson="() => OpenPersonCard(IsaChatApp.Services.PersonRequestService.Doors.NotQuite, msg)" />
                         }
                         @if (msg.ShowReference && ShowDeveloperTools && !string.IsNullOrEmpty(msg.TraceId))
                         {
@@ -382,7 +385,29 @@
                    chat, above the welcome message. Shows only for a
                    signed-in leader in their first 90 days. *@
                 <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenChecklist" Version="@_notebookVersion" />
+
+                @* "Ask the outgoing president" (3 November 2026): a former president
+                   with a question waiting in the notebook sees one line here, at
+                   the top of the chat, when they open Isa. Nothing is emailed. *@
+                @if (_waitingQuestions.Count > 0)
+                {
+                    var askers = _waitingQuestions.Select(q => q.AuthorName).Distinct().ToList();
+                    <div class="isa-widget__askNote" role="note">
+                        <span>@(askers.Count == 1 ? askers[0] : "Your chapter's president") asked you @(_waitingQuestions.Count == 1 ? "a question" : $"{_waitingQuestions.Count} questions") in the succession notebook.</span>
+                        <button type="button" class="isa-widget__askNoteBtn" @onclick="OpenNotebook">Open the notebook</button>
+                    </div>
+                }
             </div>
+
+            @* Paths to a person (docs/Paths_To_A_Person.md): the "connect me"
+               card, opened by "Talk to a person" in the footer or "Not quite"
+               under an answer. It sits just above the question box. *@
+            @if (_personCard is not null)
+            {
+                <PersonRequestCard @key="_personCard" Door="@_personCard.Door" FromTraceId="@_personCard.FromTraceId"
+                                   Question="@_personCard.Question" Answer="@_personCard.Answer" Sources="@_personCard.Sources"
+                                   EarlierQuestions="@_personCard.Earlier" OnClose="ClosePersonCard" OnSent="PersonRequestSent" />
+            }
 
             @* Input row, matching wireframe "Expanded": the ring icon
                sits inside the left edge of the input pill, a dark
@@ -415,12 +440,12 @@
             </div>
 
             @* Footer: a plain promise about where answers come from, and
-               the way to reach a person. "Talk to a person" (@Title) is
-               still the placeholder for the future ticketing bridge --
-               not wired up yet; add the click handler once it exists. *@
+               the way to reach a person. "Talk to a person" (@Title) opens
+               the "connect me" card (docs/Paths_To_A_Person.md, November 2,
+               2026), always on screen as the Sprint 1 proposal promised. *@
             <div class="isa-widget__footer">
                 <span class="isa-widget__footerNote">Answers come from approved ISACA documents.</span>
-                <a href="#" class="isa-widget__directSupportLink" @onclick:preventDefault="true">@Title &rsaquo;</a>
+                <a href="#" class="isa-widget__directSupportLink" @onclick="OpenPersonCardFromFooter" @onclick:preventDefault="true">@Title &rsaquo;</a>
             </div>
         </div>
 
@@ -444,7 +469,8 @@
         {
             <TodayPanel OnClose="CloseToday" Style="@SidePanelStyle(SidePanel.Today)" Rightmost="@(!IsRightPanelOpen)"
                         Enlarged="@(Enlarged == SidePanel.Today)" OnToggleEnlarge="() => ToggleEnlarge(SidePanel.Today)"
-                        OnOpenNotebook="OpenNotebook" OnProgressChanged="RefreshStepsLeft" OnOpenHelp="OpenHelp" />
+                        OnOpenNotebook="OpenNotebook" OnProgressChanged="RefreshStepsLeft" OnOpenHelp="OpenHelp"
+                        OnListen="ListenFromStep" />
         }
 
         @* Onboarding: the succession notebook, always the rightmost panel
@@ -452,7 +478,8 @@
         if (IsNotebookOpen)
         {
             <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion" OnChecklistChanged="NotebookChanged"
-                           Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest" />
+                           Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest"
+                           OnAskTeam="OpenPersonCardFromFooter" OnQuestionsChanged="RefreshWaitingQuestions" />
         }
 
         @* The Library (Feature 5; Components/Shared/LibraryPanel.razor). It
@@ -461,7 +488,7 @@
         if (IsLibraryOpen)
         {
             <LibraryPanel OnClose="CloseLibrary" Style="@SidePanelStyle(SidePanel.Notebook)"
-                          Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" />
+                          Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" Request="@_listenRequest" />
         }
 
         @* "How to use Isa" (Feature 3; Components/Shared/HelpPanel.razor), in
@@ -814,7 +841,17 @@
         IsLibraryOpen = !IsLibraryOpen;
         if (!IsLibraryOpen) Unenlarge(SidePanel.Notebook);
     }
-    private void CloseLibrary() { IsLibraryOpen = false; Unenlarge(SidePanel.Notebook); }
+    private void CloseLibrary() { IsLibraryOpen = false; _listenRequest = null; Unenlarge(SidePanel.Notebook); }
+
+    // A journey step's Listen button (3 November 2026): opens the Library beside
+    // Today, at the part the step points to, and reads it.
+    private IsaChatApp.Services.Onboarding.ListenRequest? _listenRequest;
+    private void ListenFromStep(IsaChatApp.Services.Onboarding.ListenRequest request)
+    {
+        if (!IsLibraryOpen) { _notebookSmall = false; IsNotebookOpen = false; IsHelpOpen = false; _checklistRequest = 0; }
+        IsLibraryOpen = true;
+        _listenRequest = request;
+    }
 
     // ---- "How to use Isa" (Feature 3) ------------------------------------
     //
@@ -849,6 +886,50 @@
     private int _notebookVersion;
     private void NotebookChanged() => _notebookVersion++;
 
+    // Questions in the notebook waiting for this person's answer (a former president).
+    private IReadOnlyList<IsaChatApp.Services.Onboarding.NotebookEntry> _waitingQuestions = [];
+    private void RefreshWaitingQuestions() =>
+        _waitingQuestions = _personId is null ? [] : Notebook.GetWaitingQuestions(_personId, Settings.Today);
+
+    // ---- Paths to a person: the "connect me" card --------------------------
+
+    // What the open card is about; null while it's closed.
+    private sealed record PersonCardState(string Door, string? FromTraceId, string? Question, string? Answer,
+        IReadOnlyList<IsaChatApp.Services.Orchestrator.SourceRef> Sources, IReadOnlyList<string> Earlier);
+
+    private PersonCardState? _personCard;
+
+    // Opens the card about one answer ("Not quite", or the footer link with an answer to offer).
+    private void OpenPersonCard(string door, ChatEntry answer)
+    {
+        var index = Messages.IndexOf(answer);
+        var asked = Messages.Take(Math.Max(index, 0)).Where(m => m.Role == "you").Select(m => m.Text).ToList();
+        if (asked.Count > 0) asked.RemoveAt(asked.Count - 1);   // the question this answer is for
+        _personCard = new PersonCardState(door, answer.TraceId, answer.Question, answer.Text,
+            answer.Sources ?? new(), asked);
+    }
+
+    // "Talk to a person": offers the latest answered question, if there is one.
+    private void OpenPersonCardFromFooter()
+    {
+        var door = IsaChatApp.Services.PersonRequestService.Doors.TalkToPerson;
+        var latest = Messages.LastOrDefault(m => m.Question is not null);
+        if (latest is not null) { OpenPersonCard(door, latest); return; }
+        var asked = Messages.Where(m => m.Role == "you").Select(m => m.Text).ToList();
+        _personCard = new PersonCardState(door, null, null, null, Array.Empty<IsaChatApp.Services.Orchestrator.SourceRef>(), asked);
+    }
+
+    private void ClosePersonCard() => _personCard = null;
+
+    // After sending: the confirmation joins the conversation like any reply.
+    private void PersonRequestSent(string message)
+    {
+        _personCard = null;
+        var reply = new ChatEntry("ai", Settings.UseIsaLabel ? "Isa" : "pipeline", message);
+        Messages.Add(reply);
+        _scrollToId = reply.DomId;
+    }
+
     // Whether the signed-in person gets the Notebook and Today buttons on the rail.
     private bool CanOpenNotebook { get; set; }
     private bool HasJourney { get; set; }
@@ -865,6 +946,7 @@
         _personId = AuthState is null ? null
             : (await AuthState).User.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
         CanOpenNotebook = _personId is not null && Notebook.GetAccess(_personId, Settings.Today).CanRead;
+        RefreshWaitingQuestions();
         HasJourney = _personId is not null && JourneyContexts.GetFor(_personId) is not null;
         if (_personId is not null) RefreshStepsLeft();
 

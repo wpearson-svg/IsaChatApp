@@ -1,0 +1,65 @@
+// ============================================================
+// onboarding/step_listen.json -- Listen on journey steps
+// (Feature 5 in ONBOARDING-FEATURE.md, decided 20 October 2026; built
+// 3 November 2026).
+//
+// Each journey step that cites an ISACA document in the Library gets a
+// Listen button for each place it cites. The button opens the Library at
+// that document and reads that part aloud, word for word, then stops; the
+// rest of the document is one press of play away.
+//
+//   "step"     the step's ID in onboarding/journey_steps.csv
+//   "document" the document's "document" value in onboarding/library.json
+//   "pages"    optional: the President Guidebook page ("13") or pages
+//              ("13-14") to read; left out, the whole document is read
+//   "label"    what the button says it reads
+//
+// Only steps whose Source is an ISACA document get one. Steps from Isa's
+// onboarding plan (J-01 to J-05, J-16 to J-19, J-25) have none.
+// Read at runtime: edit, save and reopen the step; no rebuild.
+// Lines starting with // are comments and are ignored.
+// ============================================================
+{
+  "listen": [
+    { "step": "J-06", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13", "label": "President Guidebook, page 13" },
+
+    { "step": "J-20", "document": "ISACA Chapter Systems Overview", "label": "ISACA Chapter Systems Overview" },
+    { "step": "J-20", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "8", "label": "President Guidebook, page 8" },
+
+    { "step": "J-21", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "10", "label": "President Guidebook, page 10" },
+
+    { "step": "J-22", "document": "c360-intro", "label": "Chapter 360: Introduction" },
+
+    { "step": "J-10", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "14", "label": "President Guidebook, page 14" },
+
+    { "step": "J-11", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "8", "label": "President Guidebook, page 8" },
+    { "step": "J-11", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13", "label": "President Guidebook, page 13" },
+
+    { "step": "J-23", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "12", "label": "President Guidebook, page 12" },
+
+    { "step": "J-24", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "12", "label": "President Guidebook, page 12" },
+    { "step": "J-24", "document": "Annual Chapter Compliance Framework", "label": "Annual Chapter Compliance Framework" },
+
+    { "step": "J-09", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13", "label": "President Guidebook, page 13" },
+
+    { "step": "J-07", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13", "label": "President Guidebook, page 13" },
+    { "step": "J-07", "document": "affiliation-agreement", "label": "Chapter Affiliation Agreement (ISACA's template)" },
+
+    { "step": "J-26", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "7", "label": "President Guidebook, page 7" },
+    { "step": "J-26", "document": "Annual Chapter Compliance Framework", "label": "Annual Chapter Compliance Framework" },
+
+    { "step": "J-08", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13", "label": "President Guidebook, page 13" },
+
+    { "step": "J-12", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13", "label": "President Guidebook, page 13" },
+
+    { "step": "J-13", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "14", "label": "President Guidebook, page 14" },
+
+    { "step": "J-14", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13", "label": "President Guidebook, page 13" },
+
+    { "step": "J-15", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "14", "label": "President Guidebook, page 14" },
+
+    { "step": "J-27", "document": "Annual Chapter Compliance Framework", "label": "Annual Chapter Compliance Framework" },
+
+    { "step": "J-28", "document": "Chapter Leader Guidebook - President (August 2026)", "pages": "13-14", "label": "President Guidebook, pages 13 and 14" }
+  ]
+}

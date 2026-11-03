@@ -57,12 +57,24 @@ What this means for the design (for Matthew to decide; nothing changed yet):
 - The "Meet your Chapter Experience contact" step assumes every chapter has its own contact. Most don't. The step may need two versions: the chapter's Chapter Success Manager where one is assigned, and the Chapter Experience Operations Team for everyone else. Isa must never say why a chapter has a CSM.
 - Outside governance sources would have to become approved documents in Isa's content before she could answer from them (the ground rule above still holds: approved documents only). A decision for the whole team.
   - Done October 22, 2026 (Matthew): all four sites forbid copying their pages, so the team wrote nine governance best-practice guides in its own words from 20 of their free pages (content/Governance Best Practice/). Isa answers from them only when ISACA's documents have nothing, and labels every such answer "general governance best practice (not ISACA policy)". They still need ISACA's approval as Isa content.
+  - Approval asked November 2, 2026, in the catch-up update email (below). Waiting for ISACA's reply; be ready to send the guides if they ask to see them.
 - AGM and term dates come from each chapter's bylaws, so the open fixed-date question stays open; the prototype keeps counting from each leader's term start date.
 
 Dropped on October 21, 2026, and why:
 - President Guidebook as a Word document; the outside AI services question; made-up restricted content; approved wording for the local-law and emergency lines: Matthew's choice not to ask.
 - The Chapter 360 asterisks: the team will try to answer it from the material it has.
 - Differing member and chapter numbers: this is a mock scenario, so exact numbers don't matter; Isa uses the numbers in the documents the team has.
+
+Update email of November 2, 2026 (sent by Matthew to the same four people, word for word as drafted with Claude):
+- An apology for missing the October 28 update, and a promise of the regular update on Wednesday, November 4.
+- Thanks to Camille for her answers, the Chapter Affiliation Agreement and the role descriptions.
+- Challenges: search that needs every question word in one passage (being replaced with search that matches on meaning; demo questions tested meanwhile); PDF text running words together, plus content findings such as "TBD" entries and numbering slips, to be shared in a content review; keeping three people's work in step.
+- Decisions: translation switched to Meta's NLLB-200 (with the licence caution); the governance best-practice guides, with a request for ISACA's approval; Isa's rules designed so ISACA owns the policy and Isa applies it (layers that only tighten, every rule testable, a small sample set being built, real policy calls stay with ISACA).
+- Promised for Wednesday, November 4: progress on the new search and on the rules work.
+- Nothing about the onboarding feature, the sample pages or survey figures. The only question asked was the guides' approval.
+
+To ask in the update of Wednesday, November 4, 2026 (Matthew, November 3):
+- May Isa's Library include the Chapter Affiliation Agreement template Camille sent, for leaders to read and listen to word for word? Shown with the line "This is ISACA's template. Your chapter's signed agreement may differ, for example in its country-specific exhibit (Exhibit D)." Isa doesn't answer questions from it. Word it about the Library only, never the onboarding feature (still a surprise). It sits naturally beside the waiting request to approve the governance guides. When the email is sent, note here whether this went out.
 
 Decided instead of asked (Matthew, October 21, 2026; his position for Willis's review of docs/Handoff_and_Refusal_Rules_Proposal.md):
 - Every question Isa passes to a person goes to the Chapter Experience team.
