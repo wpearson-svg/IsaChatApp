@@ -59,6 +59,13 @@ public class QueryContext
     public string? EscalationReason { get; set; }
     /// <summary>Set by input_compliance for a safety topic (today: harassment), so the hand-off message adds the emergency-services line.</summary>
     public bool SafetyTopic { get; set; }
+    /// <summary>The rule that decided this question at the input checkpoint (rule ID, file, version), or null when none fired. Logged and shown in developer mode only, never to the leader.</summary>
+    public string? RuleId { get; set; }
+    public string? RuleFile { get; set; }
+    public int RuleVersion { get; set; }
+    /// <summary>"Answer, then point": the rule's line pointing the leader to a person, added after the answer, and whether to offer the connect-to-a-person button.</summary>
+    public string? PointLine { get; set; }
+    public bool OfferHandoff { get; set; }
 
     // ---- Hooks for the Content Health Dashboard (added 2026-10-21). ----
     // Nothing sets these today. The real stages fill them in when they exist, and

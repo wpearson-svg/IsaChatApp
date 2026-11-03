@@ -1,0 +1,8 @@
+{
+  "notes": "Word groups for the 'must stays must' check (output compliance). An AI-written answer may not use a strength (obligation, advice, permission, prohibition) that the approved passage it comes from does not have. Edit a list here to add a phrase; no code change needed. Phrases match whole words, longest first.",
+  "prohibition": ["must not", "may not", "shall not", "cannot", "can not", "never", "is not allowed", "are not allowed", "is not permitted", "are not permitted", "is prohibited", "are prohibited"],
+  "obligation": ["must", "required to", "is required", "are required", "required", "shall", "need to", "needs to", "have to", "has to"],
+  "advice": ["strongly recommended", "it is recommended", "recommended", "should", "encouraged", "it is best", "ideally"],
+  "permission": ["may", "can", "is allowed", "are allowed", "is permitted", "are permitted", "allowed to", "free to"],
+  "negated": ["not required", "not recommended", "not necessary", "need not", "do not have to", "does not have to", "don't have to", "doesn't have to", "not obliged", "optional"]
+}

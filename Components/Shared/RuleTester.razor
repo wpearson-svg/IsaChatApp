@@ -1,0 +1,139 @@
+@using IsaChatApp.Services.Rules
+@inject RuleEngine Rules
+
+@* ============================================================
+   RuleTester.razor
+
+   The rule tester (Matthew's policy-adapter design, section 4): type a question, pick chapters and a role, and see
+   what the rules would do for each chapter side by side. Developer role only (the Developer Dashboard already checks that).
+   It calls the SAME engine the live Input Compliance stage calls (RuleEngine.Decide). Read-only: no search, no AI, no ticket.
+   Only rule IDs, files and versions are shown; nothing is written to the event log.
+   ============================================================ *@
+
+<div class="rt">
+    <p class="rt__hint">
+        Type a question and see what the rules decide for each chapter. Nothing is searched, answered or sent.
+        Rules loaded: @Rules.RuleCount in @Rules.FileCount files.
+    </p>
+
+    <label class="rt__field">Question
+        <input type="text" class="rt__input" @bind="_question" @bind:event="oninput" autocomplete="off"
+               placeholder="A member asked us to delete their personal data. What do we do?" />
+    </label>
+
+    <div class="rt__row">
+        <fieldset class="rt__chapters">
+            <legend>Test as these chapters</legend>
+            @foreach (var id in Rules.ChapterIds)
+            {
+                var info = Rules.ChapterInfo(id);
+                <label class="rt__check">
+                    <input type="checkbox" checked="@_chosen.Contains(id)" @onchange="e => Toggle(id, e)" />
+                    @id <span class="rt__muted">@info?.Country</span>
+                </label>
+            }
+        </fieldset>
+        <label class="rt__field rt__role">Role
+            <select class="rt__input" @bind="_role">
+                @foreach (var r in Roles) { <option value="@r">@r</option> }
+            </select>
+        </label>
+    </div>
+
+    <div class="rt__actions">
+        <button type="button" class="rt__btn" @onclick="Run" disabled="@(string.IsNullOrWhiteSpace(_question) || _chosen.Count == 0)">Test question</button>
+        <button type="button" class="rt__btn rt__btn--ghost" @onclick="ReloadRules">Reload rules files</button>
+        <button type="button" class="rt__btn rt__btn--ghost" @onclick="SelfCheck">Run every rule's own tests</button>
+    </div>
+
+    @if (_selfCheckMessage is not null)
+    {
+        <p class="rt__result">@_selfCheckMessage</p>
+    }
+
+    @if (_rows.Count > 0)
+    {
+        <table class="rt__table">
+            <thead><tr><th>Chapter</th><th>Result</th><th>Deciding rule</th><th>File and version</th></tr></thead>
+            <tbody>
+            @foreach (var row in _rows)
+            {
+                <tr>
+                    <td>@row.Chapter <span class="rt__muted">@row.Country</span></td>
+                    <td><span class="rt__pill rt__pill--@(row.Decision.Outcome == "pass" || row.Decision.Outcome == "answer_then_point" ? "green" : "blue")">@Label(row.Decision.Outcome)</span></td>
+                    <td>@(row.Decision.RuleId ?? "none")</td>
+                    <td>@(row.Decision.File is null ? "" : $"{row.Decision.File} v{row.Decision.Version}")</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="rt__detail">
+                        @if (!string.IsNullOrWhiteSpace(row.Decision.PointLine))
+                        {
+                            <div>Point line: <em>@row.Decision.PointLine</em>@(row.Decision.OfferHandoff ? " (offers the connect button)" : "")</div>
+                        }
+                        <details>
+                            <summary>Every rule that applies to this chapter</summary>
+                            <ul>
+                                @foreach (var t in row.Trace)
+                                {
+                                    <li class="@(t.Winner ? "rt__win" : "")">
+                                        @t.RuleId &middot; @t.Title &middot; @t.File v@t.Version &middot; @t.Outcome &middot;
+                                        @(t.Winner ? "decided" : t.Fired ? "matched, but a more careful rule won" : "no match")
+                                    </li>
+                                }
+                            </ul>
+                        </details>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private static readonly string[] Roles = { "President", "Vice President", "Immediate Past President", "Treasurer", "Secretary", "Membership Director", "Member" };
+
+    private sealed record Row(string Chapter, string Country, RuleDecision Decision, IReadOnlyList<RuleTrace> Trace);
+
+    private string _question = "A member asked us to delete their personal data. What do we do?";
+    private string _role = "President";
+    private readonly HashSet<string> _chosen = new(StringComparer.OrdinalIgnoreCase) { "C-001", "C-005", "C-009" };
+    private List<Row> _rows = new();
+    private string? _selfCheckMessage;
+
+    private void Toggle(string id, ChangeEventArgs e)
+    {
+        if (e.Value is true) _chosen.Add(id); else _chosen.Remove(id);
+    }
+
+    private void Run()
+    {
+        _selfCheckMessage = null;
+        _rows = _chosen.OrderBy(c => c, StringComparer.Ordinal).Select(c =>
+            new Row(c, Rules.ChapterInfo(c)?.Country ?? "", Rules.Decide(_question, c, _role), Rules.Trace(_question, c, _role))).ToList();
+    }
+
+    private void ReloadRules()
+    {
+        Rules.Reload();
+        _selfCheckMessage = $"Rules reloaded: {Rules.RuleCount} rules in {Rules.FileCount} files.";
+        _rows = new();
+    }
+
+    private void SelfCheck()
+    {
+        var (checks, problems) = Rules.SelfCheck();
+        _selfCheckMessage = problems.Count == 0
+            ? $"{checks} checks, no problems."
+            : $"{checks} checks, {problems.Count} problems: " + string.Join(" | ", problems.Take(5));
+    }
+
+    private static string Label(string outcome) => outcome switch
+    {
+        "pass" => "Answer",
+        "answer_then_point" => "Answer, then point to a person",
+        "hand_off" => "Hand off to a person",
+        "stop" => "Stop",
+        _ => outcome,
+    };
+}

@@ -162,8 +162,11 @@ public class OutputComplianceStage : IStage
     private readonly HhemScorer _hhem;
     private readonly IsaChatApp.Services.OutputComplianceSettings _settings;
 
-    public OutputComplianceStage(IConfiguration config, HhemScorer hhem, IsaChatApp.Services.OutputComplianceSettings settings)
+    private readonly IsaChatApp.Services.Rules.RuleEngine _rules;
+
+    public OutputComplianceStage(IConfiguration config, HhemScorer hhem, IsaChatApp.Services.OutputComplianceSettings settings, IsaChatApp.Services.Rules.RuleEngine rules)
     {
+        _rules = rules;
         _config = config;
         _hhem = hhem;
         _settings = settings;   // thresholds are read per answer so the Dev Dashboard can change them live
@@ -206,29 +209,120 @@ public class OutputComplianceStage : IStage
             if (!retrieved)
                 return Task.FromResult(Escalate("ai check failed: source not retrieved", data));
 
-            // NLI check (REAL, HHEM-2.1-Open): each sentence of the answer is scored against the cited passage.
-            // The rehearsed demo questions keep the old fixed pass (AnswerWording:ExemptQuestions). If the model files
-            // are not there the check is skipped and the event data says "skipped", never "pass".
+            // The rehearsed demo questions keep the old fixed checks (AnswerWording:ExemptQuestions), so they behave exactly as rehearsed.
+            // OutputCompliance:FixedChecks false switches the new checks off for everything.
+            var exempt = AnswerExtract.IsExempt(_config, ctx.Question);
+            var fixedOn = !exempt && _config.GetValue("OutputCompliance:FixedChecks", true);
             var citedPassage = ctx.Passages.FirstOrDefault(p => OutputChecks.Same(source.Cited!, p));
-            var nli = AnswerExtract.IsExempt(_config, ctx.Question) || citedPassage is null
-                ? OutputChecks.Nli(ctx.AnswerText!, source.Cited!)
-                : OutputChecks.NliHhem(_hhem, ctx.AnswerText!, citedPassage.Text, _settings.NliThreshold);
-            var nliSkipped = nli.Verdict == "unclear";
-            var nliOk = (nli.Verdict == "supported" || nliSkipped) && _forceFail != "nli";
-            // Rule recheck (stub).
-            var rule = OutputChecks.RuleRecheck(ctx.AnswerText!);
-            var ruleOk = rule.Passed && _forceFail != "rule";
-            // Confidence score (stub).
-            var conf = OutputChecks.Confidence(ctx.AnswerText!, _settings.ConfidenceThreshold);
-            var confOk = conf.Passed && _forceFail != "confidence";
+            var premise = citedPassage?.Text ?? "";
 
-            data += $"; rule_recheck={(ruleOk ? "pass" : "fail")}; confidence={conf.Score:0.00}; nli={(nliSkipped && nliOk ? "skipped" : nliOk ? "pass" : "fail")}; nli_detail={nli.Reason.Replace(';', ',')}";
+            // A source that still says "TBD" is never reworded: nobody should guess what it will say.
+            if (fixedOn && citedPassage is not null && Regex.IsMatch(premise, @"\bTBD\b"))
+                return Task.FromResult(Escalate("ai check failed: source incomplete", data + "; check=tbd"));
+
+            // Rule recheck (REAL): the same rules files as the input check, applied to the written answer
+            // (each applicable rule's answer_must_not phrases). A rule failure follows the rule's own outcome (hand off or stop), never a quote.
+            ctx.Profile.TryGetValue("chapter_id", out var ruleChapter);
+            ctx.Profile.TryGetValue("chapter_role", out var ruleRole);
+            var ruleHit = _config.GetValue("Rules:Engine", true) ? _rules.CheckAnswer(ctx.AnswerText!, ruleChapter, ruleRole) : null;
+            var ruleOk = ruleHit is null && _forceFail != "rule";
+            var ruleTag = ruleHit is null ? "" : $"; rule={ruleHit.RuleId}; file={ruleHit.File}; version={ruleHit.Version}; checkpoint=output";
+            if (!ruleOk)
+            {
+                if (ruleHit?.Outcome == "stop")
+                    return Task.FromResult(new StageResult(StageOutcome.Stop, IsaChatApp.Services.ShowTheWork.Wording.OutsideScope, $"section={section}; {data}; rule_recheck=fail{ruleTag}"));
+                return Task.FromResult(Escalate("ai check failed: rule recheck", data + "; rule_recheck=fail" + ruleTag));
+            }
+
+            // Answer shape (fixed): a "how many" question needs a number, "when" a date or period, "who" a role or team.
+            // A failure goes to a person, never to a quote: the passage is what is wrong.
+            if (fixedOn && AnswerChecks.ShapeMissing(ctx.Question, ctx.AnswerText!) is string missing)
+                return Task.FromResult(Escalate("no approved content found", data + $"; check=answer_shape; missing={missing}"));
+
+            // NLI check (REAL, HHEM-2.1-Open): each sentence of the answer is scored against the cited passage.
+            // If the model files are not there the check is skipped and the event data says "skipped", never "pass".
+            var nli = exempt || citedPassage is null
+                ? OutputChecks.Nli(ctx.AnswerText!, source.Cited!)
+                : OutputChecks.NliHhem(_hhem, ctx.AnswerText!, premise, _settings.NliThreshold);
+            var nliSkipped = nli.Verdict == "unclear";
+            var nliFailed = nli.Verdict == "not_supported";
+            var answer = ctx.AnswerText!;
+            var notes = "";
+
+            // Fallback step 2: drop the unsupported sentences, when the first claim sentence and at least half of them are supported.
+            if (nliFailed && fixedOn && _forceFail != "nli" && nli.Scored is not null
+                && OutputChecks.TrimUnsupported(answer, nli.Scored, _settings.NliThreshold) is { } trimmed)
+            {
+                answer = trimmed.Text;
+                nliFailed = false;
+                notes += $"; step_down=trimmed; removed_sentences={trimmed.Removed}";
+            }
+
+            // The fixed accuracy checks (numbers, "must" stays "must", contact details) on the answer as it now stands.
+            var fails = new List<string>();
+            if (nliFailed) fails.Add("nli");
+            var fixedText = "";
+            if (fixedOn && citedPassage is not null)
+            {
+                var numbers = AnswerChecks.NumbersNotInSource(answer, premise);
+                var strength = AnswerChecks.StrengthChanges(answer, premise);
+                var contacts = AnswerChecks.ContactsNotInSource(answer, premise);
+                if (numbers > 0) fails.Add("numbers");
+                if (strength.Count > 0) fails.Add("strength");
+                if (contacts > 0) fails.Add("contact");
+                fixedText = $"; numbers={(numbers > 0 ? "fail:" + numbers : "pass")}; strength={(strength.Count > 0 ? "fail:" + string.Join("+", strength) : "pass")}; contact={(contacts > 0 ? "fail:" + contacts : "pass")}; shape=pass";
+            }
+
+            // Confidence: for a checked answer, built from parts that can be checked (search strength and the share of supported
+            // sentences), each logged; never the model's opinion of itself. Rehearsed questions keep the fixed stub.
+            ConfidenceResult conf;
+            var confParts = "";
+            var support = nli.Scored is { Count: > 0 } sc ? (double?)sc.Count(x => x.Score >= _settings.NliThreshold) / sc.Count : null;
+            if (fixedOn)
+            {
+                var search = ctx.SearchScore ?? 1.0;   // a meaning-map match is an exact match on the question
+                var parts = new List<double> { search };
+                confParts = $"; confidence_parts=search:{search:0.00}";
+                if (support is double sv) { parts.Add(sv); confParts += $",support:{sv:0.00}"; }
+                var score = Math.Round(parts.Average(), 2);
+                conf = new ConfidenceResult(score, _settings.ConfidenceThreshold, score >= _settings.ConfidenceThreshold);
+            }
+            else conf = OutputChecks.Confidence(answer, _settings.ConfidenceThreshold);
+            if (!conf.Passed) fails.Add("confidence");
+
+            data += $"; rule_recheck=pass; confidence={conf.Score:0.00}{confParts}; nli={(nliSkipped ? "skipped" : nliFailed ? "fail" : "pass")}; nli_detail={nli.Reason.Replace(';', ',')}{fixedText}{notes}";
             if (nli.MinScore is double nliScore)
                 data += $"; nli_score={nliScore:0.00}; nli_mark={_settings.NliThreshold:0.00}";   // lowest sentence score and the pass mark, shown in Show the work
 
-            if (!nliOk)  return Task.FromResult(Escalate("ai check failed: nli check", data));
-            if (!ruleOk) return Task.FromResult(Escalate("ai check failed: rule recheck", data));
-            if (!confOk) return Task.FromResult(Escalate("ai check failed: confidence score", data));
+            // Forced failures (a demo or test of a bad answer being caught) escalate exactly as before.
+            if (_forceFail == "nli") return Task.FromResult(Escalate("ai check failed: nli check", data));
+            if (_forceFail == "confidence") return Task.FromResult(Escalate("ai check failed: confidence score", data));
+
+            if (fails.Count > 0)
+            {
+                // Fallback step 3: ISACA's exact words with the source, when the search found a strong match. Otherwise a person.
+                var strong = ctx.SearchScore is null || ctx.SearchScore >= _config.GetValue("OutputCompliance:StrongMatch", 0.0);
+                if (fixedOn && strong && ctx.Passages.Count > 0)
+                {
+                    AnswerExtract.Apply(ctx, _config);
+                    if (ctx.Sources.Count > 0) ctx.CitedSource = ctx.Sources[0];
+                    answer = ctx.AnswerText!;
+                    data += $"; step_down=isaca_words; step_reason={string.Join("+", fails)}";
+                }
+                else
+                {
+                    var reason = fails[0] switch
+                    {
+                        "nli" => "ai check failed: nli check",
+                        "confidence" => "ai check failed: confidence score",
+                        "numbers" => "ai check failed: numbers",
+                        "strength" => "ai check failed: must-stays-must",
+                        _ => "ai check failed: contact details",
+                    };
+                    return Task.FromResult(Escalate(reason, data + $"; failed={string.Join("+", fails)}"));
+                }
+            }
+            ctx.AnswerText = answer;
         }
 
         // An answer from a best-practice guide says so, instead of "ISACA's guidance says".
@@ -236,6 +330,9 @@ public class OutputComplianceStage : IStage
             ? IsaChatApp.Services.ShowTheWork.Wording.BestPracticeOpening
             : IsaChatApp.Services.ShowTheWork.Wording.AnswerOpening;
         ctx.AnswerText = opening + Tidy(ctx.AnswerText!, ctx.Passages[0].Page);
+        // "Answer, then point": the input rule's line follows the answer, so the leader knows a person is the right next step.
+        if (!string.IsNullOrWhiteSpace(ctx.PointLine))
+            ctx.AnswerText += "\n\n" + ctx.PointLine;
         return Task.FromResult(new StageResult(StageOutcome.Pass, null, $"section={section}; {data}"));
     }
 

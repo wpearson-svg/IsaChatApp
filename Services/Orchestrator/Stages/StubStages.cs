@@ -225,14 +225,59 @@ public class TranslationStage : IStage
 }
 
 /// <summary>
-/// Stub input_compliance — stops pizza / jailbreak; escalates harassment.
-/// Stub rules for the four test paths; a real rules check is still to come.
+/// input_compliance: the rules check, run before the search. It reads ISACA's rules files (rules/) through the rule engine,
+/// for the leader's chapter and role (from the sign-in, never from what they type), and acts on the winning rule:
+///   stop = the neutral "outside what Isa can help with" reply; hand_off = pass to a person (a safety rule adds the
+///   emergency-services line); answer_then_point = the question goes on to the answer, and the rule's point line is added after it.
+/// The log gets the rule ID, file, version and checkpoint, never the question.
+/// Rules:Engine false switches back to the old placeholder keywords below (the way back, kept for the demo).
 /// </summary>
 public class InputComplianceStage : IStage
 {
     public string Name => "input_compliance";
 
+    private readonly IConfiguration _config;
+    private readonly IsaChatApp.Services.Rules.RuleEngine _engine;
+
+    public InputComplianceStage(IConfiguration config, IsaChatApp.Services.Rules.RuleEngine engine)
+    {
+        _config = config;
+        _engine = engine;
+    }
+
     public Task<StageResult> RunAsync(QueryContext ctx)
+    {
+        if (!_config.GetValue("Rules:Engine", true)) return RunPlaceholder(ctx);
+
+        ctx.Profile.TryGetValue("chapter_id", out var chapterId);
+        ctx.Profile.TryGetValue("chapter_role", out var chapterRole);
+        var d = _engine.Decide(ctx.Question, chapterId, chapterRole);
+        if (d.Outcome == "pass")
+            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "ok"));
+
+        ctx.RuleId = d.RuleId; ctx.RuleFile = d.File; ctx.RuleVersion = d.Version;
+        var tag = $"rule={d.RuleId}; file={d.File}; version={d.Version}; checkpoint=input";
+
+        if (d.Outcome == "stop")
+            return Task.FromResult(new StageResult(StageOutcome.Stop,
+                IsaChatApp.Services.ShowTheWork.Wording.OutsideScope, "out_of_scope; " + tag));
+
+        if (d.Outcome == "hand_off")
+        {
+            ctx.SafetyTopic = d.ExtraLine == "handoff.safety_line";   // a safety topic: the hand-off adds the emergency-services line
+            var flags = d.Flags.Count > 0 ? "; flags=" + string.Join("+", d.Flags) : "";
+            return Task.FromResult(new StageResult(StageOutcome.Escalate,
+                "Sensitive topic — escalating to a person", "sensitive; " + tag + flags));
+        }
+
+        // answer_then_point: the question carries on, and the answer gets the rule's line.
+        ctx.PointLine = string.IsNullOrWhiteSpace(d.PointLine) ? null : d.PointLine;
+        ctx.OfferHandoff = d.OfferHandoff;
+        return Task.FromResult(new StageResult(StageOutcome.Pass, null, "ok; answer_then_point; " + tag));
+    }
+
+    // The old placeholder keyword check, kept as the way back (Rules:Engine = false).
+    private static Task<StageResult> RunPlaceholder(QueryContext ctx)
     {
         var q = ctx.Question.ToLowerInvariant();
 
