@@ -45,3 +45,6 @@ data/models/
 
 # Output Compliance thresholds saved from the Dev Dashboard
 output-compliance-settings.json
+
+# Settings for one computer only (for example services on another computer over Tailscale); see appsettings.Local.example.json
+appsettings.Local.json

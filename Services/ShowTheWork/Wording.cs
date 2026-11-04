@@ -192,6 +192,7 @@ public static class Wording
     };
     public const string NotNeededDirectHit = "Not needed: the exact text answers it";
     public const string NotNeededEnglish = "Not needed: your question is in English";
+    public const string SwitchedOffTranslation = "Switched off on this computer (Translation:Enabled)";
     public const string NotNeededEscalated = "Not needed, because the question is going to a person";
 
     /// <summary>What a stage was doing, for a stage that crashed. Same words as the panel's running lines.</summary>

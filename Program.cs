@@ -10,6 +10,47 @@ using OrchestratorService = IsaChatApp.Services.Orchestrator.Orchestrator;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Settings for this computer only (git-ignored), written by the Dev Dashboard's "Services (this computer)" page
+// (Services/LocalServiceSettings.cs). Read last, so it wins over appsettings.json and appsettings.Development.json.
+// Re-read when it changes, so the voice and translation switches apply without a restart.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
+// --- Where the services run: this computer (Local) or another one over Tailscale (Remote) ---
+// "Services": { "Location": "Local" | "Remote", "RemoteHost": "100.89.6.69" }. With Remote, the address of
+// Keycloak, Ollama, the voice, embeddings and translation keeps its port but points at RemoteHost.
+// Read once at start (sign-in and the model are set up then): restart Isa after changing it.
+{
+    var defaults = new Dictionary<string, string>
+    {
+        ["Keycloak:Authority"] = "http://localhost:8080/realms/isa",
+        ["Ollama:Endpoint"] = "http://localhost:11434",
+        ["Tts:Endpoint"] = "http://localhost:8880",
+        ["Embeddings:BaseUrl"] = "http://localhost:8092",
+        ["Translation:Endpoint"] = "http://localhost:8091",
+    };
+    var location = builder.Configuration["Services:Location"] ?? "Local";
+    var remoteHost = (builder.Configuration["Services:RemoteHost"] ?? "").Trim();
+    var remote = location.Equals("Remote", StringComparison.OrdinalIgnoreCase)
+                 && IsaChatApp.Services.LocalServiceSettings.IsValidHost(remoteHost);
+    var inUse = new Dictionary<string, string>();
+    foreach (var (key, fallback) in defaults)
+    {
+        var url = builder.Configuration[key];
+        if (string.IsNullOrWhiteSpace(url)) url = fallback;
+        if (remote && Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            url = new UriBuilder(uri) { Host = remoteHost }.Uri.ToString().TrimEnd('/');
+        inUse[key] = url;
+    }
+    if (remote) builder.Configuration.AddInMemoryCollection(inUse.ToDictionary(e => e.Key, e => (string?)e.Value));
+    builder.Services.AddSingleton(new IsaChatApp.Services.ServicesAtStart(remote ? "Remote" : "Local", remote ? remoteHost : "", inUse));
+    Console.WriteLine(remote
+        ? $"Services: Remote ({remoteHost}). " + string.Join(", ", inUse.Select(m => $"{m.Key}={m.Value}"))
+        : "Services: Local (this computer).");
+    Console.WriteLine($"Voice (Tts:Enabled): {(builder.Configuration.GetValue("Tts:Enabled", false) ? "on" : "off")}. " +
+                      $"Translation (Translation:Enabled): {(builder.Configuration.GetValue("Translation:Enabled", true) ? "on" : "off")}.");
+}
+builder.Services.AddSingleton<IsaChatApp.Services.LocalServiceSettings>();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

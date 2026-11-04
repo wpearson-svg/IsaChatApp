@@ -28,6 +28,9 @@
 @inject DevKeysStore DevKeys
 @inject OutputComplianceSettings OutputSettings
 @inject DevAccessService DevAccess
+@inject LocalServiceSettings ServiceSettings
+@inject ServicesAtStart StartServices
+@inject IHttpClientFactory HttpFactory
 @rendermode InteractiveServer
 
 <PageTitle>Developer Dashboard</PageTitle>
@@ -312,6 +315,94 @@ else
                     </div>
                 </div>
             }
+            else if (ActiveSection == "services")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Services (this computer)</h1>
+                </div>
+                <div class="dd__grid">
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Where the services run</h3>
+                            <span class="dd__tag dd__tag--purple">NEEDS A RESTART</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            Keycloak (sign-in), Ollama (the model), the voice, embeddings and translation, on
+                            this computer or on another one over Tailscale. On that computer, run
+                            <code>tailscale-phone.ps1 -Mode On</code>.
+                        </p>
+                        <div class="dd__fields">
+                            <label class="dd__field">
+                                <span><input type="radio" name="svcLoc" checked="@(_svcLocation == "Local")" @onchange="@(() => _svcLocation = "Local")" /> Local: this computer</span>
+                            </label>
+                            <label class="dd__field">
+                                <span><input type="radio" name="svcLoc" checked="@(_svcLocation == "Remote")" @onchange="@(() => _svcLocation = "Remote")" /> Remote: another computer</span>
+                            </label>
+                            <label class="dd__field">Remote host (Tailscale IP or name)
+                                <input type="text" class="dd__testInput" @bind="_svcRemoteHost" autocomplete="off"
+                                       placeholder="100.89.6.69" disabled="@(_svcLocation != "Remote")" />
+                            </label>
+                        </div>
+                        <p class="dd__tableHint">
+                            In use now (since Isa started): <strong>@(StartServices.Location == "Remote" ? $"Remote ({StartServices.RemoteHost})" : "Local")</strong>.
+                            @if (SavedLocationLabel != CurrentLocationLabel)
+                            {
+                                <span> Saved for the next start: <strong>@SavedLocationLabel</strong>. Restart Isa to use it.</span>
+                            }
+                        </p>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Voice and translation</h3>
+                            <span class="dd__tag dd__tag--green">APPLIES AT ONCE</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            Switched off, Isa never calls the service, so it doesn't need to be running.
+                            To free its memory, also stop it where it runs (Stop voice, Stop translation).
+                        </p>
+                        <div class="dd__fields">
+                            <label class="dd__field">
+                                <span><input type="checkbox" @bind="_svcVoice" /> Voice (Kokoro)</span>
+                                <span class="dd__tableHint">Off: the Library's Listen uses the device's own voice.</span>
+                            </label>
+                            <label class="dd__field">
+                                <span><input type="checkbox" @bind="_svcTranslation" /> Translation (NLLB-200)</span>
+                                <span class="dd__tableHint">Off: the translation step is skipped for every question.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="dd__card dd__card--wide">
+                        <div class="dd__cardHeader">
+                            <h3>Addresses in use</h3>
+                        </div>
+                        <table class="dd__table">
+                            <thead><tr><th>Service</th><th>Address</th><th>Status</th></tr></thead>
+                            <tbody>
+                                @foreach (var row in ServiceRows)
+                                {
+                                    <tr>
+                                        <td>@row.Name</td>
+                                        <td><code>@row.Url</code></td>
+                                        <td>@(row.Off ? "Switched off" : _svcCheck.TryGetValue(row.Key, out var st) ? st : "")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <div class="dd__saveRow">
+                            <button type="button" class="dd__btn dd__btn--primary" @onclick="SaveServices">Save</button>
+                            <button type="button" class="dd__btn dd__btn--ghost" @onclick="CheckServices" disabled="@_svcChecking">@(_svcChecking ? "Checking..." : "Check services")</button>
+                            <button type="button" class="dd__btn dd__btn--ghost" @onclick="ResetServices">Back to appsettings.json</button>
+                            @if (!string.IsNullOrEmpty(_svcMessage))
+                            {
+                                <span class="dd__saveNote @(_svcMessageIsError ? "dd__saveNote--err" : "dd__saveNote--ok")">@_svcMessage</span>
+                            }
+                        </div>
+                        <p class="dd__tableHint">Saved to <code>@ServiceSettings.FileName</code> in the project folder (this computer only, not in Git).</p>
+                    </div>
+                </div>
+            }
             else
             {
                 <div class="dd__topbar">
@@ -340,10 +431,109 @@ else
         new("testing", "Testing console"),
         new("ruletester", "Rule tester"),
         new("content", "Content import"),
+        new("services", "Services (this computer)"),
         new("health", "Health alerts"),
     };
 
     private string ActiveSection = "compliance";
+
+    // ---- Services (this computer) -> appsettings.Local.json ---------
+    // Where Keycloak, Ollama, the voice, embeddings and translation run (needs a restart), and whether the
+    // voice and translation are used at all (applies at once). See Services/LocalServiceSettings.cs.
+
+    private string _svcLocation = "Local";
+    private string _svcRemoteHost = "";
+    private bool _svcVoice;
+    private bool _svcTranslation;
+    private string _svcMessage = "";
+    private bool _svcMessageIsError;
+    private bool _svcChecking;
+    private Dictionary<string, string> _svcCheck = new();
+
+    private void LoadServiceSettings()
+    {
+        _svcLocation = ServiceSettings.Location.Equals("Remote", StringComparison.OrdinalIgnoreCase) ? "Remote" : "Local";
+        _svcRemoteHost = ServiceSettings.RemoteHost;
+        _svcVoice = ServiceSettings.VoiceOn;
+        _svcTranslation = ServiceSettings.TranslationOn;
+    }
+
+    private string CurrentLocationLabel => StartServices.Location == "Remote" ? $"Remote ({StartServices.RemoteHost})" : "Local";
+    private string SavedLocationLabel => ServiceSettings.Location.Equals("Remote", StringComparison.OrdinalIgnoreCase)
+        ? $"Remote ({ServiceSettings.RemoteHost})" : "Local";
+
+    private sealed record ServiceRow(string Key, string Name, string Url, string HealthPath, bool Off);
+
+    private IEnumerable<ServiceRow> ServiceRows => new[]
+    {
+        new ServiceRow("Keycloak:Authority", "Keycloak (sign-in)", StartServices.Endpoints["Keycloak:Authority"], "", false),
+        new ServiceRow("Ollama:Endpoint", "Ollama (the model)", StartServices.Endpoints["Ollama:Endpoint"], "/api/version", false),
+        new ServiceRow("Tts:Endpoint", "Voice (Kokoro)", StartServices.Endpoints["Tts:Endpoint"], "/v1/models", !ServiceSettings.VoiceOn),
+        new ServiceRow("Embeddings:BaseUrl", "Embeddings", StartServices.Endpoints["Embeddings:BaseUrl"], "/health", false),
+        new ServiceRow("Translation:Endpoint", "Translation (NLLB-200)", StartServices.Endpoints["Translation:Endpoint"], "/health", !ServiceSettings.TranslationOn),
+    };
+
+    private void SaveServices()
+    {
+        if (!Settings.CanAccessDevDashboard && !_isDev) return;
+        try
+        {
+            ServiceSettings.Save(_svcLocation, _svcRemoteHost, _svcVoice, _svcTranslation);
+            LoadServiceSettings();
+            _svcCheck.Clear();
+            _svcMessage = "Saved. Voice " + (_svcVoice ? "on" : "off") + " and translation " + (_svcTranslation ? "on" : "off") + " apply now."
+                + (SavedLocationLabel != CurrentLocationLabel ? " Restart Isa to use " + SavedLocationLabel + "." : "");
+            _svcMessageIsError = false;
+        }
+        catch (Exception ex)
+        {
+            _svcMessage = "Could not save: " + ex.Message;
+            _svcMessageIsError = true;
+        }
+    }
+
+    private void ResetServices()
+    {
+        if (!Settings.CanAccessDevDashboard && !_isDev) return;
+        try
+        {
+            ServiceSettings.Reset();
+            LoadServiceSettings();
+            _svcCheck.Clear();
+            _svcMessage = "Removed " + ServiceSettings.FileName + ": appsettings.json applies"
+                + (SavedLocationLabel != CurrentLocationLabel ? ". Restart Isa to use " + SavedLocationLabel + "." : ".");
+            _svcMessageIsError = false;
+        }
+        catch (Exception ex)
+        {
+            _svcMessage = "Could not reset: " + ex.Message;
+            _svcMessageIsError = true;
+        }
+    }
+
+    private async Task CheckServices()
+    {
+        if (!Settings.CanAccessDevDashboard && !_isDev) return;
+        _svcChecking = true;
+        _svcCheck.Clear();
+        StateHasChanged();
+        var http = HttpFactory.CreateClient();
+        http.Timeout = TimeSpan.FromSeconds(4);
+        foreach (var row in ServiceRows.Where(r => !r.Off))
+        {
+            try
+            {
+                using var resp = await http.GetAsync(row.Url.TrimEnd('/') + row.HealthPath);
+                _svcCheck[row.Key] = resp.IsSuccessStatusCode ? "Answers" : $"Answers with {(int)resp.StatusCode}";
+            }
+            catch
+            {
+                _svcCheck[row.Key] = "Not reachable";
+            }
+            StateHasChanged();
+        }
+        _svcChecking = false;
+    }
 
     // ---- Ticketing (Salesforce) settings -> dev-keys.json ---------
 
@@ -363,6 +553,7 @@ else
         _isDev = await DevAccess.HasDevRoleAsync(AuthState);
         LoadSalesforce();
         LoadOutputSettings();
+        LoadServiceSettings();
     }
 
     private void LoadSalesforce()

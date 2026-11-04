@@ -249,16 +249,26 @@ public class RagStage : IStage
     }
 }
 
-/// <summary>Stub translation — pass-through (detects the language, does not translate yet).</summary>
+/// <summary>Stub translation — pass-through (detects the language, does not translate yet).
+/// Translation:Enabled false switches the stage off: it is skipped for every question ("off") and never calls
+/// the translation service (Translation:Endpoint), so that service does not need to be running.</summary>
 public class TranslationStage : IStage
 {
+    private readonly IConfiguration _config;
+    public TranslationStage(IConfiguration config) => _config = config;
+
     public string Name => "translation";
     public Task<StageResult> RunAsync(QueryContext ctx)
-        => Task.FromResult(ctx.Language == "en"
+    {
+        // Switched off on this computer: the text goes on unchanged, shown gray in developer view.
+        if (!_config.GetValue("Translation:Enabled", true))
+            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "off", Skipped: true));
+        return Task.FromResult(ctx.Language == "en"
             // English needs no translation: the contract's "skipped, english" (shown gray in developer view).
             ? new StageResult(StageOutcome.Pass, null, "english", Skipped: true)
             // Any other language (or "und"): still a stub that passes the text through unchanged.
             : new StageResult(StageOutcome.Pass, null, $"from={ctx.Language}"));
+    }
 }
 
 /// <summary>

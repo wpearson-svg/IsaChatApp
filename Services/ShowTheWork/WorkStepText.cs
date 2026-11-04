@@ -132,6 +132,7 @@ public static class WorkStepText
         if (state == StepState.Skipped && step.Skipped)
         {
             var why = step.DataText == "escalated" ? Wording.NotNeededEscalated
+                : step.Stage == "translation" && step.DataText == "off" ? Wording.SwitchedOffTranslation
                 : step.Stage == "translation" ? Wording.NotNeededEnglish
                 : Wording.NotNeededDirectHit;
             return L(Wording.Skipped(step.Stage), why);
