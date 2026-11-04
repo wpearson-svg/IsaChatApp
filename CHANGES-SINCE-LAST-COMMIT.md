@@ -49,3 +49,26 @@ A running list of every change made since Matthew's last commit (November 2, 202
 ```
 Add Ask the outgoing president, Listen on journey steps and the Chapter Affiliation Agreement in the Library; update the help guide
 ```
+
+## W4: "connect" button for answer-then-point rules
+- When a rule says answer then point (`offer_handoff`), the answer now carries `OfferHandoff` (`AskResponse`), and `AnswerFeedback` shows a "Pass this to a person" button that opens Matt's card with door `answer_then_point`.
+- Files: `Orchestrator.cs`, `ChatWidget.razor`, `AnswerFeedback.razor`, `Wording.cs` (`PassToPersonButton`). Not compiled or run yet.
+
+## W7: best-practice guides back in the search order
+- `DatabaseSearchStage` (StubStages.cs): search order is now ISACA's documents first, then the meaning map (rag stage), then the best-practice guides last. A guide answer is tagged `best_practice` so the existing wording and Show the work lines apply. A question that is in the meaning map never goes to the guides.
+- `content/add_best_practice.py` was run (9 guides, 50 passages added to `content/content.json`) and `data/content.db` was rebuilt (131 passages, meaning map unchanged). Matt's three guide questions and the demo questions were checked against the rebuilt database by script; not yet in the running app.
+
+## W2 follow-up: failed AI answers logged to the console
+- `OutputComplianceStage` now logs, to the console only, the AI's answer and each sentence's score whenever an output check fails ("Output check failed ..."). Nothing new on screen, in Show the work or in the event data.
+
+## E3/E1 ported to SQLite (no Postgres; decision November 3, 2026)
+- Eliyas's search used Postgres with pgvector. It is now `Services/Search/VectorSearchService.cs`: vectors in `data/vectors.db` (SQLite), compared in memory, passage text read from `content.db` so only approved content comes back, clean miss (`Found=false` with a reason) on any problem. `Services/Search/EmbeddingClient.cs` calls the embedding service. Both are registered in `Program.cs`. **Not connected to the pipeline yet** (W5).
+- `content/build_vectors.py` builds `data/vectors.db` from `content.db` through the embedding service. Tested against a stand-in service, not the real model.
+- `ai-services/` holds Eliyas's translation and embeddings services unchanged, with a `docker-compose.yml` that has no database, and a README.
+- E5 (events and dashboard totals) was not ported: Isa already has the privacy-safe store (`usage.db`, `UsageSummaryService`) and the Content Health Dashboard (`UsageReportService`), so Eliyas's Postgres version would duplicate them.
+- Not compiled or run. `VectorSearchService` and `EmbeddingClient` need a restart of Isa to check they build.
+
+## Launcher: one button pair per service
+- New bats: start/stop-keycloak, start/stop-voice, start/stop-translation, start/stop-embeddings. Each touches only its own service (docker compose up -d / stop <service>).
+- isa-launcher.ps1 and IsaLauncherDbg: Keycloak and voice are separate groups; new Helper services group (translation 8091, embeddings 8092, build search vectors); status shows both new ports.
+- Not yet run: relaunch the launcher and press each pair.

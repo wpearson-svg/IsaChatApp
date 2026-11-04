@@ -163,9 +163,12 @@ public class OutputComplianceStage : IStage
     private readonly IsaChatApp.Services.OutputComplianceSettings _settings;
 
     private readonly IsaChatApp.Services.Rules.RuleEngine _rules;
+    private readonly Microsoft.Extensions.Logging.ILogger<OutputComplianceStage>? _log;
 
-    public OutputComplianceStage(IConfiguration config, HhemScorer hhem, IsaChatApp.Services.OutputComplianceSettings settings, IsaChatApp.Services.Rules.RuleEngine rules)
+    public OutputComplianceStage(IConfiguration config, HhemScorer hhem, IsaChatApp.Services.OutputComplianceSettings settings, IsaChatApp.Services.Rules.RuleEngine rules,
+        Microsoft.Extensions.Logging.ILogger<OutputComplianceStage>? log = null)
     {
+        _log = log;
         _rules = rules;
         _config = config;
         _hhem = hhem;
@@ -293,6 +296,16 @@ public class OutputComplianceStage : IStage
             data += $"; rule_recheck=pass; confidence={conf.Score:0.00}{confParts}; nli={(nliSkipped ? "skipped" : nliFailed ? "fail" : "pass")}; nli_detail={nli.Reason.Replace(';', ',')}{fixedText}{notes}";
             if (nli.MinScore is double nliScore)
                 data += $"; nli_score={nliScore:0.00}; nli_mark={_settings.NliThreshold:0.00}";   // lowest sentence score and the pass mark, shown in Show the work
+
+            // Console only (never on screen): what the AI wrote and how each sentence scored, whenever the answer fails a check.
+            if (fails.Count > 0 && _log is not null)
+            {
+                var scored = nli.Scored is { Count: > 0 }
+                    ? string.Join(" | ", nli.Scored.Select(x => $"{x.Score:0.00}: {x.Text}"))
+                    : "(no sentences scored)";
+                _log.LogInformation("Output check failed ({Fails}) trace={Trace} mark={Mark:0.00}. AI answer: {Answer}. Scored sentences: {Scored}",
+                    string.Join("+", fails), ctx.TraceId, _settings.NliThreshold, answer, scored);
+            }
 
             // Forced failures (a demo or test of a bad answer being caught) escalate exactly as before.
             if (_forceFail == "nli") return Task.FromResult(Escalate("ai check failed: nli check", data));

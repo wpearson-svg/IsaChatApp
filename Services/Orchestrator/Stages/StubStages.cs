@@ -58,29 +58,13 @@ public class DatabaseSearchStage : IStage
         await using var conn = new SqliteConnection($"Data Source={_contentDbPath};Mode=ReadOnly");
         await conn.OpenAsync();
 
-        var passages = new List<Passage>();
-        double? best = null;
-        await using (var cmd = conn.CreateCommand())
+        // Order (Matthew, October 22): ISACA's own documents first, then the meaning map (the rag stage), the best-practice guides last.
+        var (passages, best) = await SearchAsync(conn, ftsQuery, guides: false);
+        var fromGuides = false;
+        if (passages.Count == 0 && !await InMeaningMapAsync(conn, ctx.Question))
         {
-            cmd.CommandText = """
-                SELECT document, section, page, text, rank
-                FROM passages
-                WHERE passages MATCH $q
-                ORDER BY rank
-                LIMIT 5;
-                """;
-            cmd.Parameters.AddWithValue("$q", ftsQuery);
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                passages.Add(new Passage(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
-                if (best is null)
-                {
-                    // FTS5 rank is negative and more negative = better. Squash it into 0..1.
-                    var x = Math.Max(0, -reader.GetDouble(4));
-                    best = x / (1 + x);
-                }
-            }
+            (passages, best) = await SearchAsync(conn, ftsQuery, guides: true);
+            fromGuides = passages.Count > 0;
         }
 
         if (passages.Count == 0)
@@ -91,7 +75,60 @@ public class DatabaseSearchStage : IStage
         ctx.SearchScore = best;
         ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
         ctx.CitedSource = ctx.Sources[0];   // the passage the answer comes from (contract: cited_source)
-        return new StageResult(StageOutcome.Pass, null, $"direct_hit; count={passages.Count}; hit=yes; passages={passages.Count}");
+        // A guide answer is tagged best_practice so the wording, the opening line and Show the work say "general best practice, not ISACA policy".
+        return new StageResult(StageOutcome.Pass, null, fromGuides
+            ? $"best_practice; count={passages.Count}; hit=yes; passages={passages.Count}"
+            : $"direct_hit; count={passages.Count}; hit=yes; passages={passages.Count}");
+    }
+
+    private const string GuidePrefix = "Best Practice Guide:";
+
+    // The full-text search, over ISACA's documents or (guides: true) only the best-practice guides.
+    private static async Task<(List<Passage>, double?)> SearchAsync(SqliteConnection conn, string ftsQuery, bool guides)
+    {
+        var passages = new List<Passage>();
+        double? best = null;
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"""
+            SELECT document, section, page, text, rank
+            FROM passages
+            WHERE passages MATCH $q AND document {(guides ? "LIKE" : "NOT LIKE")} $g
+            ORDER BY rank
+            LIMIT 5;
+            """;
+        cmd.Parameters.AddWithValue("$q", ftsQuery);
+        cmd.Parameters.AddWithValue("$g", GuidePrefix + "%");
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            passages.Add(new Passage(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+            if (best is null)
+            {
+                // FTS5 rank is negative and more negative = better. Squash it into 0..1.
+                var x = Math.Max(0, -reader.GetDouble(4));
+                best = x / (1 + x);
+            }
+        }
+        return (passages, best);
+    }
+
+    private static string NormalizeMapText(string value) =>
+        System.Text.RegularExpressions.Regex.Replace(value ?? "", "[^a-z0-9]+", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim().ToLowerInvariant();
+
+    // Is the question one of the meaning map's questions (the same exact match the rag stage uses)? If so the guides stay out of it.
+    private static async Task<bool> InMeaningMapAsync(SqliteConnection conn, string question)
+    {
+        try
+        {
+            var wanted = NormalizeMapText(question);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT question FROM meaning_map;";
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                if (NormalizeMapText(reader.GetString(0)) == wanted) return true;
+        }
+        catch (SqliteException) { /* no meaning map in this database: not in the map */ }
+        return false;
     }
 }
 

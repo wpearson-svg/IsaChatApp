@@ -143,12 +143,25 @@ Add-Btn $pApp 'Watch problems' 'watch-isa.bat: shows warnings and errors from th
 Add-Btn $pApp 'Watch ALL log lines' 'watch-isa.bat ALL: shows every log line.' { Run-Cmd 'watch-isa.bat ALL' }
 
 $pKc = New-Group $left 'Keycloak (needs Docker Desktop running)' 2
-Add-Btn $pKc 'Start Keycloak' 'docker compose up -d (starts Keycloak and Isa''s voice for the Library)' { Run-Cmd 'docker compose up -d' }
-Add-Btn $pKc 'Stop Keycloak' 'docker compose down (stops Keycloak and the voice; keeps their data)' { Run-Cmd 'docker compose down' }
+Add-Btn $pKc 'Start Keycloak' 'start-keycloak.bat: starts ONLY Keycloak (docker compose up -d keycloak).' { Run-Bat 'start-keycloak.bat' }
+Add-Btn $pKc 'Stop Keycloak' 'stop-keycloak.bat: stops ONLY Keycloak; its data is kept.' { Run-Bat 'stop-keycloak.bat' }
+Add-Btn $pKc 'Keycloak logs' 'docker compose logs keycloak (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f keycloak' }
 Add-Btn $pKc 'Reset Keycloak' 'reset-keycloak.bat: wipes Keycloak data and re-imports the realm file as it is.' { Run-Bat 'reset-keycloak.bat' }
 Add-Btn $pKc 'Reset + rebuild realm' 'reset-keycloak-rebuild.bat: rebuilds the realm file with Python first, then resets.' { Run-Bat 'reset-keycloak-rebuild.bat' }
-Add-Btn $pKc 'Keycloak logs' 'docker compose logs keycloak (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f keycloak' }
-Add-Btn $pKc 'Voice logs' 'docker compose logs kokoro: Isa''s spoken voice for the Library (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f kokoro' }
+
+$pVoice = New-Group $left 'Voice: Kokoro on port 8880 (needs Docker Desktop running)' 1
+Add-Btn $pVoice 'Start voice' 'start-voice.bat: starts ONLY the voice (Isa''s spoken voice for the Library).' { Run-Bat 'start-voice.bat' }
+Add-Btn $pVoice 'Stop voice' 'stop-voice.bat: stops ONLY the voice and frees its memory.' { Run-Bat 'stop-voice.bat' }
+Add-Btn $pVoice 'Voice logs' 'docker compose logs kokoro (last 100 lines, then follows)' { Run-Cmd 'docker compose logs --tail 100 -f kokoro' }
+
+$pHelp = New-Group $left 'Helper services: Eliyas, ai-services (needs Docker Desktop running)' 3
+Add-Btn $pHelp 'Start translation (8091)' 'start-translation.bat: starts ONLY the NLLB-200 translation service. The first start builds it and is slow.' { Run-Bat 'start-translation.bat' }
+Add-Btn $pHelp 'Stop translation' 'stop-translation.bat: stops ONLY translation and frees its memory.' { Run-Bat 'stop-translation.bat' }
+Add-Btn $pHelp 'Translation logs' 'docker compose logs translation' { Run-Cmd 'docker compose -f ai-services\docker-compose.yml logs --tail 100 -f translation' }
+Add-Btn $pHelp 'Start embeddings (8092)' 'start-embeddings.bat: starts ONLY the embeddings service (search by meaning). The first start builds it and is slow.' { Run-Bat 'start-embeddings.bat' }
+Add-Btn $pHelp 'Stop embeddings' 'stop-embeddings.bat: stops ONLY embeddings and frees its memory.' { Run-Bat 'stop-embeddings.bat' }
+Add-Btn $pHelp 'Embeddings logs' 'docker compose logs embeddings' { Run-Cmd 'docker compose -f ai-services\docker-compose.yml logs --tail 100 -f embeddings' }
+Add-Btn $pHelp 'Build search vectors' 'python content\build_vectors.py: needs embeddings running and content.db built. Writes data\vectors.db.' { Run-Ps 'python content\build_vectors.py' }
 
 $pTest = New-Group $left 'Tests (the app must be running)' 3
 Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks and the test paths (five questions, Spanish, English), signed in as d.whitfield.' { Run-Script 'test-paths.ps1' '' }
@@ -204,6 +217,14 @@ $lblVoice = New-Object System.Windows.Forms.Label
 $lblVoice.AutoSize = $true
 $lblVoice.Margin = New-Object System.Windows.Forms.Padding(6, 8, 20, 4)
 $pStatus.Controls.Add($lblVoice)
+$lblTr = New-Object System.Windows.Forms.Label
+$lblTr.AutoSize = $true
+$lblTr.Margin = New-Object System.Windows.Forms.Padding(6, 8, 20, 4)
+$pStatus.Controls.Add($lblTr)
+$lblEm = New-Object System.Windows.Forms.Label
+$lblEm.AutoSize = $true
+$lblEm.Margin = New-Object System.Windows.Forms.Padding(6, 8, 20, 4)
+$pStatus.Controls.Add($lblEm)
 
 function Update-Status {
     $appUp = Test-Port 5067
@@ -215,6 +236,12 @@ function Update-Status {
     $voiceUp = Test-Port 8880
     $lblVoice.Text = 'Isa voice (port 8880): ' + $(if ($voiceUp) { 'UP' } else { 'down' })
     $lblVoice.ForeColor = $(if ($voiceUp) { [System.Drawing.Color]::DarkGreen } else { [System.Drawing.Color]::Firebrick })
+    $trUp = Test-Port 8091
+    $lblTr.Text = 'Translation (8091): ' + $(if ($trUp) { 'UP' } else { 'down' })
+    $lblTr.ForeColor = $(if ($trUp) { [System.Drawing.Color]::DarkGreen } else { [System.Drawing.Color]::Firebrick })
+    $emUp = Test-Port 8092
+    $lblEm.Text = 'Embeddings (8092): ' + $(if ($emUp) { 'UP' } else { 'down' })
+    $lblEm.ForeColor = $(if ($emUp) { [System.Drawing.Color]::DarkGreen } else { [System.Drawing.Color]::Firebrick })
 }
 Add-Btn $pStatus 'Refresh status' 'Check the app and Keycloak now. It also refreshes every 10 seconds.' { Update-Status }
 
@@ -384,7 +411,7 @@ function Check-Requirements {
         else { Req-Warn 'Something is on port 8880 but it did not answer as the voice'; Req-Hint 'Click "Voice logs".' }
     } else {
         Req-Warn 'Isa voice (Kokoro) is not running, so Listen uses the device voice'
-        Req-Hint 'Click "Start Keycloak" (it starts the voice too). The first start downloads the voice, which takes a few minutes.'
+        Req-Hint 'Click "Start voice". The first start downloads the voice, which takes a few minutes.'
     }
 
     $keysPath = Join-Path $script:root 'dev-keys.json'

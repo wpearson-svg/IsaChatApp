@@ -70,6 +70,7 @@ public static class Wording
     public const string PersonCardTitle = "Pass this to ISACA's Chapter Experience team?";
 
     /// <summary>After "Not quite": the offer to pass the question on.</summary>
+    public const string PassToPersonButton = "Pass this to a person";
     public const string NotQuiteOffer = "Sorry that didn't help. Want me to pass it to a person?";
 
     /// <summary>The message after a leader asks for a person themselves.</summary>

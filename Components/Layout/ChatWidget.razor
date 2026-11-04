@@ -341,7 +341,9 @@
                             @* Content Health Dashboard: "Yes, this answered my
                                question" / "Not quite", logged by trace ID. *@
                             <AnswerFeedback @key="@("fb-" + msg.TraceId)" TraceId="@(msg.TraceId ?? "")"
-                                            OnPassToPerson="() => OpenPersonCard(IsaChatApp.Services.PersonRequestService.Doors.NotQuite, msg)" />
+                                            OfferHandoff="msg.OfferHandoff"
+                                            OnPassToPerson="() => OpenPersonCard(IsaChatApp.Services.PersonRequestService.Doors.NotQuite, msg)"
+                                            OnPointToPerson="() => OpenPersonCard(IsaChatApp.Services.PersonRequestService.Doors.AnswerThenPoint, msg)" />
                         }
                         @if (msg.ShowReference && ShowDeveloperTools && !string.IsNullOrEmpty(msg.TraceId))
                         {
@@ -1487,7 +1489,7 @@
         switch (result.Status)
         {
             case "answered":
-                Messages.Add(new ChatEntry("ai", name, result.Message, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, Question: text));
+                Messages.Add(new ChatEntry("ai", name, result.Message, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, Question: text, OfferHandoff: result.OfferHandoff));
                 break;
             case "escalated":
                 // The ticketing stage's message already names the ticket, so
@@ -1539,7 +1541,8 @@
     private sealed record ChatEntry(string Role, string DisplayName, string Text, string? Model = null, double? ElapsedMs = null, List<IsaChatApp.Services.Orchestrator.SourceRef>? Sources = null, string? TraceId = null,
         List<IsaChatApp.Services.Orchestrator.WorkStep>? Steps = null, double? WorkMs = null,
         string? Question = null,    // set only on answered pipeline replies: the question asked, for "Save to notebook"
-        bool ShowReference = false) // true only on a hand-off: show the "Reference #" line (wording table, section 5)
+        bool ShowReference = false, // true only on a hand-off: show the "Reference #" line (wording table, section 5)
+        bool OfferHandoff = false)  // a rule said "answer, then point": show the pass-to-a-person button
     {
         // A unique id for the message's element on the page, so the chat
         // can scroll to it (and two messages with the same text never

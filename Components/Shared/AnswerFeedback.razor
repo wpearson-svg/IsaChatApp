@@ -25,6 +25,10 @@
     {
         <button type="button" class="isa-fb__btn" @onclick='() => Send("resolved")'>Yes, this answered my question</button>
         <button type="button" class="isa-fb__btn" @onclick='() => Send("not_quite")'>Not quite</button>
+        @if (OfferHandoff && OnPointToPerson.HasDelegate)
+        {
+            <button type="button" class="isa-fb__btn" @onclick="() => OnPointToPerson.InvokeAsync()">@IsaChatApp.Services.ShowTheWork.Wording.PassToPersonButton</button>
+        }
     }
     else if (_kind == "not_quite" && OnPassToPerson.HasDelegate && !_offerClosed)
     {
@@ -44,6 +48,10 @@
 
     /// <summary>Opens the "connect me" card for this answer. Without it, "Not quite" only says thanks.</summary>
     [Parameter] public EventCallback OnPassToPerson { get; set; }
+
+    /// <summary>A rule said "answer, then point": also show a button that opens the connect card.</summary>
+    [Parameter] public bool OfferHandoff { get; set; }
+    [Parameter] public EventCallback OnPointToPerson { get; set; }
 
     private string? _kind;
     private bool _offerClosed;
