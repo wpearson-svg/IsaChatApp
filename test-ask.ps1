@@ -6,8 +6,13 @@ param(
     [Parameter(Mandatory=$true)][string]$User,
     [string]$Question = "How many board meetings must a chapter hold each year?",
     [string]$App = "http://localhost:5067",
-    [string]$Keycloak = "http://localhost:8080"
+    [string]$Keycloak = ""
 )
+
+# Where the services run (this computer, or the home PC when Isa is set to Remote). An explicit -Keycloak still wins.
+. "$PSScriptRoot\services-config.ps1"
+if (-not $Keycloak) { $Keycloak = Get-ServiceUrl 'keycloak' }
+if ((Get-ServicesLocation).Remote) { Write-Host ("Services are Remote: using " + $Keycloak) -ForegroundColor Yellow }
 $pwFile = Join-Path $PSScriptRoot "keycloak\dev-passwords.local.csv"
 if (-not (Test-Path $pwFile)) { Write-Host "No $pwFile - run: python directory\build_keycloak_realm.py" -ForegroundColor Red; exit 1 }
 $row = Import-Csv -Path $pwFile -Encoding UTF8 | Where-Object { $_.username -eq $User }

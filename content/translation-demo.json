@@ -1,0 +1,10 @@
+{
+  "note": "Predetermined Amharic questions for the test and the presentation. question = as typed in Latin letters. ethiopic = the same question in Ethiopic script (sent to the translation service). reply = the answer shown back in Latin letters. All three are required. The reply is shown only when the English question gets an answer.",
+  "entries": [
+    {
+      "question": "And mehaber chaptar be and amet wust sint yebord sibseba madreg alebet?",
+      "ethiopic": "አንድ የማህበር ቻፕተር በአንድ ዓመት ውስጥ ስንት የቦርድ ስብሰባ ማድረግ አለበት?",
+      "reply": "be-chaptaru memehiriya denb meselet, yechaptaru bord be-ametu wust be-zerzer mesebseb alebet, be-anestegwa arat yebord sibsebawoch be-amet. (Chapter Leader Guidebook - President (August 2026), page 7)"
+    }
+  ]
+}

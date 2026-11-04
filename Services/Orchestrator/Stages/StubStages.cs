@@ -154,10 +154,12 @@ public class RagStage : IStage
     public string Name => "rag";
     private readonly string _contentDbPath;
     private readonly IConfiguration _config;
+    private readonly IsaChatApp.Services.Search.VectorSearchService _vector;
 
-    public RagStage(IConfiguration config)
+    public RagStage(IConfiguration config, IsaChatApp.Services.Search.VectorSearchService vector)
     {
         _config = config;
+        _vector = vector;
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
     }
 
@@ -173,15 +175,38 @@ public class RagStage : IStage
         if (ctx.Passages.Count == 0)
             ctx.Passages = await StandInAsync(ctx.Question);
 
+        // Nothing in the meaning map: search by meaning (E3, Services/Search/VectorSearchService.cs). Only ISACA's own
+        // documents come back from it for now: a best-practice guide is labelled "general best practice" by database_search,
+        // and that label is not carried through here yet. A miss, or an embedding service that is down, falls through
+        // to the same escalation as before.
+        var how = "stub=meaning_map";
+        var vectorNote = "";
+        if (ctx.Passages.Count == 0 && _vector.Enabled)
+        {
+            var v = await _vector.SearchAsync(ctx.Question, _config.GetValue("VectorSearch:TopK", 3));
+            if (v.Found)
+            {
+                var docs = v.Hits.Where(h => !h.Document.StartsWith("Best Practice Guide:", StringComparison.OrdinalIgnoreCase)).ToList();
+                if (docs.Count > 0)
+                {
+                    ctx.Passages = docs.Select(h => new Passage(h.Document, h.Section, h.Page, h.Text)).ToList();
+                    ctx.SearchScore = docs[0].Score;
+                    how = $"retrieval=vector; top_score={docs[0].Score:0.00}";
+                }
+                else vectorNote = "; vector_miss=guides only";
+            }
+            else vectorNote = $"; vector_miss={v.Reason.Replace(';', ',')}";
+        }
+
         if (ctx.Passages.Count == 0)
             // The question text is never logged. Only how close it came to a meaning-map question (in letters changed) is, so a
             // near miss such as a speech-to-text mishearing can be told apart from a real gap in the content.
-            return new StageResult(StageOutcome.Escalate, "no approved content found", $"no_context; passages=0; retrieved=none; nearest_map_distance={_nearestDistance}; map_error={_mapError}; nearest_diff={_nearestDiff}");
+            return new StageResult(StageOutcome.Escalate, "no approved content found", $"no_context; passages=0; retrieved=none; nearest_map_distance={_nearestDistance}; map_error={_mapError}; nearest_diff={_nearestDiff}{vectorNote}");
 
         ctx.Sources = ctx.Passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).Distinct().ToList();
         var retrieved = string.Join(", ", ctx.Passages.Select(p => $"{p.Document} {p.Section}".Replace(';', ',')).Distinct());
         return new StageResult(StageOutcome.Pass, null,
-            $"passages={ctx.Passages.Count}; retrieved={retrieved}; stub=meaning_map");
+            $"passages={ctx.Passages.Count}; retrieved={retrieved}; {how}");
     }
 
     private int _nearestDistance = -1;
@@ -249,25 +274,65 @@ public class RagStage : IStage
     }
 }
 
-/// <summary>Stub translation — pass-through (detects the language, does not translate yet).
-/// Translation:Enabled false switches the stage off: it is skipped for every question ("off") and never calls
-/// the translation service (Translation:Endpoint), so that service does not need to be running.</summary>
+/// <summary>
+/// Translation (E1: Eliyas's NLLB-200 service, Translation:Endpoint). English is skipped. Amharic ("am") is translated to
+/// English and the English text replaces ctx.Question for every stage after this one (the orchestrator keeps the original
+/// for the usage summary). The service only knows English and Amharic, so any other language still passes through
+/// unchanged, as before. When the service says fallback (its model is not loaded) or does not answer, the question goes on
+/// as written and the step says so; it is never reported as translated. The question text is never logged or put in DataText.
+/// Translation:Enabled false switches the stage off ("off"); then the service is never called.
+/// Settings: Translation:Enabled, Translation:Endpoint, Translation:TimeoutSeconds (default 30).
+/// </summary>
 public class TranslationStage : IStage
 {
-    private readonly IConfiguration _config;
-    public TranslationStage(IConfiguration config) => _config = config;
+    private readonly Services.Translation.TranslationClient _translator;
+    private readonly Services.Translation.TranslationDemo _demo;
+
+    public TranslationStage(Services.Translation.TranslationClient translator, Services.Translation.TranslationDemo demo)
+    {
+        _translator = translator;
+        _demo = demo;
+    }
 
     public string Name => "translation";
-    public Task<StageResult> RunAsync(QueryContext ctx)
+
+    public async Task<StageResult> RunAsync(QueryContext ctx)
     {
         // Switched off on this computer: the text goes on unchanged, shown gray in developer view.
-        if (!_config.GetValue("Translation:Enabled", true))
-            return Task.FromResult(new StageResult(StageOutcome.Pass, null, "off", Skipped: true));
-        return Task.FromResult(ctx.Language == "en"
-            // English needs no translation: the contract's "skipped, english" (shown gray in developer view).
-            ? new StageResult(StageOutcome.Pass, null, "english", Skipped: true)
-            // Any other language (or "und"): still a stub that passes the text through unchanged.
-            : new StageResult(StageOutcome.Pass, null, $"from={ctx.Language}"));
+        if (!_translator.Enabled)
+            return new StageResult(StageOutcome.Pass, null, "off", Skipped: true);
+
+        // A predetermined Amharic question typed in Latin letters (test and presentation): the Ethiopic version is
+        // sent to the service for a real translation to English; the reply is predetermined (ctx.DemoReply).
+        var demo = _demo.Find(ctx.Question);
+        if (demo is not null)
+        {
+            var d = await _translator.TranslateMessageAsync(demo.Ethiopic, "amh", "eng");
+            if (d.Text is null)
+                return new StageResult(StageOutcome.Pass, null, $"from=am; translated=no; predetermined=yes; note={d.Note}");
+            ctx.Question = d.Text;
+            ctx.Language = "am";
+            ctx.DemoReply = demo.Reply;
+            return new StageResult(StageOutcome.Pass, null, $"from=am; translated=yes; predetermined=yes; model_ms={d.Ms}");
+        }
+
+        // English needs no translation: the contract's "skipped, english" (shown gray in developer view).
+        if (ctx.Language == "en")
+            return new StageResult(StageOutcome.Pass, null, "english", Skipped: true);
+
+        // A language Isa has no translation code for (see TranslationClient.ServiceCodes, or "und") passes through unchanged.
+        var code = Services.Translation.TranslationClient.ServiceCode(ctx.Language);
+        if (code is null)
+            return new StageResult(StageOutcome.Pass, null, $"from={ctx.Language}; translated=no; note=language_not_supported");
+
+        var r = await _translator.TranslateMessageAsync(ctx.Question, code, "eng");
+        if (r.Text is null)
+            return new StageResult(StageOutcome.Pass, null, $"from={ctx.Language}; translated=no; note={r.Note}");
+
+        ctx.Question = r.Text;
+        // ctx.Language stays as detected: the ticket and the usage summary record the language the person wrote in,
+        // and the orchestrator translates the reply back into it.
+        return new StageResult(StageOutcome.Pass, null, $"from={ctx.Language}; translated=yes; model_ms={r.Ms}");
     }
 }
 

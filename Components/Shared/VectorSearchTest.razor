@@ -1,0 +1,184 @@
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Search
+@inject IAccessControlAdapter Access
+@inject KeycloakSignInService SignInService
+@inject VectorSearchService Vector
+@*
+    Dev dashboard > Vector search test.
+
+    Shows what search by meaning finds for a question: the closest approved passages with their scores, and whether
+    each is above the pass mark (the search pass mark slider in Compliance policy; default VectorSearch:MinScore). The pass mark has not been calibrated on the real passages,
+    so the second table runs the five rehearsed questions plus two reworded ones and shows each one's best score:
+    the questions that should find something need to score above the mark, and the ones that must still go to a person
+    (the cryptocurrency question) need to score below it.
+    Read-only: nothing is written to the event log and no ticket is made. English questions only; translation is not
+    part of this page. Limited to the dashboard_dev role, like the Testing console.
+*@
+
+@if (_allowed is null)
+{
+    <p class="vt__note">Checking your access&hellip;</p>
+}
+else if (_allowed == false)
+{
+    <div class="vt__locked" role="alert">
+        <strong>The vector search test is for the dashboard developer role.</strong>
+        <p>Sign in with an account that has the <code>dashboard_dev</code> role.</p>
+    </div>
+}
+else
+{
+    <section class="vt">
+        <h3 class="vt__h">Vector search test</h3>
+        <p class="vt__note">
+            Index: @(_status.Ready ? $"{_status.Passages} passages, model {_status.ModelId}" : "not built (run Build search vectors in the launcher)").
+            Pass mark <b>@Vector.MinScore.ToString("0.00")</b> (set in Compliance policy, Search pass mark). Search by meaning in the chat is
+            @(Vector.Enabled ? "on" : "off") (VectorSearch:Enabled).
+        </p>
+
+        <div class="vt__row">
+            <input type="text" class="vt__input" placeholder="Type an English question..." @bind="_question" @bind:event="oninput"
+                   @onkeydown="OnKey" aria-label="Question" />
+            <button type="button" class="vt__btn" @onclick="RunOneAsync" disabled="@(_running || string.IsNullOrWhiteSpace(_question))">@(_running ? "Searching..." : "Search")</button>
+        </div>
+
+        @if (_one is not null)
+        {
+            @if (_one.Hits.Count == 0)
+            {
+                <p class="vt__note">Nothing came back: @_one.Reason.</p>
+            }
+            else
+            {
+                <div class="vt__scroll">
+                    <table class="vt__table">
+                        <thead><tr><th>Score</th><th>Pass mark</th><th>Document</th><th>Section</th><th>Page</th><th>Start of the passage</th></tr></thead>
+                        <tbody>
+                            @foreach (var h in _one.Hits)
+                            {
+                                <tr>
+                                    <td class="vt__num">@h.Score.ToString("0.000")</td>
+                                    <td>@(h.Score >= Vector.MinScore ? "above" : "below")</td>
+                                    <td>@h.Document</td>
+                                    <td>@h.Section</td>
+                                    <td>@h.Page</td>
+                                    <td class="vt__data">@Snip(h.Text)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p class="vt__note">The chat uses only the passages above the mark, ISACA documents only (best-practice guides are not returned by search by meaning yet).</p>
+            }
+        }
+
+        <h3 class="vt__h vt__h--gap">Best score for the rehearsed questions</h3>
+        <div class="vt__row">
+            <button type="button" class="vt__btn vt__btn--ghost" @onclick="RunPresetsAsync" disabled="@_running">Run these questions</button>
+        </div>
+        @if (_presets is not null)
+        {
+            <div class="vt__scroll">
+                <table class="vt__table">
+                    <thead><tr><th>Question</th><th>Expected</th><th>Best score</th><th>Pass mark</th><th>Best passage</th></tr></thead>
+                    <tbody>
+                        @foreach (var p in _presets)
+                        {
+                            <tr>
+                                <td>@p.Question</td>
+                                <td>@p.Expect</td>
+                                <td class="vt__num">@(p.Hit is null ? "none (" + p.Reason + ")" : p.Hit.Score.ToString("0.000"))</td>
+                                <td>@(p.Hit is null ? "" : p.Hit.Score >= Vector.MinScore ? "above" : "below")</td>
+                                <td class="vt__data">@(p.Hit is null ? "" : p.Hit.Document + " · " + p.Hit.Section)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="vt__note">Questions answered earlier in the pipeline (direct hit, meaning map, a rule) never reach this search; they are here to see where the scores sit.</p>
+        }
+    </section>
+}
+
+@code {
+    [CascadingParameter] private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthState { get; set; }
+
+    private const string DevRole = "dashboard_dev";
+
+    private sealed record Preset(string Question, string Expect, VectorSearchService.VectorHit? Hit, string Reason);
+
+    private static readonly (string Question, string Expect)[] PresetQuestions =
+    {
+        ("How many board meetings must a chapter hold each year?", "finds the Guidebook passage"),
+        ("How often does the board need to meet?", "finds the Guidebook passage (reworded)"),
+        ("Who writes down what the board decided?", "finds the minutes passage"),
+        ("What do I have to send ISACA every year?", "finds the annual paperwork passage (reworded)"),
+        ("What is the cryptocurrency policy?", "must score below the mark (goes to a person)"),
+        ("Where's a good pizza place near the conference?", "must score below the mark (a rule stops it first)"),
+        ("A colleague keeps bothering me, what should I do?", "a rule hands it to a person first"),
+    };
+
+    private bool? _allowed;
+    private bool _running;
+    private string _question = "";
+    private VectorSearchService.IndexStatus _status = new(false, 0, "");
+    private VectorSearchService.VectorSearchResult? _one;
+    private List<Preset>? _presets;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await GetBearerTokenAsync();
+        var identity = await Access.ValidateAsync(token);
+        _allowed = identity is not null && identity.Roles.Contains(DevRole);
+        if (_allowed == true) _status = Vector.Status();
+    }
+
+    private async Task<string?> GetBearerTokenAsync()
+    {
+        if (AuthState is null) return null;
+        var user = (await AuthState).User;
+        var sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+        var accessToken = await SignInService.GetAccessTokenAsync(sessionId);
+        return accessToken is null ? null : $"Bearer {accessToken}";
+    }
+
+    private static string Snip(string text)
+    {
+        var flat = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
+        return flat.Length <= 140 ? flat : flat[..140] + "...";
+    }
+
+    private async Task OnKey(KeyboardEventArgs e) { if (e.Key == "Enter") await RunOneAsync(); }
+
+    private async Task RunOneAsync()
+    {
+        if (_allowed != true || _running || string.IsNullOrWhiteSpace(_question)) return;
+        _running = true;
+        try
+        {
+            _status = Vector.Status();
+            // -1 = everything, however low the score, so the page shows how close the nearest passages are.
+            _one = await Vector.SearchAsync(_question.Trim(), 5, default, minScore: -1);
+        }
+        finally { _running = false; }
+    }
+
+    private async Task RunPresetsAsync()
+    {
+        if (_allowed != true || _running) return;
+        _running = true;
+        try
+        {
+            _status = Vector.Status();
+            var list = new List<Preset>();
+            foreach (var (q, expect) in PresetQuestions)
+            {
+                var r = await Vector.SearchAsync(q, 1, default, minScore: -1);
+                list.Add(new Preset(q, expect, r.Hits.Count > 0 ? r.Hits[0] : null, r.Reason));
+                _presets = list.ToList();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        finally { _running = false; }
+    }
+}

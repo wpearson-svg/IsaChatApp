@@ -12,8 +12,13 @@ param(
     [Parameter(Mandatory=$true)][string]$User,
     [ValidateSet("Forged","Restart","Reset")][string]$Mode = "Forged",
     [string]$App = "http://localhost:5067",
-    [string]$Keycloak = "http://localhost:8080"
+    [string]$Keycloak = ""
 )
+
+# Where the services run (this computer, or the home PC when Isa is set to Remote). An explicit -Keycloak still wins.
+. "$PSScriptRoot\services-config.ps1"
+if (-not $Keycloak) { $Keycloak = Get-ServiceUrl 'keycloak' }
+if ((Get-ServicesLocation).Remote) { Write-Host ("Services are Remote: using " + $Keycloak) -ForegroundColor Yellow }
 
 $script:fail = 0
 function Pass($t) { Write-Host "[ PASS ] $t" -ForegroundColor Green }

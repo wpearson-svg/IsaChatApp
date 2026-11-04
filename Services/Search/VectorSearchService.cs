@@ -14,29 +14,38 @@ namespace IsaChatApp.Services.Search;
 /// A clean miss (Found = false, with a short reason) is what the caller gets whenever there is no good
 /// match, the embedding service is down, or no vectors have been built yet. It never throws.
 ///
-/// Settings: VectorSearch:Path (default data/vectors.db), VectorSearch:MinScore (default 0.25, Eliyas's
-/// starting value; not yet benchmarked on the real passages), ContentDb:Path.
-/// Not connected to the chat pipeline yet: the search and RAG stages do not call it.
+/// Settings: VectorSearch:Enabled (default true), VectorSearch:Path (default data/vectors.db), VectorSearch:MinScore
+/// (the default for the Dev Dashboard's search pass mark slider, 0.80; Eliyas started at 0.25, which suits a different model: multilingual-e5 scores even unrelated text
+/// around 0.70, so 0.25 would match everything. NOT yet calibrated: use Dev Dashboard > Vector search test),
+/// VectorSearch:TopK (default 3, read by the rag stage), ContentDb:Path.
+/// Called by the rag stage when the meaning map has nothing; a miss there still escalates to a person.
 /// </summary>
 public sealed class VectorSearchService
 {
     private readonly string _vectorsPath;
     private readonly string _contentPath;
-    private readonly double _minScore;
+    private readonly IConfiguration _config;
     private readonly EmbeddingClient _embeddings;
+    private readonly OutputComplianceSettings _settings;
     private readonly ILogger<VectorSearchService> _log;
     private readonly object _lock = new();
     private IndexSnapshot? _snapshot;
     private DateTime _snapshotStamp;
 
-    public VectorSearchService(IConfiguration config, EmbeddingClient embeddings, ILogger<VectorSearchService> log)
+    public VectorSearchService(IConfiguration config, EmbeddingClient embeddings, OutputComplianceSettings settings, ILogger<VectorSearchService> log)
     {
         _embeddings = embeddings;
+        _settings = settings;
         _log = log;
         _vectorsPath = config["VectorSearch:Path"] ?? Path.Combine("data", "vectors.db");
         _contentPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
-        _minScore = config.GetValue("VectorSearch:MinScore", 0.25);
+        _config = config;
     }
+
+    public bool Enabled => _config.GetValue("VectorSearch:Enabled", true);
+
+    /// <summary>The search pass mark: a Dev Dashboard slider (OutputComplianceSettings.SearchPassMark, default VectorSearch:MinScore). Read each time, so a change applies to the next question.</summary>
+    public double MinScore => _settings.SearchPassMark;
 
     public sealed record VectorHit(long PassageId, string Document, string Section, string Page, string Text, double Score);
 
@@ -63,7 +72,8 @@ public sealed class VectorSearchService
         }
     }
 
-    public async Task<VectorSearchResult> SearchAsync(string query, int topK = 5, CancellationToken ct = default)
+    /// <param name="minScore">Overrides VectorSearch:MinScore. Pass a very low number (for example -1) to get the closest passages whatever their score, for tuning.</param>
+    public async Task<VectorSearchResult> SearchAsync(string query, int topK = 5, CancellationToken ct = default, double? minScore = null)
     {
         if (string.IsNullOrWhiteSpace(query)) return Miss("empty question");
 
@@ -96,7 +106,7 @@ public sealed class VectorSearchService
         var top = scored
             .OrderByDescending(s => s.Score)
             .Take(Math.Clamp(topK, 1, 20))
-            .Where(s => s.Score >= _minScore)
+            .Where(s => s.Score >= (minScore ?? MinScore))
             .ToList();
         if (top.Count == 0) return Miss("no passage close enough");
 

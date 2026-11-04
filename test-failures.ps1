@@ -24,10 +24,19 @@ param(
     [string]$User = "d.whitfield",
     [switch]$NoToken,
     [string]$App = "http://localhost:5067",
-    [string]$Keycloak = "http://localhost:8080"
+    [string]$Keycloak = ""
 )
 
+# Where the services run (this computer, or the home PC when Isa is set to Remote). An explicit -Keycloak still wins.
+. "$PSScriptRoot\services-config.ps1"
+if (-not $Keycloak) { $Keycloak = Get-ServiceUrl 'keycloak' }
+if ((Get-ServicesLocation).Remote) { Write-Host ("Services are Remote: using " + $Keycloak) -ForegroundColor Yellow }
+
 # ---------- helpers ----------
+# A sign-in token can run out during a long run (slow model calls). Each token is remembered with its user, so a 401 on a
+# token this script itself signed in can be answered with ONE fresh sign-in and a retry. Made-up or tampered tokens are never retried.
+$script:TokenUser = @{}; $script:TokenReplaced = @{}
+
 function Get-AuthHeader([string]$name) {
     $pwFile = Join-Path $PSScriptRoot "keycloak\dev-passwords.local.csv"
     if (-not (Test-Path $pwFile)) { return $null }
@@ -37,7 +46,8 @@ function Get-AuthHeader([string]$name) {
         $tok = Invoke-RestMethod -Method Post -Uri "$Keycloak/realms/isa/protocol/openid-connect/token" -Body @{
             grant_type = "password"; client_id = "isa-chat"; client_secret = "dev-only-placeholder-secret"
             username = $name; password = $row.password } -ContentType "application/x-www-form-urlencoded"
-        return @{ Authorization = "Bearer $($tok.access_token)" }
+        $v = "Bearer $($tok.access_token)"; $script:TokenUser[$v] = $name
+        return @{ Authorization = $v }
     } catch { return $null }
 }
 
@@ -50,6 +60,17 @@ function Merge-Headers($a, $b) {
 
 # One HTTP call. Code 0 = no response at all (app down or timed out).
 function Send-Raw([string]$Method, [string]$Path, $Headers, [byte[]]$Body, [string]$ContentType = "application/json; charset=utf-8") {
+    $h = $Headers
+    if ($h -and $h.Authorization -and $script:TokenReplaced.ContainsKey($h.Authorization)) { $h = @{} + $h; $h.Authorization = $script:TokenReplaced[$h.Authorization] }
+    $r = Send-RawOnce $Method $Path $h $Body $ContentType
+    if ($r.Code -eq 401 -and $h -and $h.Authorization -and $script:TokenUser.ContainsKey($h.Authorization)) {
+        $fresh = Get-AuthHeader $script:TokenUser[$h.Authorization]
+        if ($fresh) { $script:TokenReplaced[$h.Authorization] = $fresh.Authorization; $h = @{} + $h; $h.Authorization = $fresh.Authorization; $r = Send-RawOnce $Method $Path $h $Body $ContentType }
+    }
+    return $r
+}
+
+function Send-RawOnce([string]$Method, [string]$Path, $Headers, [byte[]]$Body, [string]$ContentType = "application/json; charset=utf-8") {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     $code = 0; $text = ""
     try {
@@ -229,7 +250,7 @@ $r = Send-Raw "GET" "/api/events/$([guid]::NewGuid())" $null $null
 $p = @(); if ($r.Code -ne 200) { $p += "unknown trace lookup: HTTP $($r.Code), expected 200 with nothing in it" }
 Report "Looking up a trace ID that does not exist" $p $null ""
 
-$auth = ""; if ($haveToken) { $auth = $headers.Authorization }
+$auth = ""; if ($haveToken) { $auth = $headers.Authorization; $fresh = Get-AuthHeader $User; if ($fresh) { $auth = $fresh.Authorization } }
 $jobs = 1..8 | ForEach-Object {
     Start-Job -ScriptBlock {
         param($app, $auth, $q)

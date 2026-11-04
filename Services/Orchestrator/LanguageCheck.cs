@@ -57,6 +57,8 @@ public static class LanguageCheck
             else if (c >= '฀' && c <= '๿') thai++;
         }
         if (letters == 0) return "und";
+        // Ethiopic script (Amharic): the translation service handles it.
+        if (text.Count(c => c >= '\u1200' && c <= '\u137F') * 10 >= letters * 3) return "am";
 
         bool Mostly(int n) => n * 10 >= letters * 3;
         if (kana > 0 && Mostly(han + kana)) return "ja";
