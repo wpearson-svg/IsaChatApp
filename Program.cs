@@ -112,6 +112,9 @@ builder.Services.AddSingleton<IStage, ComplexAiStage>();
 builder.Services.AddSingleton<IsaChatApp.Services.OutputComplianceSettings>();   // Output Compliance thresholds, editable on the Dev Dashboard
 builder.Services.AddSingleton<IsaChatApp.Services.Orchestrator.Stages.HhemScorer>();   // the NLI model (HHEM-2.1-Open, ONNX)
 builder.Services.AddSingleton<IStage, OutputComplianceStage>();
+// Search by meaning (E3 on SQLite): embedding client + vector search over data/vectors.db. Not called by the pipeline yet.
+builder.Services.AddSingleton<IsaChatApp.Services.Search.EmbeddingClient>();
+builder.Services.AddSingleton<IsaChatApp.Services.Search.VectorSearchService>();
 builder.Services.AddSingleton<IStage, TicketingStage>();
 builder.Services.AddSingleton<OrchestratorService>();
 // PersonRequestService: a hand-off the leader asks for themselves ("Talk to a

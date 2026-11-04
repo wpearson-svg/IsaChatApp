@@ -24,6 +24,51 @@
    "document": "Chapter Leader Guidebook - President (August 2026)",
    "source": "ChapterLeaderGuidebookPresident_August 2026.pdf",
    "folder": "(root)"
+  },
+  {
+   "document": "Best Practice Guide: Board Meeting Minutes",
+   "source": "Governance Best Practice/Board Meeting Minutes.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "source": "Governance Best Practice/Board and Officer Roles.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Committees and Task Forces",
+   "source": "Governance Best Practice/Committees and Task Forces.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Conflicts of Interest",
+   "source": "Governance Best Practice/Conflicts of Interest.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Leadership Succession and Handover",
+   "source": "Governance Best Practice/Leadership Succession and Handover.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Orienting New Board Members",
+   "source": "Governance Best Practice/Orienting New Board Members.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Recruiting and Engaging Volunteers",
+   "source": "Governance Best Practice/Recruiting and Engaging Volunteers.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Reviewing Your Chapter Governance",
+   "source": "Governance Best Practice/Reviewing Your Chapter Governance.md",
+   "folder": "Governance Best Practice"
+  },
+  {
+   "document": "Best Practice Guide: Running Effective Board Meetings",
+   "source": "Governance Best Practice/Running Effective Board Meetings.md",
+   "folder": "Governance Best Practice"
   }
  ],
  "passages": [
@@ -593,6 +638,356 @@
    "page": "14",
    "text": "o Ensure the chapter’s goals and strategic plans are in progress.\n• Within 210 days (approximately 7 months) of the AGM:\no Begin recruiting volunteers for the following year/term.\nKey Links\n• Chapter Leader Portal • Training and Events\n• Policies • ISACA Newsroom\n• Chapter Bylaws Template • COBIT\n• Membership • One In Tech\n• Credentialing (certifications and • SheLeadsTech\ncertificates)",
    "id": 81
+  },
+  {
+   "document": "Best Practice Guide: Board Meeting Minutes",
+   "section": "Why minutes matter",
+   "page": "n/a",
+   "text": "Board meeting minutes are the official record of what the board decided. They let the next meeting pick up where the last one ended, show members and partners how decisions were made, help settle later disagreements about what was agreed, and keep the chapter's memory when leaders change. Because minutes can be used as an official record, they should be accurate, plain and brief.",
+   "id": 82
+  },
+  {
+   "document": "Best Practice Guide: Board Meeting Minutes",
+   "section": "What to include in board meeting minutes",
+   "page": "n/a",
+   "text": "Board meeting minutes should include the date, time and place; whether it was a regular or special meeting; who chaired it, which board members attended and who was absent; whether a quorum was present; whether the previous minutes were approved, with any corrections; each motion, who made and seconded it, and the result of the vote; decisions and actions agreed, with who will do them; items held over to a later meeting; and the time the meeting ended. Attach reports instead of copying them into the minutes.",
+   "id": 83
+  },
+  {
+   "document": "Best Practice Guide: Board Meeting Minutes",
+   "section": "What to leave out of minutes",
+   "page": "n/a",
+   "text": "Minutes record decisions, not a word-for-word account of the discussion. Leave out personal opinions and remarks about people, arguments between members, praise or criticism, details of legal advice, jargon nobody will understand later, and anything said in confidence. Use names mainly for who made and seconded motions. Summarize the main points of an important debate in a sentence or two.",
+   "id": 84
+  },
+  {
+   "document": "Best Practice Guide: Board Meeting Minutes",
+   "section": "Approving, signing and sharing minutes",
+   "page": "n/a",
+   "text": "The secretary drafts the minutes soon after the meeting, checks them against the agenda, and sends the draft to the board so members can suggest corrections. The board approves the minutes, with any corrections, at the start of its next meeting. Once approved, the secretary signs them (some boards also ask the president to sign) and files them. Unsigned or unapproved minutes are only a draft.",
+   "id": 85
+  },
+  {
+   "document": "Best Practice Guide: Board Meeting Minutes",
+   "section": "Keeping minutes safe",
+   "page": "n/a",
+   "text": "Keep all approved minutes, with their attachments, in one consistent place that the board can find, with a backup copy. Hand them over to the next secretary and president when leaders change, so the record isn't lost. Rules on how long minutes must be kept differ by country and by your bylaws; many boards simply keep them permanently.",
+   "id": 86
+  },
+  {
+   "document": "Best Practice Guide: Board Meeting Minutes",
+   "section": "Common mistakes with minutes",
+   "page": "n/a",
+   "text": "Common mistakes are not recording whether a quorum was present, describing decisions too vaguely to act on, including remarks that could embarrass the chapter, sending minutes out late or approving them late, missing signatures, and filing them in different places so they can't be found later.",
+   "id": 87
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "section": "What the board as a whole does",
+   "page": "n/a",
+   "text": "A board's job is oversight and direction, not running day-to-day activities. Its main responsibilities are to keep the mission in view, plan and then check progress against the plan, make sure programs serve the mission, protect the chapter's money and assets through a budget and financial controls, recruit and develop good board members, and keep the chapter legally and ethically sound. Each board member also owes the chapter care (decide carefully and with good information), loyalty (put the chapter's interests ahead of their own) and faithfulness to the mission and the rules.",
+   "id": 88
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "section": "What every board member is expected to do",
+   "page": "n/a",
+   "text": "Every board member should attend board meetings, read the agenda and materials before each meeting, serve on at least one committee or take on a special task, keep up with the chapter's activities and policies, follow the conflict of interest and confidentiality policies, help find future leaders, and speak well of the chapter. Board members share responsibility for board decisions, including ones they voted against, and should disagree respectfully in the meeting rather than outside it.",
+   "id": 89
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "section": "The president or chair",
+   "page": "n/a",
+   "text": "The president (or board chair) leads the board as a team. Typical duties are to plan the agenda and run board meetings, make sure every member can take part, appoint committee chairs and suggest committee members, help with new member orientation, act as the board's main spokesperson, lead a regular board self-assessment, and mentor the person who will take over. The president has the same single vote as other members; some presidents speak last so they don't steer the discussion.",
+   "id": 90
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "section": "The vice president",
+   "page": "n/a",
+   "text": "The vice president (or vice chair) is the backup leader, so the board is never without someone to lead. Typical duties are to run meetings when the president is absent, take on special assignments from the president, share leadership tasks, and prepare to step into the president's role.",
+   "id": 91
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "section": "The secretary",
+   "page": "n/a",
+   "text": "The secretary looks after the board's records. Typical duties are to send meeting notices, record attendance and whether a quorum was present, take or review the minutes and bring them to the next meeting for approval, keep board records, documents and contracts safe and in one place, and keep track of board members' terms. Any board member can take minutes if needed, but the secretary makes sure they are complete and filed.",
+   "id": 92
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "section": "The treasurer",
+   "page": "n/a",
+   "text": "The treasurer looks after the chapter's money on behalf of the board. Typical duties are to prepare or oversee the annual budget and present it for approval, make sure board members receive clear, timely financial reports, chair any finance committee, help the board understand the chapter's financial position, and work with whoever reviews or audits the accounts. A treasurer needs some understanding of basic accounting and financial statements.",
+   "id": 93
+  },
+  {
+   "document": "Best Practice Guide: Board and Officer Roles",
+   "section": "Terms, job descriptions and holding more than one role",
+   "page": "n/a",
+   "text": "Written descriptions of each board role help everyone know what is expected, and give the board something to refer back to later. A role description usually covers the role's duties, who it reports to, the term dates, the expected time commitment, and the skills it needs. Many boards limit how many terms in a row a person can serve, and stagger terms so the whole board never changes at once. It is usually better for one person to hold only one officer role. Your chapter's bylaws set the actual terms and limits.",
+   "id": 94
+  },
+  {
+   "document": "Best Practice Guide: Committees and Task Forces",
+   "section": "Standing committees, ad hoc committees and task forces",
+   "page": "n/a",
+   "text": "A standing committee handles ongoing work year after year, such as finance, membership, programs or nominations. An ad hoc committee is set up for one purpose, such as reviewing the bylaws or drafting a strategic plan, and closes when the job is done. A task force is short and focused on one problem, such as planning an event. An advisory group gives expert advice but has no decision-making power. Committees usually make recommendations; the full board makes the decision.",
+   "id": 95
+  },
+  {
+   "document": "Best Practice Guide: Committees and Task Forces",
+   "section": "How many committees a chapter needs",
+   "page": "n/a",
+   "text": "Most boards need fewer standing committees than they think. Review the committees every year against the work the chapter actually needs to do: close committees with no real work, merge committees whose duties overlap, and use short task forces for one-off jobs. Committees are tools for the board's work, not ends in themselves.",
+   "id": 96
+  },
+  {
+   "document": "Best Practice Guide: Committees and Task Forces",
+   "section": "Choosing committee members",
+   "page": "n/a",
+   "text": "Write down what each committee is for and what skills it needs, and share that widely so volunteers can decide whether to join. Match people to committees by their skills, interests and available time, and aim for a mix of experienced members and newer people. Each board member should serve on at least one committee, and usually on no more than two. Committees can include chapter members who are not on the board, which is a good way to spot future board members.",
+   "id": 97
+  },
+  {
+   "document": "Best Practice Guide: Committees and Task Forces",
+   "section": "The committee chair's job",
+   "page": "n/a",
+   "text": "A committee chair turns the board's goals into a work plan and meeting agendas, runs the committee's meetings, follows up with members who miss meetings, makes sure notes are kept, and reports the committee's progress and recommendations to the board. Give every committee a written charge with its goals and deadlines, and review it every year or two.",
+   "id": 98
+  },
+  {
+   "document": "Best Practice Guide: Committees and Task Forces",
+   "section": "Checking how committees are doing",
+   "page": "n/a",
+   "text": "At the end of each year or project, ask whether each committee met its goals, used its members' time well and still needs to exist. Short check-ins at the end of meetings also help. Use what you learn to thank strong contributors and to invite them toward larger leadership roles.",
+   "id": 99
+  },
+  {
+   "document": "Best Practice Guide: Conflicts of Interest",
+   "section": "What a conflict of interest is",
+   "page": "n/a",
+   "text": "A conflict of interest arises when a board member's personal interest could influence, or look as if it could influence, a decision they take part in. It isn't only about money: a family tie, a job with a supplier or sponsor, or a role in a competing organization can all create a conflict. Conflicts are normal, since board members have lives and careers outside the chapter. What matters is that they are disclosed and handled openly.",
+   "id": 100
+  },
+  {
+   "document": "Best Practice Guide: Conflicts of Interest",
+   "section": "What a conflict of interest policy should include",
+   "page": "n/a",
+   "text": "A conflict of interest policy should say why it exists, ask every board member to agree to follow it, require each board member to fill in a written disclosure of their outside ties every year, keep those disclosures on file and up to date, explain what happens when a member has a conflict on a decision, and expect members to speak up when a new conflict comes up during a discussion.",
+   "id": 101
+  },
+  {
+   "document": "Best Practice Guide: Conflicts of Interest",
+   "section": "What to do when a board member has a conflict in a meeting",
+   "page": "n/a",
+   "text": "When a board member has a conflict of interest on an item, they should declare it before the discussion starts, leave the room for that item and not vote, and the minutes should record that they declared the conflict and did not vote. Some boards let the member answer questions first and then step out. The chair names the conflict and asks the member to step aside. If a member forgets, the chair should give a gentle reminder; if a member disputes the conflict, the chair can pause the item until it is resolved.",
+   "id": 102
+  },
+  {
+   "document": "Best Practice Guide: Conflicts of Interest",
+   "section": "Preventing conflicts",
+   "page": "n/a",
+   "text": "Talk about conflicts of interest when recruiting new board members, include the policy in orientation, and review the disclosures when planning each agenda so the chair can spot conflicts in advance. A board with a range of members is less likely to have one conflict dominate a decision. If a conflict is serious and lasting, the board should discuss whether the member can keep serving in that role.",
+   "id": 103
+  },
+  {
+   "document": "Best Practice Guide: Leadership Succession and Handover",
+   "section": "Why plan for succession",
+   "page": "n/a",
+   "text": "Chapter leadership changes regularly, and much of what a leader knows can leave with them. Planning for succession keeps the chapter running smoothly through each change, brings in fresh ideas, and stops leadership resting on the same few people year after year. The best time to start is early in a term, not just before it ends.",
+   "id": 104
+  },
+  {
+   "document": "Best Practice Guide: Leadership Succession and Handover",
+   "section": "Building a pipeline of future leaders",
+   "page": "n/a",
+   "text": "Treat every active member as a possible future leader. Give promising volunteers growing responsibility, for example a committee role, then a committee chair, then a board seat. Offer training as they go, especially in finance and strategy. A year as treasurer or committee chair is good preparation for president. Ask the whole board what qualities the next leaders need, and invite nominations from every board member.",
+   "id": 105
+  },
+  {
+   "document": "Best Practice Guide: Leadership Succession and Handover",
+   "section": "Handing over to the next president",
+   "page": "n/a",
+   "text": "Before a term ends, the outgoing president should mentor the incoming president, share the open items and upcoming deadlines, introduce key contacts, and pass on records such as minutes, financial information and passwords, following the chapter's procedures. Writing down what worked, what didn't and what is unfinished saves the next leader months of rediscovery.",
+   "id": 106
+  },
+  {
+   "document": "Best Practice Guide: Leadership Succession and Handover",
+   "section": "The role of past presidents",
+   "page": "n/a",
+   "text": "Many boards keep the immediate past president on the board for a year after their term. They remember why past decisions were made, can advise the new president, and help keep plans on track. Their role is to support and advise, not to keep leading. Past leaders can also help by recruiting the next group of volunteers.",
+   "id": 107
+  },
+  {
+   "document": "Best Practice Guide: Leadership Succession and Handover",
+   "section": "Stepping up as a new leader",
+   "page": "n/a",
+   "text": "A new leader should spend the first months learning how the chapter really works: its habits, who holds knowledge and influence, and how decisions get made. Build relationships with fellow board members early, since they drive what the board can achieve. Be honest about your own gaps and ask for help with them. As president, part of the job is to encourage the next group of members to step up.",
+   "id": 108
+  },
+  {
+   "document": "Best Practice Guide: Orienting New Board Members",
+   "section": "Why orientation matters",
+   "page": "n/a",
+   "text": "A new board member should have an orientation, even if they have served on other boards before. Every board has its own habits, customs and unwritten rules, and few people pick up governance on their own. A good orientation shortens the learning curve, so new members contribute sooner, and it gives the whole board one shared picture of how it works. It is also the formal start of working relationships between new and returning members.",
+   "id": 109
+  },
+  {
+   "document": "Best Practice Guide: Orienting New Board Members",
+   "section": "What to cover in a new board member orientation",
+   "page": "n/a",
+   "text": "An orientation for new board members should cover the chapter's mission and goals, the key issues the chapter faces right now, what is expected of each board member (time, meetings, committee work), the board meeting calendar, a contact list of the people they will work with, the board handbook, and the minutes of recent board meetings. Leave time at the end for questions. Spend the session on how to be a good board member and how this board works, more than on organizational detail.",
+   "id": 110
+  },
+  {
+   "document": "Best Practice Guide: Orienting New Board Members",
+   "section": "The board handbook",
+   "page": "n/a",
+   "text": "Give every new board member a board handbook, on paper or as a link. A useful handbook holds a welcome letter, the chapter's history, its mission and goals, the bylaws, recent financial information, the strategic plan, a description of each committee and who chairs it, the role of each board member, and key policies such as conflict of interest. Update the handbook before each orientation, so it reflects new programs and policy changes. New members should read it on their own time before the session, so the session can be used for discussion.",
+   "id": 111
+  },
+  {
+   "document": "Best Practice Guide: Orienting New Board Members",
+   "section": "Who should lead the orientation",
+   "page": "n/a",
+   "text": "The chapter president usually leads the orientation, supported by whoever handles board development, such as a governance or nominating committee. Invite returning board members too: they can present their area, act as mentors, and show newcomers the range of people on the board. Some boards bring in a neutral facilitator so that everyone feels free to speak. ISACA's Chapter Experience team can tell you what ISACA provides for new chapter leaders.",
+   "id": 112
+  },
+  {
+   "document": "Best Practice Guide: Orienting New Board Members",
+   "section": "How to run the session",
+   "page": "n/a",
+   "text": "There is no single right format. An orientation can be a few hours or spread over several short sessions, in person or online; a full-day event can overload people. Decide the goals and the agenda in advance. Keep the setting informal, mix short presentations with discussion and questions, and include some social time, since getting to know each other helps the board work as a team. Make clear that the board acts as a group: decisions are made together, not by any one member.",
+   "id": 113
+  },
+  {
+   "document": "Best Practice Guide: Orienting New Board Members",
+   "section": "After the orientation",
+   "page": "n/a",
+   "text": "Orientation is a start, not the whole job. Pair each new board member with an experienced member as a mentor for their first year. Treat their first regular board meeting as the start of their formal duties, and check in after a few months to see what is still unclear. Some boards ask each new member to sign a short statement of what is expected of them and keep it with the board's records.",
+   "id": 114
+  },
+  {
+   "document": "Best Practice Guide: Recruiting and Engaging Volunteers",
+   "section": "Finding new volunteers and board members",
+   "page": "n/a",
+   "text": "The most effective way to recruit a volunteer is to ask them personally. Look at the skills and backgrounds the board already has, note the gaps, and look for people who fill them, at events, through committees and through members' networks. Explain to each candidate why their skills would help and what the role involves before they say yes. Keep a list of possible future leaders all year, not only at election time.",
+   "id": 115
+  },
+  {
+   "document": "Best Practice Guide: Recruiting and Engaging Volunteers",
+   "section": "Setting clear expectations for board members",
+   "page": "n/a",
+   "text": "Agree on what the chapter expects of every board member and tell new and returning members the same thing, ideally in writing. Typical expectations are to attend meetings regularly, arrive having read the materials, take part in at least one committee, use personal and professional contacts to help the chapter, and raise disagreements respectfully in the meeting. When members have different ideas about their role, the board stops working as a team.",
+   "id": 116
+  },
+  {
+   "document": "Best Practice Guide: Recruiting and Engaging Volunteers",
+   "section": "Keeping volunteers engaged",
+   "page": "n/a",
+   "text": "Learn what motivates each volunteer and give them work that uses their skills and interests. Give volunteers one clear person to contact, tell them how much time a task needs, and respect their limits to avoid burnout. Pair newer volunteers with experienced ones so knowledge is passed on. Ask volunteers for feedback, and act on it, so they feel like partners rather than helpers. When someone steps down, ask what would have made the role better.",
+   "id": 117
+  },
+  {
+   "document": "Best Practice Guide: Recruiting and Engaging Volunteers",
+   "section": "Recognizing and thanking volunteers",
+   "page": "n/a",
+   "text": "Thank volunteers often and publicly, for example at chapter events, in newsletters or in the minutes. Small gestures, such as a certificate, a mention at the annual meeting or a personal note, build loyalty. Recognition also shows other members that volunteering is valued, and it helps move strong volunteers toward leadership roles.",
+   "id": 118
+  },
+  {
+   "document": "Best Practice Guide: Recruiting and Engaging Volunteers",
+   "section": "Improving how the board works",
+   "page": "n/a",
+   "text": "Make board effectiveness a regular topic, for example once a year during planning. A short self-assessment survey every year or two helps members see where the board is strong and where it needs work. Offer training on the topics members ask for, such as reading financial statements, running meetings, meeting rules, the bylaws and strategic planning, and keep past agendas, minutes and budgets in one place so everyone can find them.",
+   "id": 119
+  },
+  {
+   "document": "Best Practice Guide: Recruiting and Engaging Volunteers",
+   "section": "Welcoming new chapter members",
+   "page": "n/a",
+   "text": "New members are more likely to stay when someone connects with them early. Contact each new member personally within their first month, ideally from a fellow volunteer rather than an automated message, and check in again around six months. Send a short series of welcome messages over the first 90 days, each focused on one way to get involved, and offer easy first steps such as a local meetup or an online session.",
+   "id": 120
+  },
+  {
+   "document": "Best Practice Guide: Reviewing Your Chapter Governance",
+   "section": "When to review how the board is set up",
+   "page": "n/a",
+   "text": "Consider a review of the board's structure when the same problems keep coming back: members aren't engaged, decisions take too long, roles overlap, or the bylaws no longer match how the chapter actually works. Reviewing the bylaws every few years, through a short-term committee, keeps them up to date.",
+   "id": 121
+  },
+  {
+   "document": "Best Practice Guide: Reviewing Your Chapter Governance",
+   "section": "Agree on the problem before the solution",
+   "page": "n/a",
+   "text": "Changes to how a board is set up work best when people first agree on what the problems are. Start by writing down what good governance should achieve for the chapter, then compare that with how things work today and list the gaps. Only then design options to close the gaps. Jumping straight to a solution, such as \"we need a smaller board\", tends to split people into camps.",
+   "id": 122
+  },
+  {
+   "document": "Best Practice Guide: Reviewing Your Chapter Governance",
+   "section": "Steps for a governance review",
+   "page": "n/a",
+   "text": "A practical sequence is: form a small review group that includes past leaders and some critical voices; agree what the board should achieve; list the gaps; have the board approve the gaps; design and compare several options; share the preferred option with members and listen to their concerns; refine it; have the board approve it; update the bylaws to match; and plan the changeover so the chapter keeps running. Keep detailed procedures in board policies rather than in the bylaws, so they can be updated more easily.",
+   "id": 123
+  },
+  {
+   "document": "Best Practice Guide: Reviewing Your Chapter Governance",
+   "section": "Pitfalls to avoid in a governance review",
+   "page": "n/a",
+   "text": "Allow enough time, since agreement builds slowly. Talk often with influential members, but don't circulate a proposal before it's ready. Remember that board members serve the whole chapter, not one group within it. Aim for a decision everyone can live with, rather than one everyone loves.",
+   "id": 124
+  },
+  {
+   "document": "Best Practice Guide: Reviewing Your Chapter Governance",
+   "section": "The board's role in planning",
+   "page": "n/a",
+   "text": "Setting the chapter's direction is the board's job. Set aside dedicated time for planning at least once a year, keep the plan short and adaptable, and review progress against it regularly, for example every quarter. Use the plan to decide which projects to take on and which to decline.",
+   "id": 125
+  },
+  {
+   "document": "Best Practice Guide: Running Effective Board Meetings",
+   "section": "Planning the board meeting agenda",
+   "page": "n/a",
+   "text": "Start the agenda by deciding what the board must accomplish at this meeting. Carry over unfinished business from the last meeting, ask board members for items and give them time to reply, put the most important items first, and mark which items need a vote. Next to each item, note who will lead it and roughly how long it should take. A common order is: call to order, approval of the last minutes, reports, unfinished business, new business, and adjournment.",
+   "id": 126
+  },
+  {
+   "document": "Best Practice Guide: Running Effective Board Meetings",
+   "section": "Sending materials before the meeting",
+   "page": "n/a",
+   "text": "Send the agenda and supporting papers well before the meeting, ideally one to two weeks ahead and within any notice period in your bylaws, so members can read them and arrive ready to decide. Short summaries, charts and comparisons with earlier results are easier to read than long reports. Fixing the year's meeting dates in advance helps volunteers keep them free.",
+   "id": 127
+  },
+  {
+   "document": "Best Practice Guide: Running Effective Board Meetings",
+   "section": "Using a consent agenda",
+   "page": "n/a",
+   "text": "A consent agenda groups routine items, such as approving the last minutes and accepting written reports, so the board can approve them together in one vote without discussion. Any member can ask to move an item off the consent agenda for discussion. This saves meeting time for real decisions and strategy instead of listening to reports read aloud.",
+   "id": 128
+  },
+  {
+   "document": "Best Practice Guide: Running Effective Board Meetings",
+   "section": "Leading the meeting",
+   "page": "n/a",
+   "text": "The person chairing the meeting, usually the president, should start and end on time, keep to the agenda, and gently stop discussions that wander. Make sure every member gets a chance to speak, draw out quieter members, and welcome different views before a decision. When an item can't be settled, it can be postponed or passed to a committee. If your bylaws adopt a set of meeting rules such as Robert's Rules of Order, the chair should know how motions and votes work under them.",
+   "id": 129
+  },
+  {
+   "document": "Best Practice Guide: Running Effective Board Meetings",
+   "section": "After the meeting",
+   "page": "n/a",
+   "text": "Within a day or two, send a short note of decisions and action items, with who will do what by when. Carry open action items onto the next agenda as unfinished business. The secretary should send the draft minutes soon after, while memories are fresh. Some boards take five minutes at the end of each meeting to ask what worked and what to change.",
+   "id": 130
+  },
+  {
+   "document": "Best Practice Guide: Running Effective Board Meetings",
+   "section": "Common board meeting mistakes",
+   "page": "n/a",
+   "text": "The most common mistakes are putting too many items on one agenda, leaving too little time for difficult topics, burying the important items at the end, spending most of the meeting on reports instead of decisions, and ending without anyone assigned to follow up. Long meetings with no decisions are a common reason volunteers lose interest and leave a board.",
+   "id": 131
   }
  ]
 }

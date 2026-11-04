@@ -130,7 +130,8 @@ public class Orchestrator
             Message: message ?? "",
             Sources: ctx.Sources,
             TicketReference: ctx.TicketReference,
-            TraceId: ctx.TraceId
+            TraceId: ctx.TraceId,
+            OfferHandoff: finalStatus == "answered" && ctx.OfferHandoff
         );
     }
 
@@ -179,5 +180,6 @@ public record AskResponse(
     string Message,
     IReadOnlyList<SourceRef> Sources,
     string? TicketReference,
-    string TraceId
+    string TraceId,
+    bool OfferHandoff = false   // a rule said "answer, then point": show the pass-to-a-person button
 );

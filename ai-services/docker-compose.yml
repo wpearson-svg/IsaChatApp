@@ -1,0 +1,27 @@
+# Isa's two helper services (from Eliyas's E1 and E3 work). No database here: Isa keeps everything in SQLite.
+#   translation: NLLB-200, English and Amharic, port 8091 (the first start downloads the model into a volume)
+#   embeddings:  multilingual-e5-base, port 8092
+# Start:  docker compose up -d --build        Check:  http://localhost:8091/health  and  http://localhost:8092/health
+services:
+  translation:
+    build: ./translation
+    environment:
+      MODEL_ID: facebook/nllb-200-distilled-600M
+      HF_HOME: /models
+      DEVICE: cpu
+    ports: ["8091:8000"]
+    volumes: [nllb_models:/models]
+    restart: unless-stopped
+
+  embeddings:
+    build: ./embeddings
+    environment:
+      MODEL_ID: intfloat/multilingual-e5-base
+      HF_HOME: /models
+    ports: ["8092:8000"]
+    volumes: [embedding_models:/models]
+    restart: unless-stopped
+
+volumes:
+  nllb_models:
+  embedding_models:
