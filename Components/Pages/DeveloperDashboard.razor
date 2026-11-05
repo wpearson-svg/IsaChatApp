@@ -148,6 +148,55 @@ else
 
                     <div class="dd__card">
                         <div class="dd__cardHeader">
+                            <h3>Strong-match mark</h3>
+                            <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            When an AI-written answer fails a check, Isa looks at how well the search matched.
+                            At or above this mark, she shows ISACA's own words from the passage instead. Below it,
+                            the question goes to a person. At 0.00 every match counts as strong, so a failed check
+                            never goes to a person. Default @OutputSettings.StrongMatchDefault.ToString("0.00").
+                        </p>
+                        <input type="range" class="dd__slider" min="0" max="100" step="1"
+                               value="@StrongMatchPct"
+                               @oninput="OnStrongMatchChanged" />
+                        <div class="dd__sliderLabels">
+                            <span>More ISACA quotes</span>
+                            <span class="dd__sliderValue">@((StrongMatchPct / 100.0).ToString("0.00"))</span>
+                            <span>More handoffs</span>
+                        </div>
+                        <p class="dd__tableHint">
+                            Search by meaning scores between the search pass mark and 1.00, so a mark below the
+                            search pass mark has the same effect as 0.00.
+                        </p>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Search pass mark</h3>
+                            <span class="dd__tag dd__tag--green">SEARCH</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            How close an approved passage must be to the question for search by meaning to use it.
+                            Lower: more questions reach the AI. Higher: more questions go to a person as
+                            "not covered", and fewer AI calls. Default @OutputSettings.SearchPassMarkDefault.ToString("0.00").
+                        </p>
+                        <input type="range" class="dd__slider" min="0" max="100" step="1"
+                               value="@SearchPassMarkPct"
+                               @oninput="OnSearchPassMarkChanged" />
+                        <div class="dd__sliderLabels">
+                            <span>More AI answers</span>
+                            <span class="dd__sliderValue">@((SearchPassMarkPct / 100.0).ToString("0.00"))</span>
+                            <span>More handoffs</span>
+                        </div>
+                        <p class="dd__tableHint">
+                            Unrelated text still scores about 0.70 with this embedding model, so marks below 0.75
+                            let in passages that don't match. See Testing &gt; Vector search test for real scores.
+                        </p>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
                             <h3>Always route to a person</h3>
                             <span class="dd__tag dd__tag--green">INPUT COMPLIANCE</span>
                         </div>
@@ -254,6 +303,24 @@ else
                     @* T5W: runs the real pipeline, always shows dev tags and reasons,
                        has the trace lookup, and needs the dashboard_dev role. *@
                     <DevTesting />
+                </div>
+            }
+            else if (ActiveSection == "translation")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Translation test</h1>
+                </div>
+                <div class="dd__card">
+                    <TranslationTest />
+                </div>
+            }
+            else if (ActiveSection == "vectorsearch")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Vector search test</h1>
+                </div>
+                <div class="dd__card">
+                    <VectorSearchTest />
                 </div>
             }
             else if (ActiveSection == "ruletester")
@@ -429,6 +496,8 @@ else
         new("models", "Models, RAG, access & ticketing"),
         new("frontend", "Front end (optional)"),
         new("testing", "Testing console"),
+        new("translation", "Translation test"),
+        new("vectorsearch", "Vector search test"),
         new("ruletester", "Rule tester"),
         new("content", "Content import"),
         new("services", "Services (this computer)"),
@@ -595,16 +664,30 @@ else
 
     // ---- Compliance policy state ---------------------------------
 
-    // Real settings: the two Output Compliance thresholds are saved by OutputComplianceSettings
-    // and read by the output compliance stage on every answer.
+    // Real settings: the four answer-quality numbers are saved by OutputComplianceSettings and read on every question
+    // (NLI, confidence and strong match by the output compliance stage; the search pass mark by vector search).
     private int ConfidenceThreshold = (int)Math.Round(OutputComplianceSettings.DefaultConfidence * 100);
     private int NliThresholdPct = (int)Math.Round(OutputComplianceSettings.DefaultNli * 100);
+    private int StrongMatchPct = (int)Math.Round(OutputComplianceSettings.DefaultStrongMatch * 100);
+    private int SearchPassMarkPct = (int)Math.Round(OutputComplianceSettings.DefaultSearchPassMark * 100);
     private string _saveMessage = "";
 
     private void LoadOutputSettings()
     {
         ConfidenceThreshold = (int)Math.Round(OutputSettings.ConfidenceThreshold * 100);
         NliThresholdPct = (int)Math.Round(OutputSettings.NliThreshold * 100);
+        StrongMatchPct = (int)Math.Round(OutputSettings.StrongMatch * 100);
+        SearchPassMarkPct = (int)Math.Round(OutputSettings.SearchPassMark * 100);
+    }
+
+    private void OnStrongMatchChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value)) StrongMatchPct = value;
+    }
+
+    private void OnSearchPassMarkChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value)) SearchPassMarkPct = value;
     }
 
     private void OnNliChanged(ChangeEventArgs e)
@@ -704,9 +787,11 @@ else
         if (!Settings.CanAccessDevDashboard && !_isDev) return;
         try
         {
-            OutputSettings.Save(NliThresholdPct / 100.0, ConfidenceThreshold / 100.0);
+            OutputSettings.Save(NliThresholdPct / 100.0, ConfidenceThreshold / 100.0, StrongMatchPct / 100.0, SearchPassMarkPct / 100.0);
             _saveMessage = "Saved: NLI pass mark " + (NliThresholdPct / 100.0).ToString("0.00")
                 + ", confidence threshold " + (ConfidenceThreshold / 100.0).ToString("0.00")
+                + ", strong-match mark " + (StrongMatchPct / 100.0).ToString("0.00")
+                + ", search pass mark " + (SearchPassMarkPct / 100.0).ToString("0.00")
                 + ". Applies to the next question. The other controls on this page are still illustrative.";
         }
         catch (Exception ex)

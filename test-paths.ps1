@@ -5,12 +5,15 @@
 #         .\test-paths.ps1 -NoToken          send no token for the paths (DevBypass ON); skips the sign-in checks
 #         .\test-paths.ps1 -SkipSignIn        skip the sign-in checks (use while AccessControl:DevBypass is ON)
 #         .\test-paths.ps1 -ModelOff          also run the "model turned off" path (no need to stop Ollama)
+#         .\test-paths.ps1 -ForcedCheck nli|rule|confidence   the same for the accuracy (NLI) check, the rule recheck of the
+#                                     written answer (the input rules applied to the AI answer) or the confidence score; start the app
+#                                     with OutputCompliance__ForceFail=<same word> (the launcher has a button for each)
 #         .\test-paths.ps1 -ForcedFailure     also run the "source not retrieved" path (start the app with
 #                                             set OutputCompliance__ForceFail=source first)
 # The app must be running. Needs Windows PowerShell 5.1 or newer.
 #
 # What each path proves (contract section 11):
-#   1  Direct hit          answered with a source; knowledge_graph, rag and complex_ai skipped;
+#   1  Direct hit          (English: language=en and translation skipped, english, checked on every case) answered with a source; knowledge_graph, rag and complex_ai skipped;
 #                          output_compliance still ran (database side); no model was called
 #   2  Model path          database_search not_found; rag and complex_ai ran; the model was called;
 #                          the cited source was one of the retrieved passages; output_compliance ran
@@ -18,8 +21,8 @@
 #   3  Stopped             input_compliance stop; nothing after it; no ticket
 #   4  Escalated (no content)   not_found, then escalate; ticketing runs; the stages in between are skipped
 #   5  Escalated (sensitive)    input_compliance escalate; ticketing runs
-#   6  Non-English         language=es on the front end; translation runs (not skipped)
-#   7  English             language=en on the front end; translation skipped, english
+#   6  Non-English         language=es on the front end; translation runs and really translates (translated=yes).
+#                          Needs the translation service on Translation:Endpoint with Spanish ("spa") added and its model loaded.
 #   Extra (switches)       model off -> error + ticket; unretrieved source -> escalates
 # Every path also checks: the trace ID is kept, events are in 'result=...; reason=...' format,
 # ticketing runs only when something escalated, and the question text is never in the event log.
@@ -32,11 +35,21 @@ param(
     [switch]$NoToken,
     [switch]$ModelOff,
     [switch]$ForcedFailure,
+    [ValidateSet("", "source", "nli", "rule", "confidence")][string]$ForcedCheck = "",
     [string]$App = "http://localhost:5067",
-    [string]$Keycloak = "http://localhost:8080"
+    [string]$Keycloak = ""
 )
 
+# Where the services run (this computer, or the home PC when Isa is set to Remote). An explicit -Keycloak still wins.
+. "$PSScriptRoot\services-config.ps1"
+if (-not $Keycloak) { $Keycloak = Get-ServiceUrl 'keycloak' }
+if ((Get-ServicesLocation).Remote) { Write-Host ("Services are Remote: using " + $Keycloak) -ForegroundColor Yellow }
+
 # ---------- helpers ----------
+# A sign-in token can run out during a long run (slow model calls). Each token is remembered with its user, so a 401 on a
+# token this script itself signed in can be answered with ONE fresh sign-in and a retry. Made-up or tampered tokens are never retried.
+$script:TokenUser = @{}; $script:TokenReplaced = @{}
+
 function Get-AuthHeader([string]$name) {
     $pwFile = Join-Path $PSScriptRoot "keycloak\dev-passwords.local.csv"
     if (-not (Test-Path $pwFile)) { return $null }
@@ -46,12 +59,24 @@ function Get-AuthHeader([string]$name) {
         $tok = Invoke-RestMethod -Method Post -Uri "$Keycloak/realms/isa/protocol/openid-connect/token" -Body @{
             grant_type = "password"; client_id = "isa-chat"; client_secret = "dev-only-placeholder-secret"
             username = $name; password = $row.password } -ContentType "application/x-www-form-urlencoded"
-        return @{ Authorization = "Bearer $($tok.access_token)" }
+        $v = "Bearer $($tok.access_token)"; $script:TokenUser[$v] = $name
+        return @{ Authorization = $v }
     } catch { return $null }
 }
 
 # Sends one question. Returns @{ Code = http status; Res = response body or $null; Trace = trace id }.
 function Send-Ask([string]$question, $headers) {
+    $h = $headers
+    if ($h -and $h.Authorization -and $script:TokenReplaced.ContainsKey($h.Authorization)) { $h = @{} + $h; $h.Authorization = $script:TokenReplaced[$h.Authorization] }
+    $r = Send-AskOnce $question $h
+    if ($r.Code -eq 401 -and $h -and $h.Authorization -and $script:TokenUser.ContainsKey($h.Authorization)) {
+        $fresh = Get-AuthHeader $script:TokenUser[$h.Authorization]
+        if ($fresh) { $script:TokenReplaced[$h.Authorization] = $fresh.Authorization; $h = @{} + $h; $h.Authorization = $fresh.Authorization; $r = Send-AskOnce $question $h }
+    }
+    return $r
+}
+
+function Send-AskOnce([string]$question, $headers) {
     $trace = [guid]::NewGuid().ToString()
     $body = @{ question = $question; traceId = $trace } | ConvertTo-Json
     try {
@@ -127,8 +152,7 @@ $cases = @(
     @{ Id = "3";  Name = "3. Stopped";                   Q = "Where's a good pizza place near the conference?";                    Status = "stopped";   Lang = "en"; Ticket = $false },
     @{ Id = "4";  Name = "4. Escalated (no content)";    Q = "What is the cryptocurrency policy?";                                 Status = "escalated"; Lang = "en"; Ticket = $true  },
     @{ Id = "5";  Name = "5. Escalated (sensitive)";     Q = "A colleague keeps bothering me, what should I do?";               Status = "escalated"; Lang = "en"; Ticket = $true  },
-    @{ Id = "6";  Name = "6. Non-English question";      Q = $spanish;                                                             Status = $null;       Lang = "es"; Ticket = $null  },
-    @{ Id = "7";  Name = "7. English question";          Q = "How many board meetings must a chapter hold each year?";            Status = $null;       Lang = "en"; Ticket = $null  }
+    @{ Id = "6";  Name = "6. Non-English question";      Q = $spanish;                                                             Status = $null;       Lang = "es"; Ticket = $null; Translated = $true }
 )
 if ($ModelOff) {
     # No need to quit Ollama: the app is told (test header) to aim the model call at an address where
@@ -136,8 +160,9 @@ if ($ModelOff) {
     # Development with Testing:AllowForcedFailures=true (the default in appsettings.Development.json).
     $cases += @{ Id = "M"; Name = "Extra: model turned off";   Q = "Who writes down what the board decided?"; Status = "escalated"; Lang = "en"; Ticket = $true; Extra = @{ "X-Isa-Test-Model" = "off" } }
 }
-if ($ForcedFailure) {
-    $cases += @{ Id = "F"; Name = "Extra: source not retrieved"; Q = "Who writes down what the board decided?"; Status = "escalated"; Lang = "en"; Ticket = $true }
+if ($ForcedFailure -and -not $ForcedCheck) { $ForcedCheck = "source" }
+if ($ForcedCheck) {
+    $cases += @{ Id = "F"; Name = "Extra: forced $ForcedCheck failure"; Q = "Who writes down what the board decided?"; Status = "escalated"; Lang = "en"; Ticket = $true }
 }
 
 foreach ($c in $cases) {
@@ -190,6 +215,7 @@ foreach ($c in $cases) {
             if ($c.Lang -eq "en" -and -not (Test-Skipped $tr)) { $problems += "English should skip translation (got: $tr)" }
             if ($c.Lang -ne "en" -and (Test-Skipped $tr))     { $problems += "non-English must not skip translation (got: $tr)" }
         } else { $problems += "no translation event" }
+        if ($c.Translated -and $tr -notmatch 'translated=yes') { $problems += "translation should have translated the question (got: $tr)" }
         if ($stages -contains "translation" -and $stages -contains "input_compliance" -and
             [array]::IndexOf($stages,"translation") -gt [array]::IndexOf($stages,"input_compliance")) { $problems += "translation ran after input_compliance" }
 
@@ -262,7 +288,8 @@ foreach ($c in $cases) {
                 if ($ai -notmatch '^result=escalate; reason=model call failed') { $problems += "complex_ai should escalate with 'model call failed' (got: $ai)" }
             }
             "F" {
-                if ($oc -notmatch '^result=escalate; reason=ai check failed: source not retrieved') { $problems += "output_compliance should escalate with 'ai check failed: source not retrieved' (got: $oc)" }
+                $want = switch ($ForcedCheck) { "source" { "source not retrieved" } "nli" { "nli check" } "rule" { "rule recheck" } "confidence" { "confidence score" } }
+                if ($oc -notmatch ('^result=escalate; reason=ai check failed: ' + $want)) { $problems += "output_compliance should escalate with 'ai check failed: $want' (got: $oc). Was the app started with OutputCompliance__ForceFail=$ForcedCheck ?" }
             }
         }
     }
@@ -271,6 +298,6 @@ foreach ($c in $cases) {
 }
 
 if (-not $ModelOff)      { Write-Host "SKIP  Extra: model turned off     (run with -ModelOff)" -ForegroundColor Yellow }
-if (-not $ForcedFailure) { Write-Host "SKIP  Extra: source not retrieved (run with -ForcedFailure after starting the app with OutputCompliance__ForceFail=source)" -ForegroundColor Yellow }
+if (-not $ForcedCheck) { Write-Host "SKIP  Extra: a forced AI-check failure (run with -ForcedFailure, or -ForcedCheck nli|rule|confidence, after starting the app with OutputCompliance__ForceFail=<the same word>)" -ForegroundColor Yellow }
 Write-Host ""
 if ($fails -eq 0) { Write-Host "All $ran checks passed." -ForegroundColor Green } else { Write-Host "$fails of $ran check(s) failed." -ForegroundColor Red; exit 1 }

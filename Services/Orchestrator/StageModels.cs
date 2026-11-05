@@ -66,6 +66,8 @@ public class QueryContext
     /// <summary>"Answer, then point": the rule's line pointing the leader to a person, added after the answer, and whether to offer the connect-to-a-person button.</summary>
     public string? PointLine { get; set; }
     public bool OfferHandoff { get; set; }
+    /// <summary>Set by translation for a predetermined Amharic question (Services/Translation/TranslationDemo.cs): the reply, in Latin letters, shown instead of the English one when the question is answered.</summary>
+    public string? DemoReply { get; set; }
 
     // ---- Hooks for the Content Health Dashboard (added 2026-10-21). ----
     // Nothing sets these today. The real stages fill them in when they exist, and

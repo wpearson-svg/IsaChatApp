@@ -314,7 +314,8 @@ public class OutputComplianceStage : IStage
             if (fails.Count > 0)
             {
                 // Fallback step 3: ISACA's exact words with the source, when the search found a strong match. Otherwise a person.
-                var strong = ctx.SearchScore is null || ctx.SearchScore >= _config.GetValue("OutputCompliance:StrongMatch", 0.0);
+                // The strong-match mark is a Dev Dashboard slider (OutputComplianceSettings.StrongMatch, default OutputCompliance:StrongMatch).
+                var strong = ctx.SearchScore is null || ctx.SearchScore >= _settings.StrongMatch;
                 if (fixedOn && strong && ctx.Passages.Count > 0)
                 {
                     AnswerExtract.Apply(ctx, _config);

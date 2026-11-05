@@ -1,0 +1,230 @@
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Orchestrator
+@using IsaChatApp.Services.Translation
+@inject IAccessControlAdapter Access
+@inject KeycloakSignInService SignInService
+@inject IsaChatApp.Services.Orchestrator.Orchestrator Pipeline
+@inject TranslationClient Translator
+@inject IConfiguration Config
+@*
+    Dev dashboard > Translation test.
+
+    Type a question, pick its language, and see each step of the round trip:
+      1. what the translation service turns it into in English,
+      2. what Isa answers to that English question (the real pipeline, the same one the chat uses),
+      3. what that English answer becomes translated back.
+    Calls the translation service directly (Translation:Endpoint, so it is the home PC when Services is Remote), so
+    it works even when Translation:Enabled is off. The service knows English and Amharic only (Ethiopic script).
+    A run is real: it writes event-log rows and, on an escalation, creates a ticket reference. Limited to the
+    dashboard_dev role, like the Testing console. The question text is never written to the event log.
+*@
+
+@if (_allowed is null)
+{
+    <p class="tt__note">Checking your access&hellip;</p>
+}
+else if (_allowed == false)
+{
+    <div class="tt__locked" role="alert">
+        <strong>The translation test is for the dashboard developer role.</strong>
+        <p>Sign in with an account that has the <code>dashboard_dev</code> role.</p>
+    </div>
+}
+else
+{
+    <section class="tt">
+        <h3 class="tt__h">Translation test</h3>
+        <p class="tt__note">Service: <code>@Endpoint</code>. The service translates English and Amharic (Ethiopic script); Spanish works once the service has "spa" added.
+            Translation in the chat is @(Translator.Enabled ? "on" : "off") (Translation:Enabled); this test works either way.</p>
+
+        <div class="tt__row">
+            <button type="button" class="tt__btn tt__btn--ghost" @onclick="CheckServiceAsync" disabled="@_checking">@(_checking ? "Checking..." : "Check the service")</button>
+            @if (_health is not null)
+            {
+                @if (!_health.Value.Reachable)
+                {
+                    <span class="tt__tag tt__tag--stop">not reachable</span>
+                }
+                else if (!_health.Value.ModelReady)
+                {
+                    <span class="tt__tag tt__tag--escalate">reachable, model not loaded</span>
+                }
+                else
+                {
+                    <span class="tt__tag tt__tag--pass">ready</span>
+                }
+                @if (_health.Value.ModelId.Length > 0) { <code>@_health.Value.ModelId</code> }
+            }
+        </div>
+
+        <div class="tt__row">
+            <select class="tt__input tt__select" @bind="_language" aria-label="Language of the question">
+                <option value="amh">Amharic (Ethiopic script)</option>
+                <option value="spa">Spanish</option>
+                <option value="eng">English</option>
+            </select>
+        </div>
+        <div class="tt__row">
+            <input type="text" class="tt__input" placeholder="Type the question to translate..." @bind="_question" @bind:event="oninput"
+                   @onkeydown="OnKey" aria-label="Question" />
+            <button type="button" class="tt__btn" @onclick="RunAsync" disabled="@(_running || string.IsNullOrWhiteSpace(_question))">@(_running ? "Running..." : "Run")</button>
+        </div>
+
+        @if (_done)
+        {
+            <div class="tt__step">
+                <h4>1. The question you typed</h4>
+                <p class="tt__msg">@_question</p>
+                <p class="tt__note">Language chosen: @LanguageName</p>
+            </div>
+
+            <div class="tt__step">
+                <h4>2. The question in English</h4>
+                @if (_language == "eng")
+                {
+                    <p class="tt__msg">@_english</p>
+                    <p class="tt__note">English: no translation needed.</p>
+                }
+                else if (_toEnglish is not null && _toEnglish.Text is not null)
+                {
+                    <p class="tt__msg">@_toEnglish.Text</p>
+                    <p class="tt__note">Translated by the service in @_toEnglish.Ms ms.</p>
+                }
+                else
+                {
+                    <p class="tt__msg">Not translated.</p>
+                    <p class="tt__note">@Describe(_toEnglish?.Note) The question was not sent to Isa.</p>
+                }
+            </div>
+
+            @if (_response is not null)
+            {
+                <div class="tt__step">
+                    <h4>3. Isa's answer (English)</h4>
+                    <p class="tt__summary">
+                        <span class="tt__tag tt__tag--@_response.Status">@_response.Status</span>
+                        <span>total <b>@_pipelineMs ms</b></span>
+                        @if (_response.TicketReference is not null) { <span>ticket <b>@_response.TicketReference</b></span> }
+                        <span>trace <code>@_response.TraceId</code></span>
+                    </p>
+                    <p class="tt__msg">@_response.Message</p>
+                    @if (_response.Sources.Count > 0)
+                    {
+                        <ul class="tt__sources">
+                            @foreach (var src in _response.Sources)
+                            {
+                                <li>@src.Document &middot; @src.Section@(string.IsNullOrEmpty(src.Page) ? "" : " · p. " + src.Page)</li>
+                            }
+                        </ul>
+                    }
+                    <p class="tt__note">Look the trace up in the Testing console to see every stage.</p>
+                </div>
+
+                <div class="tt__step">
+                    <h4>4. The answer translated back (@BackName)</h4>
+                    @if (_back is not null && _back.Text is not null)
+                    {
+                        <p class="tt__msg">@_back.Text</p>
+                        <p class="tt__note">Translated by the service in @_back.Ms ms. Machine translation: the accuracy check ran on the English answer, not on this.</p>
+                    }
+                    else
+                    {
+                        <p class="tt__msg">Not translated.</p>
+                        <p class="tt__note">@Describe(_back?.Note)</p>
+                    }
+                </div>
+            }
+        }
+    </section>
+}
+
+@code {
+    [CascadingParameter] private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthState { get; set; }
+
+    private const string DevRole = "dashboard_dev";
+
+    private bool? _allowed;
+    private string? _token;
+    private string _language = "amh";
+    private string _question = "";
+    private bool _running, _checking, _done;
+    private (bool Reachable, bool ModelReady, string ModelId)? _health;
+    private string _english = "";
+    private TranslationClient.Result? _toEnglish, _back;
+    private AskResponse? _response;
+    private long _pipelineMs;
+
+    private string BackCode => _language == "eng" ? "amh" : _language;
+    private string LanguageName => _language switch { "amh" => "Amharic (Ethiopic script)", "spa" => "Spanish", _ => "English" };
+    private string BackName => BackCode == "spa" ? "Spanish" : "Amharic, Ethiopic script";
+
+    private string Endpoint => Config["Translation:Endpoint"] ?? "http://localhost:8091";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _token = await GetBearerTokenAsync();
+        var identity = await Access.ValidateAsync(_token);
+        _allowed = identity is not null && identity.Roles.Contains(DevRole);
+    }
+
+    private async Task<string?> GetBearerTokenAsync()
+    {
+        if (AuthState is null) return null;
+        var user = (await AuthState).User;
+        var sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+        var accessToken = await SignInService.GetAccessTokenAsync(sessionId);
+        return accessToken is null ? null : $"Bearer {accessToken}";
+    }
+
+    private static string Describe(string? note) => note switch
+    {
+        "fallback" => "The service answered but its model is not loaded (fallback), so nothing was translated.",
+        "service_unavailable" => "The service did not answer.",
+        "language_not_supported_by_service" => "The service does not support this language yet (it rejected the language code).",
+        _ => "",
+    };
+
+    private async Task OnKey(KeyboardEventArgs e) { if (e.Key == "Enter") await RunAsync(); }
+
+    private async Task CheckServiceAsync()
+    {
+        _checking = true;
+        try { _health = await Translator.HealthAsync(); }
+        finally { _checking = false; }
+    }
+
+    private async Task RunAsync()
+    {
+        if (_allowed != true || _running || string.IsNullOrWhiteSpace(_question)) return;
+        _running = true;
+        _done = false;
+        _toEnglish = null; _back = null; _response = null; _english = "";
+        try
+        {
+            var typed = _question.Trim();
+            if (_language != "eng")
+            {
+                _toEnglish = await Translator.TranslateMessageAsync(typed, _language, "eng");
+                _english = _toEnglish.Text ?? "";
+            }
+            else
+            {
+                _english = typed;
+            }
+            _done = true;
+            await InvokeAsync(StateHasChanged);
+
+            if (_english.Length > 0)
+            {
+                var ctx = new QueryContext { TraceId = Guid.NewGuid().ToString(), Question = _english, IncomingToken = _token };
+                var clock = System.Diagnostics.Stopwatch.StartNew();
+                _response = await Pipeline.RunAsync(ctx);
+                _pipelineMs = clock.ElapsedMilliseconds;
+                await InvokeAsync(StateHasChanged);
+
+                _back = await Translator.TranslateMessageAsync(_response.Message, "eng", BackCode);
+            }
+        }
+        finally { _running = false; }
+    }
+}

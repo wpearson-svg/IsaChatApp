@@ -93,3 +93,77 @@ Add Ask the outgoing president, Listen on journey steps and the Chapter Affiliat
 - New bats: start/stop-keycloak, start/stop-voice, start/stop-translation, start/stop-embeddings. Each touches only its own service (docker compose up -d / stop <service>).
 - isa-launcher.ps1 and IsaLauncherDbg: Keycloak and voice are separate groups; new Helper services group (translation 8091, embeddings 8092, build search vectors); status shows both new ports.
 - Not yet run: relaunch the launcher and press each pair.
+
+## Translation hooked in (E1)
+- TranslationStage now calls Translation:Endpoint /translate for Amharic (new "am" in LanguageCheck: Ethiopic script) and puts the English text in ctx.Question for the later stages. English is still skipped; other languages (es, fr...) still pass through, because the service only knows English and Amharic. Translation:Enabled false still switches it off.
+- fallback=true or a service that does not answer: the question goes on as written, step says translated=no (note=fallback / service_unavailable). Never reported as translated. Question text is never logged.
+- Show the work (developer detail): "Your question was translated to English" / fallback / not supported. ctx.Language stays "am" for tickets and the usage summary.
+- NOT done: translating the answer back to Amharic (the stage only translates the question in), and the stage-contract extras row for translation (needs Willis written OK).
+- Not yet compiled or run. Restart Isa to confirm.
+
+## Translate the reply back (Amharic)
+- New Services/Translation/TranslationClient.cs (shared by the stage and the orchestrator). Messages are split into short pieces before translating, because the model truncates long input.
+- After all checks, the orchestrator translates the finished reply back into Amharic when the question was Amharic; if any piece fails the reply stays whole in English. Sources and ticket reference untouched. Logged as a second translation event: direction=out.
+- Machine translation of approved wording is NOT checked by the NLI step (that runs on the English). Not yet compiled or run.
+
+## Predetermined Amharic questions (test and presentation)
+- content/translation-demo.json (empty until filled): per entry, the question as typed in Latin letters, the same question in Ethiopic script, and the reply in Latin letters. Read on each use, no restart.
+- A question that matches an entry: the Ethiopic text goes to the translation service (real translation to English), the English question goes through the normal pipeline, and when it is answered the predetermined Latin reply is shown instead of the English one. A stop or hand-off stays English. Not machine-translated.
+- Show the work (developer): translation step data has predetermined=yes. The reply is NOT produced by the translator; say so if asked in the presentation.
+- Not yet compiled or run.
+- Predetermined path also runs the English answer through the translator (English to Ethiopic) for real; the result is logged as back_translation=ok/fallback/service_unavailable with its time, but the person sees the predetermined Latin reply, not that output.
+
+## Dev Dashboard: Translation test
+- New section "Translation test" (dashboard_dev role): pick Amharic (Ethiopic script) or English, type a question, see (1) what you typed, (2) the English the service turns it into, (3) Isa answer in English through the real pipeline (status, sources, ticket, trace), (4) that answer translated back into Amharic. Plus a "Check the service" button (reachable, model loaded).
+- Calls Translation:Endpoint directly, so it works against the home PC and even when Translation:Enabled is off. A run is real: event log rows, tickets on escalation.
+- Not yet compiled or run.
+
+## Spanish goes through the translation layer
+- TranslationClient.ServiceCodes maps am->amh and es->spa; the stage and the reply-back step use it instead of Amharic only. Spanish questions are translated to English and the reply is translated back into Spanish (real calls, Latin letters, no predetermined text).
+- Needs Eliyas to add spa to ai-services/translation/app.py (LANG map: "spa": "spa_Latn", and the eng|amh pattern on both language fields). Until then the service answers HTTP 422 and Isa passes Spanish through unchanged with note=language_not_supported_by_service.
+- test-paths check 6 (Spanish) now requires translated=yes in the translation event. It fails until the service supports Spanish.
+- Dev Dashboard Translation test: Spanish added to the language choice.
+- Not yet compiled or run.
+
+## Test scripts know when the services are remote
+- New services-config.ps1 reads Services:Location / RemoteHost from appsettings.json and appsettings.Local.json (same rule as Program.cs). test-paths, test-failures, test-tokens, test-ask now get the Keycloak address from it (the home PC when Remote), and test-model gets the Ollama address. An explicit -Keycloak / -OllamaUrl still wins. They print "Services are Remote: using ..." when it applies.
+- Not changed: test-tokens -Mode Restart / Reset (they restart or reset Keycloak in Docker on THIS computer, so they do nothing useful when Keycloak is remote); check-prereqs.ps1, reset-keycloak.ps1 and the launcher status lights still look at localhost.
+- Not yet run.
+
+## Vector search hooked into the rag stage (E3)
+- RagStage: after the meaning map finds nothing, it asks VectorSearchService (embeddings on Embeddings:BaseUrl, vectors in data/vectors.db). Passages at or above VectorSearch:MinScore (ISACA documents only, top VectorSearch:TopK=3) go to complex_ai as before. A miss, or an embedding service that is down, escalates to a person exactly as before; the escalation event now adds vector_miss=<reason>. Step data: retrieval=vector; top_score=x.xx.
+- MinScore default raised from 0.25 to 0.80 (multilingual-e5 scores unrelated text near 0.70, so 0.25 would match everything, including the cryptocurrency question). It is a starting point, NOT calibrated. Read each time, so an appsettings.json change applies without a restart. VectorSearch:Enabled false switches it off.
+- Best-practice guides are not returned by vector search yet (their general-best-practice label is set by database_search).
+- New Dev Dashboard section Vector search test: closest passages with scores for any question, and a table of best scores for the rehearsed questions to calibrate the mark.
+- Not yet compiled or run.
+
+## Test questions no longer exempt; forced accuracy and rule-recheck tests
+- AnswerWording:ExemptQuestions is now empty in appsettings.json: the five rehearsed questions go through the same wording ladder, accuracy (NLI) check and fixed checks as every other question. Their results may change; test-paths expectations may need updating once re-run.
+- test-paths.ps1 -ForcedCheck source|nli|rule|confidence (-ForcedFailure still means source): the forced case now expects the matching "ai check failed: ..." reason. Start Isa with OutputCompliance__ForceFail=<same word> first. Launcher (both): Start Isa (force NLI failure), Start Isa (force rule-recheck failure) and matching Test paths buttons.
+- These are deterministic stand-ins. A question that fails the accuracy check or the rule recheck NATURALLY depends on what the model writes and has to be found by running questions in the Testing console; not done yet.
+- Not yet run.
+
+## Test scripts: fresh sign-in on a 401
+- test-paths and test-failures remember the token they signed in with. If a request with that token gets a 401 (the token ran out during a long run), they sign in again once and retry; later requests use the new token. Made-up or tampered tokens are never retried, so the token tests still expect 401. The eight-at-once test signs in fresh just before it starts.
+- Not yet run.
+- test-paths: removed check 7 (English question). It repeated check 1; every case already checks the language and the translation step (English skips translation).
+- IsaLauncherDbg Run all tests: the token step ran test-tokens.ps1 with no -User, which is a required parameter, so PowerShell sat waiting for someone to type a user name and the run never finished. It now passes -User d.whitfield. The three single Token tests buttons in IsaLauncherDbg had the same gap and now pass it too (isa-launcher.ps1 already did).
+
+## IsaLauncherDbg: Run all tests runs all tests
+- Now: test paths, test paths (model off), failure tests, forged-token tests, rules self-check, then the forced AI-check failures (source, nli, rule, confidence), stopping and starting Isa between them and starting it normally at the end. Excluded on purpose: token tests with Keycloak restart/reset (Docker on this computer, or need a person), Test Salesforce (creates a real Case), the model timing test, test paths with no token (needs DevBypass).
+- Written without compiling the launcher: rebuild IsaLauncherDbg and watch the first run.
+
+## Real failing questions instead of forced ones
+- Run all tests no longer includes the forced AI-check failures or any Isa restarts (a forced check only proves a failure is caught). The forced buttons still exist on their own.
+- New find-failing-questions.ps1 + test-questions-candidates.csv (13 candidate questions, intended check per question; guesses, none tried yet): sends each question to the running Isa several times, reads the event log, and reports which checks really failed and whether it is repeatable. Buttons in both launchers: Find failing questions.
+- Next: run it with the model warm, keep the repeatable ones, add them to test-paths as real failure cases.
+- Not yet run.
+
+## Real test questions and the settings inventory (November 4)
+- **test-questions-candidates.csv**: 52 rows added, each found by sending real questions to Isa (real sign-in, nothing forced, the path checked in the event log, the same path on 5 of 5 runs, 3 of 3 for the Spanish model-path questions). The `intended` column is the path number from Willis's test-path table: 1 direct hit, 2 model clean pass, 3 stopped, 4 no content, 5 sensitive, 6 Spanish (6-ai: Spanish through the model; replies take 10 to 25 seconds to translate back, and one question that took over 30 seconds came back in English, so it was left out), 8 trimmed, 9 ISACA's words after a failed check, 10 source check, 11 rule recheck, 12 answer shape, 13 contact check, 15 rule stop, 15-handoff (rule hand-offs instead of stops), 16 the AI says the passages don't answer. Path 14 (a failed check on a weak search match goes to a person) needs the strong-match mark at 0.85; its rows say so. The earlier rows are unchanged.
+- **docs/Settings_Inventory.md** (new): every setting the code reads, where its value lives today, and whether it belongs on the Dev Dashboard, in the config file, or in code and tests only. Notes that StrongMatch and VectorSearch:MinScore aren't adjustable on the dashboard, that the Isa Configuration page settings reset when Isa restarts, and that several dashboard controls are still illustrative.
+- Apart from the two sliders below, no code, rules or settings changed.
+- **Dev Dashboard, two more real sliders** (Compliance policy, beside the NLI and confidence ones): **Strong-match mark** (OutputCompliance:StrongMatch, default 0.00) and **Search pass mark** (VectorSearch:MinScore, default 0.80). Save changes writes them to output-compliance-settings.json with the other two; Reset to defaults clears all four. They apply to the next question without a restart.
+  - Strong-match mark: when an AI answer fails a check, a search score at or above the mark shows ISACA's own words; below it, the question goes to a person. At 0.00 (today's value) a failed check never goes to a person.
+  - Files: Services/OutputComplianceSettings.cs (two new numbers, saved and loaded), Services/Orchestrator/Stages/ResponseStages.cs (reads the strong-match mark from it), Services/Search/VectorSearchService.cs (reads the search pass mark from it), Components/Pages/DeveloperDashboard.razor (the two sliders, saved with the others), Components/Shared/VectorSearchTest.razor (says where the pass mark is set).
+  - Checked: build has 0 warnings and 0 errors. With the strong-match mark at 0.85 (saved in the file, then Isa restarted), questions with search scores of 0.81 to 0.84 that failed a check went to a person (failed=..., with a ticket), and 0.85 or above still got ISACA's words. 4 questions did this on 5 of 5 runs and were added to the CSV as path 14. The file was then put back as it was (NLI 0.40, confidence 0.70). Not checked on screen: the Dev Dashboard needs a sign-in, so the sliders still need a look in the browser.
