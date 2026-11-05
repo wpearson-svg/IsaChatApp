@@ -532,16 +532,19 @@ public class NotebookService
     private async Task<string?> CheckAsync(string text, string purpose, string? bearerToken,
         string needsPerson, string outOfScope)
     {
-        var check = await _pipeline.CheckTextAsync(new QueryContext
+        var ctx = new QueryContext
         {
             TraceId = Guid.NewGuid().ToString(),
             Question = text,
             IncomingToken = bearerToken,
-        }, purpose);
+        };
+        var check = await _pipeline.CheckTextAsync(ctx, purpose);
 
         return check.Outcome switch
         {
             StageOutcome.Pass => null,
+            // The sign-in check refused it: say so, rather than blaming the words (3 November 2026).
+            _ when ctx.AuthFailed => "You're not signed in any more, so nothing was saved. Please sign in again and try once more.",
             StageOutcome.Escalate => needsPerson,
             _ when check.DataText.StartsWith("error=") => "Something went wrong on our side, so nothing was saved. Try again.",
             _ => outOfScope,

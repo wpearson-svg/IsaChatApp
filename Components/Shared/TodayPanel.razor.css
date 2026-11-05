@@ -874,6 +874,30 @@
     color: #606e7c;
 }
 
+/* "Introduce yourself to your board" and the profile replies (3 November 2026). */
+.isa-today__boardDraft { margin: 0.3rem 0 0.4rem; }
+.isa-today__boardBtns { margin: 0.6rem 0 0.4rem; }
+.isa-today__boardProblem { margin: 0 0 0.6rem; font-size: 0.8rem; color: #8a4b00; }
+.isa-today__savedIntro {
+    margin: 0 0 0.6rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid #dfe5ec;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+.isa-today__introText { margin: 0.35rem 0 0.4rem; font-size: 0.82rem; line-height: 1.5; white-space: pre-line; color: #1f2933; }
+.isa-today__reply { align-items: flex-start; }
+.isa-today__answers {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem 0.6rem;
+    margin: 0.35rem 0 0;
+    font-size: 0.78rem;
+}
+.isa-today__answers dt { color: #5f6b7a; }
+.isa-today__answers dd { margin: 0; color: #1f2933; }
+.isa-today__noReply { margin-top: 0.2rem; font-size: 0.75rem; font-style: italic; color: #5f6b7a; }
+
 .isa-today__boardNext {
     display: block;
     width: 100%;

@@ -133,6 +133,8 @@ C. "Meet your board" step
 D. ISACA terms explained
 - A short glossary of terms new leaders meet early (for example AGM, CPE, Engage), loaded into Isa's knowledge base so leaders can ask "What's an AGM?" and get a cited answer.
 - Definitions come from ISACA-approved documents. Any term the documents don't define is left out until ISACA approves wording for it.
+- Built November 3, 2026 (Matthew: "Let's just stick with ISACA's words"): "Terms explained", a card at the top of the Library (Matthew chose the Library over the Help panel or a rail button). 26 terms that ISACA's documents define, A to Z, with search: each shows ISACA's words exactly, in quotes, with the document, page and part, and "Read it" opens the document at that passage (on the named page), ready to read or listen from there; nothing plays until the leader presses play, and Back returns to the term. Sources: the President Guidebook, the Chapter Systems Overview, Core Roles, Chapter 360's Introduction and the Affiliation Agreement's definitions. onboarding/glossary.json (read while Isa runs); onboarding/check_glossary.py checks every quote word for word against the text the Library shows (26 terms, 0 problems; a quote with one word changed is caught). No new content in Isa's search, so no pipeline change: "What is Engage?" in the chat still goes through the normal pipeline. Not a tax glossary: tax terms differ by country and Isa's rules send tax questions to a person (Matthew agreed, November 3).
+- The terms ISACA's documents use without defining (AGM's meaning, bylaws, minutes, ex officio, audit, review, compilation, financial verification, D&O insurance, Willingness to Serve Agreement, the Chapter Experience team, ISACA Support and more, plus quorum, which the documents don't use) are listed in docs/Glossary_Terms_To_Request.md, with where each appears in ISACA's documents, to send to ISACA. Worded about Isa's content only, never the onboarding feature.
 
 E. Day 30, 60 and 90 check-ins
 - At each milestone, Isa asks one question: "What's still unclear?"
@@ -231,13 +233,15 @@ If we fall behind, cut from the bottom of this list first:
 3. Contact step with fake time slots
 4. "Today" note
 5. Handoff checklist for the outgoing president
-6. ISACA terms glossary
+6. ISACA terms glossary (built November 3, 2026, as "Terms explained" in the Library)
 7. "Meet your board" step
 8. Document library with "Listen" button
 9. "Ask the outgoing president" (fallback: roadmap slide) (built November 3, 2026)
 10. Smart save offer, now a quiet "worth saving?" label on the save button (fallback: the plain save icon)
-11. Day 30/60/90 check-ins (fallback: roadmap slide)
+11. Day 30/60/90 check-ins (fallback: roadmap slide) (planned, November 3, 2026: roadmap)
 12. Full help section (fallback: a short static page)
+
+Sprint 3, M3 decided (Matthew, November 3, 2026). Built before the presentation (M4): "Ask the outgoing president", Listen on journey steps, the Chapter Affiliation Agreement in the Library, "Terms explained", the board introduction and profile form, and notebook check-ins. On the roadmap, labelled planned, not built: the day 30/60/90 check-ins, the "Coming up" overview, progress sharing with the Chapter Experience staff view (with ISACA's on/off switch), Listen in the succession notebook, and journeys for other board roles (already planned, October 19). The sample Engage and Chapter 360 pages stay as they are (decided October 28). Designed-but-not-built pieces are listed in docs/Supplement_Items.md.
 
 === DECIDED ===
 
@@ -279,8 +283,8 @@ Journey phases for the full 90 days:
 - Weeks 9-13, Look ahead: the compliance requirements and the next dates on the annual checklist.
 - Why: chapter presidents are volunteers with limited time, and volunteer onboarding is a known weak spot for ISACA, so the journey is designed for quick wins early. (Keep survey figures out of this file, per the constraints above.)
 - Journey steps reviewed with Matthew and fitted to these phases (October 20, 2026). onboarding/journey_steps.csv now has 28 steps and every day from 1 to 90 has at least one. Step IDs never change once used, because saved progress refers to them; new steps start at J-19.
-  - Week 1: J-01 and J-02 (day 1), J-03 (days 2-3), J-04 (days 3-5), J-05 "Meet your board" moved to days 6-7, leading into the board introduction email.
-  - Week 2, quick wins: J-06 mission and history, J-19 introduce yourself to your board, J-20 log in to ISACA's chapter systems, J-21 check your chapter's leader listing, J-22 Meet Chapter 360.
+  - Week 1: J-01 and J-02 (day 1), J-03 (days 2-3), J-04 (days 3-5), J-05 "Meet your board" moved to days 6-7, leading into the board introduction email. Changed November 3, 2026 (Matthew: a president shouldn't wait a week to introduce themselves): J-19 "Introduce yourself to your board" moved into week 1, days 6-7, beside "Meet your board"; J-05 now points to it as "Next".
+  - Week 2, quick wins: J-06 mission and history, J-19 introduce yourself to your board (moved to week 1 on November 3), J-20 log in to ISACA's chapter systems, J-21 check your chapter's leader listing, J-22 Meet Chapter 360.
   - Weeks 3-4, waits on others: J-23 handoff meeting, J-24 bank signers (at least two, three is best), J-11 volunteer list to ISACA (the records update), J-10 signed volunteer agreements, J-25 board profile replies (days 22-28, about two weeks after the email).
   - Weeks 5-8, run the chapter: J-26 board meeting rhythm, J-09 committees and meetings, J-07 bylaws and Chapter Affiliation Agreement (moved out of week 2 because it is not a quick win), J-08 strategic plan and financials, J-12 events on Engage, J-13 strategic planning session, J-14 plan the orientation.
   - Weeks 9-13, look ahead: J-15 the 60-day goals deadline, J-27 compliance requirements, J-28 the year ahead.
@@ -303,6 +307,13 @@ Board introduction email and board roster (builds on piece C, "Meet your board")
   - Certifications, years as an ISACA member, and years on the board: ISACA decides whether presidents may see these.
   - Specialties and interests: only what each member chooses to share in the profile form.
 - Isa does not learn names or roles from conversations. The roster comes from ISACA's official records, so the promise that questions to Isa stay private holds. The prototype uses synthetic board members only.
+- Built November 3, 2026 (Services/Onboarding/BoardIntroService.cs, Components/Shared/BoardProfileCard.razor, TodayPanel and ChatWidget):
+  - J-19: "Write your introduction" opens a draft Isa fills in from ISACA's records (name, chapter, term start); Isa never writes it herself. The president edits and saves it; saving completes the step. It passes the sign-in check and Input Compliance (purpose=board_introduction). Saved in Isa, never emailed; the step says so.
+  - Once it is saved, each current board member sees one line at the top of their chat: "[president], your new president, invited the board to fill in a short, optional profile", with "Fill it in" and "No thanks". The form (above the question box): What are you good at? What would you enjoy helping with this year? About how much time can you give each month? (Less than 2 hours, 2 to 5, 5 to 10, More than 10) How do you prefer to be contacted? (Email, Phone, A message on Engage, A chat app). All optional; the written answers pass Input Compliance (purpose=board_profile). "Only [president] sees your answers, and you can change or withdraw them any time." After answering, a quiet line: "Your board profile is shared with [president] · Change".
+  - J-25 lists the board with each member's answers, or "No reply yet". Anyone who said no or withdrew also shows as "No reply yet", so the president never learns who said no, and Isa never chases anyone. "Only you see these answers."
+  - In the demo only Sato Yumiko (Immediate Past President) has a sign-in account among Watanabe Kenji's board, so she is the one who answers (Matthew, November 3); the other four show "No reply yet", which fits the optional form.
+  - Stored in data/progress.db (board_introductions, board_profiles), local like the rest of the journey's progress.
+  - Also fixed (November 3): when the sign-in check refuses a typed note, question, introduction or profile, the message now says "You're not signed in any more, so nothing was saved. Please sign in again and try once more." It used to blame the words. NotebookService and BoardIntroService.
 
 Chapter 360:
 - "Meet Chapter 360" is a week 2 step, because it is a large resource and leaders should meet it early.
@@ -312,7 +323,8 @@ Chapter 360:
 Succession notebook reminders:
 - Isa prompts leaders to add notes for their successor in two ways: a weekly check-in ("Anything from this week your successor should know?") and a prompt right after each board meeting.
 - Each prompt has a one-line answer box, a "Nothing this week" button, an "Ask me later" button (Isa brings it back after a short delay), and a dismiss button (closes it until the next scheduled reminder).
-- If the leader already saved something to the notebook that week, the weekly check-in is skipped.
+- If the leader already saved something to the notebook that week, the weekly check-in is skipped. Changed November 3, 2026 (Matthew): instead of skipping, it asks for anything more: "You saved 2 notes this week. Anything else your successor should know?", with "That's everything" in place of "Nothing this week". Check-ins start in week 2 (day 8), so week 1 stays light. The prompt after each board meeting is not built (Isa has no meeting dates); it is in docs/Supplement_Items.md.
+- Built November 3, 2026 (Services/Onboarding/NotebookReminderService.cs, Components/Shared/NotebookCheckInCard.razor): the check-in card at the top of the chat, for the chapter's current president only (the outgoing president has the handoff checklist), from day 8. A one-line box and Save (saved to the notebook as a private "Other" note through NotebookService.AddNoteAsync, so it passes the sign-in check and Input Compliance), "Nothing this week" (or "That's everything" after saving something, "Nothing to add" for longer periods), "Ask me later" (hidden until Isa is next opened; not stored) and × (closed until the next check-in). How often: "How often Isa checks in" in the notebook's ⋯ menu: every week (default), every two weeks or every four weeks; weekly in the last three months of a term whatever the setting. Periods count from day 8 of the term; an answer given at any time in the current period counts, so changing how often never asks again straight away. Stored in data/progress.db (notebook_checkins, notebook_reminder_settings). Watanabe Kenji on day 3 sees none; Ana Beatriz Souza on day 60 does.
 - The leader can switch the weekly check-in to every two weeks or monthly.
 - In the last few months of a term, Isa prompts a little more often (this fits the handoff checklist, piece A).
 - Prompts appear inside Isa only, never by email or notification, the same rule as the Today note.

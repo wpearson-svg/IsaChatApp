@@ -92,6 +92,8 @@
 @inject IsaChatApp.Services.Onboarding.NotebookService Notebook
 @inject IsaChatApp.Services.Onboarding.JourneyContextService JourneyContexts
 @inject IsaChatApp.Services.Onboarding.ProgressService Progress
+@inject IsaChatApp.Services.Onboarding.BoardIntroService BoardIntro
+@inject IsaChatApp.Services.Onboarding.NotebookReminderService Reminders
 
 @* keeps-rail-room (and, on phones, has-rail) sets --isa-rail-w, the rail's
    width, which the chat and its side panels leave free on the left (see
@@ -399,11 +401,50 @@
                         <button type="button" class="isa-widget__askNoteBtn" @onclick="OpenNotebook">Open the notebook</button>
                     </div>
                 }
+
+                @* The succession notebook check-in (3 November 2026): once per
+                   period from week 2, for the chapter's president, inside Isa only. *@
+                @if (_checkIn is not null && !_checkInLater && _personId is not null)
+                {
+                    <NotebookCheckInCard @key="_checkIn.PeriodStart" CheckIn="@_checkIn" PersonId="@_personId" SessionId="@_widgetSessionId"
+                                         OnDone="CheckInDone" OnLater="() => _checkInLater = true" />
+                }
+
+                @* The board's optional profile form (3 November 2026): once the
+                   president has saved an introduction to the board (step J-19),
+                   each board member sees one line here. "No thanks" hides it for
+                   good; after answering, a quiet line lets them change or withdraw. *@
+                @if (_profileRequest is { } invite && !_showProfileCard)
+                {
+                    @if (invite.Mine is null)
+                    {
+                        <div class="isa-widget__askNote" role="note">
+                            <span>@invite.PresidentName, your new president, invited the board to fill in a short, optional profile.</span>
+                            <span class="isa-widget__askNoteBtns">
+                                <button type="button" class="isa-widget__askNoteBtn" @onclick="() => _showProfileCard = true">Fill it in</button>
+                                <button type="button" class="isa-widget__askNoteLink" @onclick="DeclineProfile">No thanks</button>
+                            </span>
+                        </div>
+                    }
+                    else if (invite.Mine.Status is "answered" or "withdrawn")
+                    {
+                        <div class="isa-widget__profileLine" role="note">
+                            <span>@(invite.Mine.Status == "answered" ? $"Your board profile is shared with {invite.PresidentName}." : "Your board profile isn't shared.")</span>
+                            <button type="button" class="isa-widget__askNoteLink" @onclick="() => _showProfileCard = true">@(invite.Mine.Status == "answered" ? "Change" : "Fill it in")</button>
+                        </div>
+                    }
+                }
             </div>
 
             @* Paths to a person (docs/Paths_To_A_Person.md): the "connect me"
                card, opened by "Talk to a person" in the footer or "Not quite"
                under an answer. It sits just above the question box. *@
+            @if (_showProfileCard && _profileRequest is not null && _personId is not null)
+            {
+                <BoardProfileCard Request="@_profileRequest" PersonId="@_personId" SessionId="@_widgetSessionId"
+                                  OnClose="() => _showProfileCard = false" OnChanged="ProfileChanged" />
+            }
+
             @if (_personCard is not null)
             {
                 <PersonRequestCard @key="_personCard" Door="@_personCard.Door" FromTraceId="@_personCard.FromTraceId"
@@ -481,7 +522,8 @@
         {
             <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion" OnChecklistChanged="NotebookChanged"
                            Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest"
-                           OnAskTeam="OpenPersonCardFromFooter" OnQuestionsChanged="RefreshWaitingQuestions" />
+                           OnAskTeam="OpenPersonCardFromFooter" OnQuestionsChanged="RefreshWaitingQuestions"
+                           OnRemindersChanged="RefreshCheckIn" />
         }
 
         @* The Library (Feature 5; Components/Shared/LibraryPanel.razor). It
@@ -886,12 +928,46 @@
     // Goes up by one whenever something is saved to the notebook from the
     // chat, so an open notebook panel reads its entries again.
     private int _notebookVersion;
-    private void NotebookChanged() => _notebookVersion++;
+    private void NotebookChanged()
+    {
+        _notebookVersion++;
+        RefreshCheckIn();
+    }
 
     // Questions in the notebook waiting for this person's answer (a former president).
     private IReadOnlyList<IsaChatApp.Services.Onboarding.NotebookEntry> _waitingQuestions = [];
     private void RefreshWaitingQuestions() =>
         _waitingQuestions = _personId is null ? [] : Notebook.GetWaitingQuestions(_personId, Settings.Today);
+
+    // The succession notebook check-in, if one is due. "Ask me later" hides it
+    // until Isa is next opened (this flag is not stored).
+    private IsaChatApp.Services.Onboarding.NotebookCheckIn? _checkIn;
+    private bool _checkInLater;
+    private void RefreshCheckIn() =>
+        _checkIn = _personId is null ? null : Reminders.GetDue(_personId, Settings.Today);
+    private void CheckInDone(bool saved)
+    {
+        if (saved) _notebookVersion++;
+        RefreshCheckIn();
+    }
+
+    // The board's optional profile form: the invitation for this board member, if any.
+    private IsaChatApp.Services.Onboarding.ProfileRequest? _profileRequest;
+    private bool _showProfileCard;
+    private string? _widgetSessionId;
+    private void RefreshProfileRequest() =>
+        _profileRequest = _personId is null ? null : BoardIntro.GetRequest(_personId, Settings.Today, includeAnswered: true);
+    private void DeclineProfile()
+    {
+        if (_personId is null) return;
+        BoardIntro.Decline(_personId, Settings.Today);
+        RefreshProfileRequest();
+    }
+    private void ProfileChanged()
+    {
+        _showProfileCard = false;
+        RefreshProfileRequest();
+    }
 
     // ---- Paths to a person: the "connect me" card --------------------------
 
@@ -949,6 +1025,9 @@
             : (await AuthState).User.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value;
         CanOpenNotebook = _personId is not null && Notebook.GetAccess(_personId, Settings.Today).CanRead;
         RefreshWaitingQuestions();
+        RefreshProfileRequest();
+        RefreshCheckIn();
+        _widgetSessionId = AuthState is null ? null : (await AuthState).User.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
         HasJourney = _personId is not null && JourneyContexts.GetFor(_personId) is not null;
         if (_personId is not null) RefreshStepsLeft();
 

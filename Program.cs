@@ -105,6 +105,8 @@ builder.Services.AddSingleton<ProgressService>();
 // NotebookService: each chapter's succession notebook (saved answers and
 // notes), kept in data/notebook.db, created on first run.
 builder.Services.AddSingleton<NotebookService>();
+builder.Services.AddSingleton<BoardIntroService>();
+builder.Services.AddSingleton<NotebookReminderService>();
 // The Library (Feature 5): ISACA's documents to read or listen to, from onboarding/library.json
 // and the approved passages in data/content.db (Components/Shared/LibraryPanel.razor).
 builder.Services.AddSingleton<LibraryService>();
