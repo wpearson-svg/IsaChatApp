@@ -1,6 +1,7 @@
 """
-E1 — NLLB-200 translation service (Amharic ↔ English)
+E1 — NLLB-200 translation service (English, Amharic, Spanish; any pair)
 Self-hosted. Safe fallback when the model is unavailable.
+To add a language, add its NLLB code to LANG below; the same model covers it, nothing new is downloaded.
 """
 from __future__ import annotations
 
@@ -16,7 +17,9 @@ MODEL_ID = os.getenv("MODEL_ID", "facebook/nllb-200-distilled-600M")
 DEVICE = os.getenv("DEVICE", "cpu")
 
 # NLLB language codes
-LANG = {"eng": "eng_Latn", "amh": "amh_Ethi"}
+LANG = {"eng": "eng_Latn", "amh": "amh_Ethi", "spa": "spa_Latn"}
+# Requests may only name a language in LANG (the request check below is built from it).
+LANG_PATTERN = "^(" + "|".join(LANG) + ")$"
 
 _tokenizer = None
 _model = None
@@ -46,8 +49,8 @@ def startup() -> None:
 
 class TranslateRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=4000)
-    source_lang: str = Field(..., pattern="^(eng|amh)$")
-    target_lang: str = Field(..., pattern="^(eng|amh)$")
+    source_lang: str = Field(..., pattern=LANG_PATTERN)
+    target_lang: str = Field(..., pattern=LANG_PATTERN)
 
 
 class TranslateResponse(BaseModel):
@@ -58,7 +61,7 @@ class TranslateResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"ok": True, "model_ready": _ready, "model_id": MODEL_ID}
+    return {"ok": True, "model_ready": _ready, "model_id": MODEL_ID, "languages": sorted(LANG)}
 
 
 @app.post("/translate", response_model=TranslateResponse)

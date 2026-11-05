@@ -1,5 +1,5 @@
 # Isa's two helper services (from Eliyas's E1 and E3 work). No database here: Isa keeps everything in SQLite.
-#   translation: NLLB-200, English and Amharic, port 8091 (the first start downloads the model into a volume)
+#   translation: NLLB-200, English, Amharic and Spanish, port 8091 (the first start downloads the model into a volume)
 #   embeddings:  multilingual-e5-base, port 8092
 # Start:  docker compose up -d --build        Check:  http://localhost:8091/health  and  http://localhost:8092/health
 services:

@@ -84,6 +84,11 @@ Add Ask the outgoing president, Listen on journey steps and the Chapter Affiliat
 - Switched on (November 4): `-Mode On`. Checked over the tailnet address: Keycloak 8080 and Ollama 11434 answer; Isa, translation and embeddings forward correctly but weren't running yet.
 - Set-up on this PC only (nothing in the repo changed): installed the .NET 10 SDK (10.0.403). IsaChatApp builds in Release with 0 warnings and 0 errors. The launcher in D:\Repos\IsaLauncherDbg builds too, opens, and found D:\Repos\IsaChatApp by itself. Python 3.15 is installed now (Willis), with pypdf for the content import; the rules self-check passes (61 checks, 0 problems). Docker Desktop installed (Willis).
 
+## Translation service: Spanish
+- **ai-services/translation/app.py**: Spanish added (`spa`, NLLB code `spa_Latn`), alongside English and Amharic, in any direction. The allowed languages now come from the one LANG table, so adding another is one line; /health lists them ("languages"). Same model, nothing new downloaded. ai-services/README.md and docker-compose.yml comments updated.
+- Rebuilt and restarted the translation container on Willis's desktop. Checked over 100.89.6.69: English to Spanish, Spanish to English and Spanish to Amharic all translate (no fallback); an unknown language (`fra`) is still refused (422).
+- To watch when Isa uses it: "debe celebrar" came back as "should hold", not "must hold" (Spanish "deber" covers both), and Isa's output checks keep "must" and "should" apart.
+
 ## Launcher: one button pair per service
 - New bats: start/stop-keycloak, start/stop-voice, start/stop-translation, start/stop-embeddings. Each touches only its own service (docker compose up -d / stop <service>).
 - isa-launcher.ps1 and IsaLauncherDbg: Keycloak and voice are separate groups; new Helper services group (translation 8091, embeddings 8092, build search vectors); status shows both new ports.

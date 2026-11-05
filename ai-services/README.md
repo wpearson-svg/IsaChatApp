@@ -4,7 +4,7 @@ Two small Python services, built by Eliyas (E1 and E3), run in Docker next to Is
 
 | Service | What it does | Port | Check |
 |---|---|---|---|
-| translation | NLLB-200, English and Amharic. When the model is not available it returns the original text with `fallback: true`, never claiming it translated. | 8091 | http://localhost:8091/health |
+| translation | NLLB-200, English, Amharic and Spanish (`eng`, `amh`, `spa`; any pair). When the model is not available it returns the original text with `fallback: true`, never claiming it translated. | 8091 | http://localhost:8091/health |
 | embeddings | multilingual-e5-base, turns text into 768-number vectors | 8092 | http://localhost:8092/health |
 
 ## Start
