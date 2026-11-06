@@ -117,7 +117,7 @@ function toast(text) {
 
 export function setSlide(index) {
     // Full path, because <base href="/"> would turn a bare "#3" into "/#3".
-    history.replaceState(history.state, '', location.pathname + '#' + (index + 1));
+    history.replaceState(history.state, '', location.pathname + location.search + '#' + (index + 1));
 }
 
 export function dispose() {

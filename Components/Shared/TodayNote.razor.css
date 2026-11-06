@@ -120,3 +120,21 @@
     color: #606e7c;
     font-style: italic;
 }
+
+/* "Last year around now" (November 6, 2026): the chapter's own notes from the
+   same weeks a year ago, quoted from the succession notebook. */
+.isa-tnote__lastYear {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.isa-tnote__lastYear li + li { margin-top: 0.2rem; }
+
+.isa-tnote__lyWho {
+    display: block;
+    font-size: 0.75rem;
+    color: #52606d;
+}
+
+.isa-tnote__lyOpen { margin-top: 0.2rem; padding-left: 0; }

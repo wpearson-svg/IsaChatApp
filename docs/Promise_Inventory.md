@@ -43,7 +43,7 @@ The RFP's key principle: help chapter leaders find and understand ISACA-approved
 | R12 | **Accessibility:** meet ISACA's requirements once finalized | Reduced motion, contrast, 44px tap targets, screen-reader labels, Listen Library | Partly (no formal accessibility check yet: Milestone 2, P2) |
 | R13 | **Analytics and measurement:** adoption, usefulness, answer quality, escalation, knowledge currency, user experience, operational impact | Event log and usage log (model, tokens, time); Developer and Content Health dashboards, but labelled "not wired to a real backend", parts simulated | Partly (Willis's Milestone 1 hole: dashboards) |
 | R14 | **Maintainability and scalability:** maintained, monitored, governed and scaled across the network; language support later | SQLite, local Ollama, data files ISACA could maintain; translation detects the language only | Partly (translation is Eliyas's Milestone 1 hole) |
-| R15 | **AI-use register** (required): tool, provider, model; purpose; information submitted; resulting artifact; human review | Not yet brought up to date, including Matthew's work with Claude Code | Not started (Milestone 2, P7, Matthew) |
+| R15 | **AI-use register** (required): tool, provider, model; purpose; information submitted; resulting artifact; human review | Drafted November 6 in docs/AI_Use_Register.md: Matthew's Claude Code use is filled in; teammates' rows are still to confirm | Partly (P7, Matthew) |
 
 ## 3. The RFP: phases and expected outputs (section 2)
 

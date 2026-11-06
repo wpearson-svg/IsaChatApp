@@ -10,8 +10,10 @@ journey steps (journey_steps.csv), the invented sample Chapter
 Experience contacts (contacts.csv), the key calendar dates from
 ISACA documents, such as the compliance window (key_dates.csv), and the
 outgoing president's handoff checklist, word for word from the President
-Guidebook (handoff_steps.csv), and the document sections whose answers
-get a quiet "worth saving?" label on the save button (save_hints.csv).
+Guidebook (handoff_steps.csv), the document sections whose answers
+get a quiet "worth saving?" label on the save button (save_hints.csv), and
+invented sample notebook entries from earlier presidents' years
+(notebook_history.csv), which Isa copies into data/notebook.db once.
 Things leaders do in Isa, such as marking a step
 complete, will be stored in a separate database that this script never
 touches, so rebuilding never erases anyone's progress.
@@ -46,6 +48,12 @@ with open(os.path.join(here, "handoff_steps.csv"), encoding="utf-8-sig", newline
 # gets a quiet "worth saving?" label on its save button (Matthew, 28 October 2026).
 with open(os.path.join(here, "save_hints.csv"), encoding="utf-8-sig", newline="") as f:
     hints = list(csv.DictReader(f))
+
+# Invented sample notebook entries from earlier presidents' years (November 6, 2026),
+# so "Last year around now" and the month view have a past year to show. Copied into
+# data/notebook.db by NotebookService when Isa starts, once each.
+with open(os.path.join(here, "notebook_history.csv"), encoding="utf-8-sig", newline="") as f:
+    history = list(csv.DictReader(f))
 
 # ---- Check the data before building -------------------------------------
 problems = []
@@ -127,6 +135,25 @@ for h in hints:
         problems.append(f"save_hints.csv {hid}: the same document, section and page is tagged twice")
     hint_keys.add(key)
 
+history_ids = [h["History ID"] for h in history]
+if len(set(history_ids)) != len(history_ids):
+    problems.append("notebook_history.csv: duplicate History ID")
+for h in history:
+    nid = h["History ID"]
+    if not re.fullmatch(r"N-\d{2}", nid):
+        problems.append(f"notebook_history.csv: bad History ID {nid!r} (use N- and two digits, like N-01)")
+    for field in ("Chapter ID", "Author ID", "Author name", "Note"):
+        if not h[field].strip():
+            problems.append(f"notebook_history.csv {nid}: {field} is empty")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", h["Date"].strip()):
+        problems.append(f"notebook_history.csv {nid}: Date must look like 2025-07-08")
+    if h["Kind"].strip() not in ("decision", "contact", "worked", "unfinished", "other"):
+        problems.append(f"notebook_history.csv {nid}: Kind must be a notebook note kind")
+    if h["Topic"].strip() not in ("Elections", "Finances", "Meetings", "Compliance", "Membership", "Events", "Other"):
+        problems.append(f"notebook_history.csv {nid}: Topic must be a notebook topic")
+    if h["Shared"].strip() not in ("yes", "no"):
+        problems.append(f"notebook_history.csv {nid}: Shared must be yes or no")
+
 if problems:
     print("DATA PROBLEMS:")
     for p in problems:
@@ -179,6 +206,17 @@ CREATE TABLE save_hints(
   label    TEXT NOT NULL,     -- deadline or decision
   reason   TEXT NOT NULL      -- shown to the leader: "This answer cites ..."
 );
+CREATE TABLE notebook_history(
+  history_id  TEXT PRIMARY KEY,
+  chapter_id  TEXT NOT NULL,
+  author_id   TEXT NOT NULL,    -- an invented sample person from directory/
+  author_name TEXT NOT NULL,
+  on_date     TEXT NOT NULL,    -- YYYY-MM-DD
+  category    TEXT NOT NULL,    -- decision, contact, worked, unfinished, other
+  topic       TEXT NOT NULL,
+  shared      INTEGER NOT NULL, -- 1 = shared with the board
+  note        TEXT NOT NULL
+);
 CREATE TABLE contact_chapters(
   chapter_id TEXT PRIMARY KEY,  -- each chapter has one contact
   contact_id TEXT NOT NULL REFERENCES contacts(contact_id)
@@ -200,10 +238,13 @@ db.executemany("INSERT INTO key_dates VALUES(?,?,?,?,?)", [
 db.executemany("INSERT INTO save_hints VALUES(?,?,?,?,?,?)", [
     (h["Hint ID"], h["Document"].strip(), h["Section"].strip(), h["Page"].strip(),
      h["Label"].strip(), h["Reason"].strip()) for h in hints])
+db.executemany("INSERT INTO notebook_history VALUES(?,?,?,?,?,?,?,?,?)", [
+    (h["History ID"], h["Chapter ID"].strip(), h["Author ID"].strip(), h["Author name"].strip(), h["Date"].strip(),
+     h["Kind"].strip(), h["Topic"].strip(), 1 if h["Shared"].strip() == "yes" else 0, h["Note"].strip()) for h in history])
 db.commit()
 db.close()
 print(f"built {out}: {len(steps)} journey steps, {len(contacts)} sample contacts, {len(key_dates)} key dates, "
-      f"{len(handoff)} handoff steps, {len(hints)} save hints")
+      f"{len(handoff)} handoff steps, {len(hints)} save hints, {len(history)} sample notebook entries")
 
 # A tagged section that Isa's content no longer has never gets its label
 # (for example after the content is rebuilt with new section names). Not an
