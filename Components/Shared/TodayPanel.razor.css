@@ -953,3 +953,300 @@
 
 .isa-today__tourBtn.is-ghost { background: #ffffff; color: #1d2d5c; }
 .isa-today__tourBtn:focus-visible { outline: 2px solid #00a4e4; outline-offset: 2px; }
+
+/* ---- View 5: the month (November 6, 2026) ----
+   Read only. Brand colors (BRAND_GUIDELINES.md): journey steps in Isa's
+   teal, ISACA key dates in ISACA Blue, the leader's booked call in ISACA
+   Green, last year's notebook entries as a hollow grey ring. Every mark
+   is also named in the legend and read out to screen readers, so color
+   never carries the meaning alone. */
+.isa-today__calendarLink { margin-top: 0.5rem; }
+
+.isa-cal__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0.25rem 0 0.5rem;
+}
+
+.isa-cal__month {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1d2d5c;
+}
+
+.isa-cal__navBtn {
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    font: inherit;
+    font-size: 1.2rem;
+    color: #07649d;
+    cursor: pointer;
+}
+
+.isa-cal__navBtn:disabled { color: #cbd2d9; cursor: default; }
+.isa-cal__navBtn:not(:disabled):hover,
+.isa-cal__navBtn:focus-visible { border-color: #07649d; }
+
+.isa-cal__grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+}
+
+.isa-cal__wd {
+    padding: 0.2rem 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    color: #52606d;
+}
+
+.isa-cal__day {
+    min-height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    padding: 0.25rem 0 0.2rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font: inherit;
+    color: #1d2d5c;
+    cursor: pointer;
+}
+
+/* The leader's first 90 days get a faint tint; an open ISACA key date a light blue one. */
+.isa-cal__day.is-journey { background: #f3f8f6; }
+.isa-cal__day.is-keydate { background: #e7f0f5; }
+
+.isa-cal__day:hover,
+.isa-cal__day:focus-visible { border-color: #07649d; }
+
+.isa-cal__day.is-today .isa-cal__num {
+    background: #1d2d5c;
+    color: #ffffff;
+}
+
+.isa-cal__day.is-selected {
+    border: 2px solid #07649d;
+    padding: calc(0.25rem - 1px) 0 calc(0.2rem - 1px);
+}
+
+.isa-cal__num {
+    min-width: 1.5rem;
+    padding: 0.05rem 0.25rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.isa-cal__dots {
+    display: flex;
+    gap: 2px;
+    min-height: 7px;
+}
+
+.isa-cal__dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.isa-cal__dot.is-step { background: #1b7a66; }
+.isa-cal__dot.is-key  { background: #017dc2; }
+.isa-cal__dot.is-call { background: #3f7d20; }
+.isa-cal__dot.is-past { border: 1.5px solid #52606d; background: transparent; }
+
+.isa-cal__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.9rem;
+    margin: 0.6rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.72rem;
+    color: #52606d;
+}
+
+.isa-cal__legend li { display: flex; align-items: center; gap: 0.3rem; }
+
+.isa-cal__detail {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.isa-cal__detailHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.5rem;
+    margin: 0 0 0.4rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1d2d5c;
+}
+
+.isa-cal__detailHead span {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #52606d;
+}
+
+.isa-cal__group {
+    margin: 0.7rem 0 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #52606d;
+}
+
+.isa-cal__item {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #1d2d5c;
+}
+
+.isa-cal__source {
+    margin: 0.15rem 0 0;
+    font-size: 0.72rem;
+    color: #52606d;
+}
+
+.isa-cal__past {
+    margin: 0 0 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border-left: 3px solid #cbd2d9;
+    background: #ffffff;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.84rem;
+    line-height: 1.4;
+    color: #1d2d5c;
+}
+
+.isa-cal__pastWho {
+    display: block;
+    margin-bottom: 0.15rem;
+    font-size: 0.72rem;
+    color: #52606d;
+}
+
+.isa-cal__note {
+    margin: 1rem 0 0;
+    font-size: 0.72rem;
+    color: #52606d;
+}
+
+/* "Add to my calendar" (November 6, 2026): a quiet text button under each
+   item in the day's details, tall enough to tap (44px). */
+.isa-cal__addBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 44px;
+    margin: 0 0 0.2rem;
+    padding: 0 0.1rem;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #07649d;
+    cursor: pointer;
+}
+
+.isa-cal__addBtn:hover { text-decoration: underline; }
+.isa-cal__addBtn:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; border-radius: 4px; }
+
+.isa-cal__addIcon {
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid currentColor;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+/* Under a step card, the button sits just below it. */
+.isa-today__steps li > .isa-cal__addBtn { margin-top: 0.1rem; }
+
+/* ---- A board member's page (November 9, 2026): rows open it; View 4 ---- */
+.isa-today__member--open { padding: 0; }
+.isa-today__memberBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.6rem 0.25rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+}
+.isa-today__memberBtn:hover { background: #f1f6f9; }
+.isa-today__memberBtn:hover .isa-today__memberName { text-decoration: underline; }
+.isa-today__memberBtn:focus-visible { outline: 2px solid #07649d; outline-offset: 1px; }
+.isa-today__memberChevron { flex: none; color: #07649d; font-size: 1.2rem; line-height: 1; }
+
+.isa-today__person { display: flex; align-items: center; gap: 0.85rem; margin: 0.25rem 0 0.9rem; }
+.isa-today__avatar--big { width: 56px; height: 56px; font-size: 1.05rem; }
+.isa-today__personName { margin: 0; }
+.isa-today__personName em { font-style: normal; font-weight: 400; color: #606e7c; font-size: 0.85rem; }
+.isa-today__personRole { margin: 0.15rem 0 0; font-size: 0.85rem; color: #4a5866; }
+
+.isa-today__facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 0.9rem;
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+}
+.isa-today__facts dt { color: #5f6b7a; }
+.isa-today__facts dd { margin: 0; color: #1f2933; }
+
+.isa-today__personBlock { margin: 0 0 1rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb; }
+.isa-today__personHead {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+}
+.isa-today__personText { margin: 0 0 0.55rem; font-size: 0.85rem; color: #1f2933; }
+.isa-today__roleQuote { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; color: #1f2933; }
+p.isa-today__roleQuote { padding-left: 0; }
+.isa-today__roleSource { margin: 0.35rem 0 0; font-size: 0.74rem; color: #4a5866; }
+.isa-today__engageBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 44px;
+    padding: 0 1rem;
+    border-radius: 8px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+.isa-today__engageBtn:hover { background: #07649d; color: #ffffff; }
+.isa-today__engageBtn:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }

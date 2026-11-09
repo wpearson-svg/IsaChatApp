@@ -309,7 +309,8 @@
                             <ShowTheWork Steps="@msg.Steps" TotalMs="@(msg.WorkMs ?? 0)" Developer="@(ShowDeveloperTools && !Settings.PanelUserView)"
                                          CanToggle="@ShowDeveloperTools" OnToggle="@TogglePanelView" />
                         }
-                        <div class="isa-widget__text">@msg.Text</div>
+                        @* Isa's replies mark glossary terms (hover for ISACA's definition); the leader's own words stay plain. *@
+                        <div class="isa-widget__text">@if (msg.Role == "ai"){<GlossaryText Text="@msg.Text" />}else{<text>@msg.Text</text>}</div>
                         @if (msg.Sources is { Count: > 0 })
                         {
                             @* Each source as a card: the document's name, then
@@ -388,7 +389,7 @@
                    column-reverse layout it sits at the very TOP of the
                    chat, above the welcome message. Shows only for a
                    signed-in leader in their first 90 days. *@
-                <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenChecklist" Version="@_notebookVersion" />
+                <TodayNote OnOpenToday="OpenToday" OnOpenNotebook="OpenChecklist" OnOpenNotebookIndex="OpenNotebook" Version="@_notebookVersion" />
 
                 @* "Ask the outgoing president" (3 November 2026): a former president
                    with a question waiting in the notebook sees one line here, at

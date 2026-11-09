@@ -110,6 +110,7 @@ builder.Services.AddSingleton<NotebookReminderService>();
 // The Library (Feature 5): ISACA's documents to read or listen to, from onboarding/library.json
 // and the approved passages in data/content.db (Components/Shared/LibraryPanel.razor).
 builder.Services.AddSingleton<LibraryService>();
+builder.Services.AddSingleton<GlossaryMatcher>();   // hover definitions for glossary terms (November 9, 2026)
 // ISACA's Chapter 360 documents (onboarding/chapter360.json): the sample Chapter 360 page and
 // the Library's Chapter 360 group.
 builder.Services.AddSingleton<Chapter360Service>();

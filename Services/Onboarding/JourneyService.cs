@@ -141,6 +141,38 @@ public class JourneyService
     }
 
     /// <summary>
+    /// The member roster for "Meet your board" (November 9, 2026): each person's ISACA
+    /// certifications and the year they became a member, by person ID
+    /// (onboarding/member_roster.csv, invented, standing in for ISACA's member roster,
+    /// which a president may see in full: Camille, October 21, 2026). Empty if the
+    /// database was built before the roster existed.
+    /// </summary>
+    public IReadOnlyDictionary<string, RosterEntry> GetMemberRoster()
+    {
+        var map = new Dictionary<string, RosterEntry>();
+        if (!StepsExist) return map;
+
+        using var conn = new SqliteConnection($"Data Source={_dbPath};Mode=ReadOnly");
+        conn.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT person_id, certifications, member_since FROM member_roster;";
+        try
+        {
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var certs = reader.GetString(1).Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                map[reader.GetString(0)] = new RosterEntry(certs, reader.GetInt32(2));
+            }
+        }
+        catch (SqliteException)
+        {
+            // data/onboarding.db was built before the roster existed: run the onboarding build script again.
+        }
+        return map;
+    }
+
+    /// <summary>
     /// The "worth saving?" label for an answer, or null. A fixed rule, not
     /// the AI model: if the source the answer cites (the first source) is a
     /// document section tagged in onboarding/save_hints.csv, the save button
@@ -201,6 +233,9 @@ public class JourneyService
 /// <param name="Reason">Plain words that finish "This answer cites ...".</param>
 /// <param name="Document">The cited document, named in the explanation.</param>
 public record SaveHint(string HintId, string Label, string Reason, string Document);
+
+/// <summary>A person's line on ISACA's member roster: certifications and the year they joined.</summary>
+public record RosterEntry(IReadOnlyList<string> Certifications, int MemberSince);
 
 /// <summary>One item of the outgoing president's handoff checklist.</summary>
 /// <param name="Title">A short title in Isa's own words.</param>

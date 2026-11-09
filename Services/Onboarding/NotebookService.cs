@@ -126,6 +126,12 @@ public class NotebookService
         AddColumnIfMissing(conn, "answered_on", "TEXT");
         AddColumnIfMissing(conn, "answered_at", "TEXT");
 
+        // Added November 6, 2026 for "Last year around now" and the month view:
+        //   sample_id  the History ID of an invented sample entry copied from
+        //              onboarding/notebook_history.csv (through data/onboarding.db)
+        AddColumnIfMissing(conn, "sample_id", "TEXT");
+        CopySampleHistory(conn, config["OnboardingDb:Path"] ?? Path.Combine("data", "onboarding.db"));
+
         // "Email this record": in the prototype nothing is emailed; each
         // request is kept here instead, like the introduction on the contact
         // step. A real version would hand these to ISACA's mail system.
@@ -169,6 +175,55 @@ public class NotebookService
         using var shared = conn.CreateCommand();
         shared.CommandText = "UPDATE notebook_entries SET shared_on = on_date WHERE shared = 1 AND shared_on IS NULL;";
         shared.ExecuteNonQuery();
+    }
+
+    // Copies the invented sample entries from earlier presidents' years
+    // (onboarding/notebook_history.csv, built into data/onboarding.db) into
+    // this notebook, each once. A sample entry already copied is never copied
+    // again, even if its writer removed it, so the record stays honest.
+    // Deleting data/notebook.db before a rehearsal brings them back on the next start.
+    private static void CopySampleHistory(SqliteConnection conn, string onboardingDb)
+    {
+        if (!File.Exists(onboardingDb)) return;
+        var rows = new List<(string Id, string Chapter, string Author, string Name, string Date, string Kind, string Topic, bool Shared, string Note)>();
+        try
+        {
+            using var src = new SqliteConnection($"Data Source={onboardingDb};Mode=ReadOnly");
+            src.Open();
+            using var read = src.CreateCommand();
+            read.CommandText = "SELECT history_id, chapter_id, author_id, author_name, on_date, category, topic, shared, note FROM notebook_history;";
+            using var r = read.ExecuteReader();
+            while (r.Read())
+                rows.Add((r.GetString(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4),
+                    r.GetString(5), r.GetString(6), r.GetInt64(7) == 1, r.GetString(8)));
+        }
+        catch (SqliteException)
+        {
+            return;   // data/onboarding.db was built before the sample history existed.
+        }
+
+        foreach (var h in rows)
+        {
+            using var add = conn.CreateCommand();
+            // Recorded at 10:00 in Tokyo on its day (01:00 UTC); the sample cast is in Japan.
+            add.CommandText = """
+                INSERT INTO notebook_entries(chapter_id, author_id, author_name, author_role, kind, category,
+                                             note, shared, on_date, recorded_at, topic, shared_on, sample_id)
+                SELECT $c, $p, $n, 'President', 'note', $cat, $note, $sh, $d, $d || 'T01:00:00Z', $topic,
+                       CASE WHEN $sh = 1 THEN $d END, $id
+                WHERE NOT EXISTS (SELECT 1 FROM notebook_entries WHERE sample_id = $id);
+                """;
+            add.Parameters.AddWithValue("$c", h.Chapter);
+            add.Parameters.AddWithValue("$p", h.Author);
+            add.Parameters.AddWithValue("$n", h.Name);
+            add.Parameters.AddWithValue("$cat", h.Kind);
+            add.Parameters.AddWithValue("$note", h.Note);
+            add.Parameters.AddWithValue("$sh", h.Shared ? 1 : 0);
+            add.Parameters.AddWithValue("$d", h.Date);
+            add.Parameters.AddWithValue("$topic", h.Topic);
+            add.Parameters.AddWithValue("$id", h.Id);
+            add.ExecuteNonQuery();
+        }
     }
 
     private static void AddColumnIfMissing(SqliteConnection conn, string column, string type)
@@ -271,6 +326,32 @@ public class NotebookService
         }
         return list;
     }
+
+    /// <summary>
+    /// "Last year around now" (November 6, 2026): the notes and decisions in this
+    /// person's chapter notebook dated from <paramref name="daysBefore"/> days before
+    /// to <paramref name="daysAfter"/> days after the same date one year earlier,
+    /// oldest first. Only what this person may already read (GetEntries applies the
+    /// notebook's rules), never their own entries, and never questions or follow-ups.
+    /// Nothing comes from the AI model: it is a date match on the chapter's own words.
+    /// </summary>
+    public IReadOnlyList<NotebookEntry> GetLastYear(string personId, DateOnly today, int daysBefore, int daysAfter)
+    {
+        var center = today.AddYears(-1);
+        return GetFromPastYears(personId, today, center.AddDays(-daysBefore), center.AddDays(daysAfter));
+    }
+
+    /// <summary>
+    /// Notes and decisions dated between two days (inclusive) in this person's chapter
+    /// notebook, written by someone else, oldest first. For the month view's
+    /// "last year" markers. Same reading rules as GetEntries.
+    /// </summary>
+    public IReadOnlyList<NotebookEntry> GetFromPastYears(string personId, DateOnly today, DateOnly from, DateOnly to) =>
+        GetEntries(personId, today)
+            .Where(e => e.ParentId is null && e.Kind != "question" && e.AuthorId != personId
+                        && e.OnDate >= from && e.OnDate <= to)
+            .OrderBy(e => e.OnDate).ThenBy(e => e.EntryId)
+            .ToList();
 
     private static NotebookEntry ReadEntry(SqliteDataReader r) => new(
         EntryId: r.GetInt64(0),
