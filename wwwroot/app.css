@@ -61,3 +61,41 @@ h1:focus {
 /* Isa's bubble is never shown while an Isa panel is open anywhere on the page, even if a second widget is
    present (a second widget's bubble used to stay on screen beside the open panel). */
 body:has(.isa-widget__panel) .isa-widget__bubble { display: none !important; }
+
+/* ---- Glossary terms (November 9, 2026): GlossaryText.razor marks each "Terms explained"
+   term; hovering, tapping or tabbing to it shows ISACA's definition in .isa-tip, one box
+   on the page (GlossaryText.razor.js). Global because the box sits in <body>. ---- */
+.isa-term {
+    text-decoration: underline dotted #07649d;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+    cursor: help;
+    border-radius: 2px;
+}
+.isa-term:hover { text-decoration-style: solid; }
+.isa-term:focus-visible { outline: 2px solid #07649d; outline-offset: 1px; }
+
+.isa-tip {
+    position: fixed;
+    z-index: 2147483600;   /* above Isa's panels (.isa-widget is 2147483000) */
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(340px, calc(100vw - 16px));
+    padding: 10px 12px;
+    background: #ffffff;
+    color: #1f2933;
+    border: 1px solid #c5d3dc;
+    border-left: 4px solid #07649d;
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(29, 45, 92, 0.18);
+    font-family: Roboto, system-ui, sans-serif;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    white-space: normal;
+    pointer-events: none;
+}
+.isa-tip[hidden] { display: none; }
+.isa-tip__term { display: block; font-weight: 700; color: #1d2d5c; margin-bottom: 4px; }
+.isa-tip__quote, .isa-tip__list { display: block; }
+.isa-tip__item { display: list-item; margin-left: 1.1em; }
+.isa-tip__source { display: block; margin-top: 6px; font-size: 0.74rem; color: #4a5866; }

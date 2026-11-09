@@ -1183,3 +1183,70 @@
 
 /* Under a step card, the button sits just below it. */
 .isa-today__steps li > .isa-cal__addBtn { margin-top: 0.1rem; }
+
+/* ---- A board member's page (November 9, 2026): rows open it; View 4 ---- */
+.isa-today__member--open { padding: 0; }
+.isa-today__memberBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.6rem 0.25rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+}
+.isa-today__memberBtn:hover { background: #f1f6f9; }
+.isa-today__memberBtn:hover .isa-today__memberName { text-decoration: underline; }
+.isa-today__memberBtn:focus-visible { outline: 2px solid #07649d; outline-offset: 1px; }
+.isa-today__memberChevron { flex: none; color: #07649d; font-size: 1.2rem; line-height: 1; }
+
+.isa-today__person { display: flex; align-items: center; gap: 0.85rem; margin: 0.25rem 0 0.9rem; }
+.isa-today__avatar--big { width: 56px; height: 56px; font-size: 1.05rem; }
+.isa-today__personName { margin: 0; }
+.isa-today__personName em { font-style: normal; font-weight: 400; color: #606e7c; font-size: 0.85rem; }
+.isa-today__personRole { margin: 0.15rem 0 0; font-size: 0.85rem; color: #4a5866; }
+
+.isa-today__facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 0.9rem;
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+}
+.isa-today__facts dt { color: #5f6b7a; }
+.isa-today__facts dd { margin: 0; color: #1f2933; }
+
+.isa-today__personBlock { margin: 0 0 1rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb; }
+.isa-today__personHead {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #1d2d5c;
+}
+.isa-today__personText { margin: 0 0 0.55rem; font-size: 0.85rem; color: #1f2933; }
+.isa-today__roleQuote { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; color: #1f2933; }
+p.isa-today__roleQuote { padding-left: 0; }
+.isa-today__roleSource { margin: 0.35rem 0 0; font-size: 0.74rem; color: #4a5866; }
+.isa-today__engageBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 44px;
+    padding: 0 1rem;
+    border-radius: 8px;
+    background: #1d2d5c;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+.isa-today__engageBtn:hover { background: #07649d; color: #ffffff; }
+.isa-today__engageBtn:focus-visible { outline: 2px solid #07649d; outline-offset: 2px; }

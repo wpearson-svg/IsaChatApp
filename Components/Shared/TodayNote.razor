@@ -72,7 +72,7 @@
                 @if (_handoffNext is not null)
                 {
                     <dt>Next</dt>
-                    <dd>@_handoffNext.Title</dd>
+                    <dd><GlossaryText Text="@_handoffNext.Title" /></dd>
                 }
             </dl>
             <div class="isa-tnote__actions">
@@ -117,7 +117,7 @@ else if (_ctx is not null)
                         <ul>
                             @foreach (var s in _todayLeft)
                             {
-                                <li>@s.Title</li>
+                                <li><GlossaryText Text="@s.Title" /></li>
                             }
                         </ul>
                     }
@@ -130,7 +130,7 @@ else if (_ctx is not null)
                         <ul>
                             @foreach (var s in _comingUp.Take(ComingUpShown))
                             {
-                                <li>@s.Title <span class="isa-tnote__days">(@DaysLabel(s))</span></li>
+                                <li><GlossaryText Text="@s.Title" /> <span class="isa-tnote__days">(@DaysLabel(s))</span></li>
                             }
                             @if (_comingUp.Count > ComingUpShown)
                             {
@@ -144,7 +144,7 @@ else if (_ctx is not null)
                 @foreach (var k in _keyDates)
                 {
                     <dt>Key date</dt>
-                    <dd title="@k.Source">@KeyDateLine(k)</dd>
+                    <dd title="@k.Source"><GlossaryText Text="@KeyDateLine(k)" /></dd>
                 }
 
                 @if (_lastYear.Count > 0)

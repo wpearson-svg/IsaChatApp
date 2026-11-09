@@ -205,6 +205,13 @@ public class LibraryService
             .ToList();
     }
 
+    /// <summary>When the glossary file last changed, so GlossaryMatcher knows to read it again.</summary>
+    public DateTime GlossaryStamp()
+    {
+        try { return File.GetLastWriteTimeUtc(_glossaryPath); }
+        catch { return DateTime.MinValue; }
+    }
+
     /// <summary>The sentences of a glossary quote in its document (on the given guidebook page, if
     /// any): from the first sentence the quote starts in to the last one it covers. Null if the quote
     /// can't be found (then "Read it" opens the page, or the top of the document).</summary>

@@ -56,6 +56,7 @@
 @inject BoardIntroService BoardIntro
 @inject KeycloakSignInService SignInService
 @inject JourneyService Journey
+@inject GlossaryMatcher Glossary
 @inject NotebookService Notebook
 @inject IJSRuntime JS
 
@@ -320,7 +321,7 @@
                 @* ---- View 2: Meet your Chapter Experience contact (approved mockup) ---- *@
                 <button type="button" class="isa-today__back" @onclick="Back">&lsaquo; @BackLabel</button>
 
-                <h2 class="isa-today__stepHeading">@_selected.Title</h2>
+                <h2 class="isa-today__stepHeading"><GlossaryText Text="@_selected.Title" /></h2>
                 <p class="isa-today__lede">Your contact is the person to reach when Isa can't help, or when you'd rather talk to someone.</p>
 
                 @if (_contact is null)
@@ -427,14 +428,122 @@
 
                 <StepHistoryList Entries="_history" />
             }
+            else if (_selected.StepId == BoardStepId && _boardPerson is not null
+                     && Terms.GetBoard(_ctx.Term.ChapterId, _ctx.Today).FirstOrDefault(b => b.PersonId == _boardPerson) is { } pm)
+            {
+                @* ---- View 4: one board member's page (November 9, 2026, Matthew) ----
+                   Opened from "Meet your board". Everything Isa already knows about this
+                   person, in one place: ISACA's description of their role (the glossary),
+                   their term and time zone, ISACA's member roster (certifications, member
+                   since: invented, onboarding/member_roster.csv), and the profile answers they
+                   chose to share with this president (the J-25 rules). No contact details and
+                   no chat: Isa says how they like to be reached and hands off to Engage,
+                   ISACA's own tool for leaders to talk to each other. *@
+                var isYou = pm.PersonId == _ctx.PersonId;
+                var isPast = pm.Role == "Immediate Past President";
+                var roleDef = Glossary.FindTerm("Chapter " + pm.Role);
+                var roster = Journey.GetMemberRoster().GetValueOrDefault(pm.PersonId);
+                var reply = isYou ? null : BoardIntro.GetReplies(_ctx.PersonId, _ctx.Today).FirstOrDefault(r => r.Member.PersonId == pm.PersonId);
+                var introSaved = BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId) is not null;
+                var diff = TimeDifference(pm.TimeZone, _ctx.Term.TimeZone);
+                <button type="button" class="isa-today__back" @onclick="CloseMember">&lsaquo; Your board</button>
+
+                <div class="isa-today__person">
+                    <span class="isa-today__avatar isa-today__avatar--big @(isYou ? "is-you" : isPast ? "is-past" : "")" aria-hidden="true">@Initials(pm.Name)</span>
+                    <div>
+                        <h2 class="isa-today__stepHeading isa-today__personName">@pm.Name@if (isYou) {<em> (you)</em>}</h2>
+                        <p class="isa-today__personRole">@pm.Role@(isPast ? " · the president before you" : "") · @_ctx.Term.ChapterName</p>
+                    </div>
+                </div>
+
+                <dl class="isa-today__facts">
+                    <dt>Term</dt>
+                    <dd>@TermLabel(pm)</dd>
+                    @if (!isYou)
+                    {
+                        <dt>Time there now</dt>
+                        <dd>@LocalTime(pm.TimeZone), @City(pm.TimeZone)@(diff is null ? " (same as you)" : $" ({diff})")</dd>
+                    }
+                    @if (roster is not null)
+                    {
+                        <dt>Certifications</dt>
+                        <dd>@(roster.Certifications.Count == 0 ? "None listed" : string.Join(", ", roster.Certifications))</dd>
+                        <dt>ISACA member</dt>
+                        <dd>Since @roster.MemberSince (@YearsLabel(_ctx.Today.Year - roster.MemberSince))</dd>
+                    }
+                </dl>
+
+                @if (roleDef is not null)
+                {
+                    <section class="isa-today__personBlock" aria-label="What this role does">
+                        <h3 class="isa-today__personHead">What a @pm.Role.ToLowerInvariant() does</h3>
+                        @if (roleDef.Bullets && roleDef.Quote.Count > 1)
+                        {
+                            <ul class="isa-today__roleQuote">
+                                @foreach (var q in roleDef.Quote)
+                                {
+                                    <li>“@q”</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="isa-today__roleQuote">“@string.Join(" ", roleDef.Quote)”</p>
+                        }
+                        <p class="isa-today__roleSource">@RoleSource(roleDef)</p>
+                    </section>
+                }
+
+                @if (!isYou)
+                {
+                    <section class="isa-today__personBlock" aria-label="What they shared with you">
+                        <h3 class="isa-today__personHead">What they shared with you</h3>
+                        @if (reply?.Profile is { } p)
+                        {
+                            <dl class="isa-today__answers">
+                                @if (p.GoodAt is not null) { <dt>Good at</dt><dd>@p.GoodAt</dd> }
+                                @if (p.Enjoy is not null) { <dt>Would enjoy</dt><dd>@p.Enjoy</dd> }
+                                @if (p.TimePerMonth is not null) { <dt>Time each month</dt><dd>@p.TimePerMonth</dd> }
+                                @if (p.ContactBy is not null) { <dt>Prefers</dt><dd>@p.ContactBy</dd> }
+                            </dl>
+                        }
+                        else if (introSaved)
+                        {
+                            <p class="isa-today__noReply">No reply yet. The profile form is optional.</p>
+                        }
+                        else
+                        {
+                            var introStep = _ctx.AllSteps.FirstOrDefault(s => s.StepId == BoardIntroStepId);
+                            <p class="isa-today__hint">Board members can share a short, optional profile once you've introduced yourself.</p>
+                            @if (introStep is not null)
+                            {
+                                <button type="button" class="isa-today__boardNext" @onclick="() => OpenStep(introStep)">
+                                    <b>First:</b> @introStep.Title.ToLowerInvariant() &rsaquo;
+                                </button>
+                            }
+                        }
+                    </section>
+
+                    <section class="isa-today__personBlock" aria-label="Getting in touch">
+                        <h3 class="isa-today__personHead">Getting in touch</h3>
+                        <p class="isa-today__personText">@ReachLine(reply?.Profile?.ContactBy)</p>
+                        <a class="isa-today__engageBtn" href="/sample/engage" target="_blank" rel="noopener">Open Engage <span aria-hidden="true">&#8599;</span></a>
+                    </section>
+                }
+
+                <p class="isa-today__boardPrivacy">
+                    <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
+                    @(isYou ? "This is what your board sees about you from ISACA's records." : "From ISACA's records, plus only what they chose to share with you. Isa shows no contact details.")
+                </p>
+            }
             else
             {
                 @* ---- View 3: any other step ---- *@
                 <button type="button" class="isa-today__back" @onclick="Back">&lsaquo; @BackLabel</button>
 
-                <h2 class="isa-today__stepHeading">@_selected.Title</h2>
+                <h2 class="isa-today__stepHeading"><GlossaryText Text="@_selected.Title" /></h2>
                 <p class="isa-today__when">@DaysLabel(_selected)</p>
-                <p class="isa-today__lede">@_selected.Details</p>
+                <p class="isa-today__lede"><GlossaryText Text="@_selected.Details" /></p>
 
                 @if (JourneyContext.IsFromIsacaContent(_selected))
                 {
@@ -514,7 +623,9 @@
                             var isYou = m.PersonId == _ctx.PersonId;
                             var isPast = m.Role == "Immediate Past President";
                             var diff = TimeDifference(m.TimeZone, _ctx.Term.TimeZone);
-                            <li class="isa-today__member">
+                            <li class="isa-today__member isa-today__member--open">
+                                <button type="button" class="isa-today__memberBtn" @onclick="() => OpenMember(m.PersonId)"
+                                        aria-label="@($"{m.Name}{(isYou ? " (you)" : "")}, {m.Role}. Open their page")">
                                 <span class="isa-today__avatar @(isYou ? "is-you" : isPast ? "is-past" : "")" aria-hidden="true">@Initials(m.Name)</span>
                                 <span class="isa-today__memberMain">
                                     <span class="isa-today__memberName">@m.Name@if (isYou) {<em> (you)</em>}</span>
@@ -529,12 +640,14 @@
                                         <span class="isa-today__memberDiff">@diff</span>
                                     }
                                 </span>
+                                <span class="isa-today__memberChevron" aria-hidden="true">&rsaquo;</span>
+                                </button>
                             </li>
                         }
                     </ul>
                     <p class="isa-today__boardPrivacy">
                         <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
-                        From ISACA's records: names, board roles, term dates and time zones only.
+                        From ISACA's records. Tap a name for their role, certifications and anything they chose to share with you.
                     </p>
                     var nextStep = _ctx.AllSteps.FirstOrDefault(s => s.StepId == BoardIntroStepId);
                     if (nextStep is not null)
@@ -754,6 +867,45 @@
     // ---- "Meet your board" (J-05) ----
     private const string BoardStepId = "J-05";
     private const string BoardIntroStepId = "J-19";   // "Introduce yourself to your board", the next step
+
+    // The board member whose page is open in "Meet your board" (View 4), or null for the list.
+    private string? _boardPerson;
+
+    private void OpenMember(string personId)
+    {
+        _goingBack = false;
+        _hasMoved = true;
+        _boardPerson = personId;
+    }
+
+    private void CloseMember()
+    {
+        _goingBack = true;
+        _hasMoved = true;
+        _boardPerson = null;
+    }
+
+    private static string YearsLabel(int years) => years <= 0 ? "this year" : years == 1 ? "1 year" : $"{years} years";
+
+    // "Core Chapter Leader Roles and Responsibilities · Chapter Secretary, Primary Responsibilities"
+    private static string RoleSource(GlossaryTerm t)
+    {
+        var s = t.Document.Title;
+        if (!string.IsNullOrWhiteSpace(t.Pages)) s += ", page " + t.Pages;
+        if (!string.IsNullOrWhiteSpace(t.Where)) s += " · " + t.Where;
+        return s;
+    }
+
+    // How to reach them, from their own profile answer if they gave one. Isa never shows
+    // contact details or offers a chat: the conversation happens in ISACA's own tools.
+    private static string ReachLine(string? contactBy) => contactBy switch
+    {
+        "A message on Engage" => "They'd like a message on Engage, ISACA's community for chapter leaders.",
+        "Email" => "They prefer email. Their address is in your chapter's member roster and on their Engage profile.",
+        "Phone" => "They prefer a phone call. Their number is in your chapter's member roster.",
+        "A chat app" => "They prefer a chat app. You could ask them which one on Engage.",
+        _ => "You can find them in Engage's member directory, ISACA's community for chapter leaders.",
+    };
 
     private static string Initials(string name) =>
         string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
@@ -1065,6 +1217,7 @@
         _goingBack = false;
         _hasMoved = true;
         _selected = step;
+        _boardPerson = null;
         _openedFromProgress = fromProgress;
         _openedFromMonth = false;
         _writing = false;
@@ -1081,6 +1234,7 @@
         _goingBack = true;
         _hasMoved = true;
         _selected = null;
+        _boardPerson = null;
         _showProgress = _openedFromProgress;
         _showMonth = _openedFromMonth;
         if (_showMonth) LoadMonth();
