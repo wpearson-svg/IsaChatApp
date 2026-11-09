@@ -1,5 +1,5 @@
 # Changes since the last commit
-
+Notes on A'keyrah
 A running list of every change made since Matthew's last commit (November 3, 2026: 92a8bdf, "Sprint 3 M3 and M4: Terms explained, the board introduction and profile form, notebook check-ins, J-19 in week 1, the supplement list and a note for Willis"). Use it to write the Git commit message and to tell Willis what changed. When Matthew commits, this list is cleared and starts again.
 
 - **ISA-PROJECT-CONTEXT.md** (November 4): the nine governance best-practice guides go to ISACA as a courtesy, with how and when Isa uses them, to check we are aligned (first framed as a review request, because team-written answers could look like they go against the RFP's "approved sources only" rule; reframed after Matthew talked with Willis).
@@ -74,6 +74,8 @@ A running list of every change made since Matthew's last commit (November 3, 202
   - Checked on screen as Watanabe Kenji on the demo date: the list, Mei Takahashi's page (role description, roster, "introduce yourself first"), Sato Yumiko's page after she filled in the profile form (her answers, "They'd like a message on Engage", Open Engage), his own page, Back, and phone width (no sideways scrolling). Build: 0 warnings, 0 errors.
   - Test data left in this laptop's data/progress.db (git-ignored): Kenji's saved board introduction and Sato's profile answers, made during the check. Delete data/progress.db before a rehearsal, as usual.
   - Noticed, not changed: Kenji's introduction draft writes "1 July 2026" (day-month order).
+
+- **ISA-PROJECT-CONTEXT.md** (November 9): A'keyrah Stevenson is no longer on the team; Willis and Matthew share her responsibilities. Added under the Sprint 1 team roles so she is never listed as a current teammate. Still naming her as a teammate, to fix when each is next touched: presentation/slides.json (team slide), docs/Sprint3_Presentation_Outline.md (speakers), docs/AI_Use_Register.md (her "to confirm" row).
 
 ## Suggested commit message
 

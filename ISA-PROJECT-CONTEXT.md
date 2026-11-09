@@ -121,6 +121,8 @@ Still a best guess: what new leaders actually struggle with is worth confirming 
 
 Matthew's copy: C:\Users\MatthewBrady\Downloads\ISACA AI-Enabled Chapter Support Presentation.pptx (not in the project folder). "Isa: AI-Enabled Chapter Knowledge and Support Agent. A proposal for ISACA's Chapter Experience Team", Second Star Collective, 24 September 2026, 43 slides. Team roles on slide 2: Willis Pearson (Project Lead, Solution Architecture), Eliyas Eshta (Solutions Analyst, Technical Stack), A'keyrah Stevenson (Quality Engineer, Risk & Success Metrics), Matthew Brady (Client Liaison, Governance & Escalation Design).
 
+TEAM TODAY (Matthew, November 9, 2026): A'keyrah Stevenson is no longer on the team. Willis and Matthew share her responsibilities (quality, risk and success metrics, the testing and QA report). The team is three people: Willis, Eliyas and Matthew. Never list her as a speaker, owner or teammate.
+
 It was NOT built on COBIT. It used five sections, with a tracker across the top of the slides showing which one was current:
 1. Business Impact: hours spent on questions with documented answers, multiplied across chapters, volunteer leaders, every annual rotation and a growing network. Slides 9 and 10 name "New Chapter Leader Onboarding" and "Annual Leadership Rotation & Handoff" as business impacts. Closing line: "Unlocking thousands of volunteer & team hours through instant, verified chapter support."
 2. Intended Outcome, "in your words" (Camille quote: "the types of questions you need to ask in order to get to what someone is not saying"): (1) Leaders doing strategy, (2) Answers that survive the rotation, (3) A team freed for the work that needs them.
