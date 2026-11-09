@@ -10,6 +10,7 @@ public class Orchestrator
     private readonly EventLogService _eventLog;
     private readonly ILogger<Orchestrator> _log;
     private readonly UsageSummaryService _usage;
+    private readonly IsaChatApp.Services.Translation.TranslationClient _translator;
 
     // Stage order from Part B section 4
     // ticketing runs only on Escalate (handled inside the loop)
@@ -17,9 +18,11 @@ public class Orchestrator
         IEnumerable<IStage> stages,
         EventLogService eventLog,
         ILogger<Orchestrator> log,
-        UsageSummaryService usage)
+        UsageSummaryService usage,
+        IsaChatApp.Services.Translation.TranslationClient translator)
     {
         _usage = usage;
+        _translator = translator;
         _stages = stages.ToList();
         _eventLog = eventLog;
         _log = log;
@@ -120,6 +123,38 @@ public class Orchestrator
         else if (finalStatus == "answered")
         {
             message = ctx.AnswerText ?? "No answer produced.";
+        }
+
+        // Translate the reply back into the language the question was written in (Amharic today; the translation
+        // service knows English and Amharic only). Runs after every check, on the finished message only. The sources
+        // and the ticket reference are not touched. If any piece cannot be translated the message stays in English
+        // whole, never half and half. Logged as a second "translation" event with direction=out; no text is logged.
+        // A predetermined question (content/translation-demo.json): when it was answered, show the predetermined
+        // Latin-letter reply. Anything else (a stop, a hand-off) stays in English; it is never machine-translated.
+        if (ctx.DemoReply is not null)
+        {
+            var shown = finalStatus == "answered";
+            var backNote = "not_run";
+            long backMs = 0;
+            if (shown && _translator.Enabled)
+            {
+                // The English answer really goes through the translator into Ethiopic script. That result is
+                // recorded in the log (outcome and time, never the text) but is not what the person sees: the
+                // predetermined Latin-letter reply is shown instead.
+                var back = await _translator.TranslateMessageAsync(message ?? "", "eng", "amh");
+                backNote = back.Text is not null ? "ok" : back.Note;
+                backMs = back.Ms;
+            }
+            if (shown) message = ctx.DemoReply;
+            await _eventLog.WriteAsync(ctx.TraceId, "translation",
+                $"result=pass; reason=none; direction=out; to=am; predetermined=yes; back_translation={backNote}; model_ms={backMs}; shown={(shown ? "predetermined_latin" : "no")}");
+        }
+        else if (IsaChatApp.Services.Translation.TranslationClient.ServiceCode(ctx.Language) is { } backCode && _translator.Enabled && !string.IsNullOrWhiteSpace(message))
+        {
+            var back = await _translator.TranslateMessageAsync(message, "eng", backCode);
+            if (back.Text is not null) message = back.Text;
+            await _eventLog.WriteAsync(ctx.TraceId, "translation",
+                $"result=pass; reason=none; direction=out; to={ctx.Language}; translated={(back.Text is not null ? "yes" : "no")}; note={back.Note}; model_ms={back.Ms}");
         }
 
         // Content Health Dashboard: one summary row per run (no question text, person hashed).

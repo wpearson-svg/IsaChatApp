@@ -15,7 +15,7 @@
 // Player buttons (data-lib="..."): prev / next section, toggle
 // (play and pause), speed (0.75x, 1x, 1.25x, 1.5x).
 //
-// From a journey step (3 November 2026), attach is given the first and
+// From a journey step or a glossary term (3 November 2026), attach is given the first and
 // last sentence of the part the step points to: reading starts there and
 // stops after the last one. Play then carries on through the rest.
 // ============================================================
@@ -117,6 +117,11 @@ export function attach(body, autoplay, from, to) {
         stopAfter = -1;
     }
     if (autoplay && (supported || !kokoroDown)) play();
+}
+
+// Back from a glossary term's "Read it": bring that term into view again.
+export function showTerm(id) {
+    document.getElementById(id)?.scrollIntoView({ block: 'center' });
 }
 
 export function stop() {
@@ -229,7 +234,7 @@ function advance(id) {
         current++;
         playing = false;
         update();
-        if (current < sentences.length) setStatus('That was the part this step points to. Press play to keep listening.');
+        if (current < sentences.length) setStatus('That is the end of that part. Press play to keep listening.');
         else setStatus('Finished. Press play to start again.');
         return;
     }

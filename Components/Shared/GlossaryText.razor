@@ -1,0 +1,48 @@
+@*
+    GlossaryText (November 9, 2026, Matthew): shows a piece of text with every "Terms
+    explained" glossary term marked. Hovering over a term, tapping it or tabbing to it shows
+    ISACA's definition word for word, with the document and page (onboarding/glossary.json,
+    the same entries as the Library's "Terms explained").
+
+    Display only: the words are exactly the text it is given. GlossaryMatcher finds the terms
+    with fixed rules (no AI). Used for Isa's chat answers, journey steps and the Today note.
+
+    The definition is kept hidden inside each term (screen readers read it through
+    aria-describedby); GlossaryText.razor.js shows a copy of it in one box on the page,
+    placed beside the term, so no panel's edge can cut it off.
+
+    Written on one line on purpose: the chat keeps line breaks (white-space: pre-line),
+    so spaces or line breaks between tags here would show in the answer.
+*@
+@using IsaChatApp.Services.Onboarding
+@inject GlossaryMatcher Matcher
+@inject IJSRuntime JS
+@foreach (var (seg, i) in Matcher.Split(Text).Select((s, i) => (s, i))){if (seg.Term is null){<text>@seg.Text</text>}else{var id = $"{_id}-{i}";<span class="isa-term" tabindex="0" aria-describedby="@id">@seg.Text<span class="isa-term__def" id="@id" hidden><span class="isa-tip__term">@seg.Term.Term</span>@if (seg.Term.Bullets && seg.Term.Quote.Count > 1){<span class="isa-tip__list">@foreach (var q in seg.Term.Quote){<span class="isa-tip__item">“@q”</span>}</span>}else{<span class="isa-tip__quote">“@string.Join(" ", seg.Term.Quote)”</span>}<span class="isa-tip__source">@Source(seg.Term)</span></span></span>}}
+
+@code {
+    /// <summary>The text to show, unchanged.</summary>
+    [Parameter] public string? Text { get; set; }
+
+    private readonly string _id = "isa-term-" + Guid.NewGuid().ToString("N")[..8];
+
+    // "President Guidebook, page 8 · Turnover duties": what the Library shows under a term.
+    private static string Source(GlossaryTerm t)
+    {
+        var s = t.Document.Title;
+        if (!string.IsNullOrWhiteSpace(t.Pages)) s += (t.Pages.Contains('-') ? ", pages " : ", page ") + t.Pages;
+        if (!string.IsNullOrWhiteSpace(t.Where)) s += " · " + t.Where;
+        return s;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            var module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/GlossaryText.razor.js");
+            await module.InvokeVoidAsync("init");
+        }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }   // prerendering: no browser yet
+    }
+}

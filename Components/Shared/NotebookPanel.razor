@@ -50,6 +50,7 @@
 @inject NotebookService Notebook
 @inject WidgetSettings Settings
 @inject KeycloakSignInService SignInService
+@inject NotebookReminderService Reminders
 
 <aside class="isa-nb" style="@Style" aria-label="Succession notebook">
 
@@ -227,6 +228,29 @@
             @if (_justSaved)
             {
                 <p class="isa-nb__saved" role="status">Saved to the notebook.</p>
+            }
+            @if (_choosingReminders && _personId is not null)
+            {
+                @* How often Isa checks in (3 November 2026; NotebookReminderService). *@
+                var every = Reminders.GetEveryDays(_personId);
+                <div class="isa-nb__inline">
+                    <p class="isa-nb__sectionHead">Check-ins for your successor</p>
+                    <div class="isa-nb__kinds" role="radiogroup" aria-label="How often Isa checks in">
+                        @foreach (var (days, label) in new[] { (7, "Every week"), (14, "Every two weeks"), (28, "Every four weeks") })
+                        {
+                            <button type="button" role="radio" aria-checked="@(every == days ? "true" : "false")"
+                                    class="isa-nb__kind @(every == days ? "is-on" : "")" @onclick="() => SetReminders(days)">@label</button>
+                        }
+                    </div>
+                    <p class="isa-nb__askHint">
+                        Isa asks, inside Isa only, whether anything from that time should go in the notebook. Never by email.
+                        @if (Reminders.WeeklyNearEnd(_personId, Settings.Today))
+                        {
+                            <span> In the last three months of your term, she asks every week.</span>
+                        }
+                    </p>
+                    <button type="button" class="isa-nb__linkBtn" @onclick="() => _choosingReminders = false">Done</button>
+                </div>
             }
             @if (_justAsked && _askTarget is not null)
             {
@@ -570,6 +594,8 @@
             if (_access.SeesAll && _filter != "shared" && TopLevel.Any(e => e.Shared)) items.Add(new("Show shared entries only", () => _filter = "shared"));
             if (_filter != "all") items.Add(new("Show all entries", () => _filter = "all"));
         }
+        if (_personId is not null && Reminders.CanChoose(_personId, Settings.Today))
+            items.Add(new("How often Isa checks in", () => _choosingReminders = true));
         items.Add(new("Who can see this notebook", () => _showPrivacy = true));
         return items;
     }
@@ -764,6 +790,18 @@
 
     /// <summary>Called when a question is asked or answered, so the chat's "question waiting" line can update.</summary>
     [Parameter] public EventCallback OnQuestionsChanged { get; set; }
+
+    /// <summary>Called when the president changes how often Isa checks in, so the chat's check-in can update.</summary>
+    [Parameter] public EventCallback OnRemindersChanged { get; set; }
+
+    private bool _choosingReminders;
+
+    private async Task SetReminders(int days)
+    {
+        if (_personId is null) return;
+        Reminders.SetEveryDays(_personId, days);
+        await OnRemindersChanged.InvokeAsync();
+    }
 
     /// <summary>Width and position, worked out by the chat widget so the panels sit side by side.</summary>
     [Parameter] public string Style { get; set; } = "";
@@ -1095,6 +1133,7 @@
                 CancelNote();
                 _justSaved = parentId is null;
                 Reload();
+                await OnRemindersChanged.InvokeAsync();   // the chat's check-in now says "Anything else…"
             }
             else
             {

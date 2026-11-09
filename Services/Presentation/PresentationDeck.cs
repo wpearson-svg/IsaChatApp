@@ -17,35 +17,60 @@ public class PresentationDeck
         AllowTrailingCommas = true
     };
 
-    private readonly string _path;
+    private readonly string _folder;
 
     public PresentationDeck(IWebHostEnvironment env)
     {
-        _path = Path.Combine(env.ContentRootPath, "presentation", "slides.json");
+        _folder = Path.Combine(env.ContentRootPath, "presentation");
     }
 
     /// <summary>
-    /// Loads the slides. A missing or broken file returns no slides and the reason,
+    /// Loads the slides of presentation/slides.json (the current deck, Sprint 3 since
+    /// November 6, 2026). A missing or broken file returns no slides and the reason,
     /// so the page can say what is wrong instead of crashing.
     /// </summary>
     public (IReadOnlyList<Slide> Slides, string? Error) Load()
     {
+        var d = LoadDeck(null);
+        return (d.Slides, d.Error);
+    }
+
+    /// <summary>
+    /// Loads a deck by name: null or empty is presentation/slides.json; "sprint2" is
+    /// presentation/sprint2.json (the Sprint 2 deck, kept as it was), opened with
+    /// /present?deck=sprint2. Only letters, digits and hyphens are accepted, so the
+    /// name can never point outside the presentation folder.
+    /// </summary>
+    public DeckData LoadDeck(string? name)
+    {
+        var file = string.IsNullOrWhiteSpace(name) ? "slides.json" : $"{name.Trim().ToLowerInvariant()}.json";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(file, @"^[a-z0-9-]+\.json$"))
+            return new DeckData([], [], $"No deck called \"{name}\".");
+        var path = Path.Combine(_folder, file);
         try
         {
-            var deck = JsonSerializer.Deserialize<DeckFile>(File.ReadAllText(_path), Options);
-            return (deck?.Slides ?? [], null);
+            var deck = JsonSerializer.Deserialize<DeckFile>(File.ReadAllText(path), Options);
+            return new DeckData(deck?.Slides ?? [], deck?.Tracker ?? [], null);
         }
         catch (Exception ex)
         {
-            return ([], $"{Path.GetFileName(_path)}: {ex.Message}");
+            return new DeckData([], [], $"{file}: {ex.Message}");
         }
     }
 
     private sealed class DeckFile
     {
+        /// <summary>
+        /// The section names shown across the top of a slide that has "tracker" set, the
+        /// current one highlighted (Sprint 1's five sections: Business impact to Success metrics).
+        /// </summary>
+        public List<string> Tracker { get; set; } = [];
         public List<Slide> Slides { get; set; } = [];
     }
 }
+
+/// <summary>One deck: its slides, its tracker sections (may be empty), or why it couldn't be read.</summary>
+public record DeckData(IReadOnlyList<Slide> Slides, IReadOnlyList<string> Tracker, string? Error);
 
 /// <summary>One slide. Which fields are used depends on Kind (see the top of slides.json).</summary>
 public class Slide
@@ -54,6 +79,8 @@ public class Slide
     /// <summary>True on the slide where the model warm-up starts in the background (once per visit).</summary>
     public bool Warmup { get; set; }
     public string? Section { get; set; }
+    /// <summary>Which of the deck's tracker sections this slide belongs to; the tracker is drawn across the top.</summary>
+    public string? Tracker { get; set; }
     public string? Presenter { get; set; }
     public string Title { get; set; } = "";
     public string? Lead { get; set; }
@@ -77,6 +104,8 @@ public class SlideItem
     public string Title { get; set; } = "";
     public string? Text { get; set; }
     public string? Status { get; set; }
+    /// <summary>On a "promises" slide: what was built (Text is what was promised).</summary>
+    public string? Built { get; set; }
 }
 
 public class SlideStage

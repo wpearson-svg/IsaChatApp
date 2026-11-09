@@ -342,8 +342,9 @@ public class UsageSummaryService
 
     // ---------- Hooks for later (nothing calls these yet) ----------
 
-    /// <summary>Hook for ticketing: call when a ticket is closed, so time-to-resolution can be shown.</summary>
-    public async Task CloseTicketAsync(string ticketReference)
+    /// <summary>Called by TicketCloseSyncService when Salesforce reports a Case closed, so time-to-resolution can be shown.
+    /// closedUtc is Salesforce's own ClosedDate (now, if not given).</summary>
+    public async Task CloseTicketAsync(string ticketReference, DateTime? closedUtc = null)
     {
         try
         {
@@ -353,7 +354,7 @@ public class UsageSummaryService
                 await using var conn = Open();
                 await using var cmd = conn.CreateCommand();
                 cmd.CommandText = "UPDATE request_summary SET ticket_closed_utc=$ts WHERE ticket_reference=$r AND ticket_closed_utc IS NULL;";
-                cmd.Parameters.AddWithValue("$ts", DateTime.UtcNow.ToString("O"));
+                cmd.Parameters.AddWithValue("$ts", (closedUtc ?? DateTime.UtcNow).ToUniversalTime().ToString("O"));
                 cmd.Parameters.AddWithValue("$r", ticketReference);
                 await cmd.ExecuteNonQueryAsync();
             }

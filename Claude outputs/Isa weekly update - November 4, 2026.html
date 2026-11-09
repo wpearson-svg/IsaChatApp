@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Isa weekly update: November 4, 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: Letter; margin: 0.45in 0.5in; }
+  :root {
+    --navy: #1d2d5c; --navy-dark: #131f42; --blue: #017dc2; --mblue: #07649d; --sky: #00a4e4;
+    --light: #e7f0f5; --green: #3f7d20; --lgreen: #6cb33f; --purple: #6558b1;
+    --ink: #1f2933; --muted: #52606d; --line: #d4dde6;
+  }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; background: #fff; color: var(--ink); font-family: Roboto, Arial, sans-serif; font-size: 9.4pt; line-height: 1.42; }
+  .head { background: var(--navy); color: #fff; border-radius: 6px; padding: 14pt 18pt 12pt; position: relative; overflow: hidden; }
+  .head::after { content: ""; position: absolute; right: -40pt; top: -40pt; width: 160pt; height: 160pt; border-radius: 50%; background: var(--blue); opacity: .35; }
+  .head .eyebrow { font-size: 8pt; letter-spacing: .14em; text-transform: uppercase; color: #9fd3f2; font-weight: 500; }
+  .head h1 { margin: 2pt 0 2pt; font-size: 22pt; font-weight: 700; letter-spacing: -.01em; }
+  .head .sub { font-size: 10pt; color: #dbe7f3; position: relative; z-index: 1; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8pt; margin: 10pt 0 4pt; }
+  .tile { background: var(--light); border-radius: 6px; padding: 8pt 10pt; border-top: 3px solid var(--blue); }
+  .tile:nth-child(2) { border-top-color: var(--green); }
+  .tile:nth-child(3) { border-top-color: var(--purple); }
+  .tile:nth-child(4) { border-top-color: var(--sky); }
+  .tile .n { font-size: 20pt; font-weight: 700; color: var(--navy); line-height: 1.05; }
+  .tile .l { font-size: 8.2pt; color: var(--muted); }
+  h2 { font-size: 11pt; color: var(--navy); margin: 12pt 0 6pt; padding-bottom: 3pt; border-bottom: 2px solid var(--blue); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
+  .card { border: 1px solid var(--line); border-radius: 6px; padding: 8pt 10pt 7pt; break-inside: avoid; }
+  .card h3 { margin: 0 0 3pt; font-size: 10pt; color: var(--navy); display: flex; justify-content: space-between; align-items: baseline; gap: 6pt; }
+  .card p { margin: 0 0 4pt; }
+  .card p:last-child { margin-bottom: 0; }
+  .chip { font-size: 7.2pt; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; padding: 1.5pt 6pt; border-radius: 10pt; white-space: nowrap; }
+  .chip.ok { background: #e3f1d9; color: #2f5f17; }
+  .chip.test { background: #e2eefa; color: var(--mblue); }
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 2pt 0 4pt; }
+  .step { flex: 1; background: var(--light); border-radius: 5px; padding: 6pt 7pt; font-size: 8.2pt; }
+  .step b { display: block; color: var(--navy); font-size: 8.8pt; margin-bottom: 1pt; }
+  .step.ai { background: #ece9f7; }
+  .step.ai b { color: var(--purple); }
+  .step.out { background: #e3f1d9; }
+  .step.out b { color: #2f5f17; }
+  .arrow { width: 14pt; display: flex; align-items: center; justify-content: center; color: var(--blue); font-weight: 700; font-size: 11pt; }
+  .note { font-size: 8.2pt; color: var(--muted); margin: 4pt 0 0; }
+  .foot { margin-top: 12pt; border-top: 1px solid var(--line); padding-top: 7pt; display: flex; justify-content: space-between; gap: 12pt; font-size: 8.2pt; color: var(--muted); }
+  .foot b { color: var(--navy); }
+  .team div { margin-bottom: 1pt; }
+  .proto { max-width: 46%; text-align: right; }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div class="eyebrow">Isa · AI-enabled chapter support · weekly update</div>
+  <h1>November 4, 2026</h1>
+  <div class="sub">What we built this week, at a glance · from Second Star Collective</div>
+</div>
+
+<div class="tiles">
+  <div class="tile"><div class="n">131</div><div class="l">approved passages, now searched by meaning</div></div>
+  <div class="tile"><div class="n">61 / 61</div><div class="l">rule checks passed on start-up, no problems</div></div>
+  <div class="tile"><div class="n">~200</div><div class="l">languages the translation model can switch on</div></div>
+  <div class="tile"><div class="n">3</div><div class="l">ways for a leader to reach a person</div></div>
+</div>
+
+<h2>How Isa answers a question</h2>
+<div class="flow">
+  <div class="step"><b>1. Rules</b>Decide whether Isa answers, answers and points to a person, or passes it on.</div>
+  <div class="arrow">›</div>
+  <div class="step"><b>2. Search</b>Finds the approved passages closest in meaning to the question.</div>
+  <div class="arrow">›</div>
+  <div class="step"><b>3. ISACA's words</b>If a passage answers directly, Isa shows ISACA's own text.</div>
+  <div class="arrow">›</div>
+  <div class="step ai"><b>4. AI wording, only if needed</b>When the answer is spread across passages, the AI puts it together.</div>
+  <div class="arrow">›</div>
+  <div class="step"><b>5. Checks</b>Every AI sentence is checked against its source.</div>
+  <div class="arrow">›</div>
+  <div class="step out"><b>6. The leader</b>Gets the answer, ISACA's exact words, or a person.</div>
+</div>
+<p class="note">All of Isa's AI runs on our own computers. No ISACA text is sent to an outside AI service.</p>
+
+<h2>This week</h2>
+<div class="grid">
+
+  <div class="card">
+    <h3>Search by meaning <span class="chip test">Built · connecting</span></h3>
+    <p>Each approved passage is turned into 768 numbers that capture its meaning, and so is each question. Isa finds the closest passages even when they share no words with the question, so leaders don't have to guess the guidebook's exact wording.</p>
+    <p>Only approved passages can come back. If none is a good enough match, Isa says she couldn't find the answer in ISACA's documents, rather than guessing.</p>
+  </div>
+
+  <div class="card">
+    <h3>Checking answers <span class="chip test">Built · testing</span></h3>
+    <p>When the AI words an answer, a separate checking model scores each sentence from 0 to 1 for whether its source supports it. Numbers, dates and contact details must match the source, and "must" cannot be softened.</p>
+    <p>Each answer gets a confidence score. If the wording doesn't pass, Isa quotes ISACA's exact words or passes the question to a person. Both pass marks are adjustable on a dashboard, with no restart.</p>
+  </div>
+
+  <div class="card">
+    <h3>Clear rules for what Isa will and won't answer <span class="chip ok">Self-test passing</span></h3>
+    <p>Written rules decide, for each kind of question, what Isa does. A rule can cover every chapter, one region or country, or a single chapter. A local rule can add caution but can never remove a protection that applies more widely.</p>
+    <p>13 sample rules, each with test questions. Files without an approval record are refused. A tester shows what Isa would do with any question, and which rule decided it. In a real deployment, ISACA would write and approve the rules.</p>
+  </div>
+
+  <div class="card">
+    <h3>Translation <span class="chip ok">Working</span></h3>
+    <p>Translation works end to end, in many languages. It uses a translation model that runs on our own computers and covers about 200 languages, and we can switch any of them on.</p>
+    <p>If the model isn't available, Isa shows the original English and says so, rather than pretending she translated it.</p>
+  </div>
+
+  <div class="card">
+    <h3>Three ways to reach a person <span class="chip ok">Working</span></h3>
+    <p>Under every answer, a leader can tell Isa whether she helped; if not, she offers to pass it on. "Talk to a person" is always at the bottom of the chat. When an answer also needs a human view, Isa offers a button to pass it to the Chapter Experience team.</p>
+    <p>The leader decides what goes with the request, and nothing is sent until they press send. Each hand-off gets a reference number and can open a case in Salesforce.</p>
+  </div>
+
+  <div class="card">
+    <h3>Room to grow <span class="chip ok">Working</span></h3>
+    <p>Isa's heavier AI services can run on a separate, more powerful computer of our own, over a private, encrypted network. No outside service is involved.</p>
+    <p>An administrator chooses on the dashboard where the services run and can switch voice and translation on or off. The chat stays light, so Isa grows by adding capacity where it's needed.</p>
+  </div>
+
+</div>
+
+<div class="card" style="margin-top:8pt">
+  <h3>Privacy in the logs <span class="chip ok">Built</span></h3>
+  <p>Every check Isa runs is recorded, so we can always see why she answered the way she did. The records hold counts and categories only, never a leader's words.</p>
+</div>
+
+<div class="foot">
+  <div class="team">
+    <div><b>Second Star Collective</b></div>
+    <div>Willis Pearson, Project Lead, Solution Architecture</div>
+    <div>Eliyas Eshtea, Solutions Analyst, Technical Stack</div>
+    <div>Matthew Brady, Client Liaison, Governance &amp; Escalation Design</div>
+    <div>i.c.stars | Kansas City</div>
+  </div>
+  <div class="proto">Isa is a prototype. The rules, sample people and settings shown here are ours, for demonstration. A real deployment would use ISACA's own approved content, rules and systems.</div>
+</div>
+
+</body>
+</html>

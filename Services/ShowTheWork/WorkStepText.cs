@@ -150,7 +150,11 @@ public static class WorkStepText
                     : L(Wording.StepAccess);
 
             case "translation":
-                return L(Wording.StepTranslation);
+                return L(Wording.StepTranslation,
+                    step.DataText.Contains("translated=yes") ? Wording.TranslatedToEnglish
+                    : step.DataText.Contains("note=language_not_supported") ? Wording.TranslationNotSupported
+                    : step.DataText.Contains("translated=no") ? Wording.TranslationFallback
+                    : null);
 
             case "input_compliance":
                 return state switch

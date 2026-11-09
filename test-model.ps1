@@ -8,10 +8,15 @@
 # Results are appended to docs\MODEL_TIMING_RESULTS.csv.
 param(
     [string]$Model = "phi4-mini",
-    [string]$OllamaUrl = "http://localhost:11434",
+    [string]$OllamaUrl = "",
     [int]$Runs = 5,
     [int]$TimeoutSeconds = 180
 )
+
+# Where the services run (this computer, or the home PC when Isa is set to Remote). An explicit -OllamaUrl still wins.
+. "$PSScriptRoot\services-config.ps1"
+if (-not $OllamaUrl) { $OllamaUrl = Get-ServiceUrl 'ollama' }
+if ((Get-ServicesLocation).Remote) { Write-Host ("Services are Remote: using " + $OllamaUrl) -ForegroundColor Yellow }
 $ErrorActionPreference = "Stop"
 function Test-Port([int]$port) {
     try {

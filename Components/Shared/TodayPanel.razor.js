@@ -85,3 +85,18 @@ function glide(box, move) {
 function easeInOut(t) {
     return t * t * t * (t * (6 * t - 15) + 10);
 }
+
+// "Add to my calendar" (November 6, 2026): hands the leader's browser a
+// calendar file (.ics) that Isa made. Opening it adds the event to Outlook,
+// Google Calendar or Apple Calendar. Nothing is sent anywhere.
+export function downloadCalendarFile(fileName, text) {
+    const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

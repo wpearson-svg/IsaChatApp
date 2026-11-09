@@ -1,0 +1,83 @@
+@using IsaChatApp.Services
+@inject DevHealthService Health
+@inject LocalServiceSettings ServiceSettings
+@*
+    Dev dashboard > Front end. How people use the chat, from usage.db (totals only, no question text), and the
+    voice and translation switches as they are now (change them on the Services tab).
+*@
+<div class="hd">
+    <div class="hd__card">
+        <h3>Range</h3>
+        <select @bind="_days" @bind:after="Load">
+            <option value="1">Last day</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="3650">All time</option>
+        </select>
+    </div>
+
+    @if (_r is { Error: not null })
+    {
+        <div class="hd__card"><p class="hd__hint">@_r.Error</p></div>
+    }
+    else if (_r is not null)
+    {
+        <div class="hd__card">
+            <h3>Questions</h3>
+            <div class="hd__big">@_r.Questions <span>asked</span></div>
+            <p class="hd__hint">Voice is @(ServiceSettings.VoiceOn ? "on" : "off") and translation is @(ServiceSettings.TranslationOn ? "on" : "off") (Services tab).</p>
+        </div>
+
+        <div class="hd__card">
+            <h3>Languages</h3>
+            <p class="hd__hint">Language Isa detected for each question.</p>
+            @if (_r.Languages.Count == 0) { <p class="hd__hint">No questions in this range.</p> }
+            else
+            {
+                <table class="hd__table">
+                    <thead><tr><th>Language</th><th>Questions</th></tr></thead>
+                    <tbody>
+                        @foreach (var l in _r.Languages) { <tr><td>@l.Label</td><td>@l.N</td></tr> }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <div class="hd__card">
+            <h3>Buttons under answers</h3>
+            <table class="hd__table">
+                <thead><tr><th>Button</th><th>Clicks</th></tr></thead>
+                <tbody>
+                    <tr><td>Yes, this answered my question</td><td>@_r.Resolved</td></tr>
+                    <tr><td>Not quite</td><td>@_r.NotQuite</td></tr>
+                    <tr><td>Talk to a person</td><td>@_r.TalkToPerson</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="hd__card">
+            <h3>How long people wait</h3>
+            <p class="hd__hint">Total time from question to answer, in seconds.</p>
+            @if (_r.Timings.Count == 0) { <p class="hd__hint">No answered questions in this range.</p> }
+            else
+            {
+                <table class="hd__table">
+                    <thead><tr><th>Answer type</th><th>Questions</th><th>Median</th><th>Slowest</th></tr></thead>
+                    <tbody>
+                        @foreach (var t in _r.Timings)
+                        {
+                            <tr><td>@t.Route</td><td>@t.Questions</td><td>@t.MedianSeconds.ToString("0.0")</td><td>@t.SlowestSeconds.ToString("0.0")</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private int _days = 7;
+    private DevHealthService.FrontEndReport? _r;
+    protected override void OnInitialized() => Load();
+    private void Load() => _r = Health.GetFrontEnd(_days);
+}

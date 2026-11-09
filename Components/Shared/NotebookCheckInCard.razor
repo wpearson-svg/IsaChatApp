@@ -1,0 +1,117 @@
+@* ============================================================
+   NotebookCheckInCard.razor
+
+   The succession notebook check-in (ONBOARDING-FEATURE.md, "Succession
+   notebook reminders"; built 3 November 2026). At the top of the chat,
+   once per period from week 2, for the chapter's president:
+   "Anything from this week your successor should know?", or, if they
+   already saved something, "You saved 2 notes this week. Anything else
+   your successor should know?"
+
+   A one-line note is saved to the notebook (NotebookService.AddNoteAsync,
+   so it passes the sign-in check and Input Compliance; private, not
+   shared). "Nothing this week" / "That's everything" and × are recorded
+   for the period; "Ask me later" only hides it until Isa is next opened.
+   The rules are in Services/Onboarding/NotebookReminderService.cs.
+   ============================================================ *@
+
+@using IsaChatApp.Services
+@using IsaChatApp.Services.Onboarding
+@inject NotebookReminderService Reminders
+@inject NotebookService Notebook
+@inject WidgetSettings Settings
+@inject KeycloakSignInService SignInService
+
+<section class="isa-checkin" aria-label="Succession notebook check-in">
+    <div class="isa-checkin__head">
+        <span class="isa-checkin__icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.5 1.5h7l2 2v11h-9z" /><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" /></svg>
+        </span>
+        <p class="isa-checkin__q">
+            @if (CheckIn.SavedCount > 0)
+            {
+                @($"You saved {(CheckIn.SavedCount == 1 ? "1 note" : $"{CheckIn.SavedCount} notes")} {CheckIn.Span}. Anything else your successor should know?")
+            }
+            else
+            {
+                @($"Anything from {CheckIn.Span} your successor should know?")
+            }
+        </p>
+        <button type="button" class="isa-checkin__close" @onclick="Close" aria-label="Close until the next check-in" title="Close until the next check-in" disabled="@_saving">&times;</button>
+    </div>
+
+    <div class="isa-checkin__row">
+        <input type="text" class="isa-checkin__input" maxlength="300" aria-label="A note for your successor"
+               placeholder="One line is enough" @bind="_note" @bind:event="oninput" @onkeydown="OnKey" disabled="@_saving" />
+        <button type="button" class="isa-checkin__save" @onclick="Save" disabled="@(_saving || string.IsNullOrWhiteSpace(_note))">@(_saving ? "Checking..." : "Save")</button>
+    </div>
+
+    @if (_problem is not null)
+    {
+        <p class="isa-checkin__problem" role="status">@_problem</p>
+    }
+
+    <div class="isa-checkin__btns">
+        <button type="button" class="isa-checkin__link" @onclick="Nothing" disabled="@_saving">
+            @(CheckIn.SavedCount > 0 ? "That's everything" : CheckIn.EveryDays == 7 ? "Nothing this week" : "Nothing to add")
+        </button>
+        <button type="button" class="isa-checkin__link" @onclick="OnLater" disabled="@_saving">Ask me later</button>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public NotebookCheckIn CheckIn { get; set; } = default!;
+    [Parameter] public string PersonId { get; set; } = "";
+    [Parameter] public string? SessionId { get; set; }
+    /// <summary>Called once the check-in is answered or closed, so the chat removes it.</summary>
+    [Parameter] public EventCallback<bool> OnDone { get; set; }
+    /// <summary>"Ask me later": the chat hides it until Isa is next opened.</summary>
+    [Parameter] public EventCallback OnLater { get; set; }
+
+    private string _note = "";
+    private bool _saving;
+    private string? _problem;
+
+    private async Task Save()
+    {
+        if (_saving || string.IsNullOrWhiteSpace(_note)) return;
+        _saving = true;
+        _problem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(SessionId);
+            var result = await Notebook.AddNoteAsync(PersonId, Settings.Today, "other", _note, shareWithBoard: false,
+                token is null ? null : $"Bearer {token}");
+            if (result.IsSaved)
+            {
+                Reminders.Respond(PersonId, Settings.Today, CheckIn.PeriodStart, "saved");
+                await OnDone.InvokeAsync(true);
+            }
+            else
+            {
+                _problem = result.Problem;
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Save();
+    }
+
+    private async Task Nothing()
+    {
+        Reminders.Respond(PersonId, Settings.Today, CheckIn.PeriodStart, "nothing");
+        await OnDone.InvokeAsync(false);
+    }
+
+    private async Task Close()
+    {
+        Reminders.Respond(PersonId, Settings.Today, CheckIn.PeriodStart, "closed");
+        await OnDone.InvokeAsync(false);
+    }
+}

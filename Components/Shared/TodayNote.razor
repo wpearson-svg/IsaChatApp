@@ -11,6 +11,9 @@
      Coming up:   Meet your board (days 6 to 7)
      Key date:    The annual compliance window opens in 12 days (only
                   when it falls within the next 30 days)
+     Last year:   What the chapter's notebook says for the same weeks a
+                  year ago (3 days before to 14 days after), word for
+                  word, up to two entries (added November 6, 2026)
      [Open Today]  Got it
 
    - Always opens as one line ("Day 3 · 2 steps for today"), with Show to
@@ -38,6 +41,7 @@
 @inject JourneyService Journey
 @inject ProgressService Progress
 @inject HandoffService Handoff
+@inject NotebookService Notebook
 
 @if (_ctx is null && _handoff is not null)
 {
@@ -68,7 +72,7 @@
                 @if (_handoffNext is not null)
                 {
                     <dt>Next</dt>
-                    <dd>@_handoffNext.Title</dd>
+                    <dd><GlossaryText Text="@_handoffNext.Title" /></dd>
                 }
             </dl>
             <div class="isa-tnote__actions">
@@ -113,7 +117,7 @@ else if (_ctx is not null)
                         <ul>
                             @foreach (var s in _todayLeft)
                             {
-                                <li>@s.Title</li>
+                                <li><GlossaryText Text="@s.Title" /></li>
                             }
                         </ul>
                     }
@@ -126,7 +130,7 @@ else if (_ctx is not null)
                         <ul>
                             @foreach (var s in _comingUp.Take(ComingUpShown))
                             {
-                                <li>@s.Title <span class="isa-tnote__days">(@DaysLabel(s))</span></li>
+                                <li><GlossaryText Text="@s.Title" /> <span class="isa-tnote__days">(@DaysLabel(s))</span></li>
                             }
                             @if (_comingUp.Count > ComingUpShown)
                             {
@@ -140,7 +144,32 @@ else if (_ctx is not null)
                 @foreach (var k in _keyDates)
                 {
                     <dt>Key date</dt>
-                    <dd title="@k.Source">@KeyDateLine(k)</dd>
+                    <dd title="@k.Source"><GlossaryText Text="@KeyDateLine(k)" /></dd>
+                }
+
+                @if (_lastYear.Count > 0)
+                {
+                    @* "Last year around now" (November 6, 2026): what the chapter's
+                       earlier president wrote in the notebook in the same weeks a year
+                       ago, word for word, from the succession notebook. *@
+                    <dt>Last year</dt>
+                    <dd>
+                        <ul class="isa-tnote__lastYear">
+                            @foreach (var e in _lastYear.Take(LastYearShown))
+                            {
+                                <li>
+                                    <span class="isa-tnote__lyWho">@e.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) &middot; @e.AuthorName, @e.KindLabel.ToLowerInvariant():</span>
+                                    &ldquo;@Short(e.Title)&rdquo;
+                                </li>
+                            }
+                            @if (_lastYear.Count > LastYearShown)
+                            {
+                                var more = _lastYear.Count - LastYearShown;
+                                <li class="isa-tnote__more">and @more more in the notebook</li>
+                            }
+                        </ul>
+                        <button type="button" class="isa-tnote__link isa-tnote__lyOpen" @onclick="OnOpenNotebookIndex">Open the notebook</button>
+                    </dd>
                 }
             </dl>
 
@@ -161,6 +190,25 @@ else if (_ctx is not null)
 
     /// <summary>Called by "Open the checklist" (outgoing president). The chat widget opens the notebook on its checklist page.</summary>
     [Parameter] public EventCallback OnOpenNotebook { get; set; }
+
+    /// <summary>Called by "Open the notebook" under "Last year". The chat widget opens the notebook at its index.</summary>
+    [Parameter] public EventCallback OnOpenNotebookIndex { get; set; }
+
+    // "Last year around now": notebook entries from this many days before to
+    // this many days after the same date a year ago. A fixed rule, so the
+    // reason any entry shows is visible: its date.
+    private const int LastYearDaysBefore = 3;
+    private const int LastYearDaysAfter = 14;
+    private const int LastYearShown = 2;
+    private IReadOnlyList<NotebookEntry> _lastYear = Array.Empty<NotebookEntry>();
+
+    // Long notes are cut at a word near 120 characters; the notebook has the whole note.
+    private static string Short(string text)
+    {
+        if (text.Length <= 120) return text;
+        var cut = text.LastIndexOf(' ', 120);
+        return text[..(cut > 60 ? cut : 120)].TrimEnd(',', ';', ':', '.') + "…";
+    }
 
     // Who is signed in, from the sign-in cookie.
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
@@ -225,6 +273,10 @@ else if (_ctx is not null)
         _keyDates = Journey.GetKeyDates(_ctx.Today)
             .Where(k => k.IsOpen || k.DaysUntil <= KeyDateWindowDays)
             .ToList();
+
+        // Same weeks last year, from the chapter's notebook (presidents read it all;
+        // the notebook's own rules decide, so nothing new is revealed here).
+        _lastYear = Notebook.GetLastYear(_ctx.PersonId, _ctx.Today, LastYearDaysBefore, LastYearDaysAfter);
 
         if (first) _compact = true;   // always opens as one line
     }

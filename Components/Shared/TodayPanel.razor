@@ -53,6 +53,11 @@
 @inject LeaderTermService Terms
 @inject HelpGuideService Guide
 @inject LibraryService Library
+@inject BoardIntroService BoardIntro
+@inject KeycloakSignInService SignInService
+@inject JourneyService Journey
+@inject GlossaryMatcher Glossary
+@inject NotebookService Notebook
 @inject IJSRuntime JS
 
 <aside class="isa-today @(Rightmost ? "" : "is-inner")" style="@Style" aria-label="Today">
@@ -141,6 +146,131 @@
                     }
                 </ul>
             }
+            else if (_selected is null && _showMonth)
+            {
+                @* ---- View 5: the month (November 6, 2026). Read only: journey
+                   steps on the day they start, ISACA's key dates, the leader's
+                   booked welcome call or group seat, and what the chapter's
+                   notebook says for the same days last year. ---- *@
+                <button type="button" class="isa-today__back" @onclick="CloseMonth">&lsaquo; Today's steps</button>
+
+                <h2 class="isa-today__stepHeading">Calendar</h2>
+
+                <div class="isa-cal__nav">
+                    <button type="button" class="isa-cal__navBtn" @onclick="() => MoveMonth(-1)" disabled="@(!CanMoveMonth(-1))"
+                            aria-label="Previous month">&lsaquo;</button>
+                    <span class="isa-cal__month" aria-live="polite">@_month.ToString("MMMM yyyy", CultureInfo.InvariantCulture)</span>
+                    <button type="button" class="isa-cal__navBtn" @onclick="() => MoveMonth(1)" disabled="@(!CanMoveMonth(1))"
+                            aria-label="Next month">&rsaquo;</button>
+                </div>
+
+                <div class="isa-cal__grid" role="grid" aria-label="@_month.ToString("MMMM yyyy", CultureInfo.InvariantCulture)">
+                    @foreach (var wd in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })
+                    {
+                        <span class="isa-cal__wd" aria-hidden="true">@wd</span>
+                    }
+                    @for (var blank = 0; blank < (int)_month.DayOfWeek; blank++)
+                    {
+                        <span class="isa-cal__blank" aria-hidden="true"></span>
+                    }
+                    @for (var d = 1; d <= DateTime.DaysInMonth(_month.Year, _month.Month); d++)
+                    {
+                        var day = new DateOnly(_month.Year, _month.Month, d);
+                        var info = DayInfo(day);
+                        <button type="button"
+                                class="isa-cal__day @(day == _ctx.Today ? "is-today" : "") @(day == _calSelected ? "is-selected" : "") @(info.InKeyDate ? "is-keydate" : "") @(info.InJourney ? "is-journey" : "")"
+                                @onclick="() => _calSelected = day"
+                                aria-pressed="@(day == _calSelected ? "true" : "false")"
+                                aria-label="@CellLabel(day, info)">
+                            <span class="isa-cal__num">@d</span>
+                            <span class="isa-cal__dots" aria-hidden="true">
+                                @if (info.StepsStarting.Count > 0) { <span class="isa-cal__dot is-step"></span> }
+                                @if (info.KeyDateEdges.Count > 0) { <span class="isa-cal__dot is-key"></span> }
+                                @if (info.Meetings.Count > 0) { <span class="isa-cal__dot is-call"></span> }
+                                @if (info.LastYear.Count > 0) { <span class="isa-cal__dot is-past"></span> }
+                            </span>
+                        </button>
+                    }
+                </div>
+
+                <ul class="isa-cal__legend" aria-label="What the marks mean">
+                    <li><span class="isa-cal__dot is-step"></span> A journey step starts</li>
+                    <li><span class="isa-cal__dot is-key"></span> ISACA key date</li>
+                    <li><span class="isa-cal__dot is-call"></span> Your welcome call or session</li>
+                    <li><span class="isa-cal__dot is-past"></span> Last year in the notebook</li>
+                </ul>
+
+                var sel = DayInfo(_calSelected);
+                <section class="isa-cal__detail" aria-live="polite">
+                    <h3 class="isa-cal__detailHead">
+                        @_calSelected.ToString("dddd, MMMM d", CultureInfo.InvariantCulture)
+                        @if (sel.DayOfTerm is int dot)
+                        {
+                            <span>Day @dot of your term</span>
+                        }
+                    </h3>
+
+                    @if (sel.StepsOnDay.Count == 0 && sel.KeyDatesOnDay.Count == 0 && sel.Meetings.Count == 0 && sel.LastYear.Count == 0)
+                    {
+                        <p class="isa-today__quiet">Nothing on this day.</p>
+                    }
+
+                    @if (sel.StepsOnDay.Count > 0)
+                    {
+                        <p class="isa-cal__group">Journey steps</p>
+                        <ul class="isa-today__steps">
+                            @foreach (var step in sel.StepsOnDay)
+                            {
+                                var isDone = _done.ContainsKey(step.StepId);
+                                <li>
+                                    <button type="button" class="isa-today__step @(isDone ? "is-done" : "")" @onclick="() => OpenStepFromMonth(step)">
+                                        <span class="isa-today__check" aria-hidden="true"></span>
+                                        <span class="isa-today__stepText">
+                                            <span class="isa-today__stepTitle">@step.Title</span>
+                                            <span class="isa-today__stepSub">@DaysLabel(step) &middot; @StatusLabel(step)</span>
+                                        </span>
+                                        <span class="isa-today__arrow" aria-hidden="true"></span>
+                                    </button>
+                                    <button type="button" class="isa-cal__addBtn" @onclick="() => AddStep(step)" aria-label="@($"Add {step.Title} to my calendar")"><span class="isa-cal__addIcon" aria-hidden="true">+</span> Add to my calendar</button>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    @foreach (var k in sel.KeyDatesOnDay)
+                    {
+                        <p class="isa-cal__group">ISACA key date</p>
+                        <p class="isa-cal__item" title="@k.Source">@KeyDateText(k, _calSelected)</p>
+                        <p class="isa-cal__source">@k.Source</p>
+                        <button type="button" class="isa-cal__addBtn" @onclick="() => AddKeyDate(k)" aria-label="@($"Add {k.Title} to my calendar")"><span class="isa-cal__addIcon" aria-hidden="true">+</span> Add to my calendar</button>
+                    }
+
+                    @foreach (var m in sel.Meetings)
+                    {
+                        <p class="isa-cal__group">You booked</p>
+                        <p class="isa-cal__item">@m.Text</p>
+                        <button type="button" class="isa-cal__addBtn" @onclick="() => AddMeeting(m)" aria-label="@($"Add {m.Title} to my calendar")"><span class="isa-cal__addIcon" aria-hidden="true">+</span> Add to my calendar</button>
+                    }
+
+                    @if (sel.LastYear.Count > 0)
+                    {
+                        <p class="isa-cal__group">This day last year, in your chapter's notebook</p>
+                        @foreach (var e in sel.LastYear)
+                        {
+                            <blockquote class="isa-cal__past">
+                                <span class="isa-cal__pastWho">@e.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) &middot; @e.AuthorName &middot; @e.KindLabel</span>
+                                @e.Title
+                            </blockquote>
+                        }
+                        <button type="button" class="isa-today__linkBtn" @onclick="OnOpenNotebook">Open the notebook</button>
+                    }
+                </section>
+
+                <p class="isa-cal__note">
+                    Dates come from your journey, ISACA's key dates and your chapter's notebook, never from the AI model.
+                    Nothing here is sent anywhere.
+                </p>
+            }
             else if (_selected is null)
             {
                 @* ---- View 1: today's steps ---- *@
@@ -180,13 +310,18 @@
                     <span>My progress <span class="isa-today__progressCount">&middot; @DoneCount of @_ctx.AllSteps.Count done</span></span>
                     <span class="isa-today__arrow" aria-hidden="true"></span>
                 </button>
+
+                <button type="button" class="isa-today__progressLink isa-today__calendarLink" @onclick="OpenMonth">
+                    <span>Calendar <span class="isa-today__progressCount">&middot; the whole month</span></span>
+                    <span class="isa-today__arrow" aria-hidden="true"></span>
+                </button>
             }
             else if (_selected.StepId == JourneyContextService.ContactStepId)
             {
                 @* ---- View 2: Meet your Chapter Experience contact (approved mockup) ---- *@
                 <button type="button" class="isa-today__back" @onclick="Back">&lsaquo; @BackLabel</button>
 
-                <h2 class="isa-today__stepHeading">@_selected.Title</h2>
+                <h2 class="isa-today__stepHeading"><GlossaryText Text="@_selected.Title" /></h2>
                 <p class="isa-today__lede">Your contact is the person to reach when Isa can't help, or when you'd rather talk to someone.</p>
 
                 @if (_contact is null)
@@ -293,14 +428,122 @@
 
                 <StepHistoryList Entries="_history" />
             }
+            else if (_selected.StepId == BoardStepId && _boardPerson is not null
+                     && Terms.GetBoard(_ctx.Term.ChapterId, _ctx.Today).FirstOrDefault(b => b.PersonId == _boardPerson) is { } pm)
+            {
+                @* ---- View 4: one board member's page (November 9, 2026, Matthew) ----
+                   Opened from "Meet your board". Everything Isa already knows about this
+                   person, in one place: ISACA's description of their role (the glossary),
+                   their term and time zone, ISACA's member roster (certifications, member
+                   since: invented, onboarding/member_roster.csv), and the profile answers they
+                   chose to share with this president (the J-25 rules). No contact details and
+                   no chat: Isa says how they like to be reached and hands off to Engage,
+                   ISACA's own tool for leaders to talk to each other. *@
+                var isYou = pm.PersonId == _ctx.PersonId;
+                var isPast = pm.Role == "Immediate Past President";
+                var roleDef = Glossary.FindTerm("Chapter " + pm.Role);
+                var roster = Journey.GetMemberRoster().GetValueOrDefault(pm.PersonId);
+                var reply = isYou ? null : BoardIntro.GetReplies(_ctx.PersonId, _ctx.Today).FirstOrDefault(r => r.Member.PersonId == pm.PersonId);
+                var introSaved = BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId) is not null;
+                var diff = TimeDifference(pm.TimeZone, _ctx.Term.TimeZone);
+                <button type="button" class="isa-today__back" @onclick="CloseMember">&lsaquo; Your board</button>
+
+                <div class="isa-today__person">
+                    <span class="isa-today__avatar isa-today__avatar--big @(isYou ? "is-you" : isPast ? "is-past" : "")" aria-hidden="true">@Initials(pm.Name)</span>
+                    <div>
+                        <h2 class="isa-today__stepHeading isa-today__personName">@pm.Name@if (isYou) {<em> (you)</em>}</h2>
+                        <p class="isa-today__personRole">@pm.Role@(isPast ? " · the president before you" : "") · @_ctx.Term.ChapterName</p>
+                    </div>
+                </div>
+
+                <dl class="isa-today__facts">
+                    <dt>Term</dt>
+                    <dd>@TermLabel(pm)</dd>
+                    @if (!isYou)
+                    {
+                        <dt>Time there now</dt>
+                        <dd>@LocalTime(pm.TimeZone), @City(pm.TimeZone)@(diff is null ? " (same as you)" : $" ({diff})")</dd>
+                    }
+                    @if (roster is not null)
+                    {
+                        <dt>Certifications</dt>
+                        <dd>@(roster.Certifications.Count == 0 ? "None listed" : string.Join(", ", roster.Certifications))</dd>
+                        <dt>ISACA member</dt>
+                        <dd>Since @roster.MemberSince (@YearsLabel(_ctx.Today.Year - roster.MemberSince))</dd>
+                    }
+                </dl>
+
+                @if (roleDef is not null)
+                {
+                    <section class="isa-today__personBlock" aria-label="What this role does">
+                        <h3 class="isa-today__personHead">What a @pm.Role.ToLowerInvariant() does</h3>
+                        @if (roleDef.Bullets && roleDef.Quote.Count > 1)
+                        {
+                            <ul class="isa-today__roleQuote">
+                                @foreach (var q in roleDef.Quote)
+                                {
+                                    <li>“@q”</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="isa-today__roleQuote">“@string.Join(" ", roleDef.Quote)”</p>
+                        }
+                        <p class="isa-today__roleSource">@RoleSource(roleDef)</p>
+                    </section>
+                }
+
+                @if (!isYou)
+                {
+                    <section class="isa-today__personBlock" aria-label="What they shared with you">
+                        <h3 class="isa-today__personHead">What they shared with you</h3>
+                        @if (reply?.Profile is { } p)
+                        {
+                            <dl class="isa-today__answers">
+                                @if (p.GoodAt is not null) { <dt>Good at</dt><dd>@p.GoodAt</dd> }
+                                @if (p.Enjoy is not null) { <dt>Would enjoy</dt><dd>@p.Enjoy</dd> }
+                                @if (p.TimePerMonth is not null) { <dt>Time each month</dt><dd>@p.TimePerMonth</dd> }
+                                @if (p.ContactBy is not null) { <dt>Prefers</dt><dd>@p.ContactBy</dd> }
+                            </dl>
+                        }
+                        else if (introSaved)
+                        {
+                            <p class="isa-today__noReply">No reply yet. The profile form is optional.</p>
+                        }
+                        else
+                        {
+                            var introStep = _ctx.AllSteps.FirstOrDefault(s => s.StepId == BoardIntroStepId);
+                            <p class="isa-today__hint">Board members can share a short, optional profile once you've introduced yourself.</p>
+                            @if (introStep is not null)
+                            {
+                                <button type="button" class="isa-today__boardNext" @onclick="() => OpenStep(introStep)">
+                                    <b>First:</b> @introStep.Title.ToLowerInvariant() &rsaquo;
+                                </button>
+                            }
+                        }
+                    </section>
+
+                    <section class="isa-today__personBlock" aria-label="Getting in touch">
+                        <h3 class="isa-today__personHead">Getting in touch</h3>
+                        <p class="isa-today__personText">@ReachLine(reply?.Profile?.ContactBy)</p>
+                        <a class="isa-today__engageBtn" href="/sample/engage" target="_blank" rel="noopener">Open Engage <span aria-hidden="true">&#8599;</span></a>
+                    </section>
+                }
+
+                <p class="isa-today__boardPrivacy">
+                    <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
+                    @(isYou ? "This is what your board sees about you from ISACA's records." : "From ISACA's records, plus only what they chose to share with you. Isa shows no contact details.")
+                </p>
+            }
             else
             {
                 @* ---- View 3: any other step ---- *@
                 <button type="button" class="isa-today__back" @onclick="Back">&lsaquo; @BackLabel</button>
 
-                <h2 class="isa-today__stepHeading">@_selected.Title</h2>
+                <h2 class="isa-today__stepHeading"><GlossaryText Text="@_selected.Title" /></h2>
                 <p class="isa-today__when">@DaysLabel(_selected)</p>
-                <p class="isa-today__lede">@_selected.Details</p>
+                <p class="isa-today__lede"><GlossaryText Text="@_selected.Details" /></p>
 
                 @if (JourneyContext.IsFromIsacaContent(_selected))
                 {
@@ -380,7 +623,9 @@
                             var isYou = m.PersonId == _ctx.PersonId;
                             var isPast = m.Role == "Immediate Past President";
                             var diff = TimeDifference(m.TimeZone, _ctx.Term.TimeZone);
-                            <li class="isa-today__member">
+                            <li class="isa-today__member isa-today__member--open">
+                                <button type="button" class="isa-today__memberBtn" @onclick="() => OpenMember(m.PersonId)"
+                                        aria-label="@($"{m.Name}{(isYou ? " (you)" : "")}, {m.Role}. Open their page")">
                                 <span class="isa-today__avatar @(isYou ? "is-you" : isPast ? "is-past" : "")" aria-hidden="true">@Initials(m.Name)</span>
                                 <span class="isa-today__memberMain">
                                     <span class="isa-today__memberName">@m.Name@if (isYou) {<em> (you)</em>}</span>
@@ -395,20 +640,112 @@
                                         <span class="isa-today__memberDiff">@diff</span>
                                     }
                                 </span>
+                                <span class="isa-today__memberChevron" aria-hidden="true">&rsaquo;</span>
+                                </button>
                             </li>
                         }
                     </ul>
                     <p class="isa-today__boardPrivacy">
                         <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
-                        From ISACA's records: names, board roles, term dates and time zones only.
+                        From ISACA's records. Tap a name for their role, certifications and anything they chose to share with you.
                     </p>
                     var nextStep = _ctx.AllSteps.FirstOrDefault(s => s.StepId == BoardIntroStepId);
                     if (nextStep is not null)
                     {
                         <button type="button" class="isa-today__boardNext" @onclick="() => OpenStep(nextStep)">
-                            <b>Coming up, @DaysLabel(nextStep).ToLowerInvariant():</b> @nextStep.Title.ToLowerInvariant() &rsaquo;
+                            <b>Next:</b> @nextStep.Title.ToLowerInvariant() &rsaquo;
                         </button>
                     }
+                }
+
+                @if (_selected.StepId == BoardIntroService.IntroStepId)
+                {
+                    @* "Introduce yourself to your board" (3 November 2026): a draft Isa
+                       fills in from ISACA's records, which the president edits and saves.
+                       Saved in Isa, never emailed. Saving it invites the board to the
+                       optional profile form (Services/Onboarding/BoardIntroService.cs). *@
+                    var intro = BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId);
+                    if (_writingBoard)
+                    {
+                        <label class="isa-today__label" for="isa-today-boardintro">To: your board</label>
+                        <textarea id="isa-today-boardintro" class="isa-today__textarea isa-today__boardDraft" rows="11"
+                                  @bind="_boardDraft" @bind:event="oninput" disabled="@_savingBoard"></textarea>
+                        <p class="isa-today__hint">Change it any way you like. In this prototype it's saved in Isa; nothing is sent by email. When board members open Isa, they'll see your invitation to the optional profile form.</p>
+                        <div class="isa-today__btnRow isa-today__boardBtns">
+                            <button type="button" class="isa-today__primaryBtn" @onclick="SaveBoardIntro"
+                                    disabled="@(_savingBoard || string.IsNullOrWhiteSpace(_boardDraft))">@(_savingBoard ? "Checking..." : "Save introduction")</button>
+                            <button type="button" class="isa-today__linkBtn" @onclick="() => _writingBoard = false" disabled="@_savingBoard">Cancel</button>
+                        </div>
+                        @if (_boardProblem is not null)
+                        {
+                            <p class="isa-today__boardProblem" role="status">@_boardProblem</p>
+                        }
+                    }
+                    else if (intro is not null)
+                    {
+                        <div class="isa-today__savedIntro">
+                            <p class="isa-today__label">Your introduction, saved @FormatDate(intro.OnDate)</p>
+                            <p class="isa-today__introText">@intro.Message</p>
+                            <button type="button" class="isa-today__linkBtn" @onclick="StartBoardIntro">Edit</button>
+                        </div>
+                        <p class="isa-today__hint">Saved in Isa; nothing is sent by email. Board members see your invitation to the optional profile form when they open Isa. Their replies appear in "See your board's profile replies".</p>
+                    }
+                    else
+                    {
+                        <button type="button" class="isa-today__notebookBtn" @onclick="StartBoardIntro">Write your introduction</button>
+                    }
+                }
+
+                @if (_selected.StepId == RepliesStepId)
+                {
+                    @* "See your board's profile replies": whatever has arrived so far.
+                       Anyone who hasn't answered shows as "No reply yet": the president
+                       never learns who said no, and Isa never chases anyone. *@
+                    var replies = BoardIntro.GetReplies(_ctx.PersonId, _ctx.Today);
+                    if (BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId) is null)
+                    {
+                        var introStep = _ctx.AllSteps.FirstOrDefault(s => s.StepId == BoardIntroService.IntroStepId);
+                        <p class="isa-today__hint">Your board sees the profile form once you've saved your introduction.</p>
+                        @if (introStep is not null)
+                        {
+                            <button type="button" class="isa-today__boardNext" @onclick="() => OpenStep(introStep)">
+                                <b>First:</b> @introStep.Title.ToLowerInvariant() &rsaquo;
+                            </button>
+                        }
+                    }
+                    <p class="isa-today__boardHead">
+                        @_ctx.Term.ChapterName
+                        <span>@replies.Count(r => r.Profile is not null) of @replies.Count replied</span>
+                    </p>
+                    <ul class="isa-today__board">
+                        @foreach (var r in replies)
+                        {
+                            <li class="isa-today__member isa-today__reply">
+                                <span class="isa-today__avatar" aria-hidden="true">@Initials(r.Member.Name)</span>
+                                <span class="isa-today__memberMain">
+                                    <span class="isa-today__memberName">@r.Member.Name</span>
+                                    <span class="isa-today__memberRole">@r.Member.Role</span>
+                                    @if (r.Profile is { } p)
+                                    {
+                                        <dl class="isa-today__answers">
+                                            @if (p.GoodAt is not null) { <dt>Good at</dt><dd>@p.GoodAt</dd> }
+                                            @if (p.Enjoy is not null) { <dt>Would enjoy</dt><dd>@p.Enjoy</dd> }
+                                            @if (p.TimePerMonth is not null) { <dt>Time each month</dt><dd>@p.TimePerMonth</dd> }
+                                            @if (p.ContactBy is not null) { <dt>Prefers</dt><dd>@p.ContactBy</dd> }
+                                        </dl>
+                                    }
+                                    else
+                                    {
+                                        <span class="isa-today__noReply">No reply yet</span>
+                                    }
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                    <p class="isa-today__boardPrivacy">
+                        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" /></svg>
+                        Only you see these answers. Each member chose what to share, and can change or withdraw it.
+                    </p>
                 }
 
                 @if (_selected.StepId == NotebookStepId)
@@ -487,9 +824,88 @@
 
     private static string MinutesLabel(int m) => m == 1 ? "1 minute" : $"{m} minutes";
 
+    // ---- "Introduce yourself to your board" (J-19) and the replies (J-25) ----
+    private const string RepliesStepId = "J-25";
+    private bool _writingBoard;
+    private string _boardDraft = "";
+    private bool _savingBoard;
+    private string? _boardProblem;
+    private string? _sessionId;   // for the sign-in token the Input Compliance check needs
+
+    // Opens the introduction: the saved one to edit, or Isa's draft from ISACA's records.
+    private void StartBoardIntro()
+    {
+        if (_ctx is null) return;
+        _boardDraft = BoardIntro.GetIntroduction(_ctx.PersonId, _ctx.Term.ChapterId)?.Message ?? BoardIntroService.Draft(_ctx.Term);
+        _boardProblem = null;
+        _writingBoard = true;
+    }
+
+    // Saves it after Isa's sign-in check and Input Compliance gate; saving completes J-19.
+    private async Task SaveBoardIntro()
+    {
+        if (_ctx is null || _savingBoard) return;
+        _savingBoard = true;
+        _boardProblem = null;
+        try
+        {
+            var token = await SignInService.GetAccessTokenAsync(_sessionId);
+            _boardProblem = await BoardIntro.SaveIntroductionAsync(_ctx.PersonId, _ctx.Today, _boardDraft,
+                token is null ? null : $"Bearer {token}");
+            if (_boardProblem is null)
+            {
+                _writingBoard = false;
+                await ProgressChanged();
+            }
+        }
+        finally
+        {
+            _savingBoard = false;
+        }
+    }
+
     // ---- "Meet your board" (J-05) ----
     private const string BoardStepId = "J-05";
     private const string BoardIntroStepId = "J-19";   // "Introduce yourself to your board", the next step
+
+    // The board member whose page is open in "Meet your board" (View 4), or null for the list.
+    private string? _boardPerson;
+
+    private void OpenMember(string personId)
+    {
+        _goingBack = false;
+        _hasMoved = true;
+        _boardPerson = personId;
+    }
+
+    private void CloseMember()
+    {
+        _goingBack = true;
+        _hasMoved = true;
+        _boardPerson = null;
+    }
+
+    private static string YearsLabel(int years) => years <= 0 ? "this year" : years == 1 ? "1 year" : $"{years} years";
+
+    // "Core Chapter Leader Roles and Responsibilities · Chapter Secretary, Primary Responsibilities"
+    private static string RoleSource(GlossaryTerm t)
+    {
+        var s = t.Document.Title;
+        if (!string.IsNullOrWhiteSpace(t.Pages)) s += ", page " + t.Pages;
+        if (!string.IsNullOrWhiteSpace(t.Where)) s += " · " + t.Where;
+        return s;
+    }
+
+    // How to reach them, from their own profile answer if they gave one. Isa never shows
+    // contact details or offers a chat: the conversation happens in ISACA's own tools.
+    private static string ReachLine(string? contactBy) => contactBy switch
+    {
+        "A message on Engage" => "They'd like a message on Engage, ISACA's community for chapter leaders.",
+        "Email" => "They prefer email. Their address is in your chapter's member roster and on their Engage profile.",
+        "Phone" => "They prefer a phone call. Their number is in your chapter's member roster.",
+        "A chat app" => "They prefer a chat app. You could ask them which one on Engage.",
+        _ => "You can find them in Engage's member directory, ISACA's community for chapter leaders.",
+    };
 
     private static string Initials(string name) =>
         string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
@@ -573,6 +989,7 @@
         if (AuthState is null) return;
         var user = (await AuthState).User;
         _ctx = JourneyContexts.GetFor(user.FindFirst(KeycloakSignInService.PersonIdClaim)?.Value);
+        _sessionId = user.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
         Reload();
     }
 
@@ -599,9 +1016,197 @@
 
     private void OpenStep(JourneyStep step) => OpenStep(step, false);
 
+    // ---- View 5: the month (November 6, 2026) ----
+    // Read only. Everything on it comes from the databases: journey steps
+    // (placed by the term start date), ISACA's key dates, the leader's booked
+    // call or seat, and the chapter notebook's entries from the same month a
+    // year earlier (the notebook's own reading rules apply).
+
+    private bool _showMonth;
+    private bool _openedFromMonth;           // Back from a step returns to the month
+    private DateOnly _month;                 // first day of the month showing
+    private DateOnly _calSelected;           // the day whose details show under the grid
+    private IReadOnlyList<NotebookEntry> _monthPast = Array.Empty<NotebookEntry>();
+    private IReadOnlyList<KeyDateOnDay> _monthKeys = Array.Empty<KeyDateOnDay>();
+
+    private void OpenMonth()
+    {
+        if (_ctx is null) return;
+        _goingBack = false;
+        _hasMoved = true;
+        _selected = null;
+        _showProgress = false;
+        _showMonth = true;
+        if (_month == default)
+        {
+            _month = new DateOnly(_ctx.Today.Year, _ctx.Today.Month, 1);
+            _calSelected = _ctx.Today;
+        }
+        LoadMonth();
+        Reload();
+    }
+
+    private void CloseMonth()
+    {
+        _goingBack = true;
+        _hasMoved = true;
+        _showMonth = false;
+        Reload();
+    }
+
+    // The month can move from the term's first month to eleven months later (one term year).
+    private DateOnly FirstMonth => _ctx is null ? _month : new DateOnly(_ctx.Term.TermStart.Year, _ctx.Term.TermStart.Month, 1);
+    private bool CanMoveMonth(int by)
+    {
+        var to = _month.AddMonths(by);
+        return to >= FirstMonth && to <= FirstMonth.AddMonths(11);
+    }
+
+    private void MoveMonth(int by)
+    {
+        if (!CanMoveMonth(by)) return;
+        _month = _month.AddMonths(by);
+        // Keep today selected in today's month; otherwise the 1st.
+        _calSelected = _ctx is not null && _ctx.Today.Year == _month.Year && _ctx.Today.Month == _month.Month ? _ctx.Today : _month;
+        LoadMonth();
+    }
+
+    private void LoadMonth()
+    {
+        if (_ctx is null) return;
+        var last = _month.AddMonths(1).AddDays(-1);
+        _monthPast = Notebook.GetFromPastYears(_ctx.PersonId, _ctx.Today, _month.AddYears(-1), last.AddYears(-1));
+        _monthKeys = Journey.GetKeyDates(_month);   // each key date placed for the year this month is in
+    }
+
+    private void OpenStepFromMonth(JourneyStep step)
+    {
+        OpenStep(step, false);
+        _openedFromMonth = true;
+    }
+
+    // Everything on one day of the month.
+    private record CalDay(
+        int? DayOfTerm, bool InJourney, bool InKeyDate,
+        IReadOnlyList<JourneyStep> StepsStarting,      // dot: a step starts today
+        IReadOnlyList<JourneyStep> StepsOnDay,         // details: every step meant for this day
+        IReadOnlyList<KeyDateOnDay> KeyDateEdges,      // dot: a key date opens or closes
+        IReadOnlyList<KeyDateOnDay> KeyDatesOnDay,     // details: any key date covering this day
+        IReadOnlyList<CalMeeting> Meetings,
+        IReadOnlyList<NotebookEntry> LastYear);
+
+    // A booked welcome call or group seat: what the day's details say, and what goes in a calendar file.
+    private record CalMeeting(string Key, string Title, string Text, DateTime StartUtc, int Minutes);
+
+    // ---- "Add to my calendar" (November 6, 2026) ----
+    // Makes a calendar file (Services/Onboarding/CalendarFile.cs) and hands it
+    // to the leader's browser. Nothing is sent; opening the file adds the event
+    // to the leader's own Outlook, Google or Apple calendar.
+
+    private const string CalendarNote = "From Isa, your chapter support assistant. Open Isa for the details and the source.";
+
+    private Task AddStep(JourneyStep step)
+    {
+        if (_ctx is null) return Task.CompletedTask;
+        var first = _ctx.Term.TermStart.AddDays(step.DayFrom - 1);
+        var last = _ctx.Term.TermStart.AddDays(step.DayTo - 1);
+        var ics = CalendarFile.AllDay($"step-{step.StepId}-{_ctx.PersonId}", step.Title,
+            $"Your first 90 days, {DaysLabel(step).ToLowerInvariant()}. {CalendarNote}", first, last);
+        return Download(step.Title, ics);
+    }
+
+    private Task AddKeyDate(KeyDateOnDay k)
+    {
+        var ics = CalendarFile.AllDay($"key-{k.DateId}-{k.Starts:yyyy}", k.Title,
+            $"Source: {k.Source}. {CalendarNote}", k.Starts, k.Ends);
+        return Download(k.Title, ics);
+    }
+
+    private Task AddMeeting(CalMeeting m)
+    {
+        if (_ctx is null) return Task.CompletedTask;
+        var ics = CalendarFile.Timed($"{m.Key}-{_ctx.PersonId}", m.Title, $"{m.Text}. {CalendarNote}", m.StartUtc, m.Minutes);
+        return Download(m.Title, ics);
+    }
+
+    private async Task Download(string title, string ics)
+    {
+        try
+        {
+            _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/TodayPanel.razor.js");
+            await _js.InvokeVoidAsync("downloadCalendarFile", CalendarFile.FileName(title), ics);
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page went away; nothing to download.
+        }
+    }
+
+    private CalDay DayInfo(DateOnly day)
+    {
+        if (_ctx is null) return new CalDay(null, false, false, [], [], [], [], [], []);
+        var dot = day.DayNumber - _ctx.Term.TermStart.DayNumber + 1;
+        int? dayOfTerm = dot >= 1 && day <= _ctx.Term.TermEnd ? dot : null;
+        var inJourney = dot is >= 1 and <= 90;
+
+        var starting = inJourney ? _ctx.AllSteps.Where(s => s.DayFrom == dot).ToList() : new List<JourneyStep>();
+        var onDay = inJourney ? _ctx.AllSteps.Where(s => s.DayFrom <= dot && s.DayTo >= dot).ToList() : new List<JourneyStep>();
+
+        var keys = _monthKeys.Where(k => day >= k.Starts && day <= k.Ends).ToList();
+        var edges = keys.Where(k => day == k.Starts || day == k.Ends).ToList();
+
+        // The prototype's fake calendar has no lengths: a call is taken as 30
+        // minutes and the group welcome as an hour, for the calendar file only.
+        var meetings = new List<CalMeeting>();
+        var tz = _ctx.Term.TimeZone;
+        if (_myCall is not null && LocalDay(ContactService.FromKey(_myCall), tz) == day)
+        {
+            var at = ContactService.FromKey(_myCall);
+            meetings.Add(new CalMeeting("call", $"Welcome call with {_contact?.Name}",
+                $"Welcome call with {_contact?.Name}, {ContactService.FormatInZone(at, tz)} ({tz})", at, 30));
+        }
+        if (_mySeat is not null && LocalDay(ContactService.FromKey(_mySeat), tz) == day)
+        {
+            var at = ContactService.FromKey(_mySeat);
+            meetings.Add(new CalMeeting("group", "Group welcome for new presidents",
+                $"Group welcome for new presidents, {ContactService.FormatInZone(at, tz)} ({tz})", at, 60));
+        }
+
+        // Same month and day a year earlier (February 29 shows on February 28).
+        var past = _monthPast.Where(e => e.OnDate.Month == day.Month
+            && Math.Min(e.OnDate.Day, DateTime.DaysInMonth(day.Year, day.Month)) == day.Day).ToList();
+
+        return new CalDay(dayOfTerm, inJourney, keys.Count > 0, starting, onDay, edges, keys, meetings, past);
+    }
+
+    private static DateOnly LocalDay(DateTime utc, string timeZone)
+    {
+        var zone = Zone(timeZone);
+        return DateOnly.FromDateTime(zone is null ? utc : TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), zone));
+    }
+
+    private static string KeyDateText(KeyDateOnDay k, DateOnly day)
+    {
+        string D(DateOnly x) => x.ToString("MMMM d", CultureInfo.InvariantCulture);
+        if (day == k.Starts) return $"{k.Title} opens today. It runs until {D(k.Ends)}.";
+        if (day == k.Ends) return $"{k.Title} closes today.";
+        return $"{k.Title} is open ({D(k.Starts)} to {D(k.Ends)}).";
+    }
+
+    // What a screen reader hears for one day: the date and what is on it.
+    private static string CellLabel(DateOnly day, CalDay info)
+    {
+        var parts = new List<string> { day.ToString("dddd, MMMM d", CultureInfo.InvariantCulture) };
+        if (info.StepsStarting.Count > 0) parts.Add(info.StepsStarting.Count == 1 ? "1 step starts" : $"{info.StepsStarting.Count} steps start");
+        if (info.KeyDateEdges.Count > 0) parts.Add("ISACA key date");
+        if (info.Meetings.Count > 0) parts.Add("you booked a call or session");
+        if (info.LastYear.Count > 0) parts.Add("a note from last year");
+        return string.Join(", ", parts);
+    }
+
     // Which screen is showing, so a new screen glides in when it changes,
     // and which way: back (from the left) or forward (from the right).
-    private string ViewKey => _selected?.StepId ?? (_showProgress ? "progress" : "today");
+    private string ViewKey => _selected?.StepId ?? (_showProgress ? "progress" : _showMonth ? "month" : "today");
     private bool _goingBack;
     private bool _hasMoved;   // false until the first move inside the window
     private string ViewClass => !_hasMoved ? "" : _goingBack ? "isa-today__view isa-today__view--back" : "isa-today__view";
@@ -612,8 +1217,12 @@
         _goingBack = false;
         _hasMoved = true;
         _selected = step;
+        _boardPerson = null;
         _openedFromProgress = fromProgress;
+        _openedFromMonth = false;
         _writing = false;
+        _writingBoard = false;
+        _boardProblem = null;
         _showSession = false;
         _notice = null;
         Reload();
@@ -625,11 +1234,14 @@
         _goingBack = true;
         _hasMoved = true;
         _selected = null;
+        _boardPerson = null;
         _showProgress = _openedFromProgress;
+        _showMonth = _openedFromMonth;
+        if (_showMonth) LoadMonth();
         Reload();
     }
 
-    private string BackLabel => _openedFromProgress ? "My progress" : "All of today's steps";
+    private string BackLabel => _openedFromMonth ? "Calendar" : _openedFromProgress ? "My progress" : "All of today's steps";
 
     private void OpenProgress()
     {
@@ -637,6 +1249,7 @@
         _hasMoved = true;
         _selected = null;
         _showProgress = true;
+        _showMonth = false;
         Reload();
     }
 

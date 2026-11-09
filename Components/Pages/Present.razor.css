@@ -1381,3 +1381,130 @@
 .present__stage--closing:not(.is-dark) .present__quote,
 .present__stage--closing:not(.is-dark) .present__coverSub { color: #1d2d5c; }
 .present__stage--closing:not(.is-dark) .present__coverNote { color: #606e7c; }
+
+/* ---- Sprint 3 (November 6, 2026) ---- */
+
+/* Sprint 1's tracker: the five sections across the top of the slide, the
+   current one in ISACA Blue with a bar under it, the others quiet. It takes
+   the place of the small section label. */
+.present__tracker {
+    display: flex;
+    gap: 2.2cqw;
+    margin: 0 0 1.4cqw;
+    padding: 0;
+    list-style: none;
+    max-width: 58cqw;   /* stays clear of the row of Cs top right */
+}
+
+.present__tracker li {
+    padding-bottom: 0.45cqw;
+    border-bottom: 0.25cqw solid transparent;
+    font-weight: 700;
+    font-size: 0.95cqw;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #9aa5b1;
+}
+
+.present__tracker li.is-on {
+    color: #07649d;
+    border-bottom-color: #00a4e4;
+}
+
+.is-dark .present__tracker li { color: rgba(231, 240, 245, 0.55); }
+.is-dark .present__tracker li.is-on { color: #7fd0f5; border-bottom-color: #7fd0f5; }
+
+/* Four cards in a row (the team). */
+.present__cards--4 { grid-template-columns: repeat(4, 1fr); gap: 1.6cqw; }
+.present__cards--4 .present__cardTitle { font-size: 1.15cqw; }
+.present__cards--4 .present__cardText { font-size: 1.5cqw; }
+
+/* Promised beside built: three columns (promise, what was built, status). */
+.present__promises {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.4cqw;
+}
+
+.present__promiseHead,
+.present__promise {
+    display: grid;
+    grid-template-columns: 1.15fr 1.25fr 0.42fr;
+    gap: 2cqw;
+    align-items: start;
+}
+
+.present__promiseHead {
+    padding-bottom: 0.6cqw;
+    border-bottom: 0.15cqw solid #07649d;
+    font-weight: 700;
+    font-size: 0.95cqw;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #07649d;
+}
+
+.present__promise {
+    padding: 0.85cqw 0;
+    border-bottom: 0.08cqw solid #e5e7eb;
+    font-size: 1.3cqw;
+    line-height: 1.35;
+    animation: present-row 0.4s ease-out both;
+    animation-delay: calc(var(--n) * 120ms);
+}
+
+@keyframes present-row {
+    from { opacity: 0; transform: translateY(0.6cqw); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .present__promise { animation: none; }
+}
+
+.present__promise strong { display: block; font-weight: 500; color: #1d2d5c; }
+.present__promise strong + span { display: block; margin-top: 0.15cqw; font-weight: 300; font-size: 1.15cqw; color: #52606d; }
+.present__promiseBuilt { font-weight: 300; color: #323e48; }
+
+/* Status: a filled pill with a symbol and a word. Text stays Dark Blue on the
+   light fills, so it reads at small sizes and over a Teams share. */
+.present__promiseStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4cqw;
+    padding: 0.25cqw 0.8cqw;
+    border-radius: 99cqw;
+    font-weight: 500;
+    font-size: 1.05cqw;
+    white-space: nowrap;
+    color: #1d2d5c;
+}
+
+.present__promiseStatus.is-built    { background: #6cb33f; }
+.present__promiseStatus.is-partial  { background: #fbb034; }
+.present__promiseStatus.is-designed { background: #e5e7eb; }
+.present__promiseStatus.is-plan     { background: #e7f0f5; }
+.present__promiseStatus.is-reword   { background: #ffffff; box-shadow: inset 0 0 0 0.12cqw #07649d; }
+
+.is-dark .present__promiseHead { color: #7fd0f5; border-bottom-color: #7fd0f5; }
+.is-dark .present__promise { border-bottom-color: rgba(255, 255, 255, 0.22); }
+.is-dark .present__promise strong { color: #ffffff; }
+.is-dark .present__promise strong + span,
+.is-dark .present__promiseBuilt { color: #e7f0f5; }
+
+/* The problem slide falls on a Dark Blue slide in the Sprint 3 deck: light number and label. */
+.is-dark .present__statNum { color: #7fd0f5; }
+.is-dark .present__statLabel { color: #e7f0f5; }
+
+/* The pipeline falls on a Dark Blue slide in the Sprint 3 deck: the path titles turn light,
+   and the Dark Blue "AI" bar becomes Light Blue so it shows on the blue ground. */
+.is-dark .present__path.is-blue .present__pathLabel strong { color: #7fd0f5; }
+.is-dark .present__path.is-darkblue .present__pathLabel strong { color: #ffffff; }
+.is-dark .present__path.is-green .present__pathLabel strong { color: #a8d88a; }
+.is-dark .present__path.is-darkblue { --path-color: #e7f0f5; }
+
+/* A long status column (Sprint 3: nine built stages) spans two thirds of the slide, its stages in two columns. */
+.present__statusCol.is-wide { grid-column: span 2; }
+.present__statusCol.is-wide ul { columns: 2; column-gap: 2cqw; }
+.present__statusCol.is-wide li { break-inside: avoid; }

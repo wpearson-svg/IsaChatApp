@@ -1,0 +1,139 @@
+@using IsaChatApp.Services
+@inject DevHealthService Health
+@inject ServicesAtStart StartServices
+@inject LocalServiceSettings ServiceSettings
+@inject IHttpClientFactory HttpFactory
+@inject SalesforceTicketService Salesforce
+@*
+    Dev dashboard > Health alerts. Real checks only: each service is asked whether it answers (the same checks as
+    the Services tab), recent failures are counted from the event log, and alerts follow from those counts.
+    Limits: DevHealth:ModelErrorsPerHour (3) and DevHealth:SalesforceFailuresInARow (3).
+*@
+<div class="hd">
+    <div class="hd__card">
+        <h3>Alerts</h3>
+        @if (_report is null)
+        {
+            <p class="hd__hint">Reading the event log&hellip;</p>
+        }
+        else if (_report.Error is not null)
+        {
+            <p class="hd__hint">@_report.Error</p>
+        }
+        else if (_report.Alerts.Count == 0 && _down.Count == 0)
+        {
+            <p class="hd__ok">No alerts.</p>
+        }
+        else
+        {
+            @foreach (var name in _down)
+            {
+                <div class="hd__alert hd__alert--red">@name did not answer the last check.</div>
+            }
+            @foreach (var a in _report.Alerts)
+            {
+                <div class="hd__alert hd__alert--@a.Level">@a.Text</div>
+            }
+        }
+    </div>
+
+    <div class="hd__card">
+        <h3>Services</h3>
+        <p class="hd__hint">Asks each service whether it answers. Turned-off services are skipped.</p>
+        <button class="hd__btn" @onclick="CheckAsync" disabled="@_checking">@(_checking ? "Checking\u2026" : "Check now")</button>
+        @if (_status.Count > 0)
+        {
+            <table class="hd__table" style="margin-top:0.8rem">
+                <thead><tr><th>Service</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach (var kv in _status)
+                    {
+                        <tr><td>@kv.Key</td><td class="@(kv.Value == "Answers" ? "hd__ok" : kv.Value == "Off" ? "" : "hd__bad")">@kv.Value</td></tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="hd__card">
+        <h3>Recent trouble</h3>
+        <p class="hd__hint">Counted from the event log. The questions themselves are never in it.</p>
+        @if (_report is { Error: null })
+        {
+            <table class="hd__table">
+                <thead><tr><th>What</th><th>Last hour</th><th>Last 24 hours</th></tr></thead>
+                <tbody>
+                    @foreach (var t in _report.Trouble)
+                    {
+                        <tr><td>@t.What</td><td>@t.LastHour</td><td>@t.Last24Hours</td></tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <div class="hd__card">
+        <h3>Ticket close sync</h3>
+        <p class="hd__hint">Copies the date a person closes a Case in Salesforce into Isa's usage data (Time to resolution).</p>
+        @if (!Salesforce.Enabled)
+        {
+            <p class="hd__hint">Salesforce ticketing is off, so the sync is not running.</p>
+        }
+        else if (TicketCloseSyncService.LastRunUtc is null)
+        {
+            <p class="hd__hint">Has not run since Isa started.</p>
+        }
+        else
+        {
+            <p class="@(TicketCloseSyncService.LastRunOk ? "hd__ok" : "hd__bad")">
+                Last run @TicketCloseSyncService.LastRunUtc.Value.ToLocalTime().ToString("g"):
+                @(TicketCloseSyncService.LastRunOk ? "Salesforce answered." : "could not read Salesforce.")
+            </p>
+        }
+    </div>
+</div>
+
+@code {
+    private DevHealthService.HealthReport? _report;
+    private readonly Dictionary<string, string> _status = new();
+    private readonly List<string> _down = new();
+    private bool _checking;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _report = Health.GetHealth();
+        await CheckAsync();
+    }
+
+    private async Task CheckAsync()
+    {
+        _checking = true; _status.Clear(); _down.Clear();
+        StateHasChanged();
+        var rows = new (string Name, string Key, string Path, bool Off)[]
+        {
+            ("Keycloak (sign-in)", "Keycloak:Authority", "", false),
+            ("Ollama (the model)", "Ollama:Endpoint", "/api/version", false),
+            ("Voice (Kokoro)", "Tts:Endpoint", "/v1/models", !ServiceSettings.VoiceOn),
+            ("Embeddings", "Embeddings:BaseUrl", "/health", false),
+            ("Translation (NLLB-200)", "Translation:Endpoint", "/health", !ServiceSettings.TranslationOn),
+        };
+        var http = HttpFactory.CreateClient();
+        http.Timeout = TimeSpan.FromSeconds(4);
+        foreach (var r in rows)
+        {
+            if (r.Off) { _status[r.Name] = "Off"; continue; }
+            try
+            {
+                using var resp = await http.GetAsync(StartServices.Endpoints[r.Key].TrimEnd('/') + r.Path);
+                _status[r.Name] = resp.IsSuccessStatusCode ? "Answers" : $"Answers with {(int)resp.StatusCode}";
+            }
+            catch { _status[r.Name] = "Not reachable"; }
+            if (_status[r.Name] == "Not reachable") _down.Add(r.Name);
+            StateHasChanged();
+        }
+        var sf = await Salesforce.CheckAsync();
+        _status["Salesforce"] = sf switch { "ok" => "Answers", "off" => "Off", "not_configured" => "Not set up", _ => "Problem: " + sf };
+        if (sf is not ("ok" or "off" or "not_configured")) _down.Add("Salesforce");
+        _checking = false;
+    }
+}

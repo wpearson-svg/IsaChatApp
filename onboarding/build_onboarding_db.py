@@ -10,8 +10,14 @@ journey steps (journey_steps.csv), the invented sample Chapter
 Experience contacts (contacts.csv), the key calendar dates from
 ISACA documents, such as the compliance window (key_dates.csv), and the
 outgoing president's handoff checklist, word for word from the President
-Guidebook (handoff_steps.csv), and the document sections whose answers
-get a quiet "worth saving?" label on the save button (save_hints.csv).
+Guidebook (handoff_steps.csv), the document sections whose answers
+get a quiet "worth saving?" label on the save button (save_hints.csv), and
+invented sample notebook entries from earlier presidents' years
+(notebook_history.csv), which Isa copies into data/notebook.db once.
+Also the invented member roster for "Meet your board" (member_roster.csv):
+each person's ISACA certifications and the year they became a member,
+standing in for ISACA's member roster (a president may see everything on
+it: Camille, 21 October 2026). Invented, like everyone in directory/.
 Things leaders do in Isa, such as marking a step
 complete, will be stored in a separate database that this script never
 touches, so rebuilding never erases anyone's progress.
@@ -28,6 +34,10 @@ out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(here, "..", "data", "on
 
 with open(os.path.join(here, "journey_steps.csv"), encoding="utf-8-sig", newline="") as f:
     steps = list(csv.DictReader(f))
+
+# Invented member roster (November 9, 2026): certifications and member-since year.
+with open(os.path.join(here, "member_roster.csv"), encoding="utf-8-sig", newline="") as f:
+    roster = list(csv.DictReader(f))
 
 # Invented sample contacts only -- never real ISACA staff.
 with open(os.path.join(here, "contacts.csv"), encoding="utf-8-sig", newline="") as f:
@@ -46,6 +56,12 @@ with open(os.path.join(here, "handoff_steps.csv"), encoding="utf-8-sig", newline
 # gets a quiet "worth saving?" label on its save button (Matthew, 28 October 2026).
 with open(os.path.join(here, "save_hints.csv"), encoding="utf-8-sig", newline="") as f:
     hints = list(csv.DictReader(f))
+
+# Invented sample notebook entries from earlier presidents' years (November 6, 2026),
+# so "Last year around now" and the month view have a past year to show. Copied into
+# data/notebook.db by NotebookService when Isa starts, once each.
+with open(os.path.join(here, "notebook_history.csv"), encoding="utf-8-sig", newline="") as f:
+    history = list(csv.DictReader(f))
 
 # ---- Check the data before building -------------------------------------
 problems = []
@@ -109,6 +125,25 @@ for h in handoff:
     if kind and kind not in ("decision", "contact", "worked", "unfinished", "other"):
         problems.append(f"handoff_steps.csv {hid}: Notebook kind must be empty or a notebook note kind")
 
+# The roster: one row per person, a known ISACA certification, a plausible year,
+# and only people who are in the team's directory.
+ISACA_CERTS = {"CISA", "CISM", "CRISC", "CGEIT", "CDPSE", "CCOA", "CET", "AAIA", "AAISM"}
+with open(os.path.join(here, "..", "directory", "people.csv"), encoding="utf-8-sig", newline="") as f:
+    directory_ids = {p["Person ID"] for p in csv.DictReader(f)}
+roster_ids = [r["Person ID"] for r in roster]
+if len(set(roster_ids)) != len(roster_ids):
+    problems.append("member_roster.csv: duplicate Person ID")
+for r in roster:
+    pid = r["Person ID"]
+    if pid not in directory_ids:
+        problems.append(f"member_roster.csv {pid}: not in directory/people.csv")
+    for cert in [c.strip() for c in r["Certifications"].split(";") if c.strip()]:
+        if cert not in ISACA_CERTS:
+            problems.append(f"member_roster.csv {pid}: {cert!r} is not an ISACA certification")
+    y = r["Member since"].strip()
+    if not (y.isdigit() and 1969 <= int(y) <= 2026):
+        problems.append(f"member_roster.csv {pid}: Member since must be a year")
+
 hint_ids = [h["Hint ID"] for h in hints]
 if len(set(hint_ids)) != len(hint_ids):
     problems.append("save_hints.csv: duplicate Hint ID")
@@ -126,6 +161,25 @@ for h in hints:
     if key in hint_keys:
         problems.append(f"save_hints.csv {hid}: the same document, section and page is tagged twice")
     hint_keys.add(key)
+
+history_ids = [h["History ID"] for h in history]
+if len(set(history_ids)) != len(history_ids):
+    problems.append("notebook_history.csv: duplicate History ID")
+for h in history:
+    nid = h["History ID"]
+    if not re.fullmatch(r"N-\d{2}", nid):
+        problems.append(f"notebook_history.csv: bad History ID {nid!r} (use N- and two digits, like N-01)")
+    for field in ("Chapter ID", "Author ID", "Author name", "Note"):
+        if not h[field].strip():
+            problems.append(f"notebook_history.csv {nid}: {field} is empty")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", h["Date"].strip()):
+        problems.append(f"notebook_history.csv {nid}: Date must look like 2025-07-08")
+    if h["Kind"].strip() not in ("decision", "contact", "worked", "unfinished", "other"):
+        problems.append(f"notebook_history.csv {nid}: Kind must be a notebook note kind")
+    if h["Topic"].strip() not in ("Elections", "Finances", "Meetings", "Compliance", "Membership", "Events", "Other"):
+        problems.append(f"notebook_history.csv {nid}: Topic must be a notebook topic")
+    if h["Shared"].strip() not in ("yes", "no"):
+        problems.append(f"notebook_history.csv {nid}: Shared must be yes or no")
 
 if problems:
     print("DATA PROBLEMS:")
@@ -179,6 +233,22 @@ CREATE TABLE save_hints(
   label    TEXT NOT NULL,     -- deadline or decision
   reason   TEXT NOT NULL      -- shown to the leader: "This answer cites ..."
 );
+CREATE TABLE notebook_history(
+  history_id  TEXT PRIMARY KEY,
+  chapter_id  TEXT NOT NULL,
+  author_id   TEXT NOT NULL,    -- an invented sample person from directory/
+  author_name TEXT NOT NULL,
+  on_date     TEXT NOT NULL,    -- YYYY-MM-DD
+  category    TEXT NOT NULL,    -- decision, contact, worked, unfinished, other
+  topic       TEXT NOT NULL,
+  shared      INTEGER NOT NULL, -- 1 = shared with the board
+  note        TEXT NOT NULL
+);
+CREATE TABLE member_roster(
+  person_id      TEXT PRIMARY KEY,  -- an invented sample person from directory/
+  certifications TEXT NOT NULL,     -- ISACA certifications, "CISA; CISM", or empty
+  member_since   INTEGER NOT NULL   -- the year they became an ISACA member
+);
 CREATE TABLE contact_chapters(
   chapter_id TEXT PRIMARY KEY,  -- each chapter has one contact
   contact_id TEXT NOT NULL REFERENCES contacts(contact_id)
@@ -200,10 +270,17 @@ db.executemany("INSERT INTO key_dates VALUES(?,?,?,?,?)", [
 db.executemany("INSERT INTO save_hints VALUES(?,?,?,?,?,?)", [
     (h["Hint ID"], h["Document"].strip(), h["Section"].strip(), h["Page"].strip(),
      h["Label"].strip(), h["Reason"].strip()) for h in hints])
+db.executemany("INSERT INTO notebook_history VALUES(?,?,?,?,?,?,?,?,?)", [
+    (h["History ID"], h["Chapter ID"].strip(), h["Author ID"].strip(), h["Author name"].strip(), h["Date"].strip(),
+     h["Kind"].strip(), h["Topic"].strip(), 1 if h["Shared"].strip() == "yes" else 0, h["Note"].strip()) for h in history])
+db.executemany("INSERT INTO member_roster VALUES(?,?,?)", [
+    (r["Person ID"], "; ".join(c.strip() for c in r["Certifications"].split(";") if c.strip()),
+     int(r["Member since"])) for r in roster])
 db.commit()
 db.close()
 print(f"built {out}: {len(steps)} journey steps, {len(contacts)} sample contacts, {len(key_dates)} key dates, "
-      f"{len(handoff)} handoff steps, {len(hints)} save hints")
+      f"{len(handoff)} handoff steps, {len(hints)} save hints, {len(history)} sample notebook entries, "
+      f"{len(roster)} roster rows")
 
 # A tagged section that Isa's content no longer has never gets its label
 # (for example after the content is rebuilt with new section names). Not an

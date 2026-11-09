@@ -29,6 +29,11 @@ namespace IsaChatApp.Services.Onboarding;
 /// which Library document each step points to (a guidebook page, or a whole document).
 /// GetStepListens gives a step's buttons; GetRange gives the sentences to read, so the Library
 /// reads that part and stops.
+///
+/// "Terms explained" (3 November 2026, piece D in ONBOARDING-FEATURE.md): GetGlossary reads
+/// onboarding/glossary.json, terms that ISACA's documents define, each quoted word for word
+/// (onboarding/check_glossary.py checks every quote against the same text the Library shows).
+/// GetQuoteRange finds a quote's sentences in its document, so "Read it" opens right there.
 /// </summary>
 public class LibraryService
 {
@@ -57,6 +62,7 @@ public class LibraryService
     private readonly string _listPath;
     private readonly string _textsFolder;
     private readonly string _stepListenPath;
+    private readonly string _glossaryPath;
     private readonly string _contentDbPath;
     private readonly Chapter360Service _chapter360;
 
@@ -65,6 +71,7 @@ public class LibraryService
         _listPath = Path.Combine(env.ContentRootPath, "onboarding", "library.json");
         _textsFolder = Path.Combine(env.ContentRootPath, "onboarding", "library_texts");
         _stepListenPath = Path.Combine(env.ContentRootPath, "onboarding", "step_listen.json");
+        _glossaryPath = Path.Combine(env.ContentRootPath, "onboarding", "glossary.json");
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
         _chapter360 = chapter360;
     }
@@ -173,6 +180,60 @@ public class LibraryService
         if (!int.TryParse(parts[0], out var from)) return false;
         var to = parts.Length > 1 && int.TryParse(parts[1], out var t) ? t : from;
         return page >= from && page <= to;
+    }
+
+    // ---- Terms explained (the glossary) ----------------------------------------
+
+    /// <summary>The glossary, A to Z, each term with ISACA's quote and the Library document it
+    /// comes from. A term whose document isn't in the Library is left out.</summary>
+    public IReadOnlyList<GlossaryTerm> GetGlossary()
+    {
+        List<GlossaryEntry> entries;
+        try
+        {
+            entries = JsonSerializer.Deserialize<GlossaryFile>(File.ReadAllText(_glossaryPath), Options)?.Terms ?? [];
+        }
+        catch
+        {
+            return [];   // a missing or broken file shows an empty glossary rather than breaking the Library
+        }
+        var docs = GetDocuments().ToDictionary(d => d.Document);
+        return entries
+            .Where(e => e.Quote.Count > 0 && docs.ContainsKey(e.Document))
+            .Select(e => new GlossaryTerm(e.Term, e.Quote, e.Bullets, docs[e.Document], e.Pages, e.Where))
+            .OrderBy(t => t.Term.TrimStart('“', '"'), StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    /// <summary>When the glossary file last changed, so GlossaryMatcher knows to read it again.</summary>
+    public DateTime GlossaryStamp()
+    {
+        try { return File.GetLastWriteTimeUtc(_glossaryPath); }
+        catch { return DateTime.MinValue; }
+    }
+
+    /// <summary>The sentences of a glossary quote in its document (on the given guidebook page, if
+    /// any): from the first sentence the quote starts in to the last one it covers. Null if the quote
+    /// can't be found (then "Read it" opens the page, or the top of the document).</summary>
+    public static (int From, int To)? GetQuoteRange(LibraryText text, IReadOnlyList<string> quotes, string? pages = null)
+    {
+        static string Norm(string s) => Regex.Replace(s, @"\s+", " ").Trim();
+        var sentences = text.Sections.Where(s => InPages(s.Page, pages))
+            .SelectMany(s => s.Paragraphs.SelectMany(p => p.Sentences)).ToList();
+        int? from = null, to = null;
+        foreach (var quote in quotes.Select(Norm))
+        {
+            // A long quote covers whole sentences; a short one (like "Annual General Meeting (AGM)")
+            // sits inside one sentence, and only its first place counts.
+            var covered = sentences.Where(s => Norm(s.Text).Length >= 12 && quote.Contains(Norm(s.Text))).ToList();
+            if (covered.Count == 0 && sentences.FirstOrDefault(s => Norm(s.Text).Contains(quote)) is { } inside) covered.Add(inside);
+            foreach (var s in covered)
+            {
+                from = from is null ? s.Index : Math.Min(from.Value, s.Index);
+                to = to is null ? s.Index : Math.Max(to.Value, s.Index);
+            }
+        }
+        return from is null ? null : (from.Value, to!.Value);
     }
 
     // A Chapter 360 document: its sections and paragraphs as onboarding/chapter360.json has them.
@@ -316,6 +377,21 @@ public class LibraryService
         return counts;
     }
 
+    private sealed class GlossaryFile
+    {
+        public List<GlossaryEntry> Terms { get; set; } = [];
+    }
+
+    private sealed class GlossaryEntry
+    {
+        public string Term { get; set; } = "";
+        public List<string> Quote { get; set; } = [];
+        public bool Bullets { get; set; }
+        public string Document { get; set; } = "";
+        public string? Pages { get; set; }
+        public string? Where { get; set; }
+    }
+
     private sealed class StepListenFile
     {
         public List<StepListenEntry> Listen { get; set; } = [];
@@ -372,6 +448,10 @@ public record LibrarySection(string Key, string? Heading, string? PageMarker, Li
     /// <summary>The page the section is on, for a document from content.db that has pages.</summary>
     public int? Page { get; init; }
 }
+
+/// <summary>One term in "Terms explained": ISACA's quote (one or more passages, shown as a list
+/// when Bullets), the Library document it comes from, its page, and the part of the document.</summary>
+public record GlossaryTerm(string Term, IReadOnlyList<string> Quote, bool Bullets, LibraryDocument Document, string? Pages, string? Where);
 
 /// <summary>One Listen button on a journey step: the Library document, the pages to read (empty
 /// for the whole document), what the button says, and about how many minutes it takes.</summary>

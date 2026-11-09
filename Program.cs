@@ -118,9 +118,12 @@ builder.Services.AddSingleton<ProgressService>();
 // NotebookService: each chapter's succession notebook (saved answers and
 // notes), kept in data/notebook.db, created on first run.
 builder.Services.AddSingleton<NotebookService>();
+builder.Services.AddSingleton<BoardIntroService>();
+builder.Services.AddSingleton<NotebookReminderService>();
 // The Library (Feature 5): ISACA's documents to read or listen to, from onboarding/library.json
 // and the approved passages in data/content.db (Components/Shared/LibraryPanel.razor).
 builder.Services.AddSingleton<LibraryService>();
+builder.Services.AddSingleton<GlossaryMatcher>();   // hover definitions for glossary terms (November 9, 2026)
 // ISACA's Chapter 360 documents (onboarding/chapter360.json): the sample Chapter 360 page and
 // the Library's Chapter 360 group.
 builder.Services.AddSingleton<Chapter360Service>();
@@ -140,6 +143,8 @@ builder.Services.AddHostedService<IsaChatApp.Services.Orchestrator.OllamaLifetim
 builder.Services.AddSingleton<EventLogService>();
 builder.Services.AddSingleton<UsageSummaryService>();
 builder.Services.AddSingleton<UsageReportService>();
+builder.Services.AddSingleton<DevHealthService>();
+builder.Services.AddHostedService<TicketCloseSyncService>();   // copies Salesforce Case close dates into usage.db (Time to resolution)
 builder.Services.AddSingleton<ContentImportService>();
 builder.Services.AddSingleton<DevAccessService>();
 builder.Services.AddHttpClient("salesforce");
@@ -156,6 +161,8 @@ builder.Services.AddSingleton<IAccessControlAdapter, KeycloakAccessControlAdapte
 // Stage order matters: it is the order they are registered (matches docs/stage-contract.md).
 // front_end is logged by the orchestrator itself; ticketing runs only on Escalate.
 builder.Services.AddSingleton<IStage, AccessControlStage>();
+builder.Services.AddSingleton<IsaChatApp.Services.Translation.TranslationClient>();
+builder.Services.AddSingleton<IsaChatApp.Services.Translation.TranslationDemo>();
 builder.Services.AddSingleton<IStage, TranslationStage>();
 builder.Services.AddSingleton<IsaChatApp.Services.Rules.RuleEngine>();   // reads ISACA's rules files (rules/)
 builder.Services.AddSingleton<IStage, InputComplianceStage>();
@@ -163,6 +170,7 @@ builder.Services.AddSingleton<IStage, DatabaseSearchStage>();
 builder.Services.AddSingleton<IStage, KnowledgeGraphStage>();
 builder.Services.AddSingleton<IStage, RagStage>();
 builder.Services.AddSingleton<IStage, ComplexAiStage>();
+builder.Services.AddSingleton<IsaChatApp.Services.SettingsChangeLog>();   // who changed which dashboard setting, and when
 builder.Services.AddSingleton<IsaChatApp.Services.OutputComplianceSettings>();   // Output Compliance thresholds, editable on the Dev Dashboard
 builder.Services.AddSingleton<IsaChatApp.Services.Orchestrator.Stages.HhemScorer>();   // the NLI model (HHEM-2.1-Open, ONNX)
 builder.Services.AddSingleton<IStage, OutputComplianceStage>();

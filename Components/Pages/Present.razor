@@ -22,6 +22,11 @@
 
    - Wording: presentation/slides.json (Services/Presentation/
      PresentationDeck.cs). Edit it and refresh; no restart needed.
+     Since November 6, 2026 that file is the Sprint 3 deck; the Sprint 2
+     deck is presentation/sprint2.json, at /present?deck=sprint2.
+   - Sprint 3 adds Sprint 1's tracker (the five sections across the top
+     of a slide with "tracker" set) and the "promises" layout (what we
+     promised beside what we built, with a status).
    - Keys: Present.razor.js (arrows, Page Up/Down for a clicker, Home,
      End, F for full screen). The small arrows in the footer do the same.
    - Intro: wwwroot/present/intro.html (Matthew's Isa_C_Intro.html, with
@@ -178,7 +183,19 @@ else
             }
 
             <div class="present__body">
-                @if (!string.IsNullOrEmpty(s.Section))
+                @if (!string.IsNullOrEmpty(s.Tracker) && _tracker.Count > 0)
+                {
+                    @* Sprint 1's tracker (November 6, 2026): the five sections across the top,
+                       the current one highlighted and named for screen readers. *@
+                    <ol class="present__tracker" aria-label="Section @(_tracker.ToList().IndexOf(s.Tracker) + 1) of @_tracker.Count: @s.Tracker">
+                        @foreach (var t in _tracker)
+                        {
+                            var on = string.Equals(t, s.Tracker, StringComparison.OrdinalIgnoreCase);
+                            <li class="@(on ? "is-on" : "")" aria-current="@(on ? "step" : null)">@t</li>
+                        }
+                    </ol>
+                }
+                else if (!string.IsNullOrEmpty(s.Section))
                 {
                     <p class="present__section">@s.Section</p>
                 }
@@ -383,11 +400,16 @@ else
                                 </li>
                             }
                         </ol>
+                        @* An empty status column is left out (Sprint 3: nothing is "partly built"). With only
+                           two columns left, a long one (more than five stages) takes two thirds of the width
+                           and lists its stages in two columns, so nine built stages fit on the slide. *@
+                        var shown = new[] { "built", "partial", "stub" }.Where(st => s.Rows.Any(r => r.Status == st)).ToList();
                         <div class="present__statusCols">
-                            @foreach (var (status, col) in new[] { "built", "partial", "stub" }.Select((x, c) => (x, c)))
+                            @foreach (var (status, col) in shown.Select((x, c) => (x, c)))
                             {
                                 var group = s.Rows.Select((r, i) => (Row: r, Number: i + 1)).Where(x => x.Row.Status == status).ToList();
-                                <div class="present__statusCol">
+                                var wide = shown.Count == 2 && group.Count > 5;
+                                <div class="present__statusCol @(wide ? "is-wide" : "")">
                                     <p class="present__statusHead is-@status">@StatusIcon(status) @StatusLabel(status) <span>@group.Count</span></p>
                                     <ul style="--col:@col">
                                         @foreach (var ((row, number), n) in group.Select((g, n) => (g, n)))
@@ -415,6 +437,28 @@ else
                                 @if (s.Bullets.Count > 1) { <ul class="present__bullets"><li>@s.Bullets[1]</li></ul> }
                                 <ShowTheWork Steps="_sampleHandoff" TotalMs="@(_sampleHandoff.Sum(x => x.ElapsedMs))" />
                             </div>
+                        </div>
+                        break;
+
+                    case "promises":
+                        @* Promised beside built (Sprint 3): each row is one Sprint 1 promise, what was
+                           built for it, and its status with a symbol and a word. *@
+                        <h1 class="present__title present__title--compact">@s.Title</h1>
+                        <p class="present__lead present__lead--compact">@s.Lead</p>
+                        <div class="present__promises" role="table" aria-label="@s.Title">
+                            <div class="present__promiseHead" role="row">
+                                <span role="columnheader">We promised</span>
+                                <span role="columnheader">We built</span>
+                                <span role="columnheader">Status</span>
+                            </div>
+                            @foreach (var (item, n) in s.Items.Select((x, n) => (x, n)))
+                            {
+                                <div class="present__promise" role="row" style="--n:@n">
+                                    <span role="cell"><strong>@item.Title</strong>@if (!string.IsNullOrEmpty(item.Text)) { <span>@item.Text</span> }</span>
+                                    <span role="cell" class="present__promiseBuilt">@item.Built</span>
+                                    <span role="cell"><span class="present__promiseStatus is-@item.Status"><b aria-hidden="true">@PromiseIcon(item.Status)</b> @PromiseLabel(item.Status)</span></span>
+                                </div>
+                            }
                         </div>
                         break;
 
@@ -563,7 +607,36 @@ else
     private IJSObjectReference? _js;
     private DotNetObjectReference<Present>? _self;
 
-    protected override void OnInitialized() => (_slides, _error) = Deck.Load();
+    // Which deck: /present is presentation/slides.json (Sprint 3); /present?deck=sprint2 is the Sprint 2 deck.
+    [SupplyParameterFromQuery(Name = "deck")] public string? DeckName { get; set; }
+    private IReadOnlyList<string> _tracker = [];
+
+    protected override void OnInitialized()
+    {
+        var d = Deck.LoadDeck(DeckName);
+        (_slides, _tracker, _error) = (d.Slides, d.Tracker, d.Error);
+    }
+
+    // On a "promises" slide: a symbol and a word for each status, so colour never carries the meaning alone.
+    private static string PromiseIcon(string? status) => status switch
+    {
+        "built" => "✓",
+        "partial" => "◐",
+        "designed" => "○",
+        "plan" => "▷",
+        "reword" => "✎",
+        _ => ""
+    };
+
+    private static string PromiseLabel(string? status) => status switch
+    {
+        "built" => "Built",
+        "partial" => "Partly",
+        "designed" => "Designed",
+        "plan" => "For the pilot",
+        "reword" => "Reworded",
+        _ => status ?? ""
+    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

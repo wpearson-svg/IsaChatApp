@@ -3,24 +3,19 @@
 @* ============================================================
    DeveloperDashboard.razor
 
-   Fleshed-out example page (still not wired to a real backend) --
-   linked from the chat widget's header (the ">_" icon). Built from
-   the "Isa Wireframes 2" mock: a dev-facing shell (nav + top bar)
-   whose fully-built tab is Compliance policy -- the confidence
-   threshold, input/output compliance rules, role-by-tier access
-   grid, and a testing console that reads the settings above it (a
-   test run's Output Compliance / Ticketing results respond to the
-   confidence slider and the routed-topics list, and Access Control
-   respects the role-by-tier grid). Everything else (Role access,
-   Models/RAG/access & ticketing, Front end, Health alerts) is a
-   labeled stub -- present in the nav, per the wireframe, but not
-   designed yet.
+   The team's dashboard, linked from the chat widget's header (the ">_" icon). Needs the dashboard_dev role.
+   Every control on it is real:
+   - Compliance policy: the four answer-quality numbers are saved by OutputComplianceSettings and read on every
+     question; the rules list and the output-checks list are read from the live rules files and settings; the
+     change log is the real record of saves (SettingsChangeLog).
+   - Role access: the roles Isa actually checks.
+   - Testing console, Translation test, Vector search test, Rule tester, Content import: run the real pipeline,
+     services and files.
+   - Services: where Keycloak, Ollama, the voice, embeddings and translation run (saved to appsettings.Local.json).
+   - Models, RAG, access & ticketing: the Salesforce settings (saved to dev-keys.json).
+   - Front end, Health alerts: real counts from usage.db and events.db, and live checks of each service (DevHealthService).
 
-   Dressed in the same ISACA palette as the rest of the app (see
-   WidgetSettings.IsacaColors): navy for chrome/primary actions,
-   green/orange/purple for the pipeline-stage tags, blue for the
-   slider. Nothing here persists -- "Save changes" and the change log
-   are illustrative only, same as the rest of this demo.
+   Dressed in the same ISACA palette as the rest of the app (see WidgetSettings.IsacaColors).
    ============================================================ *@
 
 @using IsaChatApp.Services
@@ -31,6 +26,9 @@
 @inject LocalServiceSettings ServiceSettings
 @inject ServicesAtStart StartServices
 @inject IHttpClientFactory HttpFactory
+@inject IConfiguration Config
+@inject SettingsChangeLog ChangeLog
+@inject IsaChatApp.Services.Rules.RuleEngine RuleSet
 @rendermode InteractiveServer
 
 <PageTitle>Developer Dashboard</PageTitle>
@@ -90,12 +88,29 @@ else
                 {
                     <div class="dd__changelog">
                         <strong>Change log</strong>
-                        <ul>
-                            <li>Example entry &mdash; lowered the answer confidence threshold from 70 to 62.</li>
-                            <li>Example entry &mdash; added &ldquo;Tax filings&rdquo; to Always route to a person.</li>
-                            <li>Example entry &mdash; enabled &ldquo;Escalate when sources conflict&rdquo;.</li>
-                        </ul>
-                        <p class="dd__tableHint">Illustrative only &mdash; no real change history is tracked here.</p>
+                        @if (_changes.Count == 0)
+                        {
+                            <p class="dd__tableHint">No changes recorded yet. Every save or reset of a setting on this dashboard is written here with who made it, when, and the old and new value.</p>
+                        }
+                        else
+                        {
+                            <table class="dd__table">
+                                <thead><tr><th>When</th><th>Who</th><th>Setting</th><th>Was</th><th>Now</th></tr></thead>
+                                <tbody>
+                                    @foreach (var c in _changes)
+                                    {
+                                        <tr>
+                                            <td>@c.TimestampUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>@c.Who</td>
+                                            <td>@c.Area: @c.Setting</td>
+                                            <td>@(c.Old ?? "")</td>
+                                            <td>@(c.New ?? "")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <p class="dd__tableHint">The last @_changes.Count changes, newest first. Kept in <code>@SettingsChangeLog.FileName</code> in the project folder (this computer only, not in Git). Secret values are never written.</p>
+                        }
                     </div>
                 }
 
@@ -106,8 +121,9 @@ else
                             <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
                         </div>
                         <p class="dd__cardHint">
-                            Below this level, Isa offers the closest sections plus a human
-                            contact instead of an answer.
+                            An AI answer's confidence (the search strength averaged with the share
+                            of its sentences the passage supports) below this level counts as a failed check. See the
+                            strong-match mark for what happens next.
                         </p>
                         <input type="range" class="dd__slider" min="0" max="100" step="1"
                                value="@ConfidenceThreshold"
@@ -126,8 +142,9 @@ else
                         </div>
                         <p class="dd__cardHint">
                             Each sentence of an AI-written answer is scored against the approved
-                            passage it cites. A sentence scoring below this mark fails the check
-                            and the answer goes to a person. Default @OutputSettings.NliDefault.ToString("0.00").
+                            passage it cites. A sentence scoring below this mark fails the check. If most of the
+                            answer is supported, the failing sentences are dropped; otherwise Isa shows ISACA's own words or
+                            passes the question to a person (see the strong-match mark). Default @OutputSettings.NliDefault.ToString("0.00").
                         </p>
                         <input type="range" class="dd__slider" min="0" max="100" step="1"
                                value="@NliThresholdPct"
@@ -148,102 +165,149 @@ else
 
                     <div class="dd__card">
                         <div class="dd__cardHeader">
-                            <h3>Always route to a person</h3>
+                            <h3>Strong-match mark</h3>
+                            <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            When an AI-written answer fails a check, Isa looks at how well the search matched.
+                            At or above this mark, she shows ISACA's own words from the passage instead. Below it,
+                            the question goes to a person. At 0.00 every match counts as strong, so a failed check
+                            never goes to a person. Default @OutputSettings.StrongMatchDefault.ToString("0.00").
+                        </p>
+                        <input type="range" class="dd__slider" min="0" max="100" step="1"
+                               value="@StrongMatchPct"
+                               @oninput="OnStrongMatchChanged" />
+                        <div class="dd__sliderLabels">
+                            <span>More ISACA quotes</span>
+                            <span class="dd__sliderValue">@((StrongMatchPct / 100.0).ToString("0.00"))</span>
+                            <span>More handoffs</span>
+                        </div>
+                        <p class="dd__tableHint">
+                            Search by meaning scores between the search pass mark and 1.00, so a mark below the
+                            search pass mark has the same effect as 0.00.
+                        </p>
+                    </div>
+
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Search pass mark</h3>
+                            <span class="dd__tag dd__tag--green">SEARCH</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            How close an approved passage must be to the question for search by meaning to use it.
+                            Lower: more questions reach the AI. Higher: more questions go to a person as
+                            "not covered", and fewer AI calls. Default @OutputSettings.SearchPassMarkDefault.ToString("0.00").
+                        </p>
+                        <input type="range" class="dd__slider" min="0" max="100" step="1"
+                               value="@SearchPassMarkPct"
+                               @oninput="OnSearchPassMarkChanged" />
+                        <div class="dd__sliderLabels">
+                            <span>More AI answers</span>
+                            <span class="dd__sliderValue">@((SearchPassMarkPct / 100.0).ToString("0.00"))</span>
+                            <span>More handoffs</span>
+                        </div>
+                        <p class="dd__tableHint">
+                            Unrelated text still scores about 0.70 with this embedding model, so marks below 0.75
+                            let in passages that don't match. See Testing &gt; Vector search test for real scores.
+                        </p>
+                    </div>
+
+                    <div class="dd__card dd__card--wide">
+                        <div class="dd__cardHeader">
+                            <h3>Rules that hand a question to a person or stop it</h3>
                             <span class="dd__tag dd__tag--green">INPUT COMPLIANCE</span>
                         </div>
                         <p class="dd__cardHint">
-                            Questions on these topics skip the AI and go straight to Ticketing.
+                            Read from the rules files in <code>rules\</code> (@RuleSet.RuleCount rules in @RuleSet.FileCount files), the same
+                            ones the live question check uses. To change what goes to a person, change the rules file; the Rule tester tab
+                            shows what each rule does for a chapter and role.
                         </p>
-                        <div class="dd__chips">
-                            @foreach (var topic in RoutedTopics)
-                            {
-                                <span class="dd__chip">
-                                    @topic
-                                    <button type="button" class="dd__chipRemove"
-                                            @onclick="@(() => RemoveTopic(topic))"
-                                            aria-label="Remove @topic">&times;</button>
-                                </span>
-                            }
-                            @if (_addingTopic)
-                            {
-                                <span class="dd__chip dd__chip--editing">
-                                    <input class="dd__chipInput" @bind="_newTopic" @bind:event="oninput"
-                                           placeholder="Topic name"
-                                           @onkeydown="OnNewTopicKeyDown" />
-                                    <button type="button" class="dd__chipConfirm" @onclick="ConfirmAddTopic"
-                                            aria-label="Add topic">&#10003;</button>
-                                    <button type="button" class="dd__chipRemove" @onclick="CancelAddTopic"
-                                            aria-label="Cancel">&times;</button>
-                                </span>
-                            }
-                            else
-                            {
-                                <button type="button" class="dd__chip dd__chip--add" @onclick="AddTopicPrompt">
-                                    + Add topic
-                                </button>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="dd__card">
-                        <div class="dd__cardHeader">
-                            <h3>Output checks</h3>
-                            <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
-                        </div>
-                        <div class="dd__checklist">
-                            <label class="dd__check">
-                                <input type="checkbox" @bind="BlockUncited" />
-                                Block any answer without a cited source
-                            </label>
-                            <label class="dd__check">
-                                <input type="checkbox" @bind="EscalateConflicts" />
-                                Escalate when sources conflict
-                            </label>
-                            <label class="dd__check">
-                                <input type="checkbox" @bind="EscalateOnFailure" />
-                                Escalate to Complex AI on check failure
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="dd__card">
-                        <div class="dd__cardHeader">
-                            <h3>Role access by content tier</h3>
-                            <span class="dd__tag dd__tag--orange">ACCESS CONTROL</span>
-                        </div>
                         <table class="dd__table">
-                            <thead>
-                                <tr>
-                                    <th>Role</th>
-                                    <th>Tier 1</th>
-                                    <th>Tier 2</th>
-                                    <th>Tier 3</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Rule</th><th>What it covers</th><th>What happens</th><th>File</th></tr></thead>
                             <tbody>
-                                @foreach (var role in ContentRoles)
+                                @foreach (var r in HandOffRules)
                                 {
                                     <tr>
-                                        <td>@role.Name</td>
-                                        @for (var t = 1; t <= 3; t++)
-                                        {
-                                            var tier = t;
-                                            <td>
-                                                <input type="checkbox" checked="@role.HasTier(tier)"
-                                                       @onchange="@(e => role.SetTier(tier, (bool)e.Value!))" />
-                                            </td>
-                                        }
+                                        <td>@r.RuleId</td>
+                                        <td>@r.Title</td>
+                                        <td>@(r.Outcome == "stop" ? "Stopped (outside scope)" : "Passed to a person")</td>
+                                        <td>@r.File</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
-                        <p class="dd__tableHint">Example defaults &mdash; adjust to match the real access policy.</p>
                     </div>
 
                     <div class="dd__card dd__card--wide">
-                        @TestingConsole
+                        <div class="dd__cardHeader">
+                            <h3>Output checks, as they run now</h3>
+                            <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            What an AI-written answer goes through before it is shown, in order. Read from the live settings; change the numbers
+                            with the sliders above. Direct answers from the database are ISACA's own words and skip most of these.
+                        </p>
+                        <table class="dd__table">
+                            <thead><tr><th>Check</th><th>Now</th><th>What it does</th></tr></thead>
+                            <tbody>
+                                @foreach (var row in OutputCheckRows)
+                                {
+                                    <tr><td>@row.Name</td><td>@row.State</td><td>@row.Note</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="dd__card dd__card--wide">
+                        <div class="dd__cardHeader">
+                            <h3>Testing console</h3>
+                            <span class="dd__tag dd__tag--green">ADMIN</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            Questions are tested through the real pipeline (real search, model, rules, checks and tickets) in the Testing console tab,
+                            which also has the trace lookup. The Translation test, Vector search test and Rule tester tabs test those parts on their own.
+                        </p>
+                        <button type="button" class="dd__btn dd__btn--primary" @onclick='@(() => ActiveSection = "testing")'>Open the Testing console</button>
                     </div>
                 </div>
+            }
+            else if (ActiveSection == "roleaccess")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Role access</h1>
+                </div>
+                <div class="dd__card">
+                    <div class="dd__cardHeader">
+                        <h3>Who can do what</h3>
+                        <span class="dd__tag dd__tag--orange">ACCESS CONTROL</span>
+                    </div>
+                    <p class="dd__cardHint">The Keycloak roles Isa checks. Accounts and their roles are in Keycloak (the realm is built from <code>directory\keycloak_accounts.csv</code>).</p>
+                    <table class="dd__table">
+                        <thead><tr><th>Role</th><th>What it allows</th><th>Checked by</th></tr></thead>
+                        <tbody>
+                            <tr><td>chat_user</td><td>Ask Isa questions. Without it a question is refused (403).</td><td>AccessControlAdapter, on every question</td></tr>
+                            <tr><td>dashboard_dev</td><td>The team's Backstage: this dashboard, the Config page, the Testing console and Content import.</td><td>DevAccessService, when each page opens</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="dd__tableHint">
+                        Isa has no content tiers: the approved passages carry no audience tag, so every signed-in person with chat_user can be given any of them.
+                        What differs by person is the rules, which apply by the chapter and the chapter role from the sign-in profile (see the rules list on Compliance policy).
+                    </p>
+                </div>
+            }
+            else if (ActiveSection == "frontend")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Front end</h1>
+                </div>
+                <DevFrontEnd />
+            }
+            else if (ActiveSection == "health")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Health alerts</h1>
+                </div>
+                <DevHealthAlerts />
             }
             else if (ActiveSection == "testing")
             {
@@ -254,6 +318,24 @@ else
                     @* T5W: runs the real pipeline, always shows dev tags and reasons,
                        has the trace lookup, and needs the dashboard_dev role. *@
                     <DevTesting />
+                </div>
+            }
+            else if (ActiveSection == "translation")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Translation test</h1>
+                </div>
+                <div class="dd__card">
+                    <TranslationTest />
+                </div>
+            }
+            else if (ActiveSection == "vectorsearch")
+            {
+                <div class="dd__topbar">
+                    <h1 class="dd__pageTitle">Vector search test</h1>
+                </div>
+                <div class="dd__card">
+                    <VectorSearchTest />
                 </div>
             }
             else if (ActiveSection == "ruletester")
@@ -409,8 +491,7 @@ else
                     <h1 class="dd__pageTitle">@CurrentSectionLabel</h1>
                 </div>
                 <div class="dd__stub">
-                    <p>Not built out for this demo &mdash; Compliance policy (and the shared
-                    Testing console) is the only fully-designed tab so far.</p>
+                    <p>Not built yet.</p>
                 </div>
             }
         </section>
@@ -427,8 +508,10 @@ else
         new("compliance", "Compliance policy"),
         new("roleaccess", "Role access"),
         new("models", "Models, RAG, access & ticketing"),
-        new("frontend", "Front end (optional)"),
+        new("frontend", "Front end"),
         new("testing", "Testing console"),
+        new("translation", "Translation test"),
+        new("vectorsearch", "Vector search test"),
         new("ruletester", "Rule tester"),
         new("content", "Content import"),
         new("services", "Services (this computer)"),
@@ -462,6 +545,18 @@ else
     private string SavedLocationLabel => ServiceSettings.Location.Equals("Remote", StringComparison.OrdinalIgnoreCase)
         ? $"Remote ({ServiceSettings.RemoteHost})" : "Local";
 
+    private (string Location, string Host, bool Voice, bool Translation) ServiceSnapshot() =>
+        (ServiceSettings.Location, ServiceSettings.RemoteHost, ServiceSettings.VoiceOn, ServiceSettings.TranslationOn);
+
+    private void LogServiceChanges(string who, (string Location, string Host, bool Voice, bool Translation) before)
+    {
+        ChangeLog.Add(who, "Services", "Where the services run", before.Location, ServiceSettings.Location);
+        ChangeLog.Add(who, "Services", "Remote host", before.Host, ServiceSettings.RemoteHost);
+        ChangeLog.Add(who, "Services", "Voice", before.Voice ? "on" : "off", ServiceSettings.VoiceOn ? "on" : "off");
+        ChangeLog.Add(who, "Services", "Translation", before.Translation ? "on" : "off", ServiceSettings.TranslationOn ? "on" : "off");
+        if (_changeLogVisible) _changes = ChangeLog.Recent(50);
+    }
+
     private sealed record ServiceRow(string Key, string Name, string Url, string HealthPath, bool Off);
 
     private IEnumerable<ServiceRow> ServiceRows => new[]
@@ -473,13 +568,16 @@ else
         new ServiceRow("Translation:Endpoint", "Translation (NLLB-200)", StartServices.Endpoints["Translation:Endpoint"], "/health", !ServiceSettings.TranslationOn),
     };
 
-    private void SaveServices()
+    private async Task SaveServices()
     {
         if (!Settings.CanAccessDevDashboard && !_isDev) return;
         try
         {
+            var who = await WhoAsync();
+            var before = ServiceSnapshot();
             ServiceSettings.Save(_svcLocation, _svcRemoteHost, _svcVoice, _svcTranslation);
             LoadServiceSettings();
+            LogServiceChanges(who, before);
             _svcCheck.Clear();
             _svcMessage = "Saved. Voice " + (_svcVoice ? "on" : "off") + " and translation " + (_svcTranslation ? "on" : "off") + " apply now."
                 + (SavedLocationLabel != CurrentLocationLabel ? " Restart Isa to use " + SavedLocationLabel + "." : "");
@@ -492,13 +590,16 @@ else
         }
     }
 
-    private void ResetServices()
+    private async Task ResetServices()
     {
         if (!Settings.CanAccessDevDashboard && !_isDev) return;
         try
         {
+            var who = await WhoAsync();
+            var before = ServiceSnapshot();
             ServiceSettings.Reset();
             LoadServiceSettings();
+            LogServiceChanges(who, before);
             _svcCheck.Clear();
             _svcMessage = "Removed " + ServiceSettings.FileName + ": appsettings.json applies"
                 + (SavedLocationLabel != CurrentLocationLabel ? ". Restart Isa to use " + SavedLocationLabel + "." : ".");
@@ -573,14 +674,22 @@ else
         }
     }
 
-    private void SaveSalesforce()
+    private async Task SaveSalesforce()
     {
         if (!Settings.CanAccessDevDashboard && !_isDev) return;
         try
         {
+            var who = await WhoAsync();
+            var old = DevKeys.GetSalesforce();
+            var secretChanged = !string.IsNullOrEmpty(_sfSecret);
             DevKeys.SaveSalesforce(_sfOrgUrl, _sfApiVersion, _sfClientId, _sfSecret);
             _sfSecret = "";
             LoadSalesforce();
+            ChangeLog.Add(who, "Ticketing (Salesforce)", "Org URL", old.OrgUrl, _sfOrgUrl);
+            ChangeLog.Add(who, "Ticketing (Salesforce)", "API version", old.ApiVersion, _sfApiVersion);
+            ChangeLog.Add(who, "Ticketing (Salesforce)", "Client ID", old.ClientId, _sfClientId);
+            if (secretChanged) ChangeLog.Add(who, "Ticketing (Salesforce)", "Client secret", "(hidden)", "changed (value not logged)");
+            if (_changeLogVisible) _changes = ChangeLog.Recent(50);
             _sfMessage = "Saved to dev-keys.json";
             _sfMessageIsError = false;
         }
@@ -595,16 +704,30 @@ else
 
     // ---- Compliance policy state ---------------------------------
 
-    // Real settings: the two Output Compliance thresholds are saved by OutputComplianceSettings
-    // and read by the output compliance stage on every answer.
+    // Real settings: the four answer-quality numbers are saved by OutputComplianceSettings and read on every question
+    // (NLI, confidence and strong match by the output compliance stage; the search pass mark by vector search).
     private int ConfidenceThreshold = (int)Math.Round(OutputComplianceSettings.DefaultConfidence * 100);
     private int NliThresholdPct = (int)Math.Round(OutputComplianceSettings.DefaultNli * 100);
+    private int StrongMatchPct = (int)Math.Round(OutputComplianceSettings.DefaultStrongMatch * 100);
+    private int SearchPassMarkPct = (int)Math.Round(OutputComplianceSettings.DefaultSearchPassMark * 100);
     private string _saveMessage = "";
 
     private void LoadOutputSettings()
     {
         ConfidenceThreshold = (int)Math.Round(OutputSettings.ConfidenceThreshold * 100);
         NliThresholdPct = (int)Math.Round(OutputSettings.NliThreshold * 100);
+        StrongMatchPct = (int)Math.Round(OutputSettings.StrongMatch * 100);
+        SearchPassMarkPct = (int)Math.Round(OutputSettings.SearchPassMark * 100);
+    }
+
+    private void OnStrongMatchChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value)) StrongMatchPct = value;
+    }
+
+    private void OnSearchPassMarkChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value)) SearchPassMarkPct = value;
     }
 
     private void OnNliChanged(ChangeEventArgs e)
@@ -615,12 +738,15 @@ else
         }
     }
 
-    private void ResetOutputSettings()
+    private async Task ResetOutputSettings()
     {
         if (!Settings.CanAccessDevDashboard && !_isDev) return;
+        var who = await WhoAsync();
+        var before = (Nli: OutputSettings.NliThreshold, Conf: OutputSettings.ConfidenceThreshold, Strong: OutputSettings.StrongMatch, Search: OutputSettings.SearchPassMark);
         OutputSettings.ResetToDefaults();
         LoadOutputSettings();
-        _saveMessage = "Output Compliance settings reset to the appsettings.json values.";
+        LogOutputChanges(who, before.Nli, before.Conf, before.Strong, before.Search);
+        _saveMessage = "Compliance settings reset to the appsettings.json values.";
     }
 
     private void OnConfidenceChanged(ChangeEventArgs e)
@@ -631,83 +757,89 @@ else
         }
     }
 
-    private bool BlockUncited = true;
-    private bool EscalateConflicts = true;
-    private bool EscalateOnFailure;
+    // ---- Lists shown on the Compliance policy page (read-only, from the live rules and settings) ----
 
-    private readonly List<string> RoutedTopics = new() { "Legal", "Financial", "Personnel", "Tax filings" };
-    private bool _addingTopic;
-    private string _newTopic = "";
+    private IEnumerable<IsaChatApp.Services.Rules.RuleSummary> HandOffRules =>
+        RuleSet.AllRules().Where(r => r.Outcome == "hand_off" || r.Outcome == "stop")
+            .OrderBy(r => r.RuleId, StringComparer.Ordinal);
 
-    private void AddTopicPrompt()
+    private sealed record CheckRow(string Name, string State, string Note);
+
+    private bool ConfigOn(string key, bool fallback)
     {
-        _addingTopic = true;
-        _newTopic = "";
+        var v = Config[key];
+        return string.IsNullOrWhiteSpace(v) ? fallback : !string.Equals(v, "false", StringComparison.OrdinalIgnoreCase);
     }
 
-    private void ConfirmAddTopic()
+    private static string Num(double v) => v.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+
+    private IEnumerable<CheckRow> OutputCheckRows
     {
-        var topic = _newTopic.Trim();
-        if (topic.Length > 0 && !RoutedTopics.Contains(topic, StringComparer.OrdinalIgnoreCase))
+        get
         {
-            RoutedTopics.Add(topic);
-        }
-        _addingTopic = false;
-    }
-
-    private void CancelAddTopic() => _addingTopic = false;
-
-    private void OnNewTopicKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter") ConfirmAddTopic();
-        else if (e.Key == "Escape") CancelAddTopic();
-    }
-
-    private void RemoveTopic(string topic) => RoutedTopics.Remove(topic);
-
-    private sealed class ContentRole
-    {
-        public string Name { get; }
-        private readonly HashSet<int> _tiers;
-
-        public ContentRole(string name, params int[] tiers)
-        {
-            Name = name;
-            _tiers = new HashSet<int>(tiers);
-        }
-
-        public bool HasTier(int tier) => _tiers.Contains(tier);
-
-        public void SetTier(int tier, bool on)
-        {
-            if (on) _tiers.Add(tier);
-            else _tiers.Remove(tier);
+            var fixedState = ConfigOn("OutputCompliance:FixedChecks", true) ? "On" : "Off";
+            var rulesState = ConfigOn("Rules:Engine", true) ? "On" : "Off";
+            return new[]
+            {
+                new CheckRow("Source check", "Always on", "The passage the answer cites must be one the search retrieved. If not, the question goes to a person."),
+                new CheckRow("Source still says TBD", fixedState, "A passage that is not finished is never reworded. The question goes to a person."),
+                new CheckRow("Rule recheck", rulesState, "The written answer is checked against each applicable rule's forbidden phrases. A hit follows that rule's outcome (a person, or a stop)."),
+                new CheckRow("Answer shape", fixedState, "A \"how many\" question needs a number, \"when\" a date or period, \"who\" a role or team. If not, the question goes to a person."),
+                new CheckRow("Answer support (NLI)", "Pass mark " + Num(OutputSettings.NliThreshold), "Each sentence is scored against the cited passage. Failing sentences are dropped when most of the answer is supported."),
+                new CheckRow("Numbers, must-stays-must, contact details", fixedState, "A number, a \"must\" that became \"should\", or an email or phone number that is not in the passage counts as a failed check."),
+                new CheckRow("Confidence", "Threshold " + Num(OutputSettings.ConfidenceThreshold), "Search strength averaged with the share of supported sentences. Below the threshold counts as a failed check."),
+                new CheckRow("After a failed check", "Strong-match mark " + Num(OutputSettings.StrongMatch), "A search score at or above the mark shows ISACA's own words from the passage; below it the question goes to a person."),
+            };
         }
     }
 
-    private readonly List<ContentRole> ContentRoles = new()
-    {
-        new ContentRole("Chapter leader", 1),
-        new ContentRole("Chapter president", 1, 2),
-        new ContentRole("ISACA staff", 1, 2, 3),
-    };
-
-    // ---- Save changes / change log (illustrative only) ------------
+    // ---- Save changes / change log ------------------------------------
 
     private bool _savedMessageVisible;
     private bool _changeLogVisible;
+    private IReadOnlyList<SettingsChangeLog.Entry> _changes = Array.Empty<SettingsChangeLog.Entry>();
 
-    private void ToggleChangeLog() => _changeLogVisible = !_changeLogVisible;
+    private void ToggleChangeLog()
+    {
+        _changeLogVisible = !_changeLogVisible;
+        if (_changeLogVisible) _changes = ChangeLog.Recent(50);
+    }
+
+    /// <summary>Who is making a change: the signed-in name, or a note that nobody is signed in (the role picker on this computer).</summary>
+    private async Task<string> WhoAsync()
+    {
+        try
+        {
+            var name = AuthState is null ? null : (await AuthState).User.Identity?.Name;
+            if (!string.IsNullOrWhiteSpace(name)) return name!;
+        }
+        catch { }
+        return "not signed in (this computer)";
+    }
+
+    private void LogOutputChanges(string who, double nli, double conf, double strong, double search)
+    {
+        ChangeLog.Add(who, "Compliance policy", "NLI pass mark", Num(nli), Num(OutputSettings.NliThreshold));
+        ChangeLog.Add(who, "Compliance policy", "Answer confidence threshold", Num(conf), Num(OutputSettings.ConfidenceThreshold));
+        ChangeLog.Add(who, "Compliance policy", "Strong-match mark", Num(strong), Num(OutputSettings.StrongMatch));
+        ChangeLog.Add(who, "Compliance policy", "Search pass mark", Num(search), Num(OutputSettings.SearchPassMark));
+        if (_changeLogVisible) _changes = ChangeLog.Recent(50);
+    }
 
     private async Task SaveChanges()
     {
         if (!Settings.CanAccessDevDashboard && !_isDev) return;
         try
         {
-            OutputSettings.Save(NliThresholdPct / 100.0, ConfidenceThreshold / 100.0);
-            _saveMessage = "Saved: NLI pass mark " + (NliThresholdPct / 100.0).ToString("0.00")
-                + ", confidence threshold " + (ConfidenceThreshold / 100.0).ToString("0.00")
-                + ". Applies to the next question. The other controls on this page are still illustrative.";
+            var who = await WhoAsync();
+            var before = (Nli: OutputSettings.NliThreshold, Conf: OutputSettings.ConfidenceThreshold, Strong: OutputSettings.StrongMatch, Search: OutputSettings.SearchPassMark);
+            OutputSettings.Save(NliThresholdPct / 100.0, ConfidenceThreshold / 100.0, StrongMatchPct / 100.0, SearchPassMarkPct / 100.0);
+            LogOutputChanges(who, before.Nli, before.Conf, before.Strong, before.Search);
+            _saveMessage = "Saved: NLI pass mark " + Num(OutputSettings.NliThreshold)
+                + ", confidence threshold " + Num(OutputSettings.ConfidenceThreshold)
+                + ", strong-match mark " + Num(OutputSettings.StrongMatch)
+                + ", search pass mark " + Num(OutputSettings.SearchPassMark)
+                + ". Applies to the next question.";
         }
         catch (Exception ex)
         {
@@ -719,109 +851,4 @@ else
         _savedMessageVisible = false;
         await InvokeAsync(StateHasChanged);
     }
-
-    // ---- Testing console --------------------------------------------
-    // Simulated pipeline: not a real model/RAG/ticketing call, but it
-    // does read the policy state above it, so a test run's results
-    // move when you move the confidence slider, edit the routed-topic
-    // list, or change the role-by-tier grid.
-
-    private string TestQuestion = "";
-    private string TestRole = "Chapter leader";
-    private bool _isRunning;
-    private TestRunResult? TestResult;
-
-    private sealed class TestRunResult
-    {
-        public required string Translation { get; init; }
-        public required string AccessControl { get; init; }
-        public required string InputCompliance { get; init; }
-        public required int Confidence { get; init; }
-        public required string OutputCompliance { get; init; }
-        public required string Ticketing { get; init; }
-    }
-
-    private async Task RunTest()
-    {
-        if (string.IsNullOrWhiteSpace(TestQuestion) || _isRunning) return;
-
-        _isRunning = true;
-        TestResult = null;
-        StateHasChanged();
-        await Task.Delay(500);
-
-        var role = ContentRoles.FirstOrDefault(r => r.Name == TestRole) ?? ContentRoles[0];
-        var accessOk = role.HasTier(1);
-        var isRoutedTopic = RoutedTopics.Any(t =>
-            TestQuestion.Contains(t, StringComparison.OrdinalIgnoreCase));
-
-        var seed = TestQuestion.Length * 31 + TestRole.Length;
-        var confidence = isRoutedTopic ? 0 : 35 + new Random(seed).Next(0, 60);
-        var outputPass = !isRoutedTopic && confidence >= ConfidenceThreshold;
-
-        TestResult = new TestRunResult
-        {
-            Translation = "pass",
-            AccessControl = accessOk ? "pass" : "fail",
-            InputCompliance = isRoutedTopic ? "routed" : "pass",
-            Confidence = confidence,
-            OutputCompliance = outputPass ? "pass" : "handoff",
-            Ticketing = isRoutedTopic || !outputPass ? "routed" : "not routed",
-        };
-
-        _isRunning = false;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private RenderFragment TestingConsole => @<div>
-        <div class="dd__cardHeader">
-            <h3>Testing console</h3>
-            <span class="dd__tag dd__tag--green">ADMIN</span>
-        </div>
-        <div class="dd__testRow">
-            <input type="text" class="dd__testInput"
-                   placeholder="Type a test question and pick a role to run it as..."
-                   @bind="TestQuestion" @bind:event="oninput" />
-            <select class="dd__testRole" @bind="TestRole">
-                @foreach (var role in ContentRoles)
-                {
-                    <option value="@role.Name">@role.Name</option>
-                }
-            </select>
-            <button type="button" class="dd__btn dd__btn--primary" @onclick="RunTest" disabled="@_isRunning">
-                @(_isRunning ? "Running..." : "Run")
-            </button>
-        </div>
-        <p class="dd__testHint">
-            Simulated pipeline &mdash; not wired to a real model, RAG index, or ticketing
-            system, but it does respect the confidence threshold, routed topics, and
-            role-by-tier grid above.
-        </p>
-        <div class="dd__resultsGrid">
-            <div class="dd__resultTile">
-                <span class="dd__tag dd__tag--orange">TRANSLATION</span>
-                <span class="dd__resultValue">@(TestResult?.Translation ?? "—")</span>
-            </div>
-            <div class="dd__resultTile">
-                <span class="dd__tag dd__tag--orange">ACCESS CONTROL</span>
-                <span class="dd__resultValue">@(TestResult?.AccessControl ?? "—")</span>
-            </div>
-            <div class="dd__resultTile">
-                <span class="dd__tag dd__tag--green">INPUT COMPLIANCE</span>
-                <span class="dd__resultValue">@(TestResult?.InputCompliance ?? "—")</span>
-            </div>
-            <div class="dd__resultTile">
-                <span class="dd__tag dd__tag--purple">DATABASE SEARCH</span>
-                <span class="dd__resultValue">@(TestResult is null ? "—" : $"{TestResult.Confidence}%")</span>
-            </div>
-            <div class="dd__resultTile">
-                <span class="dd__tag dd__tag--green">OUTPUT COMPLIANCE</span>
-                <span class="dd__resultValue">@(TestResult?.OutputCompliance ?? "—")</span>
-            </div>
-            <div class="dd__resultTile">
-                <span class="dd__tag dd__tag--purple">TICKETING</span>
-                <span class="dd__resultValue">@(TestResult?.Ticketing ?? "—")</span>
-            </div>
-        </div>
-    </div>;
 }

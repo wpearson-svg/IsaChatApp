@@ -133,10 +133,12 @@ function Add-Btn($panel, $text, $tip, [scriptblock]$onClick) {
 
 # ---- LEFT: app, keycloak, tests, open -----------------------------------
 
-$pApp = New-Group $left 'App' 3
+$pApp = New-Group $left 'App' 4
 Add-Btn $pApp 'Start Isa' 'start-isa.bat: checks prerequisites, starts the app in the background.' { Run-Bat 'start-isa.bat' }
 Add-Btn $pApp 'Start Isa (debug window)' 'start-isa-debug.bat: runs the app in a visible window, errors show there.' { Run-Bat 'start-isa-debug.bat' }
 Add-Btn $pApp 'Start Isa (force AI-check failure)' 'Stop Isa first. Starts Isa with OutputCompliance__ForceFail=source, so a model answer fails the source check. Use it for the Forced failure test, then Stop Isa and Start Isa normally.' { Run-Cmd 'set "OutputCompliance__ForceFail=source" && start-isa.bat' }
+Add-Btn $pApp 'Start Isa (force NLI failure)' 'Stop Isa first. Starts Isa with OutputCompliance__ForceFail=nli, so a model answer fails the accuracy check. Use it with Run test paths (forced NLI), then Stop Isa and Start Isa normally.' { Run-Cmd 'set "OutputCompliance__ForceFail=nli" && start-isa.bat' }
+Add-Btn $pApp 'Start Isa (force rule-recheck failure)' 'Stop Isa first. Starts Isa with OutputCompliance__ForceFail=rule, so a model answer fails the rule recheck (the input rules applied to the written answer). Use it with Run test paths (forced rule recheck), then Stop Isa and Start Isa normally.' { Run-Cmd 'set "OutputCompliance__ForceFail=rule" && start-isa.bat' }
 Add-Btn $pApp 'Stop Isa' 'stop-isa.bat: stops the background app and frees port 5067.' { Run-Bat 'stop-isa.bat' }
 Add-Btn $pApp 'Stop Isa (debug)' 'stop-isa-debug.bat' { Run-Bat 'stop-isa-debug.bat' }
 Add-Btn $pApp 'Watch problems' 'watch-isa.bat: shows warnings and errors from the running app.' { Run-Bat 'watch-isa.bat' }
@@ -164,10 +166,15 @@ Add-Btn $pHelp 'Embeddings logs' 'docker compose logs embeddings' { Run-Cmd 'doc
 Add-Btn $pHelp 'Build search vectors' 'python content\build_vectors.py: needs embeddings running and content.db built. Writes data\vectors.db.' { Run-Ps 'python content\build_vectors.py' }
 
 $pTest = New-Group $left 'Tests (the app must be running)' 3
-Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks and the test paths (five questions, Spanish, English), signed in as d.whitfield.' { Run-Script 'test-paths.ps1' '' }
+Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks, then one real question for every path (direct hit, model, stopped, no content, sensitive, Spanish, trimmed, ISACA words, source/rule/shape/contact checks, rule stops and hand-offs, AI says no), signed in as d.whitfield. Warms the model first. Reads the strong-match mark from the settings file and runs paths 9 and 13 (mark 0.00) or path 14 (mark 0.85).' { Run-Script 'test-paths.ps1' '' }
+Add-Btn $pTest 'Run test paths (all questions)' 'test-paths.ps1 -AllQuestions: also runs the spare questions for each path (about 45 questions, slow).' { Run-Script 'test-paths.ps1' '-AllQuestions' }
+Add-Btn $pTest 'Run test paths (weak match)' 'test-paths.ps1 -MatchMode weak: path 14 only needs the strong-match mark at 0.85 (Dev Dashboard, Compliance policy). A failed check on a weak match goes to a person.' { Run-Script 'test-paths.ps1' '-MatchMode weak -Only weak' }
 Add-Btn $pTest 'Run test paths (no token)' 'test-paths.ps1 -NoToken: sends no token, only works while DevBypass is on.' { Run-Script 'test-paths.ps1' '-NoToken' }
 Add-Btn $pTest 'Run test paths (model off)' 'test-paths.ps1 -ModelOff: sends the model call to a dead address (no need to quit Ollama). Checks a failed model call gives an error and a ticket, not a hang.' { Run-Script 'test-paths.ps1' '-ModelOff' }
 Add-Btn $pTest 'Run test paths (forced failure)' 'test-paths.ps1 -ForcedFailure: start Isa with the button Start Isa (force AI-check failure) first. Checks a source that was not retrieved is escalated.' { Run-Script 'test-paths.ps1' '-ForcedFailure' }
+Add-Btn $pTest 'Run test paths (forced NLI)' 'test-paths.ps1 -ForcedCheck nli: start Isa with Start Isa (force NLI failure) first. Checks an answer that fails the accuracy check goes to a person.' { Run-Script 'test-paths.ps1' '-ForcedCheck nli' }
+Add-Btn $pTest 'Run test paths (forced rule recheck)' 'test-paths.ps1 -ForcedCheck rule: start Isa with Start Isa (force rule-recheck failure) first. Checks an answer that fails the rule recheck goes to a person.' { Run-Script 'test-paths.ps1' '-ForcedCheck rule' }
+Add-Btn $pTest 'Find failing questions' 'find-failing-questions.ps1: sends each candidate question in test-questions-candidates.csv to Isa 3 times and shows which output checks REALLY fail (nothing forced). A question that fails the same check every run is a good test question. Run it with the model warm.' { Run-Script 'find-failing-questions.ps1' '' }
 Add-Btn $pTest 'Run failure tests' 'test-failures.ps1: system errors and fail states (bad requests, odd questions, bad tokens, load, a stage crashing), NOT step pass/fail. Signed in as d.whitfield.' { Run-Script 'test-failures.ps1' '' }
 Add-Btn $pTest 'Run token tests (forged)' 'test-tokens.ps1: sends forged and tampered tokens; every one must be refused (401), a real one accepted. Signed in as d.whitfield.' { Run-Script 'test-tokens.ps1' '-User d.whitfield' }
 Add-Btn $pTest 'Run token tests (Keycloak restart)' 'test-tokens.ps1 -Mode Restart: restarts the Keycloak container, then checks a new token works without restarting Isa.' { Run-Script 'test-tokens.ps1' '-User d.whitfield -Mode Restart' }

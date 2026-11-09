@@ -17,12 +17,17 @@ public class UsageReportService
     private readonly string _usagePath;
     private readonly string _contentPath;
     private readonly UsageSummaryService _usage;   // also makes sure usage.db exists
+    private readonly Rules.RuleEngine _rules;      // chapter -> region (directory/chapters.csv)
+    private readonly int _reviewAfterDays;
+    private readonly string _contentFolder;
 
     public static readonly string[] Categories = { "Governance", "Operations", "Programs", "Products" };
 
-    public UsageReportService(IConfiguration config, UsageSummaryService usage)
+    public UsageReportService(IConfiguration config, UsageSummaryService usage, Rules.RuleEngine rules)
     {
-        _usage = usage;
+        _usage = usage; _rules = rules;
+        _reviewAfterDays = Math.Clamp(config.GetValue("ContentHealth:ReviewAfterDays", 365), 30, 3650);
+        _contentFolder = config["ContentHealth:ContentFolder"] ?? "content";
         _usagePath = config["Usage:Path"] ?? Path.Combine("data", "usage.db");
         _contentPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
     }
@@ -33,6 +38,14 @@ public class UsageReportService
     public sealed record RouteSplit(string Category, int Direct, int Ai);
     public sealed record Group(string Name, int Questions, int Escalated, int Resolved, int NotQuite);
     public sealed record FeedbackDay(string Day, int Resolved, int NotQuite);
+    /// <summary>Questions whose best match was the same approved passage (so they asked about the same thing).</summary>
+    public sealed record Cluster(string Passage, int Questions, int People, int Escalated);
+    public sealed record OldDoc(string Title, int Days);
+    /// <summary>How old the approved documents are. Dated = documents with a known last-updated date.</summary>
+    public sealed record ContentAgeInfo(int Documents, int Dated, int ReviewAfterDays, int Overdue, IReadOnlyList<OldDoc> Oldest)
+    {
+        public static ContentAgeInfo None => new(0, 0, 365, 0, new List<OldDoc>());
+    }
 
     public sealed record Snapshot(
         int Total, int Answered, int Stopped, int Escalated, int ZeroMatch,
@@ -51,12 +64,16 @@ public class UsageReportService
         int RepeatedQuestions, int RepeatedAcrossPeople,
         long PromptTokens, long CompletionTokens, int QuestionsWithTokens,
         int TicketsOpened, int TicketsClosed, double? AvgHoursToClose,
-        int OpenConflicts)
+        int OpenConflicts,
+        IReadOnlyList<Count> EscalationsByRegion,
+        IReadOnlyList<Cluster> Clusters, int ClusteredQuestions,
+        ContentAgeInfo Age)
     {
         public static Snapshot Empty => new(0, 0, 0, 0, 0, new List<Count>(), new List<Count>(), new List<Count>(), new List<Count>(),
             0, 0, new List<Count>(), new List<PassageStat>(), 0, 0, new List<string>(),
             Categories.Select(c => new CategoryCoverage(c, 0, 0, 0)).ToList(), new List<RouteSplit>(),
-            0, 0, new List<FeedbackDay>(), new List<Group>(), 0, 0, 0, 0, 0, 0, 0, null, 0);
+            0, 0, new List<FeedbackDay>(), new List<Group>(), 0, 0, 0, 0, 0, 0, 0, null, 0,
+            new List<Count>(), new List<Cluster>(), 0, ContentAgeInfo.None);
     }
 
     private static SqliteConnection OpenRead(string path)
@@ -80,6 +97,34 @@ public class UsageReportService
     private static string Str(SqliteDataReader r, int i, string fallback = "") => r.IsDBNull(i) ? fallback : r.GetString(i);
     private static DateTime? Parse(string? s) =>
         DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var d) ? d : null;
+
+    /// <summary>Document ages from content.db (documents.updated), or the source file's modified date for older databases.</summary>
+    private ContentAgeInfo ReadContentAge()
+    {
+        try
+        {
+            if (!File.Exists(_contentPath)) return ContentAgeInfo.None;
+            using var cc = OpenRead(_contentPath);
+            var hasUpdated = Rows(cc, "SELECT name FROM pragma_table_info('documents')", r => r.GetString(0)).Contains("updated");
+            var docs = Rows(cc, hasUpdated ? "SELECT title, source, updated FROM documents" : "SELECT title, source, NULL FROM documents",
+                r => (Title: Str(r, 0), Source: Str(r, 1), Updated: Parse(r.IsDBNull(2) ? null : r.GetString(2))));
+            var now = DateTime.UtcNow;
+            var aged = new List<OldDoc>();
+            foreach (var d in docs)
+            {
+                var when = d.Updated;
+                if (when is null && d.Source != "")
+                {
+                    var f = Path.Combine(_contentFolder, d.Source);
+                    if (File.Exists(f)) when = File.GetLastWriteTimeUtc(f);
+                }
+                if (when is { } w) aged.Add(new OldDoc(d.Title, Math.Max(0, (int)(now - w.ToUniversalTime()).TotalDays)));
+            }
+            return new ContentAgeInfo(docs.Count, aged.Count, _reviewAfterDays, aged.Count(a => a.Days > _reviewAfterDays),
+                aged.OrderByDescending(a => a.Days).Take(5).ToList());
+        }
+        catch { return ContentAgeInfo.None; }
+    }
 
     public Snapshot Get(DateTime cutoffUtc)
     {
@@ -109,6 +154,21 @@ public class UsageReportService
                 r => new Count(r.GetString(0), r.GetInt32(1)), cut);
             var byChapter = Rows(c, $"SELECT COALESCE(chapter_id,'Unknown'), COUNT(*) {esc} GROUP BY 1 ORDER BY 2 DESC",
                 r => new Count(r.GetString(0), r.GetInt32(1)), cut);
+
+            // Region comes from the chapter directory (never from what a person typed).
+            var byRegion = byChapter
+                .GroupBy(x => x.Label == "Unknown" ? "Unknown" : (_rules.ChapterInfo(x.Label)?.Region ?? "Not in directory"))
+                .Select(g => new Count(g.Key, g.Sum(x => x.N))).OrderByDescending(x => x.N).ToList();
+
+            // Question clusters: questions grouped by the approved passage that matched best (rank 1).
+            var clusters = Rows(c, """
+                SELECT r.document, r.section, r.page, COUNT(*), COUNT(DISTINCT s.user_hash),
+                       SUM(CASE WHEN s.outcome='escalated' THEN 1 ELSE 0 END)
+                FROM retrieval r JOIN request_summary s ON s.trace_id = r.trace_id
+                WHERE r.rank = 1 AND s.timestamp_utc >= $c
+                GROUP BY 1,2,3 HAVING COUNT(*) >= 2 ORDER BY 4 DESC LIMIT 8
+                """,
+                r => new Cluster($"{r.GetString(0)} → {r.GetString(1)} (p. {r.GetString(2)})", r.GetInt32(3), r.GetInt32(4), r.GetInt32(5)), cut);
 
             var hours = new int[24];
             foreach (var t in Rows(c, $"SELECT timestamp_utc {esc}", r => Parse(r.GetString(0)), cut))
@@ -200,7 +260,8 @@ public class UsageReportService
                 most, all.Count, never.Count, never.Take(5).Select(p => Label(p.Doc, p.Sec, p.Page)).ToList(),
                 coverage.Select(kv => new CategoryCoverage(kv.Key, kv.Value.Passages, kv.Value.Used, kv.Value.Hits)).ToList(),
                 split, resolved, notQuite, byDay, tenure, rep.Count, rep.Count(x => x.People >= 2),
-                pt, ct, withTok, tickets.Count, closed.Count, avgHours, conflicts);
+                pt, ct, withTok, tickets.Count, closed.Count, avgHours, conflicts,
+                byRegion, clusters, clusters.Sum(x => x.Questions), ReadContentAge());
         }
         catch
         {
