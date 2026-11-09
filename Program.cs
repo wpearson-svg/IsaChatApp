@@ -127,6 +127,8 @@ builder.Services.AddHostedService<IsaChatApp.Services.Orchestrator.OllamaLifetim
 builder.Services.AddSingleton<EventLogService>();
 builder.Services.AddSingleton<UsageSummaryService>();
 builder.Services.AddSingleton<UsageReportService>();
+builder.Services.AddSingleton<DevHealthService>();
+builder.Services.AddHostedService<TicketCloseSyncService>();   // copies Salesforce Case close dates into usage.db (Time to resolution)
 builder.Services.AddSingleton<ContentImportService>();
 builder.Services.AddSingleton<DevAccessService>();
 builder.Services.AddHttpClient("salesforce");
@@ -152,6 +154,7 @@ builder.Services.AddSingleton<IStage, DatabaseSearchStage>();
 builder.Services.AddSingleton<IStage, KnowledgeGraphStage>();
 builder.Services.AddSingleton<IStage, RagStage>();
 builder.Services.AddSingleton<IStage, ComplexAiStage>();
+builder.Services.AddSingleton<IsaChatApp.Services.SettingsChangeLog>();   // who changed which dashboard setting, and when
 builder.Services.AddSingleton<IsaChatApp.Services.OutputComplianceSettings>();   // Output Compliance thresholds, editable on the Dev Dashboard
 builder.Services.AddSingleton<IsaChatApp.Services.Orchestrator.Stages.HhemScorer>();   // the NLI model (HHEM-2.1-Open, ONNX)
 builder.Services.AddSingleton<IStage, OutputComplianceStage>();

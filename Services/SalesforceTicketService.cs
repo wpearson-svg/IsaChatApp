@@ -94,6 +94,54 @@ public class SalesforceTicketService
         }
     }
 
+    /// <summary>An Isa Case that a person has closed in Salesforce: Isa's reference and the time it closed (UTC).</summary>
+    public sealed record ClosedCase(string IsaReference, DateTime ClosedUtc);
+
+    /// <summary>
+    /// The newest closed Isa Cases (Isa reference + ClosedDate), for the Content Health "Time to resolution" tile.
+    /// Read only. Returns null when Salesforce is off, not set up, or did not answer.
+    /// </summary>
+    public async Task<IReadOnlyList<ClosedCase>?> ListClosedCasesAsync(int count = 200, CancellationToken ct = default)
+    {
+        if (!Enabled) return null;
+        try
+        {
+            var sf = _keys.GetSalesforceForUse();
+            if (sf is null) return null;
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(15));
+            var (token, baseUrl, _) = await GetTokenAsync(sf, timeout.Token);
+            if (token is null) return null;
+
+            var soql = "SELECT Isa_Ticket_Ref__c, ClosedDate FROM Case WHERE Isa_Ticket_Ref__c != null AND IsClosed = true " +
+                       $"ORDER BY ClosedDate DESC LIMIT {Math.Clamp(count, 1, 500)}";
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/services/data/{sf.ApiVersion}/query?q={Uri.EscapeDataString(soql)}");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            using var resp = await _http.CreateClient("salesforce").SendAsync(req, timeout.Token);
+            if (!resp.IsSuccessStatusCode)
+            {
+                if ((int)resp.StatusCode == 401) _tokenExpiresUtc = DateTime.MinValue;
+                return null;
+            }
+            using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(timeout.Token));
+            var list = new List<ClosedCase>();
+            foreach (var r in doc.RootElement.GetProperty("records").EnumerateArray())
+            {
+                var reference = r.TryGetProperty("Isa_Ticket_Ref__c", out var a) && a.ValueKind == JsonValueKind.String ? a.GetString() : null;
+                var closed = r.TryGetProperty("ClosedDate", out var b) && b.ValueKind == JsonValueKind.String ? b.GetString() : null;
+                if (string.IsNullOrWhiteSpace(reference) || closed is null) continue;
+                if (DateTimeOffset.TryParse(closed.Replace("+0000", "+00:00"), out var when))
+                    list.Add(new ClosedCase(reference, when.UtcDateTime));
+            }
+            return list;
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning("Salesforce closed-case list failed: {Type}", ex.GetType().Name);
+            return null;
+        }
+    }
+
     /// <summary>Readiness check, no Case created: "off", "not_configured", "ok", or a short error word.</summary>
     public async Task<string> CheckAsync(CancellationToken ct = default)
     {
@@ -113,6 +161,13 @@ public class SalesforceTicketService
 
     /// <summary>Case Id on success, or an error word (never a secret) on failure.</summary>
     public sealed record CaseResult(bool Ok, string? CaseId, string? Error);
+
+    /// <summary>The Case "Type" value, spelled exactly as Salesforce expects it.</summary>
+    public static string TicketType(string? escalatedBy, string? reason) =>
+        escalatedBy == "leader_request" ? "Leader request"
+        : escalatedBy == "input_compliance" ? "Sensitive topic"
+        : reason == "no approved content found" || escalatedBy is "database_search" or "rag" ? "Not covered"
+        : "Answer didn\u2019t pass checks";
 
     public async Task<CaseResult> CreateCaseAsync(CaseInput c, CancellationToken ct = default)
     {
@@ -145,6 +200,10 @@ public class SalesforceTicketService
                 ["Chapter_ID__c"] = c.ChapterId ?? "",
                 ["Chapter_Role__c"] = c.ChapterRole ?? "",
             };
+            body["Type"] = TicketType(c.EscalatedBy, c.Reason);
+            // Record type for Isa's Cases, so the support team can close them (Ticketing:Salesforce:RecordTypeId).
+            var recordType = _config["Ticketing:Salesforce:RecordTypeId"];
+            if (!string.IsNullOrWhiteSpace(recordType)) body["RecordTypeId"] = recordType;
             using var req = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/services/data/{sf.ApiVersion}/sobjects/Case")
             {
                 Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"),

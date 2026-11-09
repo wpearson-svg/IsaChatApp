@@ -83,20 +83,21 @@ ContentDb:Path, DirectoryDb:Path, EventLog:Path, NotebookDb:Path, OnboardingDb:P
 | Translation:DemoFile | Predetermined Amharic replies for the demo. |
 | VectorSearch:Enabled | Turning search off would send most questions to a person. Keep for testing only. |
 
-## Dashboard controls that look real but aren't
+## Dashboard controls that looked real but weren't (fixed Nov 5)
 
-The Dev Dashboard's Compliance policy page says so itself: "The other controls on this page are still illustrative." Not wired yet:
-- **Always route to a person** (topic list): the real list is in rules\global.json, and only the rule tester reads it.
-- **Output checks** (switches).
-- **Role access by content tier**.
-- **The change log** ("Illustrative only, no real change history is tracked here").
+The Compliance policy page used to carry controls that did nothing. They are now real or gone:
+- **Always route to a person** (topic chips): replaced by the real list of rules that hand a question to a person or stop it, read from rules\ (read-only; change the rules files).
+- **Output checks** (three switches): replaced by a read-only list of the checks as they run, with the live settings.
+- **Role access by content tier**: Isa has no content tiers. The Role access tab now lists the Keycloak roles Isa actually checks (chat_user, dashboard_dev).
+- **The change log**: now real. Saves and resets of the compliance numbers, the Services settings and the Salesforce settings are written to settings-change-log.jsonl (who, when, old value, new value; secrets are never written).
+- **The simulated testing console** on the Compliance page: removed. The Testing console tab runs the real pipeline.
 
-If the client is told they can tune Isa, every control they see has to work, or be labelled as planned.
+Still not built, and labelled "Not built yet": Front end and Health alerts.
 
 ## Before settings move to the dashboard
 
 1. **Saved, not just in memory.** Use the pattern output-compliance-settings.json already follows: a git-ignored file, "Reset to defaults" deletes it.
-2. **Logged.** Each change is written with who changed it, when, the old value and the new value. The change log on the page is illustrative today, and a client (and an audit) will want it to be real.
+2. **Logged.** Each change is written with who changed it, when, the old value and the new value (SettingsChangeLog; done for the settings already on the dashboard).
 3. **Limited to the dashboard_dev role.** Secrets are write-only.
 4. **Each control says what it trades off.** For example, StrongMatch: "Higher: more questions go to a person when a check fails. Lower: more answers use ISACA's own words."
 
