@@ -93,3 +93,15 @@ Add Ask the outgoing president, Listen on journey steps and the Chapter Affiliat
 - New bats: start/stop-keycloak, start/stop-voice, start/stop-translation, start/stop-embeddings. Each touches only its own service (docker compose up -d / stop <service>).
 - isa-launcher.ps1 and IsaLauncherDbg: Keycloak and voice are separate groups; new Helper services group (translation 8091, embeddings 8092, build search vectors); status shows both new ports.
 - Not yet run: relaunch the launcher and press each pair.
+
+## Sign-in: no more "signed in but no roles"
+- Watanabe Kenji seemed to lose the dashboard_dev role (no Dev Dashboard). His role was still in Keycloak and in his token; the cause was in Isa. Isa keeps each person's Keycloak tokens in memory, but the sign-in cookie lasts 8 hours. After Isa restarted, or Keycloak restarted and forgot its sessions (it did on 5 November), the cookie still showed the person signed in, with no token, so no roles.
+- **Program.cs**: on every request the sign-in cookie is checked against the tokens Isa holds; if they are gone, the cookie is ended and the person is shown signed out, so they sign in again and get their roles back. **Services/KeycloakSignInService.cs**: new `HasSession`.
+- Checked in the running app: signed in as Watanabe, the Dev Dashboard showed; after restarting Isa, the page showed him signed out ("Sign in") instead of signed in without roles. Build: 0 errors.
+
+## Docker on Willis's desktop: why it stopped, and Keycloak now restarts with it
+- Docker's engine stopped at about 8:26 on 6 November, at the moment the Claude desktop app updated itself. On 5 November Claude Code had restarted Docker Desktop from inside its own session, so Docker ran as a child of the Claude app, and the update closed it with the app. Docker was then started again normally (from Windows), so this can't happen again the same way. Rule from now on: start Docker Desktop yourself (Start menu, or sign-in auto-start), never from a Claude session.
+- **docker-compose.yml**: Keycloak now has `restart: unless-stopped`, like the voice, translation and embeddings, so it comes back by itself whenever Docker restarts (before, it stayed stopped and had to be started by hand). Applied to the running container too.
+
+## Launcher: starting translation or embeddings no longer rebuilds them
+- **start-translation.bat, start-embeddings.bat**: no more `--build`. Every press used to rebuild the image, and once Docker's build cache was gone (6 November) each press downloaded about 3 GB again (Python, compilers, PyTorch with GPU libraries the services don't use). Now they start the image already built; Docker builds only if it is missing. The models were never downloaded again (they are kept in the nllb_models and embedding_models volumes). To apply a change to a service's app.py, rebuild once with the command in the bat's comment.

@@ -83,6 +83,19 @@ builder.Services
         options.AccessDeniedPath = "/sign-in";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        // The cookie outlives the Keycloak tokens, which Isa keeps in memory. If they are gone (Isa restarted,
+        // or Keycloak ended the session), end the cookie too, so the person signs in again and gets their
+        // roles back, instead of looking signed in with no roles (no Dev Dashboard, chat refused).
+        options.Events.OnValidatePrincipal = async ctx =>
+        {
+            var signIn = ctx.HttpContext.RequestServices.GetRequiredService<KeycloakSignInService>();
+            var sessionId = ctx.Principal?.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+            if (!signIn.HasSession(sessionId))
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
     });
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();

@@ -195,6 +195,15 @@ public class KeycloakSignInService
         }
     }
 
+    /// <summary>
+    /// Whether Isa still holds Keycloak tokens for this session. They live in memory only, so they are gone
+    /// after Isa restarts, and they are dropped when Keycloak refuses a refresh (for example after Keycloak
+    /// restarts and forgets its sessions). The sign-in cookie lasts longer, so without this check a person
+    /// looked signed in but had no token, and so no roles: the dashboard_dev role seemed to vanish.
+    /// </summary>
+    public bool HasSession(string? sessionId) =>
+        !string.IsNullOrEmpty(sessionId) && _sessions.ContainsKey(sessionId);
+
     // ---- Sign out --------------------------------------------------------
 
     /// <summary>Forgets the session's tokens and asks Keycloak to end the session too.</summary>

@@ -23,6 +23,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    # Comes back by itself when Docker restarts, like the voice, translation and embeddings.
+    restart: unless-stopped
 
   # Isa's spoken voice for the Library's Listen button: Kokoro-82M, on this machine, CPU only.
   # Isa asks it for one sentence at a time (voice bf_lily, set in appsettings.json "Tts") and keeps
