@@ -28,6 +28,9 @@ public sealed record RuleDecision(
 /// <summary>One rule's row in the rule tester: whether it fired and what it would do.</summary>
 public sealed record RuleTrace(string RuleId, string Title, string File, int Version, string Layer, string Outcome, bool Fired, bool Winner);
 
+/// <summary>One loaded rule, for the list on the Dev Dashboard.</summary>
+public sealed record RuleSummary(string RuleId, string Title, string Group, string File, string Layer, string Outcome);
+
 /// <summary>
 /// Isa's policy adapter: reads ISACA's rules files from rules/ (global, then region, country, chapter), combines the layers
 /// that apply to a leader's chapter, and decides what happens to a question (and, after the answer is written, to the answer).
@@ -346,6 +349,10 @@ public sealed class RuleEngine
     /// <summary>The chapter's country and region from directory/chapters.csv (never from what the person typed).</summary>
     public (string Country, string Region)? ChapterInfo(string chapterId) =>
         Current().Chapters.TryGetValue(chapterId, out var c) ? c : null;
+
+    /// <summary>Every rule that is loaded, from all layers (read-only; for the Dev Dashboard).</summary>
+    public IReadOnlyList<RuleSummary> AllRules() =>
+        Current().Files.SelectMany(f => f.Rules.Select(r => new RuleSummary(r.Id, r.Title, r.Group, f.Name, f.Layer, r.Outcome))).ToList();
 
     public IReadOnlyList<string> ChapterIds => Current().Chapters.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
 

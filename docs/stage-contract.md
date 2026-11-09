@@ -2,9 +2,9 @@
 
 Project: Isa, Second Star Collective
 Author: Willis Pearson (T1)
-Version: 2 (changed 2026-10-20 for the Pipeline Built milestone, due 2026-10-23)
-Status: CHANGED. Version 2 is written by the Project Lead and is NOT yet confirmed by Eliyas. Version 1 (confirmed verbally by Eliyas on 2026-10-16) is kept as `docs/stage-contract.v1.md`.
-Confirmed on: pending (Eliyas to confirm version 2; the repo copy of this file is the final word once confirmed)
+Version: 3 (updated 2026-11-09 to match the built system, Sprint 3 Milestone 1)
+Status: DRAFT for Willis's written approval. Version 3 records how the system works now; the stage names, order and context fields are unchanged from version 2. Version 2 is kept as `docs/stage-contract.v2.md`, version 1 as `docs/stage-contract.v1.md`.
+Approved on: pending (Willis)
 
 This is the one-page agreement every stage and every person builds to. If you need to change anything here, tell the team first, then change this file.
 
@@ -27,20 +27,37 @@ This is the one-page agreement every stage and every person builds to. If you ne
 
 ---
 
+## 0a. What changed in version 3 (Sprint 3 Milestone 1)
+
+Nothing here changes a stage name, the stage order or the query context. It records what was built since version 2.
+
+| # | Change | Where |
+|---|---|---|
+| 1 | `input_compliance` is real: the rules in `rules\*.json` decide answer, pass to a person, or stop. The data text names the rule that fired. | section 1, 4 |
+| 2 | `translation` is real: NLLB-200, self-hosted, Amharic and Spanish in and out. A failed or unsupported translation keeps the original text and says so in the data text. | section 1, 4 |
+| 3 | `rag` is real: the meaning map first, then vector search over the approved ISACA passages (multilingual-e5-base). A miss escalates. | section 1, 4 |
+| 4 | `knowledge_graph` stays a pass-through by decision (no graph database). | section 1 |
+| 5 | `output_compliance` AI side is real: source check, rule recheck, answer shape, NLI (HHEM, per sentence), numbers/strength/contact, confidence. On a failure Isa trims, uses ISACA's exact words, or escalates. | section 8 |
+| 6 | `ticketing` creates a real Salesforce Case (record type, `Type` field) when `Ticketing:Salesforce:Enabled` is on. | section 1, 4 |
+| 7 | Model keep-alive: the model stays loaded `Ollama:IdleKeepAlive` (10 minutes) after a question. | section 9 |
+| 8 | The test paths are real questions through the real system, with no forced failures, no bypasses and no stand-in answers. | section 11 |
+
+---
+
 ## 1. Stage order
 
 | # | Stage name (exact, used in the event log) | Owner | Runs |
 |---|---|---|---|
 | 1 | `front_end` | Willis | always. Also sets `language` (quick check) before the query enters the system |
 | 2 | `access_control` | Eliyas | always |
-| 3 | `translation` | Willis and Matt | always runs; returns Pass `skipped` when `language` is `en`. It is always BEFORE `input_compliance`, so input compliance screens English |
-| 4 | `input_compliance` | Willis and Matt | always (stub). A Stop ends the run; nothing after it runs or is shown |
+| 3 | `translation` | Willis and Matt | always runs; returns Pass `skipped` when `language` is `en`. Real (NLLB-200, Amharic and Spanish). It is always BEFORE `input_compliance`, so input compliance screens English |
+| 4 | `input_compliance` | Willis and Matt | always. Real: the rules in `rules\*.json`. A Stop ends the run; nothing after it runs or is shown. An Escalate goes to `ticketing` |
 | 5 | `database_search` | Eliyas | always. Full-text only, no AI. Found = direct hit. Not found = `NotFound`, then the run goes on to stage 6 |
-| 6 | `knowledge_graph` | Eliyas | only on a miss (Pass `skipped, direct hit` otherwise). Part of the RAG step: a stub inside RAG, not its own step in the panel |
-| 7 | `rag` | Eliyas | only on a miss (Pass `skipped, direct hit` otherwise). Stub: hands fixed stand-in passages to the AI step. No passages = Escalate |
+| 6 | `knowledge_graph` | Eliyas | only on a miss (Pass `skipped, direct hit` otherwise). Decision for Milestone 1: no graph database, a pass-through inside the RAG step, not its own step in the panel |
+| 7 | `rag` | Eliyas | only on a miss (Pass `skipped, direct hit` otherwise). Real: the meaning map first, then vector search over the approved ISACA passages. No passages = Escalate |
 | 8 | `complex_ai` | Eliyas | only on a miss (Pass `skipped, direct hit` otherwise). The real model (phi4-mini through Ollama). Always sent the question WITH the passages, never the bare question |
 | 9 | `output_compliance` | Willis | always, including direct hits. Two sections (section 8) |
-| 10 | `ticketing` | Willis | only on Escalate. Creates the TKT reference; the ticket is not sent to the connected service |
+| 10 | `ticketing` | Willis | only on Escalate. Creates the TKT reference and, when Salesforce is on, a Case in Salesforce |
 
 The orchestrator runs the stages in this order. Stage names are lower case with underscores, exactly as above.
 
@@ -110,12 +127,13 @@ If no stage stops or escalates and the last stage passes, `status = answered`.
 | Stage | Extra keys |
 |---|---|
 | `front_end` | `language=<code>` |
-| `translation` | `from=<code>; note=skipped, english` when skipped |
+| `translation` | `from=<code>; note=skipped, english` when skipped; otherwise `translated=yes/no; model_ms=<time>` and a `note=` when the service could not translate |
 | `database_search` | `hit=yes/no; passages=<count>` |
-| `rag` | `passages=<count>; retrieved=<document section, ...>` |
+| `rag` | `passages=<count>; retrieved=<document section, ...>; retrieval=vector; top_score=<x.xx>` or `vector_miss=<reason>` |
 | `complex_ai` | `model_called=yes/no; model=<name>; model_ms=<time taken>; passages=<count>; source=<document section>` |
 | `output_compliance` | `section=database/ai; source=ok/missing; approved=yes/no`, plus on the AI side `source_retrieved=yes/no; rule_recheck=pass/fail; confidence=<score>; nli=pass/fail` |
-| `ticketing` | `ticket=TKT-0001` |
+| `input_compliance` | the rule that fired: `rule=<id>` |
+| `ticketing` | `ticket=TKT-0001; from=<stage>; salesforce=created/failed/off` |
 
 Examples:
 - `result=pass; reason=none; note=skipped, direct hit`
@@ -199,7 +217,7 @@ Response (always the same shape):
 
 Errors: `401` for a missing or bad token (the front end sends the user back to sign-in). `403` for a signed-in account with no role that allows chat. `400` for a missing question or trace ID.
 
-## 8. Output compliance: two sections (stub)
+## 8. Output compliance: two sections
 
 Every answer passes through `output_compliance`, including direct hits. Which section runs depends on where the answer came from. `output_section` and the log show which one.
 
@@ -207,20 +225,24 @@ Every answer passes through `output_compliance`, including direct hits. Which se
 - The answer has a source (`cited_source`), and the source is an approved passage.
 - No source, or a source that is not approved: Escalate, `reason=answer has no approved source`.
 
-**AI side (answer written by the model)** does everything the database side does, plus:
+**AI side (answer written by the model)** does everything the database side does, plus these checks, in this order. All are real.
 
-| Check | Real or stub | Result shape | Pass rule |
-|---|---|---|---|
-| Source check | Real | `{ cited: {document, section, page}, retrieved: true/false }` | The passage the model named must be one of the passages `rag` retrieved. A source that was not retrieved: Escalate, `reason=ai check failed: source not retrieved` |
-| NLI check (does the cited passage support the answer) | Stub | `{ verdict: "supported" / "not_supported" / "unclear", reason: text }` | `supported` passes. The stub returns `supported` with reason `stub: fixed pass` |
-| Rule recheck (the output is checked again against the rules) | Stub | `{ passed: true/false, rule: text or empty, reason: text }` | `passed = true`. The stub returns passed |
-| Confidence score | Stub | `{ score: 0.00 to 1.00, threshold: 0.70, passed: true/false }` | `score >= threshold`. The stub returns `0.90` |
+| Check | What it does |
+|---|---|
+| Source check | The passage the model named must be one of the passages `rag` retrieved. If not: Escalate, `reason=ai check failed: source not retrieved` |
+| Rule recheck | The written answer is checked again against the rules (`answer_must_not` phrases) |
+| Answer shape | A "how many", "when" or "who" question needs a number, date or role in the answer |
+| NLI (HHEM, per sentence) | Each sentence must be supported by the cited passage |
+| Numbers, strength words, contact details | A number, a must/should/may word, or an email or phone number must appear in the passage |
+| Confidence | Search strength and the share of supported sentences must reach `OutputCompliance:ConfidenceThreshold` |
 
-A failure on any AI-side check returns Escalate with `reason=ai check failed: <check name>`, and the run goes to `ticketing`. Result shapes are fixed now so the real checks can be added later without changing the contract.
+**When a check fails:** the unsupported sentences are trimmed (event data `step_down=trimmed; removed_sentences=<n>`; the NLI line still reads `nli=pass`). If trimming cannot fix it, Isa gives ISACA's exact words (`step_down=isaca_words; step_reason=<check>`) when the search score is at or above `OutputCompliance:StrongMatch`. Otherwise it escalates to a person (`reason=ai check failed: <check name>`). The four numbers (NLI threshold, confidence threshold, strong match, search pass mark) are set on the Dev Dashboard and saved in `output-compliance-settings.json`.
 
-**Forcing a failure (Should):** a setting forces a chosen AI-side check to fail, so the demo and the tests can show a bad response being caught. Built (21 Oct 2026) as the config value `OutputCompliance:ForceFail` = `source`, `nli`, `rule` or `confidence` (for example, set the environment variable `OutputCompliance__ForceFail=source` before starting the app). A dev dashboard control for it is not built yet. The confidence threshold is `OutputCompliance:ConfidenceThreshold` (default 0.70).
+**Event data on the AI side:** `source_retrieved=yes/no; rule_recheck=pass/fail; confidence=<score>; nli=pass/fail`, plus `check=answer_shape; missing=...` on a shape failure.
 
-**Failure reasons (exact):** `ai check failed: source not retrieved`, `ai check failed: nli check`, `ai check failed: rule recheck`, `ai check failed: confidence score`. No approved source: `answer has no approved source`. Nothing found at all: `no approved content found`.
+**Failure reasons (exact):** `ai check failed: source not retrieved`, `ai check failed: nli check`, `ai check failed: rule recheck`, `ai check failed: answer shape`, `ai check failed: confidence score`. No approved source: `answer has no approved source`. Nothing found at all: `no approved content found`.
+
+**Forcing a failure** is a test-only setting (`OutputCompliance:ForceFail`). The test suite does not use it.
 
 ## 9. Errors
 
@@ -229,34 +251,38 @@ A **real error** is different from a Stop and from a NotFound. It is shown red i
 - If the model call fails (turned off, unreachable, empty reply) or takes longer than the time limit, `complex_ai` returns Escalate with `reason=model call failed` and `error=unavailable` or `error=timeout` or `error=empty` in the data text.
 - The orchestrator copies the value into `work_steps[].error`, and the panel shows the step red.
 - The run then goes to `ticketing`. A model that is turned off produces an error and a ticket, never a hang.
-- The time limit for a model call is **45 seconds** (`Ollama:TimeoutSeconds`), set from timing on 22 Oct 2026 (phi4-mini:3.8b on a 7.8 GB machine, 0.5 to 0.8 GB free): cold start 20 to 27 s, warm answers 7 to 10 s. When the call fails, the event data also carries `detail=` (the HTTP status or error type) to help find the cause.
+- The time limit for a model call is **45 seconds** (`Ollama:TimeoutSeconds`), set from timing on 22 Oct 2026 (the model unloaded 2 minutes after a question until 9 Nov 2026; it now stays loaded `Ollama:IdleKeepAlive`, 10 minutes, because cold starts after a pause were causing the timeouts) (phi4-mini:3.8b on a 7.8 GB machine, 0.5 to 0.8 GB free): cold start 20 to 27 s, warm answers 7 to 10 s. When the call fails, the event data also carries `detail=` (the HTTP status or error type) to help find the cause.
 
-## 10. Stub rules
+## 10. What is real and what is not (replaces the stub rules)
 
-- A stub returns the right shape every time. It does not have to be smart.
-- A stub returns its result and its data text. The orchestrator writes the event.
-- Fake means fake: invented passwords, accounts, and content only.
-- For this milestone the stubs are: `rag` (with `knowledge_graph` inside it), `ticketing` (the ticket is created, not sent to the connected service), `input_compliance`, and `output_compliance` (the AI-side checks except the source check). Sign-in, roles, full-text search, the AI model, the event log and the panel are real.
+- Real: sign-in and roles, full-text search, the meaning map, vector search, translation, input compliance, the AI model, every output check, ticketing (Salesforce), the event log and the panel.
+- Still simple by decision: `knowledge_graph` (a pass-through).
+- Test data uses invented passwords, accounts and content only.
 
-## 11. The five test paths (every stub must support all five)
+## 11. Test paths
 
-| # | Question | Expected result |
+`test-paths.ps1` sends real questions through the real system (signed in, no forced failures, no model-off or bypass settings). The questions and what each must show in the event log are in the script and in `test-questions-candidates.csv`. The paths covered:
+
+| # | Path | What the log must show |
 |---|---|---|
-| 1 | "How many board meetings must a chapter hold each year?" | Direct hit. `answered`, with source. `knowledge_graph`, `rag` and `complex_ai` skipped. `output_compliance` runs, database side |
-| 2 | "Who writes down what the board decided?" | `database_search` returns `NotFound`. `rag` hands over passages. `complex_ai` calls the real model and names a retrieved passage. `output_compliance` runs, AI side. `answered` |
-| 3 | "Where's a good pizza place near the conference?" | `input_compliance` returns Stop. Nothing after it. `stopped` |
-| 4 | "What is the cryptocurrency policy?" | No content found. Escalate. `ticketing` returns a TKT reference. `escalated` |
-| 5 | "A colleague keeps bothering me, what should I do?" | `input_compliance` returns Escalate (sensitive). `ticketing`. `escalated` |
+| 1 | Direct hit | answered, no model call |
+| 2 | Model path, clean pass | `model_called=yes`, every check passes |
+| 3 | Stopped | `input_compliance` stop, no ticket |
+| 4 | Escalated, no content | nothing found by search; ticket |
+| 5 | Escalated, sensitive | a rule routes it to a person; ticket |
+| 6 | Non-English | detected, translated, answered, translated back |
+| 8 | Trimmed answer | `step_down=trimmed; removed_sentences>=1` |
+| 9 | ISACA's exact words | `step_down=isaca_words` |
+| 10 to 13 | Source, rule recheck, answer shape, contact failures | the check named in the data text |
+| 14 | Escalated after a failed check | weak match and `OutputCompliance:StrongMatch` at 0.85 |
+| 15 | Input rule stop or hand-off | `rule=<id>` |
+| 16 | AI-stage escalation | `complex_ai` `result=escalate`, no check failing |
 
-Extra checks: one non-English question and one English question (translation is skipped for English only), a source not in the retrieved passages escalates, and a stopped model (turned off) gives an error and a ticket.
+## 12. For Willis's approval (version 3)
 
-## 12. Open questions for Eliyas (version 2)
+- [ ] Section 1 and 10: the descriptions of the real stages match what you want recorded.
+- [ ] Section 8: the output compliance ladder as built is the contract.
+- [ ] Section 9: model keep-alive of 10 minutes.
+- [ ] Section 11: the test paths as listed.
 
-- [ ] `NotFound` as a fourth result: OK? (needs a new member in `StageOutcome`)
-- [ ] The skip rules (section 3): the log keeps every stage, the panel hides skipped ones except translation for English: OK?
-- [ ] `knowledge_graph` stays a back-end stage name but is not its own step in the panel: OK?
-- [ ] Time limit for the model call: 30 seconds until measured?
-- [ ] The result shapes in section 8: OK?
-- [ ] Live updates (section 6): the callback changes from `Func<WorkStep, Task>` to `Func<StageProgress, Task>`, and the orchestrator also sends `started` and `done`. Chat side updated by Willis.
-
-Version 1 questions (stage names and order, query context fields, data text shape, API, file location) were closed 2026-10-16, confirmed verbally.
+Versions 1 and 2 questions are closed.

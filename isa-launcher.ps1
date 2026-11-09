@@ -166,7 +166,9 @@ Add-Btn $pHelp 'Embeddings logs' 'docker compose logs embeddings' { Run-Cmd 'doc
 Add-Btn $pHelp 'Build search vectors' 'python content\build_vectors.py: needs embeddings running and content.db built. Writes data\vectors.db.' { Run-Ps 'python content\build_vectors.py' }
 
 $pTest = New-Group $left 'Tests (the app must be running)' 3
-Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks and the test paths (five questions, Spanish, English), signed in as d.whitfield.' { Run-Script 'test-paths.ps1' '' }
+Add-Btn $pTest 'Run test paths' 'test-paths.ps1: sign-in checks, then one real question for every path (direct hit, model, stopped, no content, sensitive, Spanish, trimmed, ISACA words, source/rule/shape/contact checks, rule stops and hand-offs, AI says no), signed in as d.whitfield. Warms the model first. Reads the strong-match mark from the settings file and runs paths 9 and 13 (mark 0.00) or path 14 (mark 0.85).' { Run-Script 'test-paths.ps1' '' }
+Add-Btn $pTest 'Run test paths (all questions)' 'test-paths.ps1 -AllQuestions: also runs the spare questions for each path (about 45 questions, slow).' { Run-Script 'test-paths.ps1' '-AllQuestions' }
+Add-Btn $pTest 'Run test paths (weak match)' 'test-paths.ps1 -MatchMode weak: path 14 only needs the strong-match mark at 0.85 (Dev Dashboard, Compliance policy). A failed check on a weak match goes to a person.' { Run-Script 'test-paths.ps1' '-MatchMode weak -Only weak' }
 Add-Btn $pTest 'Run test paths (no token)' 'test-paths.ps1 -NoToken: sends no token, only works while DevBypass is on.' { Run-Script 'test-paths.ps1' '-NoToken' }
 Add-Btn $pTest 'Run test paths (model off)' 'test-paths.ps1 -ModelOff: sends the model call to a dead address (no need to quit Ollama). Checks a failed model call gives an error and a ticket, not a hang.' { Run-Script 'test-paths.ps1' '-ModelOff' }
 Add-Btn $pTest 'Run test paths (forced failure)' 'test-paths.ps1 -ForcedFailure: start Isa with the button Start Isa (force AI-check failure) first. Checks a source that was not retrieved is escalated.' { Run-Script 'test-paths.ps1' '-ForcedFailure' }

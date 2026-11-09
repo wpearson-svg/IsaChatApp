@@ -3,8 +3,9 @@
 @* ============================================================
    ContentHealthDashboard.razor
 
-   Fleshed-out example page (still not wired to a real backend) --
-   linked from the chat widget's header (the log icon). Built from
+   The Content Health Dashboard. The SUPPORT / DATA / TRAINING sections (ContentHealthSections) read the saved usage store
+   data/usage.db through UsageReportService; the model-usage tiles below read the in-memory UsageLogService. Linked
+   from the chat widget's header (the log icon). Built from
    the "Isa Wireframes 3" mock, but repointed at data this app
    actually HAS: the wireframe's SUPPORT/DATA/TRAINING columns assume
    real chapter escalation history and a content library this demo

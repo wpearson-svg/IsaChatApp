@@ -46,7 +46,9 @@
         </div>
         <div class="chs__card">
             <div class="chs__cardHeader"><h3>Escalations by chapter</h3><span class="chs__tag chs__tag--green">SUPPORT</span></div>
-            <p class="chs__hint">By chapter ID. Region is blank until the directory has a region field.</p>
+            <p class="chs__hint">By region (from the chapter directory), then by chapter ID.</p>
+            <CountBars Items="S.EscalationsByRegion" EmptyText="No escalations in this range." />
+            <p class="chs__hint">By chapter</p>
             <CountBars Items="S.EscalationsByChapter" EmptyText="No escalations in this range." />
         </div>
         <div class="chs__card">
@@ -58,8 +60,7 @@
         {
             <div class="chs__card chs__card--pending">
                 <div class="chs__cardHeader"><h3>Time to resolution</h3><span class="chs__tag chs__tag--grey">NOT COLLECTING YET</span></div>
-                <p class="chs__hint">@S.TicketsOpened ticket(s) opened, none closed. Switches on when the ticketing step reports a closed date
-                    (hook: <code>CloseTicketAsync</code>).</p>
+                <p class="chs__hint">@S.TicketsOpened ticket(s) opened, none closed yet. Isa checks Salesforce every few minutes and records the date a person closes each Case.</p>
             </div>
         }
         else
@@ -176,10 +177,30 @@
                 <div class="chs__big">@((S.PromptTokens + S.CompletionTokens) / S.QuestionsWithTokens) <span>tokens (@S.QuestionsWithTokens questions)</span></div>
             </div>
         }
-        <div class="chs__card chs__card--pending">
-            <div class="chs__cardHeader"><h3>Content age</h3><span class="chs__tag chs__tag--grey">NOT COLLECTING YET</span></div>
-            <p class="chs__hint">The content table has no last-updated date on its documents. Add one and the retrieval log can flag what is overdue for review.</p>
-        </div>
+        @if (S.Age.Dated == 0)
+        {
+            <div class="chs__card chs__card--pending">
+                <div class="chs__cardHeader"><h3>Content age</h3><span class="chs__tag chs__tag--grey">NO DATES FOUND</span></div>
+                <p class="chs__hint">None of the @S.Age.Documents documents has a last-updated date. Rebuild the content database to add them.</p>
+            </div>
+        }
+        else
+        {
+            <div class="chs__card">
+                <div class="chs__cardHeader"><h3>Content age</h3><span class="chs__tag chs__tag--orange">DATA</span></div>
+                <p class="chs__hint">Documents not updated in @S.Age.ReviewAfterDays days are due for review (setting <code>ContentHealth:ReviewAfterDays</code>).</p>
+                <div class="chs__big">@S.Age.Overdue <span>of @S.Age.Dated documents overdue</span></div>
+                <table class="chs__table">
+                    <thead><tr><th>Oldest documents</th><th>Days since update</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in S.Age.Oldest)
+                        {
+                            <tr><td>@d.Title</td><td>@d.Days</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 
     @* ---------------- TRAINING ---------------- *@
@@ -227,9 +248,25 @@
             <p class="chs__hint">The same question asked again (exact wording, ignoring case and punctuation). Questions are never stored, only a scrambled fingerprint.</p>
             <div class="chs__big">@S.RepeatedQuestions <span>asked more than once, @S.RepeatedAcrossPeople by 2+ different people</span></div>
         </div>
-        <div class="chs__card chs__card--pending">
-            <div class="chs__cardHeader"><h3>Question clusters</h3><span class="chs__tag chs__tag--grey">NOT COLLECTING YET</span></div>
-            <p class="chs__hint">Grouping questions by meaning waits on the real search's embeddings. The exact-repeat count above is the stand-in until then.</p>
+        <div class="chs__card">
+            <div class="chs__cardHeader"><h3>Question clusters</h3><span class="chs__tag chs__tag--purple">TRAINING</span></div>
+            <p class="chs__hint">Questions grouped by the approved passage that matched best, so different wordings of the same need land together. Question text is never stored.</p>
+            @if (S.Clusters.Count == 0)
+            {
+                <p class="chs__empty">No passage was the best match for 2 or more questions in this range.</p>
+            }
+            else
+            {
+                <table class="chs__table">
+                    <thead><tr><th>Best-matching passage</th><th>Questions</th><th>People</th><th>Passed on</th></tr></thead>
+                    <tbody>
+                        @foreach (var g in S.Clusters)
+                        {
+                            <tr><td>@g.Passage</td><td>@g.Questions</td><td>@g.People</td><td>@g.Escalated</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
     </div>
 </div>

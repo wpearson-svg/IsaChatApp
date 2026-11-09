@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Rebuild data/content.db from content/content.json + content/meaning_map.json. Safe to re-run (starts from empty)."""
-import json, re, sqlite3, os, sys
+import json, re, sqlite3, os, sys, datetime
 
 # Table-of-contents text is not an answer to anything, but its headings
 # match many searches ("Finances .......... 3"), so it pushed real answers
@@ -18,14 +18,17 @@ for ext in ("","-wal","-shm"):
     if os.path.exists(out+ext): os.remove(out+ext)
 c=json.load(open(src,encoding="utf-8")); db=sqlite3.connect(out)
 db.executescript("""
-CREATE TABLE documents(id INTEGER PRIMARY KEY, title TEXT, source TEXT, folder TEXT);
+CREATE TABLE documents(id INTEGER PRIMARY KEY, title TEXT, source TEXT, folder TEXT, updated TEXT);
 CREATE TABLE sections(id INTEGER PRIMARY KEY, document_id INT, heading TEXT);
 CREATE VIRTUAL TABLE passages USING fts5(id UNINDEXED, document, section, page, text, tokenize='porter unicode61');
 CREATE TABLE meaning_map(question TEXT, passage_id INT);
 """)
 did={}
 for i,d in enumerate(c["documents"],1):
-    db.execute("INSERT INTO documents VALUES(?,?,?,?)",(i,d["document"],d["source"],d["folder"])); did[d["document"]]=i
+    # updated = the source file's last-modified date (feeds the Content Health "Content age" tile)
+    f=os.path.join(here,d["source"]); upd=None
+    if os.path.exists(f): upd=datetime.datetime.fromtimestamp(os.path.getmtime(f),datetime.timezone.utc).isoformat()
+    db.execute("INSERT INTO documents VALUES(?,?,?,?,?)",(i,d["document"],d["source"],d["folder"],upd)); did[d["document"]]=i
 secs={}
 kept=[p for p in c["passages"] if not is_table_of_contents(p["text"])]
 skipped=len(c["passages"])-len(kept)

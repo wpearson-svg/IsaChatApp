@@ -198,3 +198,50 @@ Sprint 3 deck on the Sprint 2 HTML slides (Sprint 1 tracker, promised vs built);
   - Strong-match mark: when an AI answer fails a check, a search score at or above the mark shows ISACA's own words; below it, the question goes to a person. At 0.00 (today's value) a failed check never goes to a person.
   - Files: Services/OutputComplianceSettings.cs (two new numbers, saved and loaded), Services/Orchestrator/Stages/ResponseStages.cs (reads the strong-match mark from it), Services/Search/VectorSearchService.cs (reads the search pass mark from it), Components/Pages/DeveloperDashboard.razor (the two sliders, saved with the others), Components/Shared/VectorSearchTest.razor (says where the pass mark is set).
   - Checked: build has 0 warnings and 0 errors. With the strong-match mark at 0.85 (saved in the file, then Isa restarted), questions with search scores of 0.81 to 0.84 that failed a check went to a person (failed=..., with a ticket), and 0.85 or above still got ISACA's words. 4 questions did this on 5 of 5 runs and were added to the CSV as path 14. The file was then put back as it was (NLI 0.40, confidence 0.70). Not checked on screen: the Dev Dashboard needs a sign-in, so the sliders still need a look in the browser.
+
+## IsaLauncherDbg: a remote light for every service (November 5)
+- The status strip now has two lights per service: "● Keycloak down" for this computer, as before, and a new "●R" after it for the same port on the remote host. Green: answering; red: not answering; grey: no remote host set.
+- The remote host is Services:RemoteHost from the project's appsettings.json, then appsettings.Local.json (the Dev Dashboard's file wins), the same rule as Program.cs and services-config.ps1. Hovering a light shows the address it checked and whether Isa is set to use this computer's services or the remote ones (Services:Location).
+- The remote light sends a small HTTP request and is green only when the service replies (any reply: 200, a redirect, even 404). An open port is not enough: tailscale-phone.ps1 forwards each port with "tailscale serve --tcp", so the home PC accepts a connection on 5067 even when Isa is not running there, then drops it. The first version only checked the port, so Isa showed green there while it was off (Willis spotted it). Checked by hand against 100.89.6.69: Isa no reply (down, correct), Ollama 200, Keycloak 302, voice, translation and embeddings 404 (all up). The light for this computer still checks the port, because the forwarder does not listen on localhost.
+- All the checks run at the same time (remote ones wait up to 2 seconds), so the strip still refreshes every 3 seconds.
+- File: IsaLauncherDbg\MainForm.cs (in the launcher's own folder, C:\Users\WillisPearson\IsaLauncherDbg, not in this repo). Build: 0 warnings, 0 errors. Not yet seen on screen: open the launcher to check the lights.
+
+## test-paths.ps1 rebuilt around real questions (Nov 5)
+- One real question per path (spares with -AllQuestions), each taken from test-questions-candidates.csv (found by real runs, same path 5 of 5): direct hit, model clean pass, stopped (O-01), no content, sensitive (A-01), Spanish direct and Spanish through the model (translated both ways), trimmed, ISACA words after an NLI / strength / numbers / confidence failure, source check, rule recheck, answer shape, contact check, weak match (path 14), rule stop (C-07), rule hand-off (C-03), and the AI saying the passages do not answer. Each case checks the event trail (stage data), not only the status.
+- Strong-match mark: paths 9 and 13 need 0.00, path 14 needs 0.85. -MatchMode auto reads strongMatch from output-compliance-settings.json and skips the paths that do not fit; -MatchMode weak / default overrides.
+- Warm-up question first (not counted), -Only <id or kind>, -AllQuestions. The model-off and forced-check extras remain as opt-in switches (the forced ones are stand-ins).
+- Old rigged check questions removed: "Who writes down what the board decided?" (timed out), the English duplicate. The Spanish insurance question was left out on purpose (it matched the wrong passage).
+- Checked: parses in PowerShell 7; replayed yesterday recorded real runs against a mock server (45 of 45 cases pass in default mode, path 14 passes in weak mode, and a wrong-mode run fails as it should). Not yet run against the live app. Spanish model-path answers take 10 to 30 s to translate back.
+- Launchers: new buttons Test paths (all questions) and Test paths (weak match); descriptions updated.
+
+- Translation test page: the note no longer says Spanish needs "spa" added (it is on the service).
+
+## Dev Dashboard: the illustrative pieces are real now (Nov 5)
+- Change log: new Services/SettingsChangeLog.cs writes settings-change-log.jsonl (git-ignored): when, who (signed-in name), area, setting, old and new value. Logged: the four compliance numbers (save and reset), the Services settings (location, host, voice, translation; save and reset) and the Salesforce settings (secret logged as "changed", never the value). View change log shows the last 50.
+- Compliance policy page: the "Always route to a person" chips are replaced by the real rule list (RuleEngine.AllRules, rules that hand off or stop); the three do-nothing Output checks switches are replaced by a read-only list of the checks as they run (live settings); the simulated testing console and its random confidence are removed (a button opens the real Testing console). Slider hints for confidence and NLI now describe what actually happens.
+- Role access tab: lists the roles Isa checks (chat_user, dashboard_dev) and says there are no content tiers. The fake role-by-tier grid is gone.
+- Other tabs that are not built now say "Not built yet." Header comments of both dashboards corrected. docs/Settings_Inventory.md updated.
+- Files: Services/SettingsChangeLog.cs (new), Services/Rules/RuleEngine.cs (AllRules, RuleSummary), Program.cs, .gitignore, Components/Pages/DeveloperDashboard.razor, ContentHealthDashboard.razor (comment only).
+- Not compiled or looked at in the browser (no .NET here): restart Isa and open the Dev Dashboard.
+
+## Content Health: four tiles wired
+- Time to resolution: new Services/TicketCloseSyncService.cs polls Salesforce (SalesforceTicketService.ListClosedCasesAsync) every Ticketing:Salesforce:ClosedSyncMinutes (default 10) and records each closed Case's ClosedDate through UsageSummaryService.CloseTicketAsync(ref, closedUtc). Registered in Program.cs. Needs Ticketing:Salesforce:Enabled.
+- Escalations by chapter: now also grouped by region, looked up from directory/chapters.csv at report time (works on existing rows).
+- Question clusters: questions grouped by their best-matching passage (retrieval rank 1), 2+ questions, with people and passed-on counts. No question text stored.
+- Content age: content/build_content_db.py adds documents.updated (source file's modified date); UsageReportService falls back to the file's date for an older content.db. ContentHealth:ReviewAfterDays (default 365) sets "overdue"; tile lists the oldest documents.
+- Files: Services/UsageReportService.cs, UsageSummaryService.cs, SalesforceTicketService.cs, TicketCloseSyncService.cs, Program.cs, Components/Shared/ContentHealthSections.razor, content/build_content_db.py.
+- Not compiled (no .NET here): restart Isa. Rebuild content.db to store the dates (not required; file dates are used otherwise).
+
+- Salesforce Cases now carry RecordTypeId 012fj0000091Z3NAAU (Ticketing:Salesforce:RecordTypeId in appsettings.json; SalesforceTicketService.CreateCaseAsync) so support can close them. Restart Isa.
+
+- Salesforce Cases now send "Type": Sensitive topic / Not covered / Answer didn’t pass checks / Leader request (SalesforceTicketService.TicketType). Restart Isa.
+
+## Dev Dashboard: Front end and Health alerts tabs built
+- New Services/DevHealthService.cs (read-only counts from events.db and usage.db), Components/Shared/DevHealthAlerts.razor and DevFrontEnd.razor (+ .css), wired into DeveloperDashboard.razor; DevHealthService registered in Program.cs.
+- Health alerts: live check of Keycloak, Ollama, voice, embeddings, translation and Salesforce; recent trouble (model timeout/unavailable/empty, Salesforce Case failed, trimmed, ISACA's words) for the last hour and 24 hours; alerts when model errors reach DevHealth:ModelErrorsPerHour (3) in an hour or the last DevHealth:SalesforceFailuresInARow (3) Cases failed; ticket close sync last run (TicketCloseSyncService.LastRunUtc/LastRunOk).
+- Front end: questions, languages, Yes/Not quite/Talk to a person clicks, median and slowest wait for found-in-text vs model answers, voice/translation switches.
+- Not compiled (no .NET here): restart Isa and open both tabs.
+
+- Ollama:IdleKeepAlive raised from 2m to 10m (appsettings.json). The model had been unloading 2 minutes after each question, so the next question after a pause loaded it cold and could hit the 45 s timeout. Restart Isa.
+
+- IsaLauncherDbg (MainForm.cs AddGroup): group titles (Isa app, Keycloak, Voice...) had the tails of letters like p and y cut off by the buttons, which started at a fixed y of 20. The buttons now start at the title's measured height. (A first attempt that docked the buttons collapsed every group; it was reverted.) Not compiled: rebuild the launcher (run.bat, or publish.bat for the .exe).
