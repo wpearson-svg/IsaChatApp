@@ -164,7 +164,7 @@
                             aria-label="Next month">&rsaquo;</button>
                 </div>
 
-                <div class="isa-cal__grid" role="grid" aria-label="@_month.ToString("MMMM yyyy", CultureInfo.InvariantCulture)">
+                <div class="isa-cal__grid" role="group" aria-label="@_month.ToString("MMMM yyyy", CultureInfo.InvariantCulture)">
                     @foreach (var wd in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })
                     {
                         <span class="isa-cal__wd" aria-hidden="true">@wd</span>

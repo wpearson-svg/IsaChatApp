@@ -83,6 +83,22 @@ builder.Services
         options.AccessDeniedPath = "/sign-in";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        // The browser keeps this cookie for up to 8 hours, but Isa keeps the
+        // matching sign-in tokens in memory only, so they are gone after a
+        // restart. Without this check the page said "Signed in" while the chat
+        // said "Please sign in" (defect M-018). Each time a page loads: if Isa
+        // no longer knows the session the cookie names, turn the cookie away
+        // and remove it, so the page shows the Sign in button.
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var signIn = context.HttpContext.RequestServices.GetRequiredService<KeycloakSignInService>();
+            var sessionId = context.Principal?.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+            if (!signIn.IsKnownSession(sessionId))
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
     });
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
