@@ -1,0 +1,11 @@
+id,lane,user,expected_path,expected_input,input,path,match,rule,status,ticket,step_down,elapsed_s,trace_id,willis_lane,error
+MB-01,3,k.watanabe,,pass,pass,no_content,yes,,escalated,TKT-4543,,4.3,057833aa-7d52-4de7-bea4-1bfcf05479ec,,
+MB-02,3,k.watanabe,,pass,pass,no_content,yes,,escalated,TKT-4544,,4.13,36f3160b-9f60-4c77-81e4-8bf9853d316c,,
+MB-03,3,k.watanabe,,hand_off,hand_off,handed_off,yes,C-03,escalated,TKT-4545,,0.02,85de5ff1-f337-4985-8f5a-359ca686f47f,,
+MB-04,3,k.watanabe,,pass,pass,model,yes,,answered,,,0.04,86081ce3-b8e1-4296-81a6-91a4cba965f8,,
+MB-05,3,k.watanabe,,pass,pass,no_content,yes,,escalated,TKT-4546,,4.13,35346adc-38a0-488b-88b6-ea1f95bb1ae4,,
+MB-06,3,k.watanabe,,stop,pass,no_content,no,,escalated,TKT-4547,,4.14,5dfc7128-5fa3-4f13-b652-e58de2773d4f,,
+MB-07,3,k.watanabe,,pass,pass,direct,yes,,answered,,,0.05,96fca001-499f-4a63-bc03-d7442bfc2dc6,,
+MB-08,3,k.watanabe,,stop|hand_off,hand_off,handed_off,yes,C-03,escalated,TKT-4548,,0.04,649f98f7-7b7b-4b1d-8d03-0648f682cd77,,
+MB-09,3,k.watanabe,,hand_off,hand_off,handed_off,yes,A-01,escalated,TKT-4549,,0.05,05b790c5-6b46-4816-a65c-f37015c7e4b2,,
+MB-10,3,k.watanabe,,stop,pass,no_content,no,,escalated,TKT-4550,,4.11,4e55ff4c-8661-4fdf-a683-b016e877fcd9,,

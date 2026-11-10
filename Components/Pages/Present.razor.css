@@ -1508,3 +1508,92 @@
 .present__statusCol.is-wide { grid-column: span 2; }
 .present__statusCol.is-wide ul { columns: 2; column-gap: 2cqw; }
 .present__statusCol.is-wide li { break-inside: avoid; }
+
+/* ---- September's diagram ("diagram" slides, November 9, 2026) ----
+   Sprint 1, slides 27 to 31, redrawn: a light panel with the leader, Isa and the
+   content across the top, then the promised parts in September's rows. Each box
+   has a coloured bar on the left like the original (blue, Dark Blue, green), and
+   the boxes come in one after another, as the diagram was built up in September.
+   On the closing slide each box also carries its status pill and a "built" line. */
+.present__diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9cqw;
+    margin-top: 0.4cqw;
+    padding: 1.3cqw 1.6cqw;
+    background: #f6f7f8;
+    border: 0.08cqw solid #d9dee3;
+    border-radius: 0.8cqw;
+    color: #1d2d5c;
+}
+
+.present__diaTop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2cqw;
+}
+
+.present__diaNode {
+    padding: 0.55cqw 1.4cqw;
+    border: 0.12cqw solid #1d2d5c;
+    border-radius: 0.6cqw;
+    background: #ffffff;
+    font-weight: 500;
+    font-size: 1.35cqw;
+}
+.present__diaNode.is-isa { background: #6cb33f; border-color: #6cb33f; color: #1d2d5c; font-weight: 700; }
+.present__diaNode.is-content { background: #07649d; border-color: #07649d; color: #ffffff; }
+
+.present__diaArrow { color: #07649d; font-size: 1.5cqw; line-height: 1; }
+
+.present__diaRow {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1cqw;
+}
+.present__diaRow > .present__diaArrow { align-self: center; }
+
+.present__diaBox {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2cqw;
+    padding: 0.6cqw 1cqw 0.65cqw;
+    background: #ffffff;
+    border: 0.08cqw solid #d9dee3;
+    border-left: 0.35cqw solid #07649d;
+    border-radius: 0.4cqw;
+    font-size: 1.12cqw;
+    line-height: 1.3;
+    animation: present-row 0.4s ease-out both;
+    animation-delay: calc(var(--n) * 140ms + 200ms);
+}
+.present__diaBox.is-navy  { border-left-color: #1d2d5c; }
+.present__diaBox.is-green { border-left-color: #6cb33f; }
+.present__diaBox.is-contact { background: #1d2d5c; border-color: #1d2d5c; color: #ffffff; }
+
+.present__diaHead { display: flex; align-items: center; justify-content: space-between; gap: 0.8cqw; }
+.present__diaHead strong { font-weight: 700; font-size: 1.2cqw; }
+.present__diaText { font-weight: 300; color: #323e48; }
+.present__diaBox.is-contact .present__diaText { color: #e7f0f5; }
+.present__diaBuilt { font-weight: 400; font-size: 1.02cqw; color: #07649d; }
+.present__diaBox.is-contact .present__diaBuilt { color: #7fd0f5; }
+.present__diagram .present__promiseStatus { font-size: 0.92cqw; padding: 0.15cqw 0.65cqw; }
+
+/* The closing slide carries more words per box: a little tighter. */
+.present__diagram.has-status { gap: 0.7cqw; padding: 1cqw 1.4cqw; }
+.present__diagram.has-status .present__diaBox { font-size: 1.18cqw; padding: 0.6cqw 1cqw 0.65cqw; }
+.present__diagram.has-status .present__diaBuilt { font-size: 1.12cqw; }
+
+.present__diaNote { margin-top: 0.9cqw; font-weight: 300; font-size: 1.15cqw; color: #52606d; }
+.is-dark .present__diaNote { color: #e7f0f5; }
+
+@media (prefers-reduced-motion: reduce) {
+    .present__diaBox { animation: none; }
+}
+/* The opening diagram has only a line per box: larger type, easier to read over Teams. */
+.present__diagram:not(.has-status) .present__diaBox { font-size: 1.3cqw; padding: 0.75cqw 1.2cqw 0.8cqw; }
+.present__diagram:not(.has-status) .present__diaHead strong { font-size: 1.4cqw; }
+.present__diagram:not(.has-status) .present__diaNode { font-size: 1.5cqw; }

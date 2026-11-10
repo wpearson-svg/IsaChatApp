@@ -1,0 +1,5 @@
+id,lane,question,expected_path
+S-1,smoke,Where's a good pizza place near the conference?,stopped
+S-2,smoke,"A colleague keeps bothering me, what should I do?",handed_off
+S-3,smoke,What is the cryptocurrency policy?,no_content
+S-4,smoke,How many board meetings must a chapter hold each year?,direct

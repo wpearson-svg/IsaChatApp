@@ -2,16 +2,18 @@
 // presentation/slides.json -- every word on the /present slides.
 //
 // SPRINT 3 DECK (the final presentation to ISACA, internship week 12).
-// Built November 6, 2026 on the Sprint 2 deck (kept as it was in
-// presentation/sprint2.json, at /present?deck=sprint2), with Sprint 1's
-// structure woven in: the five-section tracker across the top, the risk
-// register and the success metrics, now as "what we promised" beside
-// "what we built", and the same ask as in September: a pilot.
-// The outline behind it: docs/Sprint3_Presentation_Outline.md. The row
-// numbers in the comments (S1-14 and so on) are docs/Promise_Inventory.md's.
+// Rebuilt November 9, 2026 from docs/Sprint3_Presentation_Outline.md: a story
+// in seven parts (the problem, what we promised, meet Isa, how she runs, a new
+// president's first 90 days, behind the scenes, promises kept and the ask).
+// Same format and the same opening as Sprint 2 (presentation/sprint2.json, at
+// /present?deck=sprint2): the intro animation onto "Meet Isa", then the cover.
+// No tracker across the top (Matthew, November 9): the promises open the talk
+// and come back at the end with a status beside each.
 //
 // TEAM ONLY until the presentation: it shows the onboarding feature.
-// Willis and Eliyas: please check every "built" line about your parts.
+// Willis and Eliyas: please check every line about your parts.
+// Placeholders, in [square brackets]: the survey figures (typed in locally on
+// the day, never committed) and the typical wait times (measured on the demo machine).
 //
 // Edit wording here; no code changes needed. Save the file and
 // refresh /present in the browser: the page reads this file each
@@ -19,17 +21,20 @@
 // restarted mid-talk: ticket numbers would start again at TKT-0001).
 //
 // Rules for the wording:
-// - The audience is ISACA, so ISACA is named (Sprint 2's audience wasn't).
-// - No model timing and no survey figures on the slides.
+// - The audience is ISACA, so ISACA is named.
+// - No model timing on the slides except the measured typical waits.
+// - No survey figures or study details in this file: the repository is
+//   public. The onboarding slide's figures are typed in locally on the day.
 // - Keep dev-only items (test scripts, the launcher) off the slides.
 // - Anything shown as built must work in the demo; anything else says
 //   designed, for the pilot, or planned.
+// - The demo runs from one sign-in: Watanabe Kenji, day 3 (July 3, 2026).
+//   Run python onboarding\prepare_demo.py before each rehearsal.
 //
 // Each slide has a "kind" that decides its layout:
 //   landing, cover, problem, statement, rules, safetynet, pipeline, status, showwork, list,
 //   demo, numbered, features, promises, closing.
-// "tracker" (one of the names in the "tracker" list below) draws Sprint 1's
-// five sections across the top of the slide, with this one highlighted.
+// "section" is the small label above the title.
 // On a "promises" slide each item has "title" (the promise), "text" (its
 // detail, optional), "built" and "status": built, partial, designed, plan or reword.
 // "presenter" shows in the corner, so hand-offs are clear.
@@ -38,119 +43,81 @@
 // Lines starting with // are comments and are ignored.
 // ============================================================
 {
-  "tracker": [ "Business impact", "Intended outcome", "Solution & cost", "Risk & controls", "Success metrics" ],
-
   "slides": [
     {
-      // The landing slide: the intro animation's curtain opens onto this one.
+      // The landing slide: the intro animation's curtain opens onto this one (as in Sprint 2).
       "kind": "landing",
       "presenter": "Matthew Brady",
       "title": "Meet Isa",
       "lead": "Your chapter support assistant"
     },
     {
+      // The cover, with the pipeline animation (as in Sprint 2).
       "kind": "cover",
-      "presenter": "Willis Pearson",
-      "title": "Promises kept",
-      "lead": "In September we made you promises. Here is what we built against each one.",
+      "presenter": "Matthew Brady",
+      "title": "Isa, built",
+      "lead": "An assistant that answers only from ISACA's approved content, shows her work, and knows when to hand off to a person.",
       "note": "Second Star Collective · AI-Enabled Chapter Knowledge and Support Agent"
     },
     {
-      // Sprint 1, slide 2: the team and their roles.
+      // The team today (November 9, 2026): three people. Willis and Matthew share the quality, risk and metrics work.
       "kind": "rules",
-      "presenter": "Willis Pearson",
+      "presenter": "Matthew Brady",
       "title": "Second Star Collective",
-      "lead": "The same team, the same five sections as in September.",
+      "lead": "The team behind Isa.",
       "items": [
-        { "title": "Willis Pearson", "text": "Project lead, solution architecture" },
+        { "title": "Willis Pearson", "text": "Project lead, solution architecture, quality and risk" },
         { "title": "Eliyas Eshtea", "text": "Solutions analyst, technical stack" },
-        { "title": "A'keyrah Stevenson", "text": "Quality engineer, risk and success metrics" },
-        { "title": "Matthew Brady", "text": "Client liaison, governance and escalation design" }
+        { "title": "Matthew Brady", "text": "Client liaison, governance, chapter leader onboarding, success metrics" }
       ]
     },
 
-    // ---------- 1. Business impact ----------
+    // ---------- 1. The problem (Matthew, 1 minute) ----------
     {
       "kind": "problem",
-      "tracker": "Business impact",
+      "section": "The problem",
       "presenter": "Matthew Brady",
-      "title": "The problem we set out to solve",
+      "title": "The problem you described",
       "stat": "230+",
-      "statLabel": "chapters, and one six-person team",
-      "lead": "Volunteer leaders need approved guidance *fast*,\nand every year, what one leader learned leaves with them.",
+      "statLabel": "chapters, and a small team to support them",
+      "lead": "Leaders wait on answers that *already exist*,\nand what one leader learns leaves with them.",
       "items": [
-        { "title": "Isa answers from ISACA-approved content.", "status": "blue" },
-        { "title": "Isa hands off to a person when it should.", "status": "green" }
+        { "title": "Answers are spread across many documents and tools.", "status": "blue" },
+        { "title": "Leadership changes every year, and knowledge is lost at each handover.", "status": "green" }
       ]
     },
 
-    // ---------- 2. Intended outcome ----------
+    // ---------- 2. What we promised (Willis, 45 seconds) ----------
     {
-      // Sprint 1, slides 24 to 26: the three outcomes, now each with what was built (S1-27 to S1-29).
-      "kind": "rules",
-      "tracker": "Intended outcome",
-      "presenter": "Matthew Brady",
-      "title": "Your three outcomes, built",
-      "lead": "What we promised in September, and what now does it.",
+      // September's diagram (Sprint 1, slide 31), redrawn: what we promised. The same picture comes back
+      // at the end with a status on each part. The panel has its own light background, so it reads on
+      // white or Dark Blue slides.
+      "kind": "diagram",
+      "section": "What we promised",
+      "presenter": "Willis Pearson",
+      "title": "What we promised in September",
+      "lead": "You've seen this. Hold us to it: it comes back at the end.",
+      "note": "For your three outcomes: leaders doing strategy, answers that survive the rotation, and a team freed for the work that needs them.",
       "items": [
-        { "title": "Leaders doing strategy", "text": "A 90-day journey for each new president, a Today note, key dates and a month calendar." },
-        { "title": "Answers that survive the rotation", "text": "A succession notebook, the guidebook's handoff checklist, and questions to the president before." },
-        { "title": "A team freed for the work that needs them", "text": "Hand-offs with a reference number, and one click to a person from any answer." }
-      ]
-    },
-    {
-      // The onboarding demo: ONBOARDING-FEATURE.md, "The demo". About two minutes.
-      "kind": "demo",
-      "tracker": "Intended outcome",
-      "presenter": "Matthew Brady",
-      "title": "Live demo: the yearly handover",
-      "lead": "One chapter, two presidents, one decision that survives the rotation.",
-      "steps": [
-        "The outgoing president saves a decision",
-        "The new president on day 3: the first week",
-        "The notebook: the decision is waiting",
-        "A president on day 60 sees a different step"
-      ]
-    },
-    {
-      // Updated November 6, 2026. "Built" works in the prototype today; "Planned" is not built.
-      "kind": "features",
-      "tracker": "Intended outcome",
-      "presenter": "Matthew Brady",
-      "title": "Built into the journey",
-      "groups": [
-        {
-          "label": "Built",
-          "items": [
-            { "title": "First 90 days", "text": "Steps for each day of term." },
-            { "title": "Today and the calendar", "text": "Today's steps, key dates, the month." },
-            { "title": "Meet your people", "text": "Your support contact and your board." },
-            { "title": "Succession notebook", "text": "Notes left for the next leader." },
-            { "title": "Handoff checklist", "text": "The guidebook's handover list." },
-            { "title": "Listen Library", "text": "ISACA's documents, read aloud." },
-            { "title": "Terms explained", "text": "ISACA's own definitions." }
-          ]
-        },
-        {
-          "label": "Planned",
-          "items": [
-            { "title": "Day 30, 60, 90 check-ins", "text": "\"What's still unclear?\" Shared only by choice." },
-            { "title": "Support team view", "text": "Who may need a check-in; never their questions." },
-            { "title": "More roles", "text": "Journeys for treasurers, secretaries and other board roles." },
-            { "title": "Phone and browser", "text": "An Android app and a Chrome extension." }
-          ]
-        }
+        { "name": "signin", "title": "Sign in", "text": "Your ISACA account, by role: chapter leader, staff, admin" },
+        { "name": "translation", "title": "Translation", "text": "Any language" },
+        { "name": "check1", "title": "Check 1", "text": "Reads the question" },
+        { "name": "check2", "title": "Check 2", "text": "Reads the answer" },
+        { "name": "ticket", "title": "Your team", "text": "Gets a ticket" },
+        { "name": "search", "title": "1 · Search", "text": "First, in ISACA's own words" },
+        { "name": "ai", "title": "2 · AI, if search isn't enough", "text": "Role filter · RAG · knowledge graph · logs" },
+        { "name": "contact", "title": "Contact the team", "text": "Always on screen · one click from any answer · the question and history go with it" }
       ]
     },
 
-    // ---------- 3. Solution & cost ----------
+    // ---------- 3. Meet Isa (Willis with Eliyas, 3 minutes) ----------
     {
       "kind": "pipeline",
       "warmup": true,
-      "tracker": "Solution & cost",
+      "section": "Meet Isa",
       "presenter": "Willis Pearson",
       "title": "One question, ten stages",
-      "lead": "The system you saw drawn in September, built. The AI stages run only when they're needed.",
+      "lead": "Search first. The AI model writes only when search alone can't, and only from the passages found.",
       "stages": [
         { "name": "Front end" },
         { "name": "Access control" },
@@ -170,16 +137,45 @@
       ]
     },
     {
-      // Status of each stage on November 6, 2026 (built, partial or stub). Willis and Eliyas: please confirm.
-      "kind": "status",
-      "tracker": "Solution & cost",
+      // The team's settled demo questions. Signed in as Kenji. Keep Spanish and Amharic out unless translation is warm.
+      "kind": "demo",
+      "section": "Meet Isa",
       "presenter": "Willis Pearson",
+      "title": "Live demo: ask Isa",
+      "lead": "Three questions, three different endings.",
+      "steps": [
+        "\"How many board meetings must a chapter hold each year?\" ISACA's own words, with the page, and Show the work",
+        "\"What insurance must we have?\" An answer, then a pointer to a person",
+        "\"What is the cryptocurrency policy?\" Not in approved content, so a person, with a reference number"
+      ]
+    },
+    {
+      "kind": "safetynet",
+      "section": "Meet Isa",
+      "presenter": "Willis Pearson",
+      "title": "Safe by design",
+      "lead": "What happens when something goes wrong.",
+      "items": [
+        { "title": "An unsupported sentence", "text": "is removed, or the answer falls back to ISACA's own words." },
+        { "title": "A failed model call", "text": "becomes a hand-off, never a wrong answer." },
+        { "title": "Sensitive topics", "text": "never get an automatic answer, and come with a safety line." },
+        { "title": "A crashed stage", "text": "shows a plain \"something went wrong\" message, not an error code." },
+        { "title": "Private by default", "text": "The event log never stores question text. Usage records hold only a one-way hash, with a key made fresh on every start and never saved." }
+      ]
+    },
+
+    // ---------- 4. How she runs (Eliyas, 1 minute) ----------
+    {
+      // Status of each stage (Willis and Eliyas: please confirm before the presentation).
+      "kind": "status",
+      "section": "How she runs",
+      "presenter": "Eliyas Eshtea",
       "title": "Every stage, honestly",
       "lead": "In Sprint 2, five stages were placeholders. Now one is.",
       "rows": [
         { "name": "Front end", "status": "built", "text": "Chat, sign-in, Today, notebook and Library" },
         { "name": "Access control", "status": "built", "text": "Sign-in and roles" },
-        { "name": "Translation", "status": "built", "text": "NLLB-200, self-hosted: Amharic and Spanish wired in" },
+        { "name": "Translation", "status": "built", "text": "NLLB-200, self-hosted: Amharic and Spanish connected" },
         { "name": "Input compliance", "status": "built", "text": "Rules files your team owns, with approval records" },
         { "name": "Database search", "status": "built", "text": "Direct answers in ISACA's own words" },
         { "name": "Knowledge graph", "status": "stub", "text": "Related topics; not needed for the pilot" },
@@ -190,101 +186,120 @@
       ]
     },
     {
-      "kind": "showwork",
-      "tracker": "Solution & cost",
-      "presenter": "Willis Pearson",
-      "title": "Show the work",
-      "lead": "Every answer can show its steps, in plain language.",
-      "items": [
-        { "title": "Answered from approved guidance", "status": "built" },
-        { "title": "Passed to a person", "status": "handoff" }
-      ],
-      "bullets": [
-        "Sections used and checks passed, visible for any answer.",
-        "A developer view shows the raw events for each stage."
-      ]
-    },
-    {
-      "kind": "demo",
-      "tracker": "Solution & cost",
-      "presenter": "Willis Pearson",
-      "title": "Live demo: Isa",
-      "lead": "Isa is in the corner. Let's ask her.",
-      "steps": [
-        "A direct answer, with its source",
-        "An answer, then a pointer to a person",
-        "A question Isa's content doesn't cover",
-        "A sensitive topic",
-        "Backstage: tracing one question"
-      ]
-    },
-    {
-      // Sprint 1, slide 32, beside what was built (S1-9 to S1-13). Three promises are reworded, honestly.
-      "kind": "promises",
-      "tracker": "Solution & cost",
+      // Recount every number on the demo machine the day before. The waits come from the Dev Dashboard's Front end tab.
+      "kind": "list",
+      "section": "How she runs",
       "presenter": "Eliyas Eshtea",
-      "title": "What it costs to run",
-      "lead": "The September promises, and where we changed the promise rather than pretend.",
+      "title": "How she runs, in numbers",
+      "lead": "Measured, not promised.",
       "items": [
-        { "title": "Search first", "text": "Most answers from direct search, word for word", "built": "Direct answers in ISACA's own words, and search by meaning before any AI", "status": "built" },
-        { "title": "Least expensive model that can answer", "text": "A frontier model only when needed", "built": "One small model running on your own machine. No paid service, nothing leaves your environment", "status": "reword" },
-        { "title": "Every call logged", "text": "Model, tokens, cost per question", "built": "Model, tokens and time logged for every call. Running locally has no per-call cost", "status": "reword" },
-        { "title": "Your controls, no developer", "text": "Thresholds and the always-to-a-person list", "built": "Four live settings on the dashboard, and rules files your team changes without a developer", "status": "partial" },
-        { "title": "Running lean", "text": "Search first, right-sized models, cached answers", "built": "Search first and a small model. We dropped the cached answers", "status": "reword" }
+        { "title": "131 passages", "text": "ISACA's documents first, then nine governance best-practice guides, searched by meaning" },
+        { "title": "61 of 61", "text": "rule checks passing, every time Isa starts" },
+        { "title": "78 test questions", "text": "each tied to a known route through Isa, the same result 5 times out of 5" },
+        { "title": "[measure] seconds", "text": "typical wait for an answer found in ISACA's text; [measure] when the AI model writes it" },
+        { "title": "About 200 languages", "text": "the translation model can handle; Spanish and Amharic connected today" },
+        { "title": "$0 per question", "text": "Isa runs on your own computers; nothing goes to a paid service" }
       ]
     },
 
-    // ---------- 4. Risk & controls ----------
+    // ---------- 5. A new president's first 90 days (Matthew, 4 minutes) ----------
     {
-      // Sprint 1's risk register (slides 33 to 37), beside what was built (S1-14 to S1-18).
-      // The role filter (row 3) is designed, not built: the team decides before the freeze whether that changes.
-      "kind": "promises",
-      "tracker": "Risk & controls",
-      "presenter": "A'keyrah Stevenson",
-      "title": "A control for every risk",
-      "lead": "The risk register from September, line by line.",
+      // The figures for this slide are NOT in this file: the repository is public and ISACA's survey is
+      // confidential. Matthew types them in locally on presentation day and does not commit them
+      // (the survey is in private/, page 19, Priority 3).
+      "kind": "problem",
+      "section": "A new president's first 90 days",
+      "presenter": "Matthew Brady",
+      "title": "Where leaders need help",
+      "stat": "[figure]",
+      "statLabel": "positive for leader onboarding",
+      "lead": "Onboarding is one of your *lowest-rated* areas,\nand [figure] of leaders chose it as a priority to improve.",
       "items": [
-        { "title": "A wrong answer", "text": "Check 2 compares every answer with approved content", "built": "Every AI sentence is checked against its source, with numbers, dates and \"must\". A failed check falls back to ISACA's own words, or a person", "status": "built" },
-        { "title": "A sensitive question reaching the AI", "text": "An always-to-a-person list your team owns", "built": "Rules files your team owns and approves. Sensitive topics go to a person before any search, with a safety line", "status": "built" },
-        { "title": "A leader seeing content outside their role", "text": "A role filter at retrieval", "built": "Designed. Today every document in Isa is meant for all chapter leaders; roles already decide which screens a person can open", "status": "designed" },
-        { "title": "The tool showing your team too much", "text": "Trends only, never a named person", "built": "Usage counted without names, and onboarding by category only", "status": "partial" },
-        { "title": "A leader who can't get to a person", "text": "Three paths, always", "built": "Isa passes on what she can't answer; \"Not quite\" offers a person; \"Talk to a person\" is always on screen", "status": "built" }
-      ]
-    },
-    {
-      "kind": "safetynet",
-      "tracker": "Risk & controls",
-      "presenter": "A'keyrah Stevenson",
-      "title": "Safe by design",
-      "lead": "What happens when things go wrong.",
-      "items": [
-        { "title": "An unsupported sentence", "text": "is removed, or the answer falls back to ISACA's own words." },
-        { "title": "A failed model call", "text": "becomes a hand-off, never a wrong answer." },
-        { "title": "Sensitive topics", "text": "never get an automatic answer, and come with a safety line." },
-        { "title": "A crashed stage", "text": "shows a plain \"something went wrong\" message, not an error code." },
-        { "title": "Private by default", "text": "The event log never stores question text. Usage records hold only a one-way hash, with a key made fresh on every start and never saved." }
-      ]
-    },
-
-    // ---------- 5. Success metrics ----------
-    {
-      // Sprint 1, slides 38 to 41 (S1-19 to S1-23): defined before the build; what exists now.
-      "kind": "promises",
-      "tracker": "Success metrics",
-      "presenter": "A'keyrah Stevenson",
-      "title": "Metrics defined before the build",
-      "lead": "Baseline before the pilot, target agreed in writing. Here is what's ready.",
-      "items": [
-        { "title": "Accuracy", "text": "A weekly sample checked by your team", "built": "52 real test questions, each with the path it should take, and 61 automatic rule checks", "status": "plan" },
-        { "title": "The right kind of use", "text": "Leaders bring Isa what she's built for, and a person the rest", "built": "Every question's outcome is logged, never its text", "status": "partial" },
-        { "title": "Escalation quality, not rate", "text": "Whether each hand-off should have happened", "built": "Every hand-off records the rule or reason that sent it", "status": "partial" },
-        { "title": "Hours returned", "text": "Questions your team no longer answers by hand", "built": "Needs your baseline, measured before the pilot", "status": "plan" }
+        { "title": "Isa guides each new president through their first 90 days.", "status": "blue" },
+        { "title": "Isa connects them to people. She never replaces them.", "status": "green" }
       ]
     },
     {
       "kind": "rules",
-      "tracker": "Success metrics",
-      "presenter": "A'keyrah Stevenson",
+      "section": "A new president's first 90 days",
+      "presenter": "Matthew Brady",
+      "title": "What leaders struggle with",
+      "lead": "And what Isa does about each.",
+      "items": [
+        { "title": "Who to call, and when", "text": "Their Chapter Experience contact, three ways to reach them, and their board, one page per person." },
+        { "title": "Hidden deadlines", "text": "A Today note, ISACA's key dates, and a calendar they can add to their own." },
+        { "title": "Resources spread out", "text": "ISACA's documents in one Library, read aloud word for word, and ISACA's definitions on hover." },
+        { "title": "What the last president knew", "text": "A succession notebook that passes from president to president." }
+      ]
+    },
+    {
+      // One sign-in: Kenji, day 3. Sato's entries are prepared by onboarding/prepare_demo.py. About 3 minutes.
+      "kind": "demo",
+      "section": "A new president's first 90 days",
+      "presenter": "Matthew Brady",
+      "title": "Live demo: Kenji, day 3",
+      "lead": "It's July 3. Kenji Watanabe has been president of the Sakura Bay Chapter for three days.",
+      "steps": [
+        "He opens Isa: today's steps, and what the president before him wrote this time last year",
+        "Who to call: his Chapter Experience contact, then his board",
+        "Hidden deadlines: the calendar, and what day 60 will bring",
+        "What the last president knew: the decision she saved, waiting in the notebook",
+        "The loop closes: Kenji saves something for whoever comes next"
+      ]
+    },
+    {
+      "kind": "rules",
+      "section": "A new president's first 90 days",
+      "presenter": "Matthew Brady",
+      "title": "What it means for ISACA",
+      "lead": "Beyond the RFP, and built to its rules.",
+      "items": [
+        { "title": "Fewer repeat questions", "text": "New leaders find what they need without asking your team the same things each year." },
+        { "title": "Your team, supported", "text": "Isa connects leaders to the Chapter Experience team. She never replaces them." },
+        { "title": "Knowledge that stays", "text": "What one president learns is there for the next." },
+        { "title": "No side door", "text": "Everything a leader sees still goes through Isa's checks." }
+      ]
+    },
+
+    // ---------- 6. Behind the scenes (Willis, with Matthew on the rules; 2.5 minutes) ----------
+    {
+      // Behind the scenes, live: the Dev Dashboard, real parts only (check every tab on screen first).
+      // The three steps are the three points: you own the rules, your team tunes her, you learn what leaders need.
+      "kind": "demo",
+      "section": "Behind the scenes",
+      "presenter": "Willis Pearson",
+      "title": "Live: your team's view",
+      "lead": "Isa doesn't just answer leaders. She tells you what they're asking.",
+      "steps": [
+        "You own the rules: the rule tester shows which rule fires and why, and every change is logged",
+        "Your team tunes her: a live setting that applies to the next question, and health alerts for every service",
+        "You learn what leaders need: questions by topic, hand-offs by region, documents due for review. Never a named person"
+      ]
+    },
+
+    // ---------- 7. Promises kept, and the ask (Matthew, then Willis; 1.5 minutes) ----------
+    {
+      // September's diagram again, now with a status on each part (Willis and Eliyas: please confirm).
+      "kind": "diagram",
+      "section": "Promises kept",
+      "presenter": "Matthew Brady",
+      "title": "What we promised, what we built",
+      "lead": "The same diagram, with an honest status on every part.",
+      "items": [
+        { "name": "signin", "title": "Sign in", "status": "built", "built": "Sign-in and roles (test accounts, not ISACA's)" },
+        { "name": "translation", "title": "Translation", "status": "reword", "built": "One model for about 200 languages; two connected today" },
+        { "name": "check1", "title": "Check 1", "status": "built", "built": "Rules files your team owns and approves" },
+        { "name": "check2", "title": "Check 2", "status": "built", "built": "Every AI sentence checked; then ISACA's words; then a person" },
+        { "name": "ticket", "title": "Your team", "status": "built", "built": "A reference number and a Salesforce case" },
+        { "name": "search", "title": "1 · Search", "status": "built", "built": "Direct answers in ISACA's own words, then search by meaning" },
+        { "name": "ai", "title": "2 · AI, if search isn't enough", "status": "partial", "built": "RAG and logs built. Knowledge graph: a placeholder. Rules can already target a role; the content filter is designed, and isn't needed until ISACA adds restricted content" },
+        { "name": "contact", "title": "Contact the team", "status": "built", "built": "\"Talk to a person\" on every screen, and one click from any answer, showing what will be sent" }
+      ]
+    },
+    {
+      "kind": "rules",
+      "section": "The ask",
+      "presenter": "Willis Pearson",
       "title": "A pilot you can judge",
       "lead": "Who we'd start with, what we'd measure, and who decides.",
       "items": [
@@ -293,8 +308,6 @@
         { "title": "Who judges", "text": "Your Chapter Experience team, against a baseline and a target agreed in writing." }
       ]
     },
-
-    // ---------- Close ----------
     {
       "kind": "numbered",
       "section": "What comes next",
@@ -302,10 +315,10 @@
       "title": "After the pilot",
       "lead": "Planned, not built.",
       "items": [
-        { "title": "Role filter at retrieval", "text": "Documents tagged by audience, filtered in search." },
-        { "title": "Content approval and versions", "text": "An approval record and a version on every document, like the rules files." },
-        { "title": "More languages", "text": "NLLB-200 covers about 200; each one added is checked by a speaker." },
+        { "title": "Content matched to each role", "text": "Documents tagged by audience, filtered in search, when ISACA adds restricted content." },
         { "title": "The support team view", "text": "Progress for check-ins, behind your on/off switch; never questions." },
+        { "title": "Check-ins and more roles", "text": "Day 30, 60 and 90 check-ins, and journeys for other board roles." },
+        { "title": "More languages", "text": "NLLB-200 covers about 200; each one added is checked by a speaker." },
         { "title": "Phone and browser", "text": "An Android app and a Chrome extension." }
       ]
     },

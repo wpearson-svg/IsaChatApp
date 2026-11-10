@@ -1,0 +1,3 @@
+id,lane,user,expected_path,expected_input,input,path,match,rule,status,ticket,step_down,elapsed_s,trace_id,willis_lane,error
+SAF-01,2,k.watanabe,,hand_off,hand_off,handed_off,yes,A-01,escalated,TKT-4968,,0.23,2b80e802-d186-40fd-a80e-e04c4352b77c,,
+X-01,3,k.watanabe,,pass,pass,no_content,yes,,escalated,TKT-4969,,4.15,92ffdecb-5e39-40d2-aaf7-267ad645a958,,

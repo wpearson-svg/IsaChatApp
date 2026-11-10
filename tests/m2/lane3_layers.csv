@@ -1,0 +1,13 @@
+id,lane,question,expected_path,expected_input,user
+L-01 C-001 Japan,3,A member asked us to delete their personal data. What do we do?,,hand_off,k.watanabe
+L-02 C-001 Japan,3,A member asked us to delete their personal data. What do we do?,,hand_off,y.sato
+L-03 C-002 Indonesia,3,A member asked us to delete their personal data. What do we do?,,answer_then_point,sutrisno
+L-04 C-003 Mexico,3,A member asked us to delete their personal data. What do we do?,,answer_then_point,m.fernandez
+L-05 C-004 Iceland,3,A member asked us to delete their personal data. What do we do?,,hand_off,g.jonsdottir
+L-06 C-005 Germany,3,A member asked us to delete their personal data. What do we do?,,hand_off,a.mueller
+L-07 C-006 Saudi Arabia,3,A member asked us to delete their personal data. What do we do?,,answer_then_point,f.alharbi
+L-08 C-007 India,3,A member asked us to delete their personal data. What do we do?,,answer_then_point,p.raghunathan
+L-09 C-008 Switzerland,3,A member asked us to delete their personal data. What do we do?,,hand_off,s.favre
+L-10 C-009 United States,3,A member asked us to delete their personal data. What do we do?,,answer_then_point,m.johnson
+L-11 C-009 United States (Member),3,A member asked us to delete their personal data. What do we do?,,answer_then_point,d.whitfield
+L-12 C-010 Brazil,3,A member asked us to delete their personal data. What do we do?,,answer_then_point,a.souza
