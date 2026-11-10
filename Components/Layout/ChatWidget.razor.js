@@ -46,3 +46,39 @@ export function scrollToMessage(container, id) {
     const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     container.scrollTo({ top: container.scrollTop + offset, behavior: calm ? 'auto' : 'smooth' });
 }
+
+// Escape closes one thing at a time (accessibility check, lane 11, M-021): the panel on
+// the right, then Today, then the chat. The choice of what to close is made in
+// ChatWidget.razor (OnEscapeKey); this only listens for the key. Escape is left alone:
+//   - while a term's definition is showing (GlossaryText.razor.js hides it),
+//   - while a pop-up box or a menu is open (they have their own Cancel or close),
+//   - while the leader is typing in a box that has text in it, or a box in a side panel
+//     has text in it, so nothing typed is lost.
+// 'current' is the chat on the page now; a reload replaces it, so the key always
+// reaches the live one.
+let current = null;
+let escapeWatched = false;
+export function watchEscape(widget) {
+    current = widget;
+    if (escapeWatched) return;
+    escapeWatched = true;
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || e.defaultPrevented || !current) return;
+        if (!document.querySelector('.isa-widget__panel')) return;            // the chat is closed
+        if (document.querySelector('.isa-tip:not([hidden])')) return;
+        if (document.querySelector('.isa-widget [role="dialog"], .isa-widget [role="menu"]')) return;
+        const at = document.activeElement;
+        if (at && (at.tagName === 'TEXTAREA' || at.tagName === 'INPUT') && at.value) return;
+        // A note or message half-written in a side panel: closing the panel would lose it.
+        const typed = [...document.querySelectorAll('.isa-widget aside textarea, .isa-widget aside input')]
+            .some((box) => !['checkbox', 'radio', 'range', 'hidden'].includes(box.type) && box.value);
+        if (typed) return;
+        current.invokeMethodAsync('OnEscapeKey').catch(() => { });
+    });
+}
+
+// Puts keyboard focus on the first element that matches, if it is on the page.
+export function focusOn(selector) {
+    const el = document.querySelector(selector);
+    if (el) el.focus({ preventScroll: true });
+}

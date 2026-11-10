@@ -83,17 +83,20 @@ builder.Services
         options.AccessDeniedPath = "/sign-in";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
-        // The cookie outlives the Keycloak tokens, which Isa keeps in memory. If they are gone (Isa restarted,
-        // or Keycloak ended the session), end the cookie too, so the person signs in again and gets their
-        // roles back, instead of looking signed in with no roles (no Dev Dashboard, chat refused).
-        options.Events.OnValidatePrincipal = async ctx =>
+        // The browser keeps this cookie for up to 8 hours, but Isa keeps the
+        // matching sign-in tokens in memory only, so they are gone after a
+        // restart. Without this check the page said "Signed in" while the chat
+        // said "Please sign in" (defect M-018). Each time a page loads: if Isa
+        // no longer knows the session the cookie names, turn the cookie away
+        // and remove it, so the page shows the Sign in button.
+        options.Events.OnValidatePrincipal = async context =>
         {
-            var signIn = ctx.HttpContext.RequestServices.GetRequiredService<KeycloakSignInService>();
-            var sessionId = ctx.Principal?.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
-            if (!signIn.HasSession(sessionId))
+            var signIn = context.HttpContext.RequestServices.GetRequiredService<KeycloakSignInService>();
+            var sessionId = context.Principal?.FindFirst(KeycloakSignInService.SessionClaim)?.Value;
+            if (!signIn.IsKnownSession(sessionId))
             {
-                ctx.RejectPrincipal();
-                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             }
         };
     });

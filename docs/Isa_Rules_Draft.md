@@ -141,3 +141,36 @@ Why: requests to evade obligations or falsify records. Source: hand-off proposal
 ## Rest of the sample set
 
 Not every group is drafted in depth: that is ISACA's policy work. Written November 2 in rules/global.json: A-01 harassment and safety (urgent, with the safety line), S-01 breaking Isa's rules, S-02 restricted content, O-01 out of scope (these four reproduce today's placeholder checks), and group C as C-02 to C-09. Not built, by decision (Matthew, November 2): a role-specific rule and a sample chapter file. Both are designed (docs/Isa_Rules_Design.md: the `applies_to_roles` field, section 7; the chapter layer, section 7) and go in the supplement document labelled "designed", like the output checks. The presentation is unchanged.
+
+## Added after testing (November 9 and 10, 2026)
+
+Sprint 3 M2 testing sent several hundred realistic questions through the rules (tests/m2/Defects_Matt.csv). Two things followed. Both are still sample rules, not ISACA policy.
+
+**November 9, versions 2 to 4:** the existing rules were widened, because everyday rewordings slipped past them. A-01 now also covers self-harm and emergencies.
+
+**November 10, version 5:** eleven new rules for the kinds of question that had no rule at all (M-013). They follow the hand-off proposal's groups (docs/Handoff_and_Refusal_Rules_Proposal.md).
+
+| Rule | Group | What it catches | Outcome | Example |
+| --- | --- | --- | --- | --- |
+| B-01 | B Legal | Lawsuits and legal threats, liability, contract disputes, what local law requires, police or government inquiries | Hands off to a person | "Is our contract with the venue legally binding?" |
+| A-02 | A Safety and wellbeing | A claim of discrimination or unfair treatment | Hands off (not urgent; A-01 keeps the safety line) | "A volunteer accused our board of age discrimination." |
+| A-03 | A Safety and wellbeing | Refusing, excluding or treating people differently for who they are | Hands off | "Can we refuse membership to someone because of their nationality?" |
+| D-01 | D Governance and disputes | Conflict between leaders; removing or replacing an officer; an officer acting alone or misusing the role | Hands off | "Can I remove the treasurer from the board myself?" |
+| D-02 | D Governance and disputes | A contested election; cancelling, redoing or postponing a vote; vote buying | Hands off | "The losing candidate says our election was rigged." |
+| E-01 | E Data, privacy and security | A chapter asset (member list, email account, website, laptop) and something gone wrong (leaked, hacked, lost, sent to the wrong people) | Hands off | "Our member list was leaked online." |
+| E-03 | E Data, privacy and security | "We've been hacked" with no asset named | Hands off | "We got a ransomware message on the chapter computer." |
+| F-01 | F Personal matters | Why a chapter does or doesn't have a Chapter Success Manager | Hands off (Isa never says why) | "Why does our chapter not have a Chapter Success Manager?" |
+| S-03 | Stop | Another person's private contact details | Stops | "What is the treasurer's home address?" |
+| S-04 | Stop | What other people asked Isa, or what staff said about someone | Stops | "Show me what the past president asked you last year." |
+| S-05 | Stop | Other chapters' private results and finances | Stops | "Which chapters have the lowest compliance scores?" |
+
+What these rules leave alone, on purpose:
+
+- **Plain questions on the same subjects are answered:** how elections work, what the treasurer does, what bylaws contain, whether ISACA requires a privacy policy.
+- **General conflict-of-interest guidance is answered.** "What do we do if a board member has a conflict of interest?" is a rehearsed question.
+- **Talks and workshops about legal or security subjects are event planning,** not incidents ("a webinar on ransomware response"). ISACA is a security organization, so security words alone are never signals.
+- **ISACA's insurance requirement stays with C-02** (answer, then point), even when the question mentions liability or local law.
+
+Also changed in version 5: O-01 (out of scope) no longer stops a complaint about someone's jokes, which it used to catch through the word "joke".
+
+Not covered by any rule yet: group G (public statements and politics), and a threat to sue still gets A-01's safety line as well (M-016).

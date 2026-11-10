@@ -144,6 +144,15 @@ public class KeycloakSignInService
         return new SignInResult(SignInOutcome.Success, BuildPrincipal(tokens.AccessToken, sessionId));
     }
 
+    /// <summary>
+    /// True if Isa still holds the tokens for this session. False after Isa
+    /// restarts (the tokens are kept in memory only) or once Keycloak has
+    /// ended the session. The sign-in cookie check in Program.cs uses it, so
+    /// a browser whose cookie outlived the session is shown as signed out.
+    /// </summary>
+    public bool IsKnownSession(string? sessionId) =>
+        !string.IsNullOrEmpty(sessionId) && _sessions.ContainsKey(sessionId);
+
     // ---- Tokens for the chat --------------------------------------------
 
     /// <summary>

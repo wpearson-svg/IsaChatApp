@@ -99,3 +99,67 @@ body:has(.isa-widget__panel) .isa-widget__bubble { display: none !important; }
 .isa-tip__quote, .isa-tip__list { display: block; }
 .isa-tip__item { display: list-item; margin-left: 1.1em; }
 .isa-tip__source { display: block; margin-top: 6px; font-size: 0.74rem; color: #4a5866; }
+
+/* ---- Tap areas of at least 44px (accessibility check, lane 11, M-022) ----
+   Some of Isa's smaller buttons and links are drawn smaller than 44px (the close
+   crosses, Help, the back links, the filter chips). They keep their look: an
+   invisible area centred on each one, at least 44px wide and tall, takes the tap or
+   click. Where two of them sit close together, the areas meet and the later one wins.
+   The rules live here, not in each component's own stylesheet, so one list covers
+   them all. A button that is placed by its own stylesheet (position: absolute) keeps
+   that placement, because the component's rule is the more specific one. */
+.isa-widget__close,
+.isa-widget__headerLink,
+.isa-widget__directSupportLink,
+.isa-tnote__link,
+.isa-today__back,
+.isa-today__close,
+.isa-today__iconBtn,
+.isa-today__optionBtn,
+.isa-today__slot,
+.isa-fb__btn,
+.isa-help__askBtn,
+.isa-help__iconBtn,
+.isa-help__tocLink,
+.isa-nb__ghostBtn,
+.isa-nb__iconBtn,
+.isa-nb__kind,
+.isa-nb__moreBtn,
+.isa-nb__saveBtn,
+.isa-lib__back,
+.isa-lib__iconBtn,
+.isa-lib__pbtn,
+.isa-lib__speed {
+    position: relative;
+}
+
+.isa-widget__close::after,
+.isa-widget__headerLink::after,
+.isa-widget__directSupportLink::after,
+.isa-tnote__link::after,
+.isa-today__back::after,
+.isa-today__close::after,
+.isa-today__iconBtn::after,
+.isa-today__optionBtn::after,
+.isa-today__slot::after,
+.isa-fb__btn::after,
+.isa-help__askBtn::after,
+.isa-help__iconBtn::after,
+.isa-help__tocLink::after,
+.isa-nb__ghostBtn::after,
+.isa-nb__iconBtn::after,
+.isa-nb__kind::after,
+.isa-nb__moreBtn::after,
+.isa-nb__saveBtn::after,
+.isa-lib__back::after,
+.isa-lib__iconBtn::after,
+.isa-lib__pbtn::after,
+.isa-lib__speed::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+}

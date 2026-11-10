@@ -138,7 +138,7 @@
         @* is-shifted rounds the chat's right corners while Today or the
            notebook is open beside it. Its width and position come from
            ChatPanelStyle (see "Onboarding: the side panels" below). *@
-        <div class="isa-widget__panel is-expanded @(IsTodayOpen || IsRightPanelOpen ? "is-shifted" : "") @(RailTakesRoom ? "has-rail" : "") @(_railGliding ? "is-railGlide" : "")" style="@ChatPanelStyle">
+        <div class="isa-widget__panel is-expanded @(IsTodayOpen || IsRightPanelOpen ? "is-shifted" : "") @(RailTakesRoom ? "has-rail" : "") @(_railGliding ? "is-railGlide" : "")" style="@ChatPanelStyle" role="region" aria-label="Isa chat">
 
             @* Header: ISACA Dark Blue band with the Isa ring, name and
                role, and a cropped "C" brand graphic behind it (same
@@ -171,7 +171,7 @@
                         <span class="isa-widget__badge" aria-hidden="true"><Throbber Spinning="false" /></span>
                         <span class="isa-widget__identityText">
                             <span class="isa-widget__name">Isa</span>
-                            <span class="isa-widget__role"><span class="isa-widget__statusDot" aria-hidden="true"></span>Chapter Support Assistant</span>
+                            <span class="isa-widget__role"><span class="isa-widget__statusDot" aria-hidden="true"></span><span class="isa-widget__roleText">Chapter Support Assistant</span></span>
                         </span>
                     </span>
                 </div>
@@ -265,6 +265,12 @@
                journey; for everyone else it renders nothing. *@
             <JourneyCard />
 
+            @* For screen readers only: Isa's newest reply, read out once when it arrives.
+               The message list itself is not a live area, because its "working" line
+               (Show the work) already announces progress and would be read twice
+               (accessibility check, lane 11, M-024). *@
+            <div class="isa-widget__srOnly" role="status" aria-live="polite">@_announce</div>
+
             <div class="isa-widget__messages" @ref="_messagesEl">
                 @* The CSS container uses flex-direction: column-reverse
                    so the browser keeps the view pinned to the newest
@@ -319,7 +325,7 @@
                                phone; they become tappable once the document
                                Library (Feature 5) can open the passage. *@
                             <div class="isa-widget__sourcesLabel">Sources (@msg.Sources.Count)</div>
-                            <div class="isa-widget__sources" aria-label="Sources">
+                            <div class="isa-widget__sources" role="group" aria-label="Sources">
                                 @foreach (var src in msg.Sources)
                                 {
                                     <div class="isa-widget__source">
@@ -840,6 +846,7 @@
         IsHelpOpen = false;
         Enlarged = null;
         _railCameBack = false;   // next time the chat opens, the rail opens with its slower glide
+        _focusAfter = ".isa-widget__bubble";   // keyboard focus returns to the button that opens the chat (M-021)
     }
 
     // ---- Onboarding: the Today window ------------------------------------
@@ -1457,7 +1464,10 @@
             // top of the chat, the answer right under it (see
             // OnAfterRenderAsync and ChatWidget.razor.js).
             if (Messages.Count > 0 && !ReferenceEquals(Messages[^1], question))
+            {
                 _scrollToId = question.DomId;
+                _announce = $"{Messages[^1].DisplayName}: {Messages[^1].Text}";   // read out by screen readers (M-024)
+            }
         }
     }
 
@@ -1471,9 +1481,49 @@
     private string? _scrollToId;
     private IJSObjectReference? _chatJs;
     private bool _showFromTop;
+    private string _announce = "";          // Isa's newest reply, for screen readers (the hidden status line)
+    private string? _focusAfter;            // what to put keyboard focus on after the next render (a CSS selector)
+    private DotNetObjectReference<ChatWidget>? _selfRef;
+
+    // Escape closes one thing at a time, from the right: the notebook, Library or Help,
+    // then Today, then the chat itself (accessibility check, lane 11, M-021). Called by
+    // ChatWidget.razor.js, which leaves Escape alone while a pop-up box or a term's
+    // definition is open, or while the leader is typing something they could lose.
+    [JSInvokable]
+    public Task OnEscapeKey()
+    {
+        if (!IsExpanded) return Task.CompletedTask;
+        if (IsNotebookOpen) CloseNotebook();
+        else if (IsLibraryOpen) CloseLibrary();
+        else if (IsHelpOpen) CloseHelp();
+        else if (IsTodayOpen) CloseToday();
+        else { Collapse(); return InvokeAsync(StateHasChanged); }
+        _focusAfter = ".isa-widget__input";   // back to the question box
+        return InvokeAsync(StateHasChanged);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        try
+        {
+            if (firstRender)
+            {
+                _chatJs ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/ChatWidget.razor.js");
+                _selfRef = DotNetObjectReference.Create(this);
+                await _chatJs.InvokeVoidAsync("watchEscape", _selfRef);
+            }
+            if (_focusAfter is not null)
+            {
+                var selector = _focusAfter;
+                _focusAfter = null;
+                _chatJs ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/ChatWidget.razor.js");
+                await _chatJs.InvokeVoidAsync("focusOn", selector);
+            }
+        }
+        catch (Exception ex) when (ex is JSDisconnectedException or JSException or InvalidOperationException)
+        {
+            // The page went away, or is still being prepared on the server; nothing to do.
+        }
         if (_showFromTop)
         {
             _showFromTop = false;
@@ -1605,6 +1655,7 @@
     public void Dispose()
     {
         _tickCts?.Cancel();
+        _selfRef?.Dispose();
     }
 
     // Model and ElapsedMs are only ever set on "ai" entries (see
