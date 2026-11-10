@@ -1,0 +1,9 @@
+id,lane,expected_path,path,match,rule,status,ticket,step_down,elapsed_s,trace_id,willis_lane,error
+S-1#1,smoke,stopped,stopped,yes,O-01,stopped,,,0.12,6c48478b-3774-41be-bfe2-5439594c00f1,,
+S-2#1,smoke,handed_off,handed_off,yes,A-01,escalated,TKT-5670,,0.02,8b6aac8b-7e03-48fd-b96e-804d549db916,,
+S-3#1,smoke,no_content,no_content,yes,,escalated,TKT-5671,,4.1,b78d23c9-2d3f-40c3-8187-67e6d17a1418,yes: vector search,
+S-4#1,smoke,direct,direct,yes,,answered,,,0.05,388aa4ac-af12-46dd-83cb-cc28ff144966,,
+S-1#2,smoke,stopped,stopped,yes,O-01,stopped,,,0.02,b78fe1c0-9a49-456c-a9a3-9bf2f37f70ab,,
+S-2#2,smoke,handed_off,handed_off,yes,A-01,escalated,TKT-5672,,0.04,2528acc8-2e98-4b71-8ea1-304820c5d8ee,,
+S-3#2,smoke,no_content,no_content,yes,,escalated,TKT-5673,,4.12,bb42073c-091e-4902-b316-bf0586950242,yes: vector search,
+S-4#2,smoke,direct,direct,yes,,answered,,,0.02,79f6f277-bd75-40ee-b7e5-c9d0c788de86,,

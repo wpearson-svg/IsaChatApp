@@ -217,7 +217,15 @@ Roadmap ideas (slides only, labeled as planned, not built for the demo): journey
 
 === THE DEMO (ISACA PRESENTATION, INTERNSHIP WEEK 12) ===
 
-A working demo of about two minutes, one reliable sequence:
+Changed November 9, 2026 (Matthew): the demo runs from ONE sign-in, Watanabe Kenji on day 3. No switching users during the presentation: it takes too long and could fail on screen. Kenji's account also has the developer dashboard role, so the behind-the-scenes part needs no sign-out either. The story is told through what Kenji finds:
+1. He opens Isa: the Today note shows day 3, his steps, and the "Last year" row quoting Sato Yumiko's notes from this time last year.
+2. Who to call: the contact step with its three options, then "Meet your board" and Sato's page.
+3. Hidden deadlines: the calendar, with the compliance window shaded in November. Scrolling ahead to weeks 9 to 13 stands in for the day-60 president ("On day 60, this is what Kenji will see"); Ana Beatriz Souza is no longer shown live.
+4. What the last president knew: he opens the succession notebook and finds the decision Sato saved before her term ended, and "Ask Sato Yumiko about this".
+5. The loop closes: Kenji asks a question and saves the answer to the notebook with one tap, leaving something for the next president.
+Sato's save is no longer done live: it is prepared beforehand by a one-step setup script (decided the same day), together with a fresh progress file, Kenji's saved board introduction and Sato's profile reply, so every rehearsal starts the same way. The narration covers it: "Last week, before her term ended, Sato saved this."
+
+The old sequence, kept for reference (switching between Sato, Kenji and Ana):
 1. The outgoing president asks Isa a question, gets a cited answer, and saves the decision with one tap.
 2. Switch to the incoming president on day 3. Their week-one steps appear, including the contact step with three options.
 3. They open the succession notebook and find the saved decision waiting.

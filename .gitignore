@@ -49,3 +49,6 @@ settings-change-log.jsonl
 
 # Settings for one computer only (for example services on another computer over Tailscale); see appsettings.Local.example.json
 appsettings.Local.json
+
+# Testing-phase database backups (tests/m2/backup-<date>/): local only, never pushed (the repository is public)
+tests/m2/backup-*/

@@ -77,10 +77,75 @@ A running list of every change made since Matthew's last commit (November 3, 202
 
 - **ISA-PROJECT-CONTEXT.md** (November 9): A'keyrah Stevenson is no longer on the team; Willis and Matthew share her responsibilities. Added under the Sprint 1 team roles so she is never listed as a current teammate. Still naming her as a teammate, to fix when each is next touched: presentation/slides.json (team slide), docs/Sprint3_Presentation_Outline.md (speakers), docs/AI_Use_Register.md (her "to confirm" row).
 
+- **ONBOARDING-FEATURE.md** (November 9, Matthew): the demo now runs from one sign-in, Watanabe Kenji on day 3, with no switching users. The handover story is told through what Kenji finds (Today's "Last year" row, the contact step, Sato's board page, the calendar standing in for day 60, Sato's saved decision in the notebook, and Kenji saving one of his own). Sato's decision, Kenji's introduction and Sato's profile reply are prepared beforehand by a one-step setup script (to be written). The old four-step sequence is kept below it for reference.
+
+- **docs/Sprint3_Presentation_Outline.md** (rewritten November 9, Matthew): the outline is now a story rather than a scorecard: the problem, what we promised, Isa answering three questions live, how she runs (in numbers), a new president's first 90 days told through Kenji's eyes around the four things new leaders struggle with, behind the scenes on the Dev Dashboard (rules ISACA owns, the sliders, what ISACA learns from Content Health), then promises kept and the pilot ask. It records Matthew's eight decisions of the same day (about 4 minutes for onboarding, no tracker on every slide, the survey figure on the slide, speed measured on the demo machine, live dashboards, one sign-in, a setup script, and the role filter's wording), a time plan for three presenters, and what to do before the slides are rebuilt. presentation/slides.json still follows the November 6 version.
+
+- **onboarding/prepare_demo.py** (new, November 9, Matthew): prepares the presentation demo in one step, so every rehearsal starts the same way. Run `python onboarding\prepare_demo.py` with Isa stopped (it refuses while Isa is running). It clears data/progress.db, then adds Watanabe Kenji's saved board introduction (J-19 done) and Sato Yumiko's profile reply; in data/notebook.db it removes every entry written while testing, keeps the sample history (and shows again any hidden during testing), and adds what Sato left before her term ended: the saved answer about board meetings with her decision ("six board meetings this year"), the online-election decision and the unfinished sponsor renewal (June 24 to 29, 2026). Touches nothing else: not the content, rules, event log or usage counts. Checked: ran it, then on screen as Kenji on the demo date: day 3 with both week-one steps open, the "Last year" row, the notebook with Sato's three June entries on top (13 in all) and "Ask Sato Yumiko", 1 of 28 steps done (J-19), and Sato's board page with her answers. Ran it again afterward, so this laptop is ready for a rehearsal.
+  - Noticed, not changed: the board list says "Yumiko Sato" and "Kenji Watanabe" (given name first), while the notebook and Today note say "Sato Yumiko" (family name first).
+
+- **presentation/slides.json** (rebuilt November 9, Matthew): the Sprint 3 deck now follows the new outline, in the same HTML format, with the same opening as Sprint 2 (the intro animation onto "Meet Isa", then the cover with the pipeline animation). 22 slides:
+  - opening and the team (three people: Willis, Eliyas, Matthew);
+  - the problem;
+  - the three outcomes and promises;
+  - Meet Isa (the ten stages, a live demo of three settled questions, Show the work, Safe by design);
+  - how she runs (every stage, then the numbers);
+  - a new president's first 90 days (the survey-figure slide, what leaders struggle with, the live demo as Kenji on day 3, built into the journey, what it means for ISACA);
+  - behind the scenes (Isa grows with ISACA, the live Dev Dashboard);
+  - promises kept with a status each (the role filter in Matthew's wording), the pilot, after the pilot, and the ask.
+  - No tracker across the top. Placeholders in [square brackets]: the survey figures on slide 12 (kept out of the repository, which is public; typed in locally on the day) and the typical wait times (measured on the demo machine). The November 6 version is in Git history.
+  - Checked in the browser: all 22 slides load at /present; measured at 1280×720, nothing runs off any slide and every title fits on one line (the closing quote is four lines, as in September). Fixed during the check: four titles shortened, the problem slide's lead reworded, and two promise rows merged so the closing promises slide fits. Not checked: the slides at full screen on the demo machine, or over a Teams share.
+  - Then (Matthew's screenshot): Show the work had landed on a Dark Blue slide, where the panel's step names (Isa's real chat component) were unreadable. It now comes before "Live demo: ask Isa", back on a white slide (7), as in Sprint 2. With both panels opened it fits a 16:9 screen (1280×720); a screen shorter than 16:9, like the browser pane, cuts off the last line.
+
+- **September's diagram in the Sprint 3 deck (November 9, Matthew):** the opening "What we promised" and closing "What we promised, what we built" slides are now Sprint 1's diagram (slides 27 to 31), redrawn in the deck's style: the chapter leader, Isa and ISACA-approved content across the top, then sign in, translation, Check 1, Check 2, your team gets a ticket, search first, AI if search isn't enough (role filter, RAG, knowledge graph, logs) and contact the team, in September's rows. The closing slide is the same picture with a status pill and a "built" line on each part (Translation reworded; AI partly built, with Matthew's role-filter wording). They replace the three-outcomes cards (now one line under the diagram) and the promises table, so the slide count (22) and the white/Dark Blue order stay the same.
+  - New slide layout "diagram": Components/Pages/Present.razor (DiagramBox) and Present.razor.css. Presentation page only; nothing else in Isa changes. presentation/slides.json and docs/Sprint3_Presentation_Outline.md updated.
+  - Checked in the browser: both slides fit above the slide controls, and the boxes come in one after another as in September. Build: 0 warnings, 0 errors.
+
+- On this computer only (not in the repo, November 9): for the testing phase, Isa uses this laptop's services, not Willis's PC (appsettings.Local.json: Services Location Local, until Matthew says otherwise). Keycloak started here; Ollama (phi4-mini) and the voice answer here. Translation and search by meaning are not installed here (not being tested). The sentence-support (HHEM) model files were downloaded into data/models/hhem/ (model.onnx 438,775,991 bytes, its checksum matching Hugging Face's record; spiece.model), and Isa's start-up self-test passes (supported sentence 0.88, unsupported 0.01). data/content.db rebuilt from content/content.json: 131 passages, ISACA's 5 documents and the 9 governance guides (it had 81, from before November 4).
+
+- **presentation/slides.json, 22 slides down to 19 (November 9, Matthew):** removed what the live demos already show: the Show the work slide (it is opened live in "Live demo: ask Isa"), "Built into the journey" (shown live in Kenji's demo; its planned items are already on "After the pilot"), and the two behind-the-scenes slides merged into one live slide, "Live: your team's view", whose three steps are the three points (you own the rules, your team tunes her, you learn what leaders need). "131 passages" now says it includes the nine governance guides, searched after ISACA's documents. Slides after the removals swapped white and Dark Blue; each was checked in the browser: all 19 fit and every title is one line (the closing quote is four lines, as before). docs/Sprint3_Presentation_Outline.md updated.
+
+- **Sprint 3 M2 testing, Matt's lanes (started November 9):** new folder **tests/m2/**:
+  - run_questions.py: real sign-in, sends each question to /api/ask, reads /api/events, records the path and the rules' decision, and tags runs that needed vector search, the model or translation as "Willis lane".
+  - The test question CSVs and their results (results/).
+  - Defects_Matt.csv.
+  - Database backups in tests/m2/backup-2026-11-09/, kept out of Git by **.gitignore** (the repository is public).
+  - Salesforce switched off in this laptop's appsettings.Local.json for the bulk runs (not in the repo).
+  - Smoke set passes. Lane 3 (rules): the self-check, all 39 rule examples, the layers in all 10 countries and tighten-only (a temporary loosening file was refused, then deleted) pass. 48 of 130 close rewordings were missed (M-001 to M-009).
+- **rules/global.json, version 2 (November 9, Matt):** A-01, C-03, C-04, C-05 and C-07 widened with more phrases, word stems and topic + kind pairs (no AI), fixing the five Major defects M-001 to M-005. Measured:
+  - fresh rewordings never used for fixing: 6 to 48 of 50 caught;
+  - 50 ordinary questions: still none caught;
+  - check_rules.py: 61 checks, 0 problems;
+  - rehearsed questions: unchanged;
+  - Willis's 78 test questions: only one decision changed. "Does our chapter owe tax on ticket sales for our events?" now goes to a person at the rules check (C-03), as intended; it isn't one of test-paths.ps1's questions.
+  - Rules reload by themselves, so Isa needs no restart. Still open: the four Minor rule defects (M-006 to M-009) and a proposal for nearby-word matching after the freeze (M-010).
+- **rules/global.json, version 3 (November 9, Matt):** E-02, S-01, S-02, O-01, C-02, C-08 and C-09 widened the same way, fixing M-006 to M-009. 'Weather' and 'hotel' were deliberately not added, because test-paths uses them. Measured:
+  - fresh rewordings never used for fixing: 12 to 67 of 70;
+  - ordinary questions: still none caught;
+  - self-check: 0 problems; rehearsed questions: unchanged;
+  - Willis's 78 questions: two decisions changed, both intended (a tax question now handed off; an insurance question now answered with a pointer to a person).
+- **Lane 2 sweep (tests/m2/lane2_sweep.csv, 106 sensitive and off-topic English questions):** Isa answered none of them. But most reached a person only because search found nothing on this laptop. Logged M-011 to M-016:
+  - self-harm and emergencies not caught by any rule (Major);
+  - 7 of 10 new harassment wordings missed (Major);
+  - no rules for legal questions, discrimination, board disputes, elections, data breaches or other people's information (Major, needs a Willis-lane run);
+  - off-topic questions becoming tickets; prompt-injection wordings; two hand-offs with the wrong label.
+- **rules/global.json, version 4 (November 9, Matt):** A-01 now also covers self-harm ('hurt themselves', 'can't go on', 'go on anymore', 'suicid'), emergencies in specific phrases only ('collapsed', 'unconscious', 'ambulance', 'medical emergency', 'fire alarm', 'badly injured'; not 'emergency' alone, so 'emergency fund' isn't caught) and more harassment wordings ('following me', 'shouting at me', 'grabbed me', 'racist', 'won't leave me alone'). Fixes M-011 and M-012. Measured:
+  - lane 2 sweep: harassment 10 of 10, self-harm and emergencies 5 of 5 handed off (was 3 and 0);
+  - ordinary questions and safety look-alikes: none caught;
+  - self-check: 0 problems;
+  - Willis's 78 questions: no new changes.
+- **tests/m2/matt_questions.csv:** Matthew's 10 hand-written test questions. 8 behave as they should. 'What is your favorite color?' and 'How do I get to the airport?' become tickets instead of being stopped (M-014). One new defect, M-017 (Major, Willis's search code): 'What is the best time to have a meeting?' is answered from the governance guide on meeting minutes, a plain word match that doesn't answer the question and isn't checked. tests/m2/run_questions.py now labels governance-guide answers as 'guide'.
+
+- **Claude outputs/M2 testing - Matt's results so far, for Willis.md** (new, November 9): a one-page note for Willis covering:
+  - what Matt tested, the rules changes (versions 2 to 4) and their measurements;
+  - the 17 defects (11 fixed);
+  - what Willis needs to do: pull the new rules, run the sweep on his PC, and agree who fixes M-017;
+  - Matt's next steps: lane 11, lane 10, and the testing section of the November 11 update to ISACA.
+
 ## Suggested commit message
 
 ```
-Sprint 3 deck on the Sprint 2 HTML slides (Sprint 1 tracker, promised vs built); Today calendar with "Add to my calendar" and "Last year around now"; M5 outline and M6 screen check; AI-use register draft; hover definitions for glossary terms in answers, steps and Today
+M2 testing (Matt): rules/global.json v4 (wider rules for harassment, self-harm, emergencies, tax and money; no AI; measured on fresh and must-not-catch sets), tests/m2 run script, question sets, results and Defects_Matt.csv, note for Willis; Sprint 3 deck down to 19 slides with September's diagram as the opening and closing promise slides
 ```
 
 ## W4: "connect" button for answer-then-point rules
