@@ -18,24 +18,37 @@ public class PassThroughStage : IStage
 /// stand-in now lives in the rag stage, not here. A real database problem is NOT hidden: it
 /// throws, and the orchestrator turns it into a plain "something went wrong" stop.
 /// Sets ctx.SearchScore (0 to 1) from the best match for the Content Health dashboard.
+///
+/// Direct-answer match (November 10, 2026): a passage that contains the question's words is not enough, because a
+/// passage is a whole section and the words can come from different requirements. The search has AnswerExtract pick the
+/// sentence it would quote, scores that sentence on the question's meaningful words (DirectMatch), and calls it a direct
+/// hit only at or above the direct-answer match mark (Dev Dashboard slider). Below it the run goes on to search by meaning.
 /// </summary>
 public class DatabaseSearchStage : IStage
 {
     public string Name => "database_search";
     private readonly string _contentDbPath;
+    private readonly IConfiguration _config;
+    private readonly IsaChatApp.Services.OutputComplianceSettings _settings;
 
-    public DatabaseSearchStage(IConfiguration config)
+    public DatabaseSearchStage(IConfiguration config, IsaChatApp.Services.OutputComplianceSettings settings)
     {
         _contentDbPath = config["ContentDb:Path"] ?? Path.Combine("data", "content.db");
+        _config = config;
+        _settings = settings;
     }
 
+    // The search's own filler list. It is deliberately kept as it was: a longer list (DirectMatch's) leaves fewer required
+    // words, which turned questions meant for the AI and its checks into direct quotes (tried November 10). DirectMatch's
+    // list is used only to score the sentence Isa would quote.
     private static readonly HashSet<string> FtsStopWords = new(StringComparer.OrdinalIgnoreCase)
     {
         "the","how","many","what","does","must","each","year","have","our","and","who","are","for",
         "when","can","with","that","this","you","is","do","we","to","a","of","in","chapter","hold","policy","period","annual"
     };
 
-    // Raw question text breaks FTS5 syntax ("?" etc.), so keep letters/digits, drop filler, and AND the rest.
+    // Raw question text breaks FTS5 syntax ("?" etc.), so keep letters/digits, drop filler, and AND the rest: a passage must
+    // contain every remaining word. The direct-answer match then decides whether the sentence Isa would quote answers it.
     // Each term is quoted so a typed word like AND, OR or NOT is searched as a word, not read as an operator.
     private static string? BuildFtsQuery(string question)
     {
@@ -59,27 +72,61 @@ public class DatabaseSearchStage : IStage
         await conn.OpenAsync();
 
         // Order (Matthew, October 22): ISACA's own documents first, then the meaning map (the rag stage), the best-practice guides last.
+        var mark = _settings.DirectMatchMark;
         var (passages, best) = await SearchAsync(conn, ftsQuery, guides: false);
+        var quote = Quote(ctx.Question, passages);
         var fromGuides = false;
-        if (passages.Count == 0 && !await InMeaningMapAsync(conn, ctx.Question))
+        if ((quote is null || quote.Score < mark) && !await InMeaningMapAsync(conn, ctx.Question))
         {
-            (passages, best) = await SearchAsync(conn, ftsQuery, guides: true);
-            fromGuides = passages.Count > 0;
+            var (guidePassages, guideBest) = await SearchAsync(conn, ftsQuery, guides: true);
+            var guideQuote = Quote(ctx.Question, guidePassages);
+            if (guideQuote is not null && guideQuote.Score >= mark)
+            {
+                (passages, best, quote, fromGuides) = (guidePassages, guideBest, guideQuote, true);
+            }
         }
 
-        if (passages.Count == 0)
+        if (passages.Count == 0 || quote is null)
             return new StageResult(StageOutcome.NotFound, "no match", "hit=no; passages=0");
 
-        ctx.Passages = passages;
+        // Found passages, but the sentence Isa would quote doesn't cover the question: not a direct answer.
+        if (quote.Score < mark)
+            return new StageResult(StageOutcome.NotFound, "no match",
+                $"hit=no; passages=0; weak_match; match={Num(quote.Score)}; mark={Num(mark)}; missing={string.Join(",", quote.Missing)}");
+
+        // The quote has the question's words but not the kind of answer asked for (no number for "how many", no date or
+        // period for "when", no role for "who"): the same answer-shape rule output compliance uses on AI answers. Not a direct answer.
+        if (AnswerChecks.ShapeMissing(ctx.Question, quote.Text) is string shape)
+            return new StageResult(StageOutcome.NotFound, "no match",
+                $"hit=no; passages=0; weak_match; match={Num(quote.Score)}; mark={Num(mark)}; shape_missing={shape}");
+
+        ctx.Passages = quote.Passages;
         ctx.DirectHit = true;
         ctx.SearchScore = best;
-        ctx.Sources = passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).ToList();
+        ctx.AnswerText = quote.Text;
+        ctx.Sources = quote.Passages.Select(p => new SourceRef(p.Document, p.Section, p.Page)).Distinct().ToList();
         ctx.CitedSource = ctx.Sources[0];   // the passage the answer comes from (contract: cited_source)
+        var matchData = $"match={Num(quote.Score)}; mark={Num(mark)}";
         // A guide answer is tagged best_practice so the wording, the opening line and Show the work say "general best practice, not ISACA policy".
         return new StageResult(StageOutcome.Pass, null, fromGuides
-            ? $"best_practice; count={passages.Count}; hit=yes; passages={passages.Count}"
-            : $"direct_hit; count={passages.Count}; hit=yes; passages={passages.Count}");
+            ? $"best_practice; count={passages.Count}; hit=yes; passages={passages.Count}; {matchData}"
+            : $"direct_hit; count={passages.Count}; hit=yes; passages={passages.Count}; {matchData}");
     }
+
+    private sealed record QuoteCheck(string Text, List<Passage> Passages, double Score, List<string> Missing);
+
+    // The sentence Isa would quote from these passages (AnswerExtract, the same picker the rag stage uses for a direct
+    // hit), and how well it covers the question's meaningful words (DirectMatch). Null when there are no passages.
+    private QuoteCheck? Quote(string question, List<Passage> passages)
+    {
+        if (passages.Count == 0) return null;
+        var trial = new QueryContext { Question = question, Passages = passages };
+        AnswerExtract.Apply(trial, _config);
+        var (score, missing) = DirectMatch.Score(question, trial.AnswerText, _contentDbPath);
+        return new QuoteCheck(trial.AnswerText ?? "", trial.Passages, score, missing);
+    }
+
+    private static string Num(double v) => v.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
 
     private const string GuidePrefix = "Best Practice Guide:";
 

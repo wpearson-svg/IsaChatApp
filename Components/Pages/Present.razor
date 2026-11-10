@@ -595,9 +595,22 @@ else
     private const int PresentationStepMs = 500;   // each stage stays on screen at least this long
     private bool _warmed;
 
-    // Alt+1 to Alt+5 type these into Isa's question box (the demo's test questions 1 to 5).
+    // Alt+1 to Alt+5, Alt+8 and Alt+9 type these into Isa's question box. Real questions, each found and checked by sending
+    // it through the real pipeline (same path on every run, November 4 to 10, 2026; tests/m2 and test-questions-candidates.csv),
+    // one per kind of ending. Alt+6 and Alt+7 open the dashboards, so those two places are empty.
+    // Alt+8 and Alt+9 are questions 1 and 2 in Spanish: the same answers, translated (about 20 seconds each).
     private static readonly string[] DemoQuestions =
-        IsaChatApp.Services.ShowTheWork.MockStageFeed.Cases.Take(5).Select(c => c.Question).ToArray();
+    {
+        "How many board meetings must a chapter hold each year?",                               // 1 direct answer in ISACA's words
+        "What should the outgoing president hand over to the new president?",                  // 2 written by the AI, every check passed
+        "Where's a good pizza place near the conference?",                                      // 3 stopped (rule O-01)
+        "A board member keeps harassing me at meetings.",                                       // 4 to a person, safety wording (rule A-01)
+        "Is a compilation fine for the financial review if ISACA approves it in writing?",      // 5 the AI's answer held back (rule C-08)
+        "",                                                                                       // Alt+6: Dev Dashboard
+        "",                                                                                       // Alt+7: Content Health
+        "¿Cuántas reuniones de la junta debe celebrar un capítulo cada año?",                   // 8 question 1 in Spanish
+        "¿Qué debe entregar el presidente saliente al nuevo presidente?",                                // 9 question 2 in Spanish
+    };
 
     // The opening screen. Stays until the next-slide key is pressed, then fades and the intro plays.
     private DateTime _warmStartedAt = DateTime.MinValue;

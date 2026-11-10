@@ -79,6 +79,23 @@ Lowest-scoring correct in_scope question: 0.7838 ("Who takes the minutes?"). Abo
 
 At 0.82, 37 labelled questions land at or above the mark and below 0.85 (as built: 26 in_scope, 2 out_of_scope, 9 near), so path 14 stays possible. **But its test question, "When does the compliance review start and end?", scores 0.8196, just under 0.82:** at 0.82 it becomes a clean miss and test-paths path 14 needs a new question. At 0.81 it stays in the band. Willis's choice: 0.82 and a new path 14 question, or 0.81 and keep it.
 
-## 6. Step 5: not run
+## 6. Step 5: end to end at 0.82 (November 10)
 
-Waits for Willis to set the slider (Dev Dashboard, Compliance policy, search pass mark). Then up to about 30 questions through Isa, signed in, model warm, Salesforce as configured.
+Willis chose 0.82. Set in `output-compliance-settings.json` (`searchPassMark: 0.82`, the file the slider saves; NLI 0.40, confidence 0.70 and strong-match 0.00 unchanged), then Isa restarted. Ran on Willis's laptop (WillisPLaptop) with services on the home PC over Tailscale (`100.89.6.69`), rules version 5, signed in as d.whitfield, nothing forced, model warmed first, Salesforce switched off for the run (laptop's `appsettings.Local.json`, put back afterwards). 30 questions from the labelled set, chosen to sit on both sides of 0.82 (`tests/m2/step5_calibration.csv`), plus 1 warm-up. Results: `tests/m2/results/step5_calibration_082.csv`.
+
+**The script matches Isa.** Every question that reached search by meaning logged the same top score the script predicted, to two decimals.
+
+| Kind | Asked | Full-text hit (never searched by meaning) | Below 0.82: person | Reached the model | What the model and checks did |
+|---|---|---|---|---|---|
+| in_scope | 12 | 4 (answered) | 2 (0.798, 0.814, as predicted) | 6 | 1 clean answer (0.85); 3 ISACA's words after a failed check (strength, strength, nli+numbers+confidence); 1 "passages don't answer" (0.83); 1 source check failed, to a person (0.83) |
+| out_of_scope | 9 | 0 | 7 | 2 (0.82, 0.82) | Both: "passages don't answer", to a person |
+| near | 9 | 1 (answered) | 2 | 6 (0.82 to 0.87) | All 6: "passages don't answer", to a person |
+
+- In-scope questions answered: 8 of 12 (4 full-text, 4 by meaning). The 2 turned away by the mark were the two the calibration predicted.
+- Out-of-scope reaching the model: 2 of 9, both at the mark, both declined by the model. None answered.
+- Near questions: 6 of 9 reached the model and the model declined every one, so here the model, not the mark, did the work, as section 5 expected.
+- To look at: "How many members must attend each educational event?" (near: the passages don't say) was **answered as a full-text hit**, from the passage on holding four educational events a year. Full-text search runs before the pass mark, so the mark can't stop it. A wording match that doesn't answer the question, like M-017.
+
+**Path 14 at 0.82.** "When does the compliance review start and end?" (0.8196) now misses the mark, as predicted. "Can we submit last year's audit if this year's isn't done?" landed at 0.84 here and failed the strength check, so it still makes a weak match at a strong-match mark of 0.85; use it as test-paths' path 14 question. Not rerun at 0.85 in this step.
+
+**Count:** 31 questions sent to Isa in step 5 (30 + 1 warm-up).

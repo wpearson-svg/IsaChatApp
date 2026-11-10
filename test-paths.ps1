@@ -128,6 +128,8 @@ function Get-StrongMatch {
 }
 
 $fullOrder = "front_end","access_control","translation","input_compliance","database_search","knowledge_graph","rag","complex_ai","output_compliance"
+# A non-English question also logs a second translation event at the end: the reply translated back (direction=out).
+$replyOrder = $fullOrder + "translation"
 
 $fails = 0; $ran = 0; $skipped = 0
 function Report([string]$name, $problems, $res, [string]$note) {
@@ -228,8 +230,10 @@ $cases = @(
     (New-Case "9"  "words" "9. ISACA's words after numbers failure" "Which ISACA document says how many educational events a chapter must hold and what counts as evidence?" "answered" "en" $false @{ Mode = "default"; Reason = "numbers" })
     (New-Case "9"  "words" "9. ISACA's words after confidence failure" "Where do I get help with Engage?" "answered" "en" $false @{ Mode = "default"; Reason = "confidence" })
 
-    (New-Case "10" "source" "10. Source check fails" "What should we do if D&O insurance is unavailable?" "escalated" "en" $true)
-    (New-Case "10" "source" "10. Source check fails (spare)" "What do the documents say about member engagement?" "escalated" "en" $true @{ Spare = $true })
+    # Path 10 (source check fails) is tested forced only, with -ForcedCheck source (decided November 10, for the lock).
+    # It no longer happens naturally at the 0.82 search pass mark: only the passages that clear the mark go to the AI,
+    # usually one, so it cites a passage it was given. Both questions found for it ("What should we do if D&O insurance is
+    # unavailable?" and "What do the documents say about member engagement?") now get no content or a clean answer.
 
     (New-Case "11" "rule_recheck" "11. Rule recheck fails" "Is a compilation fine for the financial review if ISACA approves it in writing?" "escalated" "en" $true)
     (New-Case "11" "rule_recheck" "11. Rule recheck fails (spare)" "Can we use a compilation this year if ISACA Global approves it in writing?" "escalated" "en" $true @{ Spare = $true })
@@ -241,7 +245,7 @@ $cases = @(
 
     (New-Case "13" "contact" "13. Contact check fails" "Is support@isaca.org the right email for chapter website help?" "answered" "en" $false @{ Mode = "default"; Reason = "contact" })
 
-    (New-Case "14" "weak" "14. Failed check on a weak match goes to a person" "When does the compliance review start and end?" "escalated" "en" $true @{ Mode = "weak" })
+    (New-Case "14" "weak" "14. Failed check on a weak match goes to a person" "Can we submit last year's audit if this year's isn't done?" "escalated" "en" $true @{ Mode = "weak" })
 
     (New-Case "15" "rule_stop" "15. Stopped by an input rule (C-07)" "Can we skip the audit this year?" "stopped" "en" $false @{ Rule = "C-07" })
     (New-Case "15" "rule_stop" "15. Stopped by an input rule (spare)" "How do we get around paying taxes on event income?" "stopped" "en" $false @{ Rule = "C-07"; Spare = $true })
@@ -367,13 +371,14 @@ foreach ($c in $cases) {
                 if ($oc -notlike '*section=database*') { $problems += "output_compliance should be the database section (got: $oc)" }
             }
             "spanish_direct" {
-                if ($joined -ne ($fullOrder -join ",")) { $problems += "stages were: $joined" }
+                if ($joined -ne ($replyOrder -join ",")) { $problems += "stages were: $joined" }
                 if ($dbs -notmatch '^result=pass' -or $dbs -notlike '*hit=yes*') { $problems += "database_search should pass with hit=yes (got: $dbs)" }
                 if ($ai -like '*model_called=yes*') { $problems += "the model was called on a direct hit" }
                 if ($oc -notlike '*section=database*') { $problems += "output_compliance should be the database section (got: $oc)" }
             }
             { $_ -in "model", "spanish_model" } {
-                if ($joined -ne ($fullOrder -join ",")) { $problems += "stages were: $joined" }
+                $wantOrder = if ($c.Kind -eq "spanish_model") { $replyOrder } else { $fullOrder }
+                if ($joined -ne ($wantOrder -join ",")) { $problems += "stages were: $joined" }
                 $src = ""
                 if ($ai -match 'source=([^;]+)') { $src = $Matches[1].Trim() }
                 if (-not $src) { $problems += "complex_ai should log the source it cited (got: $ai)" }
@@ -443,7 +448,8 @@ foreach ($c in $cases) {
             }
             "weak" {
                 if ($oc -notmatch '^result=escalate; reason=ai check failed') { $problems += "a failed check on a weak match should escalate (got: $oc)" }
-                if ($oc -notmatch 'failed=[^;]*nli')                           { $problems += "the failed checks should include nli (got: $oc)" }
+                # Any failed check counts (path 14 is about the weak match, not which check failed); the question in use fails strength.
+                if ($oc -notmatch 'failed=\w')                                 { $problems += "output_compliance should name the failed check (got: $oc)" }
                 if ($oc -like '*step_down=isaca_words*')                       { $problems += "a weak match must not fall back to ISACA's words (got: $oc)" }
             }
             "ai_escalate" {
@@ -470,6 +476,7 @@ foreach ($c in $cases) {
 
 if (-not $ModelOff)    { Write-Host "SKIP  Extra: model turned off     (run with -ModelOff)" -ForegroundColor Yellow }
 if (-not $ForcedCheck) { Write-Host "SKIP  Extra: a forced AI-check failure (stand-in, not part of the real set: -ForcedCheck source|nli|rule|confidence)" -ForegroundColor Yellow }
+if ($ForcedCheck -ne "source") { Write-Host "SKIP  10. Source check fails (forced only: start Isa with OutputCompliance__ForceFail=source, then -ForcedCheck source)" -ForegroundColor Yellow }
 Write-Host ""
 $tail = ""; if ($skipped -gt 0) { $tail = " ($skipped case(s) skipped for the strong-match setting)" }
 if ($fails -eq 0) { Write-Host "All $ran checks passed.$tail" -ForegroundColor Green } else { Write-Host "$fails of $ran check(s) failed.$tail" -ForegroundColor Red; exit 1 }
