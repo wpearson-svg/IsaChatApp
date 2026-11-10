@@ -1,0 +1,144 @@
+kind,question,top1_score,top1_passage,expected_passage,correct,expected_in_top3,top3_scores,as_built_top1_score,as_built_expected_in_top3
+in_scope,What's the compliance framework for?,0.8143,36: ISACA Chapter Systems Overview | Chapter Reporting Tools > Chapter Compliance Reporting,1,no,no,0.8143 0.8024 0.8007,0.8143,no
+in_scope,What do we have to keep doing all year to stay compliant?,0.8202,36: ISACA Chapter Systems Overview | Chapter Reporting Tools > Chapter Compliance Reporting,2,no,yes,0.8202 0.8114 0.8103,0.8202,yes
+in_scope,What happens in the annual compliance review at the end of the year?,0.8310,15: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,3,no,no,0.8310 0.8299 0.8144,0.8310,no
+in_scope,What counts as proof that we report our activities and finances to members?,0.8345,5: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),4,yes,yes,0.8345 0.8337 0.8314,0.8345,yes
+in_scope,Our audit for this year won't be finished by the compliance deadline. What do we submit instead?,0.8561,15: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,5,no,yes,0.8561 0.8525 0.8463,0.8561,yes
+in_scope,Is a privacy policy required?,0.8035,6: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),6,yes,yes,0.8035 0.7870 0.7866,0.8035,yes
+in_scope,Do we need insurance to be compliant?,0.8180,6: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),6,yes,yes,0.8180 0.8002 0.7979,0.8180,yes
+in_scope,We just elected new officers. How do I get the leader roster updated?,0.8916,8: Common Tasks and Navigation Guide | Task: Update Board Leadership Information > Typical Process,8,yes,yes,0.8916 0.8698 0.8429,0.8916,yes
+in_scope,Can ISACA host our chapter website?,0.9059,9: Common Tasks and Navigation Guide | Common Tasks and Navigation Guide from Chapter Leader Portal > Task: Report Chapter Events,9,yes,yes,0.9059 0.8952 0.8824,0.9059,yes
+in_scope,How do I set up registration for a multi-day conference?,0.8400,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,10,no,yes,0.8400 0.8212 0.8163,0.8400,no
+in_scope,Why does my chapter website know who I am when I log in to Engage?,0.8705,9: Common Tasks and Navigation Guide | Common Tasks and Navigation Guide from Chapter Leader Portal > Task: Report Chapter Events,11,yes,yes,0.8705 0.8633 0.8567,0.8705,yes
+in_scope,Can we put content on our website that only members can see?,0.8262,72: Chapter Leader Guidebook - President (August 2026) | Chapter Leader Listing on Hosted Chapter Websites,12,no,yes,0.8262 0.8204 0.8178,0.8262,yes
+in_scope,How many requirements do we confirm in the yearly compliance report?,0.8524,13: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,13,yes,yes,0.8524 0.8462 0.8436,0.8524,yes
+in_scope,How do I get my compliance documents together and submitted?,0.8507,36: ISACA Chapter Systems Overview | Chapter Reporting Tools > Chapter Compliance Reporting,14,no,yes,0.8507 0.8471 0.8445,0.8507,yes
+in_scope,What should we be doing in the third and fourth quarters for the audit and compliance?,0.8314,15: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,15,yes,yes,0.8314 0.8163 0.8163,0.8314,yes
+in_scope,How many educational events does our chapter need to run?,0.8435,16: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,16,yes,yes,0.8435 0.8373 0.8276,0.8435,yes
+in_scope,Where do our events have to be posted for compliance?,0.8408,16: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,16,yes,yes,0.8408 0.8335 0.8324,0.8408,yes
+in_scope,How do I get CPE credit recorded for people who attended our event?,0.8867,38: ISACA Chapter Systems Overview | Chapter Reporting Tools > CPE Upload Tool,17,no,yes,0.8867 0.8519 0.8368,0.8867,yes
+in_scope,What is the chapter president mainly responsible for?,0.8816,60: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,20,no,no,0.8816 0.8812 0.8799,0.8816,no
+in_scope,What does the president usually do from week to week?,0.8139,60: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,21,no,no,0.8139 0.8045 0.8015,0.8139,no
+in_scope,What is the vice president responsible for?,0.8382,60: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,22,no,no,0.8382 0.8064 0.8054,0.8382,no
+in_scope,What does a vice president normally get involved in?,0.8212,60: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,23,no,no,0.8212 0.8148 0.7982,0.8212,no
+in_scope,What is our secretary responsible for?,0.8281,63: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,24,no,no,0.8281 0.8072 0.8058,0.8281,no
+in_scope,Who takes the minutes?,0.7838,25: Core Chapter Leader Roles and Responsibilities | Chapter Secretary > Common Activities,25,yes,yes,0.7838 0.7824 0.7772,,no
+in_scope,What is the treasurer responsible for?,0.8575,53: Chapter Leader Guidebook - President (August 2026) | Finances,26,no,no,0.8575 0.8410 0.8328,0.8575,no
+in_scope,What does the treasurer do during the year?,0.8255,53: Chapter Leader Guidebook - President (August 2026) | Finances,27,no,no,0.8255 0.8226 0.8072,0.8255,no
+in_scope,What is the Chapter Leader Portal?,0.8954,29: ISACA Chapter Systems Overview | Chapter Leader Portal > Purpose,29,yes,yes,0.8954 0.8612 0.8440,0.8954,yes
+in_scope,What do I use the leader portal for?,0.8595,29: ISACA Chapter Systems Overview | Chapter Leader Portal > Purpose,30,no,no,0.8595 0.8288 0.8261,0.8595,no
+in_scope,What is C360?,0.8729,31: ISACA Chapter Systems Overview | C360 > Purpose,31,yes,yes,0.8729 0.8279 0.8020,0.8729,yes
+in_scope,What can Chapter 360 show me about my chapter?,0.8731,31: ISACA Chapter Systems Overview | C360 > Purpose,32,no,no,0.8731 0.8436 0.8277,0.8731,no
+in_scope,What is Engage?,0.8776,33: ISACA Chapter Systems Overview | Engage > Purpose,33,yes,yes,0.8776 0.8326 0.8101,0.8776,yes
+in_scope,What can I do on Engage as a chapter leader?,0.8729,33: ISACA Chapter Systems Overview | Engage > Purpose,34,no,yes,0.8729 0.8665 0.8657,0.8729,yes
+in_scope,What is the compliance report used for?,0.8495,36: ISACA Chapter Systems Overview | Chapter Reporting Tools > Chapter Compliance Reporting,36,yes,yes,0.8495 0.8219 0.8126,0.8495,yes
+in_scope,Why do we report our events?,0.8605,37: ISACA Chapter Systems Overview | Chapter Reporting Tools > Event Reporting,37,yes,yes,0.8605 0.8136 0.8083,0.8605,yes
+in_scope,What does the CPE upload tool do?,0.8672,38: ISACA Chapter Systems Overview | Chapter Reporting Tools > CPE Upload Tool,38,yes,yes,0.8672 0.8025 0.7949,0.8672,yes
+in_scope,Where are our board and leader contacts kept up to date?,0.8331,39: ISACA Chapter Systems Overview | Chapter Reporting Tools > Board and Leader Roster Management,39,yes,yes,0.8331 0.8315 0.8215,0.8331,yes
+in_scope,Which system do I use for what?,0.7934,28: ISACA Chapter Systems Overview | ISACA Chapter Systems Overview > Purpose,40,no,no,0.7934 0.7770 0.7758,0.7934,no
+in_scope,"How do the portal, C360 and Engage fit together?",0.8400,41: ISACA Chapter Systems Overview | High-Level Relationship Between Systems,41,yes,yes,0.8400 0.8354 0.8199,0.8400,yes
+in_scope,What does it mean to be the chief elected officer of the chapter?,0.8668,42: Chapter Leader Guidebook - President (August 2026) | Welcome!,42,yes,yes,0.8668 0.8513 0.8499,0.8668,yes
+in_scope,Our chapter is struggling to meet ISACA's standards. What should I do?,0.8753,46: Chapter Leader Guidebook - President (August 2026) | Guidebook page 3,44,no,no,0.8753 0.8738 0.8707,0.8753,no
+in_scope,What is the Strategic Advisory Council and am I on it?,0.8217,45: Chapter Leader Guidebook - President (August 2026) | Welcome!,45,yes,yes,0.8217 0.8163 0.8090,0.8217,yes
+in_scope,Is our chapter its own legal entity?,0.8391,46: Chapter Leader Guidebook - President (August 2026) | Guidebook page 3,46,yes,yes,0.8391 0.8126 0.8058,0.8391,yes
+in_scope,What is my role in the chapter's strategic plan?,0.8756,50: Chapter Leader Guidebook - President (August 2026) | General Leadership,47,no,yes,0.8756 0.8704 0.8644,0.8756,yes
+in_scope,Who is responsible for running our elections properly?,0.8138,63: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,48,no,yes,0.8138 0.8075 0.8072,0.8138,no
+in_scope,Is governance my job or the whole board's?,0.8247,49: Chapter Leader Guidebook - President (August 2026) | General Leadership,49,yes,yes,0.8247 0.8190 0.8179,,no
+in_scope,Who should review the bylaws?,0.7872,51: Chapter Leader Guidebook - President (August 2026) | General Leadership,51,yes,yes,0.7872 0.7849 0.7841,,no
+in_scope,How should I work with the treasurer on the chapter's money?,0.8821,53: Chapter Leader Guidebook - President (August 2026) | Finances,53,yes,yes,0.8821 0.8731 0.8699,0.8821,yes
+in_scope,Should we require two signatures on large payments?,0.8502,54: Chapter Leader Guidebook - President (August 2026) | Finances,54,yes,yes,0.8502 0.8020 0.7983,0.8502,yes
+in_scope,What should I do if I spot an odd transaction in the bank statements?,0.8123,27: Core Chapter Leader Roles and Responsibilities | Chapter Treasurer > Common Activities,55,no,no,0.8123 0.8098 0.8059,0.8123,no
+in_scope,Why should financial reports be produced on time?,0.8416,27: Core Chapter Leader Roles and Responsibilities | Chapter Treasurer > Common Activities,56,no,yes,0.8416 0.8412 0.8242,0.8416,yes
+in_scope,Who is the chapter's main contact with ISACA Global?,0.8970,57: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,57,yes,yes,0.8970 0.8781 0.8642,0.8970,yes
+in_scope,What do we have to send ISACA after our fiscal year ends?,0.8601,5: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),58,no,no,0.8601 0.8459 0.8459,0.8601,no
+in_scope,How should I keep our members informed?,0.8292,66: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,59,no,no,0.8292 0.8277 0.8238,,no
+in_scope,What is my role in running board and membership meetings?,0.8728,64: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,60,no,no,0.8728 0.8640 0.8563,0.8728,no
+in_scope,What should I go over with the treasurer before the board meets?,0.8545,61: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,61,yes,yes,0.8545 0.8544 0.8478,0.8545,yes
+in_scope,What am I responsible for when we hold a board meeting?,0.8574,63: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,63,yes,yes,0.8574 0.8558 0.8543,,no
+in_scope,Who decides when the next board meeting is and follows up on action items?,0.8365,64: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,64,yes,yes,0.8365 0.8232 0.8119,0.8365,yes
+in_scope,Do we have to hold membership meetings and who runs them?,0.8684,65: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,65,yes,yes,0.8684 0.8505 0.8417,0.8684,yes
+in_scope,How do I handle motions at a members' meeting?,0.8579,66: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,66,yes,yes,0.8579 0.8494 0.8419,0.8579,yes
+in_scope,How is a membership meeting different from a board meeting?,0.8495,67: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,67,yes,yes,0.8495 0.8451 0.8365,,no
+in_scope,Who tells ISACA about our new leaders after the AGM?,0.8487,68: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,68,yes,yes,0.8487 0.8325 0.8252,0.8487,yes
+in_scope,What else should the outgoing president take care of during the handover?,0.8441,75: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,69,no,no,0.8441 0.8089 0.7963,0.8441,no
+in_scope,What are the options for showing our leaders on the chapter website?,0.8925,70: Chapter Leader Guidebook - President (August 2026) | Chapter Leader Listing on Hosted Chapter Websites,70+71,yes,yes,0.8925 0.8816 0.8728,0.8925,yes
+in_scope,Can we just post a photo of the board on the website?,0.8309,71: Chapter Leader Guidebook - President (August 2026) | Chapter Leader Listing on Hosted Chapter Websites,71,yes,yes,0.8309 0.8058 0.8006,0.8309,yes
+in_scope,Why aren't our leaders' profiles showing on the website?,0.8578,71: Chapter Leader Guidebook - President (August 2026) | Chapter Leader Listing on Hosted Chapter Websites,72,yes,yes,0.8578 0.8393 0.8359,0.8578,yes
+in_scope,Should our chapter have a succession plan?,0.8727,74: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,74,yes,yes,0.8727 0.8533 0.8530,0.8727,yes
+in_scope,Can we add a President-Elect role?,0.8368,22: Core Chapter Leader Roles and Responsibilities | Chapter Vice President > Primary Responsibilities,75,no,yes,0.8368 0.8251 0.8177,0.8368,yes
+in_scope,What has to be handed over to the new officers?,0.7977,76: Chapter Leader Guidebook - President (August 2026) | Turnover Procedures,76,yes,yes,0.7977 0.7899 0.7871,0.7977,yes
+in_scope,Which unfinished items should be passed to the next president?,0.8023,77: Chapter Leader Guidebook - President (August 2026) | Turnover Procedures,77,yes,yes,0.8023 0.7963 0.7950,,no
+in_scope,What happens to the bank accounts and chapter property when leadership changes?,0.8642,78: Chapter Leader Guidebook - President (August 2026) | Turnover Procedures,78,yes,yes,0.8642 0.8307 0.8272,0.8642,yes
+in_scope,What should the incoming president receive from the outgoing one?,0.8222,68: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,79,no,no,0.8222 0.8045 0.7995,0.8222,no
+in_scope,What should we cover when we orient incoming chapter leaders?,0.8585,68: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,80,no,no,0.8585 0.8470 0.8436,0.8585,no
+in_scope,When should we start recruiting volunteers for next year?,0.8266,81: Chapter Leader Guidebook - President (August 2026) | Guidebook page 14,81,yes,yes,0.8266 0.8249 0.8215,,no
+in_scope,When does the compliance review start and end?,0.8196,13: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,3+13,yes,yes,0.8196 0.8152 0.8123,0.8196,yes
+in_scope,How should the Chapter President prepare the agenda for a board meeting?,0.9045,60: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,60+63,yes,yes,0.9045 0.8874 0.8795,0.9045,yes
+in_scope,What should the outgoing president hand over to the new president?,0.8262,68: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,69+76+79,no,no,0.8262 0.8123 0.7964,0.8262,no
+in_scope,What financial review evidence does ISACA accept?,0.8633,5: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),5,yes,yes,0.8633 0.8509 0.8334,0.8633,yes
+in_scope,What insurance must we have?,0.8084,6: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),6,yes,yes,0.8084 0.7826 0.7752,0.8084,yes
+in_scope,How should the president work with the treasurer on chapter finances?,0.9108,53: Chapter Leader Guidebook - President (August 2026) | Finances,53+61,yes,yes,0.9108 0.8874 0.8725,0.9108,yes
+in_scope,Can we submit last year's audit if this year's isn't done?,0.8432,5: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),5,yes,yes,0.8432 0.8422 0.8280,0.8432,yes
+out_of_scope,What is the cryptocurrency policy?,0.7761,6: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),,,,0.7761 0.7631 0.7599,0.7761,
+out_of_scope,What's the weather going to be like in Chicago next week?,0.7500,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.7500 0.7467 0.7462,,
+out_of_scope,Can you recommend a good hotel near the conference venue?,0.7849,77: Chapter Leader Guidebook - President (August 2026) | Turnover Procedures,,,,0.7849 0.7753 0.7720,0.7849,
+out_of_scope,Where's a good pizza place near the conference?,0.7673,16: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,,,,0.7673 0.7656 0.7589,0.7673,
+out_of_scope,What is IEEE's policy on conference sponsorship?,0.7612,38: ISACA Chapter Systems Overview | Chapter Reporting Tools > CPE Upload Tool,,,,0.7612 0.7595 0.7573,0.7612,
+out_of_scope,How does the Rotary Club elect its president?,0.7940,42: Chapter Leader Guidebook - President (August 2026) | Welcome!,,,,0.7940 0.7895 0.7803,,
+out_of_scope,What are the Toastmasters dues this year?,0.7520,25: Core Chapter Leader Roles and Responsibilities | Chapter Secretary > Common Activities,,,,0.7520 0.7506 0.7503,0.7520,
+out_of_scope,What is Bitcoin trading at today?,0.7469,25: Core Chapter Leader Roles and Responsibilities | Chapter Secretary > Common Activities,,,,0.7469 0.7465 0.7435,0.7469,
+out_of_scope,Should I invest in Ethereum?,0.7799,27: Core Chapter Leader Roles and Responsibilities | Chapter Treasurer > Common Activities,,,,0.7799 0.7777 0.7717,0.7799,
+out_of_scope,Which airline flies direct to Singapore?,0.7167,71: Chapter Leader Guidebook - President (August 2026) | Chapter Leader Listing on Hosted Chapter Websites,,,,0.7167 0.7059 0.7050,0.7167,
+out_of_scope,How do I renew my passport?,0.8016,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.8016 0.7786 0.7767,0.8016,
+out_of_scope,What's the best sushi restaurant in Tokyo?,0.7288,25: Core Chapter Leader Roles and Responsibilities | Chapter Secretary > Common Activities,,,,0.7288 0.7281 0.7264,0.7288,
+out_of_scope,How long is the flight from London to Chicago?,0.7280,16: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,,,,0.7280 0.7265 0.7236,0.7280,
+out_of_scope,Who won the World Cup in 2022?,0.7158,71: Chapter Leader Guidebook - President (August 2026) | Chapter Leader Listing on Hosted Chapter Websites,,,,0.7158 0.7072 0.7024,0.7158,
+out_of_scope,What is the capital of Australia?,0.7302,71: Chapter Leader Guidebook - President (August 2026) | Chapter Leader Listing on Hosted Chapter Websites,,,,0.7302 0.7129 0.7122,0.7302,
+out_of_scope,How many moons does Jupiter have?,0.7371,40: ISACA Chapter Systems Overview | Which Functions Are Completed in Which System?,,,,0.7371 0.7363 0.7331,0.7371,
+out_of_scope,What year did the Berlin Wall fall?,0.7114,22: Core Chapter Leader Roles and Responsibilities | Chapter Vice President > Primary Responsibilities,,,,0.7114 0.7067 0.7026,,
+out_of_scope,How do I lose weight before the conference?,0.8222,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.8222 0.7951 0.7926,0.8222,
+out_of_scope,"I'm stressed about my job, any advice?",0.8245,27: Core Chapter Leader Roles and Responsibilities | Chapter Treasurer > Common Activities,,,,0.8245 0.8232 0.8186,,
+out_of_scope,How do I ask my manager for a raise?,0.8110,21: Core Chapter Leader Roles and Responsibilities | Chapter President > Common Activities,,,,0.8110 0.8054 0.8004,0.8110,
+out_of_scope,Should I buy or rent a house?,0.7863,27: Core Chapter Leader Roles and Responsibilities | Chapter Treasurer > Common Activities,,,,0.7863 0.7749 0.7697,0.7863,
+out_of_scope,How do I fix a Python import error?,0.8070,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.8070 0.7763 0.7744,0.8070,
+out_of_scope,How do I make a pivot table in Excel?,0.8094,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.8094 0.7917 0.7817,0.8094,
+out_of_scope,"My Outlook keeps crashing, what do I do?",0.7996,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.7996 0.7971 0.7964,,
+out_of_scope,How do I reset my Windows password?,0.7869,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.7869 0.7610 0.7608,0.7869,
+out_of_scope,What's the best project management software?,0.7966,27: Core Chapter Leader Roles and Responsibilities | Chapter Treasurer > Common Activities,,,,0.7966 0.7885 0.7854,0.7966,
+out_of_scope,How do I set up a Zoom webinar?,0.8135,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.8135 0.7904 0.7849,0.8135,
+out_of_scope,What does the Paris chapter do for its holiday party?,0.7685,67: Chapter Leader Guidebook - President (August 2026) | Guidebook page 8,,,,0.7685 0.7619 0.7615,0.7685,
+out_of_scope,Who is the president of the Mumbai chapter?,0.7907,60: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,,,,0.7907 0.7856 0.7839,0.7907,
+out_of_scope,How did the Toronto chapter grow its membership?,0.7758,50: Chapter Leader Guidebook - President (August 2026) | General Leadership,,,,0.7758 0.7718 0.7714,0.7758,
+out_of_scope,What events is the Sydney chapter running next month?,0.7852,50: Chapter Leader Guidebook - President (August 2026) | General Leadership,,,,0.7852 0.7840 0.7838,0.7852,
+out_of_scope,Can you write a LinkedIn post about our event?,0.8070,37: ISACA Chapter Systems Overview | Chapter Reporting Tools > Event Reporting,,,,0.8070 0.8067 0.8035,0.8070,
+out_of_scope,Translate this paragraph into French for me.,0.7822,22: Core Chapter Leader Roles and Responsibilities | Chapter Vice President > Primary Responsibilities,,,,0.7822 0.7760 0.7734,0.7822,
+out_of_scope,What's a good name for my dog?,0.7544,22: Core Chapter Leader Roles and Responsibilities | Chapter Vice President > Primary Responsibilities,,,,0.7544 0.7443 0.7441,,
+out_of_scope,How do I cook rice in a microwave?,0.7828,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.7828 0.7686 0.7654,0.7828,
+out_of_scope,What are the rules of cricket?,0.7740,2: Annual Chapter Compliance Framework | Compliance Cycle > Throughout the Year,,,,0.7740 0.7729 0.7706,0.7740,
+out_of_scope,What is the speed of light?,0.7415,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.7415 0.7402 0.7386,,
+out_of_scope,Recommend a good book on leadership.,0.8233,23: Core Chapter Leader Roles and Responsibilities | Chapter Vice President > Common Activities,,,,0.8233 0.8227 0.8211,0.8233,
+out_of_scope,What does the PMI chapter in Dallas charge for membership?,0.7700,77: Chapter Leader Guidebook - President (August 2026) | Turnover Procedures,,,,0.7700 0.7682 0.7672,0.7700,
+out_of_scope,How do I train for a marathon?,0.8129,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.8129 0.7927 0.7824,0.8129,
+near,How much does the CISA exam cost?,0.7934,3: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),,,,0.7934 0.7888 0.7824,0.7934,
+near,When is the next CISM exam window?,0.7706,40: ISACA Chapter Systems Overview | Which Functions Are Completed in Which System?,,,,0.7706 0.7682 0.7653,0.7706,
+near,How many CPE hours do I need to keep my CISA?,0.8234,16: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,,,,0.8234 0.8157 0.8073,0.8234,
+near,What is ISACA's annual membership fee?,0.8444,33: ISACA Chapter Systems Overview | Engage > Purpose,,,,0.8444 0.8434 0.8300,0.8444,
+near,How much are chapter dues?,0.8173,2: Annual Chapter Compliance Framework | Compliance Cycle > Throughout the Year,,,,0.8173 0.8151 0.8150,0.8173,
+near,What is ISACA's global data retention policy?,0.8254,6: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),,,,0.8254 0.8203 0.8167,0.8254,
+near,What is ISACA's code of professional ethics?,0.8189,3: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),,,,0.8189 0.8186 0.8154,0.8189,
+near,How do I become an ISACA certified trainer?,0.8486,3: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),,,,0.8486 0.8484 0.8430,0.8486,
+near,What is the CPE audit process for certification holders?,0.8428,38: ISACA Chapter Systems Overview | Chapter Reporting Tools > CPE Upload Tool,,,,0.8428 0.8032 0.8012,0.8428,
+near,How much rebate does ISACA give each chapter?,0.8390,11: Common Tasks and Navigation Guide | Common Tasks and Navigation Guide from Chapter Leader Portal > Task: Report Chapter Events,,,,0.8390 0.8339 0.8308,0.8390,
+near,What is ISACA's policy on chapter mergers?,0.8574,33: ISACA Chapter Systems Overview | Engage > Purpose,,,,0.8574 0.8532 0.8527,0.8574,
+near,What is the penalty for a late compliance submission?,0.8011,16: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,,,,0.8011 0.7942 0.7902,0.8011,
+near,What happens to a chapter that holds fewer than four board meetings in a year?,0.8650,62: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,,,,0.8650 0.8379 0.8245,0.8650,
+near,What penalty does ISACA apply if a chapter does not hold its board meetings?,0.8557,3: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),,,,0.8557 0.8447 0.8373,0.8557,
+near,How long should each board meeting last and who has to attend?,0.8478,62: Chapter Leader Guidebook - President (August 2026) | The Chapter President should:,,,,0.8478 0.8443 0.8391,,
+near,How many members must attend each educational event?,0.8187,16: Common Tasks and Navigation Guide | Task: Access Compliance Information > Typical Process,,,,0.8187 0.8123 0.8079,0.8187,
+near,What quorum does ISACA require for our board?,0.8660,3: Annual Chapter Compliance Framework | Compliance Cycle > Annual Review (1 Nov – 31 Dec),,,,0.8660 0.8477 0.8463,0.8660,
+near,What is the maximum term a chapter president can serve?,0.8347,60: Chapter Leader Guidebook - President (August 2026) | Guidebook page 6,,,,0.8347 0.8299 0.8289,0.8347,
+near,How do I apply for an ISACA scholarship?,0.8427,80: Chapter Leader Guidebook - President (August 2026) | Guidebook page 13,,,,0.8427 0.8356 0.8340,0.8427,
+near,What is the ISACA Foundation?,0.8438,33: ISACA Chapter Systems Overview | Engage > Purpose,,,,0.8438 0.8309 0.8285,0.8438,
+near,Where do I get help with Engage?,0.8666,33: ISACA Chapter Systems Overview | Engage > Purpose,,,,0.8666 0.8271 0.8202,0.8666,
+near,How do I get help with Engage?,0.8581,33: ISACA Chapter Systems Overview | Engage > Purpose,,,,0.8581 0.8228 0.8166,0.8581,
+near,How do I reach the Chapter Experience team?,0.8587,17: Common Tasks and Navigation Guide | Task: Upload CPE Information > Typical Process,,,,0.8587 0.8357 0.8341,0.8587,

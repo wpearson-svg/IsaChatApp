@@ -1,0 +1,132 @@
+id,lane,language,question,expected_path
+L4-001,4,en,What does the Annual Chapter Compliance Framework explain?,passage:1
+L4-002,4,en,What compliance activities happen throughout the year?,passage:2
+L4-003,4,en,What do chapters do in the annual review from 1 November to 31 December?,passage:3
+L4-004,4,en,"What evidence shows we report activities, revenues and expenditures to members?",passage:4
+L4-005,4,en,What financial report do we submit if this year's audit isn't finished by the compliance deadline?,passage:5
+L4-006,4,en,Do we need a privacy policy and insurance for compliance?,passage:6
+L4-007,4,en,What is the Common Tasks and Navigation Guide for?,passage:7
+L4-008,4,en,How do I update our chapter leader roster when new officers are elected?,passage:8
+L4-009,4,en,Does ISACA host chapter websites on Engage?,passage:9
+L4-010,4,en,What is Event Manager on Engage?,passage:10
+L4-011,4,en,"What is cross-site configuration between ISACA Global, Engage and our chapter website?",passage:11
+L4-012,4,en,Can we create member-only pages on our chapter website?,passage:12
+L4-013,4,en,"How many governance, financial and operational requirements do chapters confirm each year?",passage:13
+L4-014,4,en,How do I gather and submit compliance documentation?,passage:14
+L4-015,4,en,What happens in Q3 and Q4 of the compliance calendar?,passage:15
+L4-016,4,en,How many educational events must a chapter hold and where are they posted?,passage:16
+L4-017,4,en,What are the steps to upload CPE information?,passage:17
+L4-018,4,en,Where can I find more information about chapter leader roles?,passage:18
+L4-019,4,en,What does the Core Chapter Leader Roles document provide?,passage:19
+L4-020,4,en,What are the chapter president's primary responsibilities?,passage:20
+L4-021,4,en,What are the chapter president's common activities?,passage:21
+L4-022,4,en,What are the vice president's primary responsibilities?,passage:22
+L4-023,4,en,What are the vice president's common activities?,passage:23
+L4-024,4,en,What are the chapter secretary's primary responsibilities?,passage:24
+L4-025,4,en,What does the secretary do day to day?,passage:25
+L4-026,4,en,What are the treasurer's primary responsibilities?,passage:26
+L4-027,4,en,What are the treasurer's common activities?,passage:27
+L4-028,4,en,What is the ISACA Chapter Systems Overview document for?,passage:28
+L4-029,4,en,What is the Chapter Leader Portal?,passage:29
+L4-030,4,en,What do chapter leaders use the Chapter Leader Portal for?,passage:30
+L4-031,4,en,What is C360 (Chapter 360)?,passage:31
+L4-032,4,en,What is Chapter 360 used for?,passage:32
+L4-033,4,en,What is Engage?,passage:33
+L4-034,4,en,What can chapter leaders do on Engage?,passage:34
+L4-035,4,en,What reporting tools do chapters use?,passage:35
+L4-036,4,en,What is chapter compliance reporting used for?,passage:36
+L4-037,4,en,What is event reporting used for?,passage:37
+L4-038,4,en,What does the CPE upload tool do?,passage:38
+L4-039,4,en,How are board and leader rosters kept up to date?,passage:39
+L4-040,4,en,Which system is used for which chapter function?,passage:40
+L4-041,4,en,"How do the Chapter Leader Portal, C360 and Engage relate to each other?",passage:41
+L4-042,4,en,What is the chapter president's role as chief elected officer?,passage:42
+L4-043,4,en,How does the president implement the board's policies and decisions?,passage:43
+L4-044,4,en,What should the president do if the chapter struggles to meet standards?,passage:44
+L4-045,4,en,What is the Regional Strategic Advisory Council?,passage:45
+L4-046,4,en,Is the chapter an independent legal entity responsible for its own affairs?,passage:46
+L4-047,4,en,What is the president's role in the strategic plan?,passage:47
+L4-048,4,en,Who oversees nominations and elections and identifies risks?,passage:48
+L4-049,4,en,"Who is responsible for governance, the president or the whole board?",passage:49
+L4-050,4,en,How should the president inspire volunteers and promote teamwork?,passage:50
+L4-051,4,en,Who oversees reviews of the bylaws and chapter programs?,passage:51
+L4-052,4,en,What is the president's role in succession planning and as spokesperson?,passage:52
+L4-053,4,en,What is the president's role in chapter finances with the treasurer?,passage:53
+L4-054,4,en,Should chapters require dual authorization for large disbursements?,passage:54
+L4-055,4,en,What should the president do about bank reconciliations and unusual transactions?,passage:55
+L4-056,4,en,Why does timely financial reporting matter?,passage:56
+L4-057,4,en,Who is the chapter's main liaison with ISACA Global?,passage:57
+L4-058,4,en,What must be submitted to ISACA within required timeframes after the fiscal year?,passage:58
+L4-059,4,en,How should the president keep members informed about chapter activities?,passage:59
+L4-060,4,en,What is the president's role in board and membership meetings?,passage:60
+L4-061,4,en,What should the president review with the treasurer before a board meeting?,passage:61
+L4-062,4,en,How should decisions and action items from meetings be documented?,passage:62
+L4-063,4,en,What is the president responsible for in conducting board meetings?,passage:63
+L4-064,4,en,Who sets the date and format of future board meetings and follows up on actions?,passage:64
+L4-065,4,en,"Must the chapter hold membership meetings, and who presides?",passage:65
+L4-066,4,en,How should motions be handled at a membership meeting?,passage:66
+L4-067,4,en,How do membership meetings differ from board meetings?,passage:67
+L4-068,4,en,Who notifies ISACA of newly elected leaders after the AGM?,passage:68
+L4-069,4,en,What else should the outgoing president do to ensure continuity?,passage:69
+L4-070,4,en,How can we display chapter leadership information on our hosted website?,passage:70
+L4-071,4,en,Can we publish a static board image on our chapter website?,passage:71
+L4-072,4,en,Why don't leader profiles show on our chapter website?,passage:72
+L4-073,4,en,How should the president support volunteer development and mentoring?,passage:73
+L4-074,4,en,Should chapters have a succession plan?,passage:74
+L4-075,4,en,Can we create a President-Elect position?,passage:75
+L4-076,4,en,What records and credentials should be transferred at turnover?,passage:76
+L4-077,4,en,What open items like invoices and contracts should be handed over?,passage:77
+L4-078,4,en,What happens to chapter property and bank accounts when leaders change?,passage:78
+L4-079,4,en,"What correspondence goes to the incoming president, and should we recognise outgoing volunteers?",passage:79
+L4-080,4,en,What should be in the orientation for incoming chapter leaders?,passage:80
+L4-081,4,en,When should we begin recruiting volunteers for the following year?,passage:81
+L4-082,4,en,Why do board meeting minutes matter?,passage:82
+L4-083,4,en,What should board meeting minutes include?,passage:83
+L4-084,4,en,What should be left out of minutes?,passage:84
+L4-085,4,en,"How are minutes approved, signed and shared?",passage:85
+L4-086,4,en,How should we keep approved minutes safe?,passage:86
+L4-087,4,en,What are common mistakes with minutes?,passage:87
+L4-088,4,en,What does the board as a whole do?,passage:88
+L4-089,4,en,What is every board member expected to do?,passage:89
+L4-090,4,en,What are the typical duties of the board chair?,passage:90
+L4-091,4,en,What does the vice chair do?,passage:91
+L4-092,4,en,What are the secretary's typical duties on the board?,passage:92
+L4-093,4,en,What are the treasurer's typical duties on the board?,passage:93
+L4-094,4,en,"Should we have written job descriptions for board roles, and can one person hold two roles?",passage:94
+L4-095,4,en,"What is the difference between a standing committee, an ad hoc committee and a task force?",passage:95
+L4-096,4,en,How many committees does a chapter need?,passage:96
+L4-097,4,en,How should we choose committee members?,passage:97
+L4-098,4,en,What is a committee chair's job?,passage:98
+L4-099,4,en,How do we check how committees are doing?,passage:99
+L4-100,4,en,What is a conflict of interest?,passage:100
+L4-101,4,en,What should a conflict of interest policy include?,passage:101
+L4-102,4,en,What should a board member do when they have a conflict in a meeting?,passage:102
+L4-103,4,en,How can we prevent conflicts of interest?,passage:103
+L4-104,4,en,Why plan for leadership succession?,passage:104
+L4-105,4,en,How do we build a pipeline of future leaders?,passage:105
+L4-106,4,en,How should the outgoing president hand over to the next president?,passage:106
+L4-107,4,en,What role do past presidents play?,passage:107
+L4-108,4,en,What should a new leader do in their first months?,passage:108
+L4-109,4,en,Why does orientation matter for new board members?,passage:109
+L4-110,4,en,What should a new board member orientation cover?,passage:110
+L4-111,4,en,What goes in a board handbook?,passage:111
+L4-112,4,en,Who should lead new board member orientation?,passage:112
+L4-113,4,en,How should an orientation session be run?,passage:113
+L4-114,4,en,What happens after the orientation?,passage:114
+L4-115,4,en,How do we find new volunteers and board members?,passage:115
+L4-116,4,en,How do we set clear expectations for board members?,passage:116
+L4-117,4,en,How do we keep volunteers engaged?,passage:117
+L4-118,4,en,How should we recognise and thank volunteers?,passage:118
+L4-119,4,en,How can the board improve how it works?,passage:119
+L4-120,4,en,How should we welcome new chapter members?,passage:120
+L4-121,4,en,When should we review how the board is set up?,passage:121
+L4-122,4,en,Why agree on the problem before the solution in a governance review?,passage:122
+L4-123,4,en,What are the steps for a governance review?,passage:123
+L4-124,4,en,What pitfalls should we avoid in a governance review?,passage:124
+L4-125,4,en,What is the board's role in planning?,passage:125
+L4-126,4,en,How do we plan the board meeting agenda?,passage:126
+L4-127,4,en,How early should we send board materials before a meeting?,passage:127
+L4-128,4,en,What is a consent agenda?,passage:128
+L4-129,4,en,How should the chair lead a board meeting?,passage:129
+L4-130,4,en,What should happen after a board meeting?,passage:130
+L4-131,4,en,What are common board meeting mistakes?,passage:131

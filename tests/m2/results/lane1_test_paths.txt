@@ -1,0 +1,222 @@
+﻿PASS  Sign-in: no token is refused  ->  
+PASS  Sign-in: account with no role gets 403  ->  
+Signed in as d.whitfield.
+Strong-match mark: 0.00: running paths 9 and 13, skipping path 14.
+Warming up the model (not counted)...
+
+PASS  1. Direct hit  ->  answered
+        message: Here's what ISACA's guidance says: As required by the chapter bylaws, the chapter board should meet 
+regularly 
+PASS  1. Direct hit (spare)  ->  answered
+        message: Here's what ISACA's guidance says: Chapter maintains adequate insurance (Directors & Officers) 
+coverage approp
+PASS  1. Direct hit (spare)  ->  answered
+        message: Here's what ISACA's guidance says: Engage/Chapter webpage listings (link to page) | | Chapter 
+provides members
+PASS  2. Model path, clean pass  ->  answered
+        message: Here's what ISACA's guidance says: The Chapter President should work with the Chapter Secretary and 
+other appr
+PASS  2. Model path (spare)  ->  answered
+        message: Here's what ISACA's guidance says: The outgoing president should transfer relevant records, 
+documentation, cre
+PASS  2. Model path (spare)  ->  answered
+        message: Here's what ISACA's guidance says: Contact ISACA Support.
+PASS  3. Stopped (out of scope)  ->  stopped
+        message: I can only help with running your chapter, using ISACA's guidance. Try asking about board meetings, 
+elections 
+PASS  3. Stopped (spare)  ->  stopped
+        message: I can only help with running your chapter, using ISACA's guidance. Try asking about board meetings, 
+elections 
+PASS  3. Stopped (spare)  ->  stopped
+        message: I can only help with running your chapter, using ISACA's guidance. Try asking about board meetings, 
+elections 
+PASS  4. Escalated (no content)  ->  escalated (TKT-4319)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+PASS  4. Escalated, no content (spare)  ->  escalated (TKT-4320)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+PASS  4. Escalated, no content (spare)  ->  escalated (TKT-4321)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+PASS  5. Escalated (sensitive)  ->  escalated (TKT-4322)
+        message: Thank you for telling me. This is something a person should help with, so I've passed it to someone 
+who can he
+PASS  5. Escalated, sensitive (spare)  ->  escalated (TKT-4323)
+        message: Thank you for telling me. This is something a person should help with, so I've passed it to someone 
+who can he
+PASS  5. Escalated, sensitive (spare)  ->  escalated (TKT-4324)
+        message: Thank you for telling me. This is something a person should help with, so I've passed it to someone 
+who can he
+FAIL  6. Spanish, direct hit
+        - stages were: front_end,access_control,translation,input_compliance,database_search,knowledge_graph,rag,comple
+x_ai,output_compliance,translation
+        message: Esto es lo que dice la guía de ISACA: según lo requerido por los estatutos del capítulo, la junta 
+directiva de
+FAIL  6. Spanish, direct hit (spare)
+        - stages were: front_end,access_control,translation,input_compliance,database_search,knowledge_graph,rag,comple
+x_ai,output_compliance,translation
+        message: Esto es lo que dice la guía de ISACA: Se utiliza para grabar eventos educativos de capítulos y 
+mantener regist
+FAIL  6. Spanish, model path
+        - stages were: front_end,access_control,translation,input_compliance,database_search,knowledge_graph,rag,comple
+x_ai,output_compliance,translation
+        message: Esto es lo que dice la guía de ISACA: El presidente saliente debe transferir los registros 
+relevantes, documen
+FAIL  6. Spanish, model path (spare)
+        - stages were: front_end,access_control,translation,input_compliance,database_search,knowledge_graph,rag,comple
+x_ai,output_compliance,translation
+        message: Esto es lo que dice la guía de ISACA: el presidente del capítulo debe trabajar con el secretario del 
+capítulo 
+FAIL  8. Trimmed answer
+        - a trimmed answer should not also fall back to ISACA's words (got: result=pass; reason=none; section=ai; 
+source=ok; approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.67; 
+confidence_parts=search:0.84,support:0.50; nli=pass; nli_detail=hhem, unsupported=2/4, min_score=0.04; numbers=pass; 
+strength=pass; contact=pass; shape=pass; step_down=trimmed; removed_sentences=2; nli_score=0.04; nli_mark=0.50; 
+step_down=isaca_words; step_reason=confidence)
+        message: Here's what ISACA's guidance says: While the Treasurer typically oversees the day-to-day 
+administration of fin
+FAIL  8. Trimmed answer (spare)
+        - output_compliance should log step_down=trimmed (got: result=pass; reason=none; section=ai; source=ok; 
+approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.55; 
+confidence_parts=search:0.86,support:0.25; nli=fail; nli_detail=hhem, unsupported=3/4, min_score=0.02; numbers=pass; 
+strength=pass; contact=pass; shape=pass; nli_score=0.02; nli_mark=0.50; step_down=isaca_words; 
+step_reason=nli+confidence)
+        - at least one sentence should have been removed (got: result=pass; reason=none; section=ai; source=ok; 
+approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.55; 
+confidence_parts=search:0.86,support:0.25; nli=fail; nli_detail=hhem, unsupported=3/4, min_score=0.02; numbers=pass; 
+strength=pass; contact=pass; shape=pass; nli_score=0.02; nli_mark=0.50; step_down=isaca_words; 
+step_reason=nli+confidence)
+        - a trimmed answer should not also fall back to ISACA's words (got: result=pass; reason=none; section=ai; 
+source=ok; approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.55; 
+confidence_parts=search:0.86,support:0.25; nli=fail; nli_detail=hhem, unsupported=3/4, min_score=0.02; numbers=pass; 
+strength=pass; contact=pass; shape=pass; nli_score=0.02; nli_mark=0.50; step_down=isaca_words; 
+step_reason=nli+confidence)
+        - after the trim the NLI result is pass (got: result=pass; reason=none; section=ai; source=ok; approved=yes; 
+sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.55; confidence_parts=search:0.86,support:0.25; 
+nli=fail; nli_detail=hhem, unsupported=3/4, min_score=0.02; numbers=pass; strength=pass; contact=pass; shape=pass; 
+nli_score=0.02; nli_mark=0.50; step_down=isaca_words; step_reason=nli+confidence)
+        message: Here's what ISACA's guidance says: The Chapter President's responsibilities for membership meetings 
+are genera
+PASS  8. Trimmed answer (spare)  ->  answered
+        message: Here's what ISACA's guidance says: The President should work closely with the Treasurer to promote 
+sound finan
+PASS  9. ISACA's words after NLI failure  ->  answered
+        message: Here's what ISACA's guidance says: The Chapter President's responsibilities for membership meetings 
+are genera
+PASS  9. ISACA's words after strength failure  ->  answered
+        message: Here's what ISACA's guidance says: Allows chapter leaders to upload continuing professional education 
+(CPE) at
+PASS  9. ISACA's words after strength failure (spare)  ->  answered
+        message: Here's what ISACA's guidance says: Access chapter compliance resources - Review chapter reporting 
+requirements
+PASS  9. ISACA's words after numbers failure  ->  answered
+        message: Here's what ISACA's guidance says: Chapter conducts or co-hosts a minimum of four educational events 
+annually.
+PASS  9. ISACA's words after confidence failure  ->  answered
+        message: Here's what ISACA's guidance says: Adding chapter events into Event Manager will also display them on 
+the Glob
+PASS  10. Source check fails  ->  escalated (TKT-4325)
+        message: I couldn't double-check this answer well enough to share it, so I've passed your question to a person 
+who can 
+FAIL  10. Source check fails (spare)
+        - status is 'answered', expected 'escalated'
+        - no TKT- reference
+        - escalated run still lists sources
+        - output_compliance should escalate (got: result=pass; reason=none; section=ai; source=ok; approved=yes; 
+sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.75; confidence_parts=search:0.83,support:0.67; 
+nli=pass; nli_detail=hhem, unsupported=1/3, min_score=0.01; numbers=pass; strength=pass; contact=pass; shape=pass; 
+step_down=trimmed; removed_sentences=1; nli_score=0.01; nli_mark=0.50)
+        - output_compliance should log source_retrieved=no (got: result=pass; reason=none; section=ai; source=ok; 
+approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.75; 
+confidence_parts=search:0.83,support:0.67; nli=pass; nli_detail=hhem, unsupported=1/3, min_score=0.01; numbers=pass; 
+strength=pass; contact=pass; shape=pass; step_down=trimmed; removed_sentences=1; nli_score=0.01; nli_mark=0.50)
+        message: Here's what ISACA's guidance says: The documents emphasize the importance of member engagement in 
+chapter acti
+PASS  11. Rule recheck fails  ->  escalated (TKT-4326)
+        message: I couldn't double-check this answer well enough to share it, so I've passed your question to a person 
+who can 
+PASS  11. Rule recheck fails (spare)  ->  escalated (TKT-4327)
+        message: I couldn't double-check this answer well enough to share it, so I've passed your question to a person 
+who can 
+FAIL  11. Rule recheck fails (spare)
+        - status is 'answered', expected 'escalated'
+        - no TKT- reference
+        - escalated run still lists sources
+        - output_compliance should escalate (got: result=pass; reason=none; section=ai; source=ok; approved=yes; 
+sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.92; confidence_parts=search:0.84,support:1.00; 
+nli=pass; nli_detail=hhem, sentences=1, min_score=0.97; numbers=pass; strength=pass; contact=pass; shape=pass; 
+nli_score=0.97; nli_mark=0.50)
+        - output_compliance should log rule_recheck=fail (got: result=pass; reason=none; section=ai; source=ok; 
+approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.92; 
+confidence_parts=search:0.84,support:1.00; nli=pass; nli_detail=hhem, sentences=1, min_score=0.97; numbers=pass; 
+strength=pass; contact=pass; shape=pass; nli_score=0.97; nli_mark=0.50)
+        - the rule that caught the answer should be logged (got: result=pass; reason=none; section=ai; source=ok; 
+approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.92; 
+confidence_parts=search:0.84,support:1.00; nli=pass; nli_detail=hhem, sentences=1, min_score=0.97; numbers=pass; 
+strength=pass; contact=pass; shape=pass; nli_score=0.97; nli_mark=0.50)
+        message: Here's what ISACA's guidance says: If our policy covers Directors and Officers appropriate to our 
+operations a
+FAIL  12. Answer shape fails
+        - status is 'answered', expected 'escalated'
+        - no TKT- reference
+        - escalated run still lists sources
+        - output_compliance should escalate (got: result=pass; reason=none; section=ai; source=ok; approved=yes; 
+sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.44; confidence_parts=search:0.88,support:0.00; 
+nli=fail; nli_detail=hhem, unsupported=2/2, min_score=0.08; numbers=fail:1; strength=fail:advice+obligation; 
+contact=pass; shape=pass; nli_score=0.08; nli_mark=0.50; step_down=isaca_words; 
+step_reason=nli+numbers+strength+confidence)
+        - output_compliance should log check=answer_shape (got: result=pass; reason=none; section=ai; source=ok; 
+approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.44; 
+confidence_parts=search:0.88,support:0.00; nli=fail; nli_detail=hhem, unsupported=2/2, min_score=0.08; numbers=fail:1; 
+strength=fail:advice+obligation; contact=pass; shape=pass; nli_score=0.08; nli_mark=0.50; step_down=isaca_words; 
+step_reason=nli+numbers+strength+confidence)
+        - output_compliance should say what was missing (got: result=pass; reason=none; section=ai; source=ok; 
+approved=yes; sources=1; source_retrieved=yes; rule_recheck=pass; confidence=0.44; 
+confidence_parts=search:0.88,support:0.00; nli=fail; nli_detail=hhem, unsupported=2/2, min_score=0.08; numbers=fail:1; 
+strength=fail:advice+obligation; contact=pass; shape=pass; nli_score=0.08; nli_mark=0.50; step_down=isaca_words; 
+step_reason=nli+numbers+strength+confidence)
+        message: Here's what ISACA's guidance says: Allows chapter leaders to upload continuing professional education 
+(CPE) at
+PASS  12. Answer shape fails (spare)  ->  escalated (TKT-4328)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+PASS  12. Answer shape fails (spare)  ->  escalated (TKT-4329)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+PASS  13. Contact check fails  ->  answered
+        message: Here's what ISACA's guidance says: ISACA offers free website hosting to all chapters as microsites of 
+the glob
+SKIP  14. Failed check on a weak match goes to a person  (needs the strong-match mark at 0.85; set it on the Dev 
+Dashboard, Compliance policy)
+PASS  15. Stopped by an input rule (C-07)  ->  stopped
+        message: I can only help with running your chapter, using ISACA's guidance. Try asking about board meetings, 
+elections 
+PASS  15. Stopped by an input rule (spare)  ->  stopped
+        message: I can only help with running your chapter, using ISACA's guidance. Try asking about board meetings, 
+elections 
+PASS  15. Stopped by an input rule (spare)  ->  stopped
+        message: I can only help with running your chapter, using ISACA's guidance. Try asking about board meetings, 
+elections 
+PASS  15. Rule hand-off to a person (C-03)  ->  escalated (TKT-4330)
+        message: Thank you for telling me. This is something a person should help with, so I've passed it to someone 
+who can he
+PASS  15. Rule hand-off (spare, C-03)  ->  escalated (TKT-4331)
+        message: Thank you for telling me. This is something a person should help with, so I've passed it to someone 
+who can he
+PASS  15. Rule hand-off (spare, C-04)  ->  escalated (TKT-4332)
+        message: Thank you for telling me. This is something a person should help with, so I've passed it to someone 
+who can he
+PASS  16. The AI says the passages do not answer  ->  escalated (TKT-4333)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+PASS  16. The AI says no (spare)  ->  escalated (TKT-4334)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+PASS  16. The AI says no (spare)  ->  escalated (TKT-4335)
+        message: ISACA's guidance doesn't cover this yet, so I've passed your question to a person who can help. Your 
+reference
+SKIP  Extra: model turned off     (run with -ModelOff)
+SKIP  Extra: a forced AI-check failure (stand-in, not part of the real set: -ForcedCheck source|nli|rule|confidence)
+
+9 of 47 check(s) failed. (1 case(s) skipped for the strong-match setting)
