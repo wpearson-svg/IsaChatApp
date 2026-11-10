@@ -24,10 +24,13 @@ LANG_PATTERN = "^(" + "|".join(LANG) + ")$"
 _tokenizer = None
 _model = None
 _ready = False
+# Where the model actually runs: "cuda" only when DEVICE asks for it AND a graphics card is visible in the container,
+# otherwise "cpu". Requests follow this, never DEVICE, so a missing card means slower translation, not failed requests.
+_device = "cpu"
 
 
 def load_model() -> None:
-    global _tokenizer, _model, _ready
+    global _tokenizer, _model, _ready, _device
     try:
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
         import torch
@@ -35,7 +38,12 @@ def load_model() -> None:
         _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
         _model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_ID)
         if DEVICE == "cuda" and torch.cuda.is_available():
-            _model = _model.to("cuda")
+            # Half precision on the card: about half the memory (it shares the card with Ollama) and faster.
+            _model = _model.half().to("cuda")
+            _device = "cuda"
+        elif DEVICE == "cuda":
+            print("[translation] DEVICE=cuda but no graphics card is visible in the container: running on the CPU")
+        print(f"[translation] model ready on {_device}")
         _ready = True
     except Exception as exc:  # model may be downloading or OOM
         print(f"[translation] model load failed: {exc}")
@@ -61,7 +69,7 @@ class TranslateResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"ok": True, "model_ready": _ready, "model_id": MODEL_ID, "languages": sorted(LANG)}
+    return {"ok": True, "model_ready": _ready, "model_id": MODEL_ID, "languages": sorted(LANG), "device": _device}
 
 
 @app.post("/translate", response_model=TranslateResponse)
@@ -82,7 +90,7 @@ def translate(req: TranslateRequest):
         tgt = LANG[req.target_lang]
         _tokenizer.src_lang = src
         inputs = _tokenizer(req.text, return_tensors="pt", truncation=True, max_length=512)
-        if DEVICE == "cuda":
+        if _device == "cuda":
             inputs = {k: v.to("cuda") for k, v in inputs.items()}
         forced_bos = _tokenizer.convert_tokens_to_ids(tgt)
         outputs = _model.generate(

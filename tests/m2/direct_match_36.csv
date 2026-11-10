@@ -1,0 +1,37 @@
+id,lane,language,question,expected_path
+DM-01,4,en,Can our chapter use a compilation this year for the financial reporting requirement with ISACA's approval?,good
+DM-02,4,en,Can our chapter use an approved compilation for compliance?,good
+DM-03,4,en,Can we submit a compilation this year?,good
+DM-04,4,en,Does our privacy policy have to comply with applicable laws?,good
+DM-05,4,en,How are chapter events recorded?,good
+DM-06,4,en,How does the president work with committees?,good
+DM-07,4,en,How long do chapters have to complete the annual review?,bad
+DM-08,4,en,How many board meetings must a chapter hold each year?,good
+DM-09,4,en,How many committees should a chapter have?,bad
+DM-10,4,en,How many educational events must a chapter hold each year and how many members must attend each?,bad
+DM-11,4,en,How many members must attend each educational event?,bad
+DM-12,4,en,How many volunteers does a chapter need?,bad
+DM-13,4,en,Is a compilation acceptable for the annual financial review?,good
+DM-14,4,en,What are the dates of the annual compliance review?,bad
+DM-15,4,en,What financial review evidence does ISACA accept?,bad
+DM-16,4,en,What insurance evidence is accepted for compliance?,bad
+DM-17,4,en,What insurance must we have?,good
+DM-18,4,en,What is ISACA's email for chapter support?,bad
+DM-19,4,en,What is ISACA's support email?,bad
+DM-20,4,en,What is in the appendix of the Chapter Treasurer Guidebook?,good
+DM-21,4,en,What is the email for the chapter leader listing?,bad
+DM-22,4,en,What is the vice president responsible for?,bad
+DM-23,4,en,What makes a chapter president effective?,bad
+DM-24,4,en,What privacy policy must the chapter have?,good
+DM-25,4,en,What should the board do to plan the chapter's year?,bad
+DM-26,4,en,When is a compilation accepted for the financial review?,good
+DM-27,4,en,When should committees report to the board?,bad
+DM-28,4,en,When should the board review the chapter's finances?,good
+DM-29,4,en,When should the new president meet the outgoing president?,good
+DM-30,4,en,When should we update our chapter leader listing?,bad
+DM-31,4,en,Who does the president report to?,good
+DM-32,4,en,Who maintains the chapter leader listing on the hosted website?,bad
+DM-33,4,en,Who reviews the chapter's privacy policy?,bad
+DM-34,4,en,Who takes the minutes?,bad
+DM-35,4,en,Who uploads CPE information?,good
+DM-36,4,en,Why do we report our events?,good

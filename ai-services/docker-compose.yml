@@ -8,7 +8,16 @@ services:
     environment:
       MODEL_ID: facebook/nllb-200-distilled-600M
       HF_HOME: /models
-      DEVICE: cpu
+      # Runs on the graphics card (Willis, November 10): on the CPU a Spanish reply took 12 to 17 seconds to translate.
+      # If no card is visible the service says so in its log and runs on the CPU; /health shows "device".
+      DEVICE: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     ports: ["8091:8000"]
     volumes: [nllb_models:/models]
     restart: unless-stopped

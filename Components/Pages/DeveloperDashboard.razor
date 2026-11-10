@@ -212,6 +212,31 @@ else
                         </p>
                     </div>
 
+                    <div class="dd__card">
+                        <div class="dd__cardHeader">
+                            <h3>Direct-answer match mark</h3>
+                            <span class="dd__tag dd__tag--green">SEARCH</span>
+                        </div>
+                        <p class="dd__cardHint">
+                            When the full-text search finds a passage, Isa scores the sentence she would quote: how much of
+                            the question's meaningful words it contains, rare words counting more (no AI). At or above this
+                            mark she quotes it as a direct answer. Below it, the question goes on to search by meaning.
+                            Default @OutputSettings.DirectMatchMarkDefault.ToString("0.00").
+                        </p>
+                        <input type="range" class="dd__slider" min="0" max="100" step="1"
+                               value="@DirectMatchMarkPct"
+                               @oninput="OnDirectMatchMarkChanged" />
+                        <div class="dd__sliderLabels">
+                            <span>More direct quotes</span>
+                            <span class="dd__sliderValue">@((DirectMatchMarkPct / 100.0).ToString("0.00"))</span>
+                            <span>More searching by meaning</span>
+                        </div>
+                        <p class="dd__tableHint">
+                            Linking words (the, should, on), question words (how many, who) and general verbs (hold, make,
+                            use) are not counted. The score and any missing words are in the database_search event.
+                        </p>
+                    </div>
+
                     <div class="dd__card dd__card--wide">
                         <div class="dd__cardHeader">
                             <h3>Rules that hand a question to a person or stop it</h3>
@@ -704,12 +729,14 @@ else
 
     // ---- Compliance policy state ---------------------------------
 
-    // Real settings: the four answer-quality numbers are saved by OutputComplianceSettings and read on every question
-    // (NLI, confidence and strong match by the output compliance stage; the search pass mark by vector search).
+    // Real settings: the five answer-quality numbers are saved by OutputComplianceSettings and read on every question
+    // (NLI, confidence and strong match by the output compliance stage; the search pass mark by vector search; the
+    // direct-answer match mark by the full-text search).
     private int ConfidenceThreshold = (int)Math.Round(OutputComplianceSettings.DefaultConfidence * 100);
     private int NliThresholdPct = (int)Math.Round(OutputComplianceSettings.DefaultNli * 100);
     private int StrongMatchPct = (int)Math.Round(OutputComplianceSettings.DefaultStrongMatch * 100);
     private int SearchPassMarkPct = (int)Math.Round(OutputComplianceSettings.DefaultSearchPassMark * 100);
+    private int DirectMatchMarkPct = (int)Math.Round(OutputComplianceSettings.DefaultDirectMatchMark * 100);
     private string _saveMessage = "";
 
     private void LoadOutputSettings()
@@ -718,6 +745,12 @@ else
         NliThresholdPct = (int)Math.Round(OutputSettings.NliThreshold * 100);
         StrongMatchPct = (int)Math.Round(OutputSettings.StrongMatch * 100);
         SearchPassMarkPct = (int)Math.Round(OutputSettings.SearchPassMark * 100);
+        DirectMatchMarkPct = (int)Math.Round(OutputSettings.DirectMatchMark * 100);
+    }
+
+    private void OnDirectMatchMarkChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value)) DirectMatchMarkPct = value;
     }
 
     private void OnStrongMatchChanged(ChangeEventArgs e)
@@ -742,10 +775,10 @@ else
     {
         if (!Settings.CanAccessDevDashboard && !_isDev) return;
         var who = await WhoAsync();
-        var before = (Nli: OutputSettings.NliThreshold, Conf: OutputSettings.ConfidenceThreshold, Strong: OutputSettings.StrongMatch, Search: OutputSettings.SearchPassMark);
+        var before = (Nli: OutputSettings.NliThreshold, Conf: OutputSettings.ConfidenceThreshold, Strong: OutputSettings.StrongMatch, Search: OutputSettings.SearchPassMark, Direct: OutputSettings.DirectMatchMark);
         OutputSettings.ResetToDefaults();
         LoadOutputSettings();
-        LogOutputChanges(who, before.Nli, before.Conf, before.Strong, before.Search);
+        LogOutputChanges(who, before.Nli, before.Conf, before.Strong, before.Search, before.Direct);
         _saveMessage = "Compliance settings reset to the appsettings.json values.";
     }
 
@@ -817,12 +850,13 @@ else
         return "not signed in (this computer)";
     }
 
-    private void LogOutputChanges(string who, double nli, double conf, double strong, double search)
+    private void LogOutputChanges(string who, double nli, double conf, double strong, double search, double direct)
     {
         ChangeLog.Add(who, "Compliance policy", "NLI pass mark", Num(nli), Num(OutputSettings.NliThreshold));
         ChangeLog.Add(who, "Compliance policy", "Answer confidence threshold", Num(conf), Num(OutputSettings.ConfidenceThreshold));
         ChangeLog.Add(who, "Compliance policy", "Strong-match mark", Num(strong), Num(OutputSettings.StrongMatch));
         ChangeLog.Add(who, "Compliance policy", "Search pass mark", Num(search), Num(OutputSettings.SearchPassMark));
+        ChangeLog.Add(who, "Compliance policy", "Direct-answer match mark", Num(direct), Num(OutputSettings.DirectMatchMark));
         if (_changeLogVisible) _changes = ChangeLog.Recent(50);
     }
 
@@ -832,13 +866,14 @@ else
         try
         {
             var who = await WhoAsync();
-            var before = (Nli: OutputSettings.NliThreshold, Conf: OutputSettings.ConfidenceThreshold, Strong: OutputSettings.StrongMatch, Search: OutputSettings.SearchPassMark);
-            OutputSettings.Save(NliThresholdPct / 100.0, ConfidenceThreshold / 100.0, StrongMatchPct / 100.0, SearchPassMarkPct / 100.0);
-            LogOutputChanges(who, before.Nli, before.Conf, before.Strong, before.Search);
+            var before = (Nli: OutputSettings.NliThreshold, Conf: OutputSettings.ConfidenceThreshold, Strong: OutputSettings.StrongMatch, Search: OutputSettings.SearchPassMark, Direct: OutputSettings.DirectMatchMark);
+            OutputSettings.Save(NliThresholdPct / 100.0, ConfidenceThreshold / 100.0, StrongMatchPct / 100.0, SearchPassMarkPct / 100.0, DirectMatchMarkPct / 100.0);
+            LogOutputChanges(who, before.Nli, before.Conf, before.Strong, before.Search, before.Direct);
             _saveMessage = "Saved: NLI pass mark " + Num(OutputSettings.NliThreshold)
                 + ", confidence threshold " + Num(OutputSettings.ConfidenceThreshold)
                 + ", strong-match mark " + Num(OutputSettings.StrongMatch)
                 + ", search pass mark " + Num(OutputSettings.SearchPassMark)
+                + ", direct-answer match mark " + Num(OutputSettings.DirectMatchMark)
                 + ". Applies to the next question.";
         }
         catch (Exception ex)

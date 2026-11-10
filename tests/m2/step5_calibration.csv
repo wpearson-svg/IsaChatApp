@@ -1,0 +1,31 @@
+id,lane,language,question,expected_path
+S5-01,4,en,Who takes the minutes?,in_scope
+S5-02,4,en,What has to be handed over to the new officers?,in_scope
+S5-03,4,en,What insurance must we have?,in_scope
+S5-04,4,en,What does the president usually do from week to week?,in_scope
+S5-05,4,en,What do we have to keep doing all year to stay compliant?,in_scope
+S5-06,4,en,Can we put content on our website that only members can see?,in_scope
+S5-07,4,en,What happens in the annual compliance review at the end of the year?,in_scope
+S5-08,4,en,What is the vice president responsible for?,in_scope
+S5-09,4,en,Can we submit last year's audit if this year's isn't done?,in_scope
+S5-10,4,en,Should we require two signatures on large payments?,in_scope
+S5-11,4,en,Why do we report our events?,in_scope
+S5-12,4,en,Our chapter is struggling to meet ISACA's standards. What should I do?,in_scope
+S5-13,4,en,How do I lose weight before the conference?,out_of_scope
+S5-14,4,en,Recommend a good book on leadership.,out_of_scope
+S5-15,4,en,"I'm stressed about my job, any advice?",out_of_scope
+S5-16,4,en,How do I renew my passport?,out_of_scope
+S5-17,4,en,Can you write a LinkedIn post about our event?,out_of_scope
+S5-18,4,en,How do I ask my manager for a raise?,out_of_scope
+S5-19,4,en,What year did the Berlin Wall fall?,out_of_scope
+S5-20,4,en,What are the Toastmasters dues this year?,out_of_scope
+S5-21,4,en,Translate this paragraph into French for me.,out_of_scope
+S5-22,4,en,When is the next CISM exam window?,near
+S5-23,4,en,What is the penalty for a late compliance submission?,near
+S5-24,4,en,How many members must attend each educational event?,near
+S5-25,4,en,How many CPE hours do I need to keep my CISA?,near
+S5-26,4,en,How much rebate does ISACA give each chapter?,near
+S5-27,4,en,What is the ISACA Foundation?,near
+S5-28,4,en,What penalty does ISACA apply if a chapter does not hold its board meetings?,near
+S5-29,4,en,How do I get help with Engage?,near
+S5-30,4,en,What happens to a chapter that holds fewer than four board meetings in a year?,near

@@ -137,16 +137,19 @@
       ]
     },
     {
-      // The team's settled demo questions. Signed in as Kenji. Keep Spanish and Amharic out unless translation is warm.
+      // Real questions, checked through the real pipeline (same ending on every run, November 4 to 10). Signed in as Kenji.
+      // Alt+1 to Alt+5 type them; Alt+8 and Alt+9 type questions 1 and 2 in Spanish (warm translation first; about 20 seconds each).
       "kind": "demo",
       "section": "Meet Isa",
       "presenter": "Willis Pearson",
       "title": "Live demo: ask Isa",
-      "lead": "Three questions, three different endings.",
+      "lead": "Five questions, five different endings. Then 1 and 2 in Spanish: the same answers.",
       "steps": [
-        "\"How many board meetings must a chapter hold each year?\" ISACA's own words, with the page, and Show the work",
-        "\"What insurance must we have?\" An answer, then a pointer to a person",
-        "\"What is the cryptocurrency policy?\" Not in approved content, so a person, with a reference number"
+        "\"How many board meetings must a chapter hold each year?\" ISACA's own words",
+        "\"What should the outgoing president hand over to the new president?\" Written by the AI, checked",
+        "\"Where's a good pizza place near the conference?\" Outside what Isa covers",
+        "\"A board member keeps harassing me at meetings.\" Straight to a person",
+        "\"Is a compilation fine for the financial review if ISACA approves it in writing?\" Isa catches her own answer"
       ]
     },
     {
