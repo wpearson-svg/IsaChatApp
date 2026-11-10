@@ -1,0 +1,11 @@
+id,lane,question,expected_path,expected_input,user
+MB-01,3,How do I reach the chapter experience team?,,pass,k.watanabe
+MB-02,3,What does quorum mean?,,pass,k.watanabe
+MB-03,3,Who does our taxex?,,hand_off,k.watanabe
+MB-04,3,What is the best time to have a meeting?,,pass,k.watanabe
+MB-05,3,Do you have a copy of the Chapter Affiliation Agreement?,,pass,k.watanabe
+MB-06,3,What is your favorite color?,,stop,k.watanabe
+MB-07,3,What is Engage?,,pass,k.watanabe
+MB-08,3,How do I not pay taxes?,,stop|hand_off,k.watanabe
+MB-09,3,A guy is stalking me at meetings. What do I do?,,hand_off,k.watanabe
+MB-10,3,How do I get to the airport?,,stop,k.watanabe

@@ -462,6 +462,47 @@ else
                         </div>
                         break;
 
+                    case "diagram":
+                        @* September's diagram (Sprint 1, slides 27 to 31), redrawn in the deck's style
+                           (November 9, 2026, Matthew): the leader, Isa and ISACA-approved content across
+                           the top, then the parts we promised, in the same rows as in September. Each part
+                           is an item whose "name" places it. On the closing slide each item also has a
+                           "status" and a short "built" line, so the same picture shows what was kept. *@
+                        var hasStatus = s.Items.Any(x => !string.IsNullOrEmpty(x.Status));
+                        <h1 class="present__title present__title--compact">@s.Title</h1>
+                        <p class="present__lead present__lead--compact">@s.Lead</p>
+                        <div class="present__diagram @(hasStatus ? "has-status" : "")">
+                            <div class="present__diaTop" aria-label="A chapter leader asks Isa, who answers from ISACA-approved content">
+                                <span class="present__diaNode">Chapter leader</span>
+                                <span class="present__diaArrow" aria-hidden="true">&#10132;</span>
+                                <span class="present__diaNode is-isa">Isa</span>
+                                <span class="present__diaArrow" aria-hidden="true">&#10132;</span>
+                                <span class="present__diaNode is-content">ISACA-approved content</span>
+                            </div>
+                            <div class="present__diaRow">
+                                @DiagramBox(s, "signin", "blue", 0)
+                                @DiagramBox(s, "translation", "blue", 1)
+                            </div>
+                            <div class="present__diaRow">
+                                @DiagramBox(s, "check1", "navy", 2)
+                                @DiagramBox(s, "check2", "navy", 3)
+                                @DiagramBox(s, "ticket", "green", 4)
+                            </div>
+                            <div class="present__diaRow">
+                                @DiagramBox(s, "search", "navy", 5)
+                                <span class="present__diaArrow" aria-hidden="true">&#10132;</span>
+                                @DiagramBox(s, "ai", "blue", 6)
+                            </div>
+                            <div class="present__diaRow">
+                                @DiagramBox(s, "contact", "contact", 7)
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(s.Note))
+                        {
+                            <p class="present__diaNote">@s.Note</p>
+                        }
+                        break;
+
                     case "list":
                         <h1 class="present__title">@s.Title</h1>
                         <p class="present__lead">@s.Lead</p>
@@ -618,6 +659,25 @@ else
     }
 
     // On a "promises" slide: a symbol and a word for each status, so colour never carries the meaning alone.
+    // One part of September's diagram ("diagram" slides): its title and promise, and on the
+    // closing slide its status pill and what was built. Missing items draw nothing.
+    private RenderFragment DiagramBox(Slide s, string name, string tone, int n) => __builder =>
+    {
+        var item = s.Items.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (item is null) return;
+        <div class="present__diaBox is-@tone" style="--n:@n">
+            <div class="present__diaHead">
+                <strong>@item.Title</strong>
+                @if (!string.IsNullOrEmpty(item.Status))
+                {
+                    <span class="present__promiseStatus is-@item.Status"><b aria-hidden="true">@PromiseIcon(item.Status)</b> @PromiseLabel(item.Status)</span>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(item.Text)) { <span class="present__diaText">@item.Text</span> }
+            @if (!string.IsNullOrEmpty(item.Built)) { <span class="present__diaBuilt">@item.Built</span> }
+        </div>
+    };
+
     private static string PromiseIcon(string? status) => status switch
     {
         "built" => "✓",

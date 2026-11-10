@@ -1,6 +1,5 @@
-id,lane,language,question,expected_path
-S-1,smoke,en,How many board meetings must a chapter hold each year?,direct
-S-2,smoke,en,How should the Chapter President prepare the agenda for a board meeting?,model
-S-3,smoke,en,Where's a good pizza place near the conference?,stopped
-S-4,smoke,en,A colleague keeps bothering me. What should I do?,sensitive
-S-5,smoke,es,¿Cuántas reuniones de la junta debe celebrar un capítulo cada año?,spanish_direct
+id,lane,question,expected_path
+S-1,smoke,Where's a good pizza place near the conference?,stopped
+S-2,smoke,"A colleague keeps bothering me, what should I do?",handed_off
+S-3,smoke,What is the cryptocurrency policy?,no_content
+S-4,smoke,How many board meetings must a chapter hold each year?,direct

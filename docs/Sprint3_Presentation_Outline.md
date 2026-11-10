@@ -1,168 +1,167 @@
-# Sprint 3 presentation outline: promised and built, side by side
+# Sprint 3 presentation outline
 
-November 6, 2026 · Matthew Brady, written with Claude · Sprint 3, task M5
+November 9, 2026 · Matthew Brady, written with Claude · replaces the November 6 version (it is in Git history)
 
-**What this is:** a slide-by-slide outline for the final presentation to ISACA (15 minutes for the whole team, over Teams, internship week 12). It follows the plan saved on October 28 (ISA-PROJECT-CONTEXT.md, "Plan for Sprint 3"). It brings back Sprint 1's five sections and the tracker across the top of the slides, and closes the loop: in each section, what we **promised** in September beside what we **built**.
+**What this is:** the outline for the final presentation to ISACA: 15 minutes for the whole team, over Microsoft Teams, in internship week 12. It is a story with a clear progression, not a scorecard: the problem, what we promised, what Isa does, how she runs, what she does for a new chapter president, what she gives ISACA behind the scenes, and the promises kept.
 
-**Row numbers** (R1, S1-14 and so on) are the ones in docs/Promise_Inventory.md, so this outline, the promise inventory and Willis's promise tracker (P1) all line up.
+**Team only until the presentation:** it names the onboarding feature, which is a surprise for ISACA.
 
-**The "built" column is updated to November 6** from the inventory (November 2), Willis's merges #43 to #47 and the M6 screen check. It is Matthew's best reading, not a test. **Willis and Eliyas: please correct anything about your parts.**
+**The team:** Willis Pearson, Eliyas Eshta and Matthew Brady. Willis and Matthew share the quality, risk and success-metrics work.
 
-**Team only until the presentation:** this outline names the onboarding feature, which is a surprise for ISACA.
+**The slides:** presentation/slides.json (open /present), 19 slides, rebuilt from this outline on November 9. No slide repeats what a live demo shows: Show the work is opened live in the Isa demo, the journey features are shown live in the onboarding demo (Library and Terms explained mentioned in a sentence; the planned items are on "After the pilot"), and behind the scenes is one live slide.
 
-**Built as slides (November 6, 2026):** the team chose to build Sprint 3 on the Sprint 2 HTML deck. The slides are in presentation/slides.json (open /present). The Sprint 2 deck is kept at /present?deck=sprint2. The slides follow this outline in 18 slides; where they differ, the slides are newer.
+## Decided (Matthew, November 9, 2026)
 
-Status words, as in the inventory: **Built**, **Partly**, **Designed** (written down, not built), **Plan** (for a pilot), **Reword** (change the promise, not the product).
-
----
+1. **Onboarding gets about 4 minutes.** Proposed to the team, not yet agreed.
+2. **No tracker on every slide.** September's promises open the talk and come back at the end with a status beside each one.
+3. **ISACA's survey figures on onboarding are shown on the slide, but never committed:** the repository is public and the survey is confidential. Slide 12 has [figure] placeholders; Matthew types the figures in locally on presentation day (the survey is in private/, page 19).
+4. **Speed is measured on the demo machine**, with the Dev Dashboard's Front end tab.
+5. **Dashboards are shown live**, real parts only.
+6. **One sign-in for the whole demo:** Watanabe Kenji, day 3 of his term (the demo date, July 3, 2026). No switching users. His account also opens the Dev Dashboard.
+7. **A one-step setup script** prepares the demo: a fresh progress file, Sato Yumiko's decision saved in the notebook, Kenji's board introduction saved, and Sato's profile reply.
+8. **The role filter**, in these words: "Rules can already target a role. The content filter is designed, and isn't needed until ISACA adds restricted content, because today every document is meant for all chapter leaders."
 
 ## The story in one breath
 
-"In September we named the problem: questions with documented answers eat volunteer and staff hours, and knowledge is lost at every yearly handover. We promised an agent that answers only from ISACA's approved content, shows its work, and hands off to a person when it should. Here is what we built against each promise, what we didn't, and what a pilot would measure."
+"Every year, chapter leaders change, and what the last president knew leaves with them. In September we promised an assistant that answers only from ISACA's approved content, shows its work, and hands off to a person when it should. Here she is: how she answers, how she runs, what she does for a new president in their first 90 days, and what she tells ISACA about what its leaders need."
 
-The RFP framing (ISA-PROJECT-CONTEXT.md, "Framing the work in the RFP's terms"): in miniature, we did the RFP's first three phases (found the use cases, checked the content, built a working prototype), and we describe what Phases 4 and 5 would test and decide.
+## Time plan
 
-## Time plan (15 minutes)
-
-| # | Section (the tracker) | Minutes | Suggested speaker |
+| # | Section | Minutes | Suggested speaker |
 |---|---|---|---|
-| 0 | Opening and "what we promised" | 1 | Willis (Project Lead) |
-| 1 | Business impact | 1 | Matthew (Client Liaison) |
-| 2 | Intended outcomes, with the onboarding demo | 3.5 | Matthew |
-| 3 | Solution and cost, with the Isa demo | 4 | Willis and Eliyas |
-| 4 | Risk and controls | 2.5 | A'keyrah (Quality, Risk) and Matthew (Governance) |
-| 5 | Success metrics and the pilot | 1.5 | A'keyrah |
-| 6 | Roadmap and the ask | 1 | Willis |
-| | Buffer for screen-share switching | 0.5 | |
+| 1 | The problem | 1:00 | Matthew |
+| 2 | What we promised | 0:45 | Willis |
+| 3 | Meet Isa (live) | 3:00 | Willis, with Eliyas |
+| 4 | How she runs | 1:00 | Eliyas |
+| 5 | A new president's first 90 days (live) | 4:00 | Matthew |
+| 6 | Behind the scenes: Isa grows with ISACA (live) | 2:30 | Willis, with Matthew on the rules |
+| 7 | Promises kept, and the ask | 1:30 | Matthew, then Willis for the ask |
+| | Switching screens and slack | 1:15 | |
 
-Speakers follow the team roles on Sprint 1's slide 2. The team decides. Still open: how much of the 15 minutes onboarding gets. This plan gives it about 3.5 minutes inside section 2.
-
----
-
-## 0. Opening (1 slide, 1 minute)
-
-**Slide: "In September, we made you promises. Here's what we built."**
-- One line per section of the tracker, each with a count, for example "Risk and controls: 5 controls promised, 4 built, 1 designed".
-- The supplement document goes into the Teams chat now, so ISACA can follow along (ISA-PROJECT-CONTEXT.md, "The supplement document").
+The team decides the speakers. The supplement document goes into the Teams chat at the start, so ISACA can follow along.
 
 ---
 
-## 1. Business impact (1 slide, 1 minute)
+## 1. The problem (1 slide, 1 minute)
 
-**Slide: the same problem as in September, one sentence each.**
+Short and familiar. Three lines, ending on the handover, because the rest of the talk answers it:
+- Questions that already have written answers take up volunteer and staff time.
+- What leaders need is spread across many documents and tools.
+- Every year the leaders change, and what the last president knew leaves with them.
 
-| Promised (Sprint 1) | Built | Status |
-|---|---|---|
-| S1-25 Business impacts named: **new chapter leader onboarding** and **the annual leadership rotation and handoff** | The 90-day journey, Today note and calendar, succession notebook, handoff checklist, "Ask the outgoing president" | Built |
-| S1-26 "Unlocking thousands of volunteer and team hours" | Direct answers from ISACA's text; the hours measure needs a pilot baseline | Partly |
-| S1-30 Sprint 1 slides 6 and 11 to 16 said "[NUMBER] hours" | | **Fix:** a real figure from ISACA's own numbers, or reword to "what a pilot would measure". Don't reuse the placeholder. |
+Say: "You told us this in September. Here's what we did about it."
 
-Say: "We kept the same five sections, so you can check every promise."
+## 2. What we promised (1 slide, 45 seconds)
+
+**September's diagram** (Sprint 1, slides 27 to 31), redrawn in the deck's style: the chapter leader, Isa and ISACA-approved content across the top, then the eight parts we promised, in September's rows: sign in (your ISACA account, by role), translation (any language), Check 1 (reads the question), Check 2 (reads the answer), your team gets a ticket, 1 · search first, 2 · AI if search isn't enough (role filter, RAG, knowledge graph, logs), and contact the team (always on screen, one click from any answer, the question and history go with it). One line under it names Camille's three outcomes.
+
+Say: "You've seen this. Hold us to it: it comes back at the end."
+
+## 3. Meet Isa (live, 3 minutes)
+
+One question, start to finish, then two more that end differently. Kenji is signed in; Isa is in the corner of the page.
+
+| Question | What it shows |
+|---|---|
+| "How many board meetings must a chapter hold each year?" | A direct answer in ISACA's own words, with the page. Open **Show the work**: every step it went through. |
+| "What insurance must we have?" | An answer, then a pointer to a person (a rule ISACA owns), with "Pass this to a person". |
+| "What is the cryptocurrency policy?" | Nothing approved covers it, so Isa says so and passes it to a person with a reference number. |
+
+Optional, if time allows: "A board member keeps harassing me, what should I do?" (handed to a person straight away, with the safety line).
+
+These are the team's settled demo questions; rehearse them on the demo machine. Keep Spanish and Amharic out of the live demo unless the translation warm-up is fixed (M6 findings).
+
+Say: "Every answer can be traced to an approved page. When she can't answer, she says so, and she gets you to a person."
+
+## 4. How she runs (1 slide, 1 minute)
+
+Numbers, not adjectives. Recount every number on the demo machine the day before.
+
+| Number | What it means |
+|---|---|
+| 131 passages | ISACA's approved content (and the governance guides, searched last), searched by meaning. This laptop's copy has 81; the demo machine must have the full set. |
+| 61 of 61 | Rule checks passing: every rule's own tests and the rehearsed questions |
+| 78 | Real test questions, each tied to a known route through Isa and run 5 of 5 times the same way |
+| [measure] | Typical wait: answer found in ISACA's text, and answer written by the AI model (Front end tab, on the demo machine) |
+| About 200 | Languages the translation model can handle; Spanish and Amharic connected today |
+| $0 per question | Runs on the team's own computers; nothing is sent to a paid service |
+
+Say: "Search first. The AI model only writes when search alone can't, and only from the passages found, and then it's checked sentence by sentence."
+
+## 5. A new president's first 90 days (live, 4 minutes)
+
+This is where we go beyond the RFP, and it is the section to deliver with the most care. Don't present a list of features. Tell a story about one person.
+
+**Open (on a slide, 20 seconds):** ISACA's own survey finding on onboarding (figures typed in locally on the day; see decision 3). Then: "So we asked: what does a new president actually struggle with?"
+
+**The four struggles** (one slide, shown before the demo and left up in the corner of everyone's mind):
+
+| What new leaders struggle with | What Isa does |
+|---|---|
+| They don't know who to call, or when | Their Chapter Experience contact with three ways to reach them, and their board, one page per person |
+| Deadlines are hidden | A Today note, ISACA's key dates, and a calendar they can add to their own |
+| Resources are spread out | ISACA's documents in one Library, read aloud word for word, and ISACA's definitions on hover |
+| What the last president knew leaves with them | A succession notebook that passes from president to president |
+
+**The demo, through Kenji's eyes** (about 3 minutes):
+
+"It's July 3. Kenji Watanabe has been president of the Sakura Bay Chapter for three days."
+
+1. **He opens Isa.** The Today note: day 3, today's steps, and the "Last year" row quoting what Sato Yumiko, the president before him, wrote at this time last year. Say: "The handover starts in the first ten seconds."
+2. **Who to call.** The contact step: book a call, send an introduction, or join a group welcome. Then "Meet your board" and Sato's page: her role in ISACA's words, and what she chose to share.
+3. **Hidden deadlines.** The calendar: November's compliance window, shaded. Scroll to weeks 9 to 13: "On day 60, this is what Kenji will see."
+4. **What the last president knew.** He opens the notebook. The decision Sato saved before her term ended is waiting, with its source. "Ask Sato Yumiko about this."
+5. **The loop closes.** Kenji asks a question; the save button says "Deadline · worth saving?"; one tap saves it. Say: "And now Kenji is leaving something for whoever comes after him."
+
+On the way, hover over one term (for example "Engage") to show ISACA's definition. Mention the Library and Listen in one sentence; don't play audio over Teams.
+
+**Close (one slide, 20 seconds), in the RFP's terms:**
+- Fewer repeat questions from new leaders ("Automate").
+- It supports the Chapter Experience team; it never replaces them. Isa connects leaders to people.
+- Knowledge survives the yearly handover.
+- Everything a leader sees still goes through Isa's checks. Nothing here is a side door.
+
+Mention the Library (with Listen) and Terms explained in one sentence during the demo. Everything else (the handoff checklist, notebook check-ins, "Ask the outgoing president", the board introduction and profile form, the glossary of 26 terms) is in the supplement document.
+
+## 6. Behind the scenes: Isa grows with ISACA (live, 2.5 minutes)
+
+One slide ("Live: your team's view"), whose three steps are the three points. Same sign-in, open the Dev Dashboard. Say: "This is what your team would see." Three short points, one live moment each. **Check every one on screen first:** Willis's November 9 merge rebuilt these tabs, and they haven't been opened in the browser yet.
+
+1. **ISACA owns the rules.** The rule tester: type a question and see which rule fires and why. Rules live in files ISACA approves, with versions; a lower layer can only tighten; no developer needed. Every settings change is in the change log (who, when, old and new value).
+2. **Your team tunes her.** The four sliders (answer confidence, sentence support, strong match, search pass mark) apply to the next question without a restart. Health alerts show every service and warn when the AI model or Salesforce keeps failing.
+3. **ISACA learns what its leaders need.** Content Health: questions grouped by the passage they matched, hand-offs by chapter and region, time to resolution from Salesforce, and which documents are due for review. Counted by topic, never by person, and no question text is stored.
+
+Say: "Isa doesn't just answer leaders. She tells you what they're asking, where your content has gaps, and where your team is needed."
+
+## 7. Promises kept, and the ask (2 slides, 1.5 minutes)
+
+**Slide: the same diagram, now with a status on every part** (Willis and Eliyas: please confirm):
+
+| Part | Status |
+|---|---|
+| Sign in | Built (test accounts, not ISACA's) |
+| Translation | Reworded: one model for about 200 languages; two connected today |
+| Check 1 | Built: rules files your team owns and approves |
+| Check 2 | Built: every AI sentence checked, then ISACA's words, then a person |
+| Your team gets a ticket | Built: reference number and Salesforce case |
+| 1 · Search | Built |
+| 2 · AI | Partly: RAG and logs built; knowledge graph a placeholder; "Rules can already target a role. The content filter is designed, and isn't needed until ISACA adds restricted content, because today every document is meant for all chapter leaders." |
+| Contact the team | Built |
+
+The risk controls and the cost promises from September aren't on this slide; they're in the supplement (docs/Promise_Inventory.md).
+
+**Slide: the ask, the same as September.** "A pilot: a small set of chapters, a defined window, your Chapter Experience team as the judges." Recommended group: new chapter presidents, who change every year, need the most help early, and are easy to measure: time to first contact with the Chapter Experience team, repeat questions in the first 90 days, steps where leaders get stuck, hand-offs by topic.
+
+**Roadmap** (one line on the ask slide, or in the supplement; labelled planned): the role-based content filter; the Chapter Experience staff view with ISACA's on/off switch; day 30, 60 and 90 check-ins; journeys for other board roles; Listen in the notebook; board messaging stays in Engage; an Android app and a Chrome extension.
 
 ---
 
-## 2. Intended outcomes, with the onboarding demo (2 slides plus a demo, 3.5 minutes)
+## Before the slides are rebuilt
 
-**Slide A: Camille's three outcomes, "in your words".**
-
-| Outcome (S1-27 to S1-29) | Built | Status |
-|---|---|---|
-| Leaders doing strategy | 90-day journey (28 steps, quick wins in week 2), Today note, key dates, month calendar with "Add to my calendar", "Meet your board", board introduction and profile form | Built |
-| Answers that survive the rotation | Succession notebook (save any answer with one tap, "worth saving?" label from fixed tags), handoff checklist (the guidebook's 13 items, word for word), "Ask the outgoing president", "Last year around now" | Built |
-| A team freed for the work that needs them | The contact step, "Talk to a person", hand-offs with a reference number and a Salesforce Case | Partly (depends on answer quality and a pilot measure) |
-
-**Live demo (about 2 minutes, the sequence in ONBOARDING-FEATURE.md, "The demo"):**
-1. Sato Yumiko (outgoing president) asks a question, gets a cited answer and saves the decision with one tap.
-2. Watanabe Kenji (incoming, day 3): week-one steps, the contact step with three options, and the Today note's "Last year" row.
-3. Kenji opens the notebook and finds Sato's decision waiting.
-4. Ana Beatriz Souza (day 60) sees a different next step.
-
-**Slide B (shown for a few seconds): "What's built into the journey".** One slide listing what isn't demoed: Library with Listen, Terms explained, Meet your board, notebook check-ins, handoff checklist, calendar. RFP terms: "Automate" (fewer repeat questions from new leaders) and supporting the Chapter Experience team, not replacing it.
-
-Say: "This isn't in the RFP. It's where your own business impacts pointed: the yearly handover."
-
----
-
-## 3. Solution and cost, with the Isa demo (2 slides plus a demo, 4 minutes)
-
-**Slide A: the Isa diagram from Sprint 1, with a "built" tick on each box.**
-
-| Promised (Sprint 1) | Built | Status |
-|---|---|---|
-| S1-1 Sign in with your ISACA account; roles | Keycloak sign-in and roles (test accounts, not ISACA's real accounts) | Built |
-| S1-2 "Translation: any language" | NLLB-200, self-hosted; Amharic and Spanish wired in, both ways (Willis's PC) | **Reword:** "NLLB-200, about 200 languages; two wired in today", with the licence caution |
-| S1-3 Check 1 reads the question | Rule engine reading ISACA's rules files: layers (global, region, country), tighten only, approval records, versions, 61 self-checks | Built |
-| S1-4 Check 2 reads the answer | Sentence-by-sentence support score (HHEM), numbers and dates, "must" stays "must", contact details, answer shape, TBD sources, confidence score, and the fallback ladder (trim, then ISACA's own words, then a person) | Built (needs the HHEM model files on the demo machine) |
-| S1-5 Search first; AI only if search isn't enough | Direct answers word for word; search by meaning; the local model only after that | Built |
-| S1-6 Role filter, RAG, knowledge graph, logs | RAG with search by meaning: built. Logs: built. Knowledge graph: placeholder. **Role filter: not built** (see section 4) | Partly |
-| S1-7 Contact the team, always on screen, one click | "Talk to a person", "Not quite → pass it to a person", and "Pass this to a person" after answer-then-point all open one card that shows what will be sent | Built |
-| S1-8 Ticket | Reference number and Salesforce Case | Built |
-
-**Live demo (about 1.5 minutes):** one direct answer with Show the work; one "answer, then point" ("What insurance must we have?"); one hand-off with a reference number. Use the demo questions the team already chose and checked.
-
-**Slide B: "What it costs to run".**
-
-| Promised | Built | Status |
-|---|---|---|
-| S1-9 Most answers from direct search: no AI call, word for word | Yes for direct hits; search by meaning catches more | Built |
-| S1-10 Least expensive model; frontier model when needed | One small local model (phi4-mini) through Ollama; no paid service | **Reword:** "one small model running locally: nothing leaves ISACA's environment" |
-| S1-11 Every call logged: model, tokens, cost per question | Model, tokens and time logged | **Reword:** "running locally has no per-call cost" |
-| S1-12 Your controls, adjusted by your team, no developer | Four real sliders (confidence, support score, strong match, search pass mark); the rules files, changed without a developer. Other dashboard controls are illustrative | Partly: show only the real sliders live |
-| S1-13 Running lean: search first, right-sized models, graph-cached answers | Search first and a small model, yes; no graph cache | **Reword:** drop "graph-cached answers" |
-
----
-
-## 4. Risk and controls (1 to 2 slides, 2.5 minutes)
-
-**Slide: Sprint 1's risk register, with "built" beside each control.** This is the slide an engineer like James will test first.
-
-| Risk and promised control | Built | Status |
-|---|---|---|
-| S1-14 A wrong answer: Check 2 compares every answer with approved content; a mismatch is stopped; the work is visible | Show the work, plus the checks and the fallback ladder in section 3 | Built |
-| S1-15 A sensitive question reaching the AI: a list your team owns and changes | Rules files ISACA owns (approval record, version, tighten only); sensitive and urgent topics are handed off before search, with the safety line | Built |
-| S1-16a Roles decide what a person can open | Keycloak roles decide who sees the dashboards and developer mode | Built |
-| S1-16b A leader seeing content outside their role: role filter at retrieval | **Not built.** Today every document in Isa's content is meant for all chapter leaders, so nobody sees anything they shouldn't, but the control itself doesn't exist. Proposed to Willis November 2 (Claude outputs/Role filter - proposal for Willis.md) | **Designed.** Say so plainly, or build the simple version before the freeze |
-| S1-17 The tool showing your team too much: trends only, never a named person | Usage counted with a salted hash; onboarding counts by category only. Not checked across every dashboard | Partly (P4, Eliyas) |
-| S1-18 A leader who can't get to a person: three paths | All three built: Isa routes not-found and sensitive questions with a ticket; "Not quite" offers a person; "Talk to a person" is always on screen | Built |
-
-Also on this slide or in the supplement (RFP section 3):
-- **R11 Security and privacy:** everything runs locally; questions to Isa stay private; no written retention policy or security test yet (Partly).
-- **R12 Accessibility:** reduced motion, contrast, 44px tap targets, screen-reader labels, Listen. No formal check yet (Partly; P2).
-
----
-
-## 5. Success metrics and the pilot (1 slide, 1.5 minutes)
-
-**Slide: "What a pilot would measure", the same four metrics as September, each with what already exists.**
-
-| Promised metric | What exists | Status |
-|---|---|---|
-| S1-19 Accuracy: a weekly sample checked by your team | 52 real test questions, each tied to a known path (test-questions-candidates.csv); the rules self-check (61 checks) | Plan (a sampling screen would help) |
-| S1-20 The right kind of use | Outcome per question in the event log | Partly (no report yet) |
-| S1-21 Escalation quality, not rate | Hand-offs by rule and topic, with the rule ID logged | Partly |
-| S1-22 Hours returned | No baseline | Plan (needs ISACA's baseline) |
-| S1-23 Baseline before the pilot, target agreed in writing | | Plan |
-
-Pilot scope (R16, S1-24): **new chapter presidents**. They change every year, need the most help early, and are a clear group to measure: time to first contact with the Chapter Experience team, repeat questions in the first 90 days, steps where leaders get stuck, hand-offs by topic.
-
-Also name: the **testing and QA report** (R19, Milestone 2) and the **AI-use register** (R15, required by the RFP; Matthew's task P7, **not started as of November 6**).
-
----
-
-## 6. Roadmap and the ask (1 slide, 1 minute)
-
-**Roadmap (labelled planned):** day 30, 60 and 90 check-ins; the Chapter Experience staff view with ISACA's on/off switch; journeys for other board roles; Listen in the notebook; downloadable audio; the role filter (if not built); content approval and versioning for content itself (R8); Android app and Chrome extension.
-
-**The ask, the same as September (S1-24):** "A pilot: a small set of chapters, a defined window, your Chapter Experience team as the judges."
-
----
-
-## Before the team builds the slides
-
-1. **Willis and Eliyas confirm the "built" column** for their parts: translation, search by meaning, the answer checks, dashboards.
-2. **Decide the role filter (S1-16b):** build the simple version before the freeze, or present it as designed. It's the one promised control that doesn't exist.
-3. **Fix "[NUMBER] hours" (S1-30)** and make the four rewordings (S1-2, S1-10, S1-11, S1-13).
-4. **The demo machine.** On November 6, Willis's PC (all of Isa's services) wasn't answering, and on Matthew's laptop the AI-model paths couldn't run (no translation, no search vectors, no HHEM model). Decide which machine runs the demo and set up everything it needs there. Rehearse on it, and record the backup video in week 11.
-5. **docs/Supplement_Items.md: done (November 6).** The answer checks have moved out of the "designed" list and are marked built, with caveats.
-6. **The AI-use register (R15, P7): drafted November 6** in docs/AI_Use_Register.md. Matthew's Claude Code rows are filled in. Matthew still has to confirm two points (survey material, the chat app's model), and Willis, Eliyas and A'keyrah each fill in their own row.
-7. **Matthew's M6 findings** (Claude outputs/M6 findings - for Willis's Claude.md): if the translation fallback isn't fixed, keep Spanish and Amharic out of the live demo.
+1. **The team agrees** to this order and the time plan (decision 1), and Willis and Eliyas check every line about their parts.
+2. **The survey figures:** type them into slide 12 locally on presentation day, from private/ (page 19), and don't commit them.
+3. **The demo machine:** decide which one, set up everything it needs (the full content with 131 passages, search vectors, the HHEM model files, translation), then measure speed there (decision 4).
+4. **Check Willis's new dashboard tabs on screen:** Front end, Health alerts, Content Health, the rule list and the change log (decision 5).
+5. **Write the setup script** (decision 7) and rehearse from it three times in a row.
+6. **Fix "[NUMBER] hours"** wherever Sprint 1 wording is reused, and take A'keyrah off the team slide.
+7. **Record the backup video** this week (week 11).

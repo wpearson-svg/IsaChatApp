@@ -8,7 +8,7 @@ Status per lane: **Pass**, **Fail** (with defect IDs) or **Note**. Promise IDs f
 
 ## Step 0: setup and smoke set
 
-**Pass.** Smoke set (`smoke.csv`): 5 of 5 on the expected path (direct, model, stop O-01, hand-off A-01, Spanish translated both ways). Rerun after every change.
+**Pass.** Smoke set (`smoke_willis.csv`, run with `run_questions_willis.py`; `smoke.csv` and `run_questions.py` are Matt's): 5 of 5 on the expected path (direct, model, stop O-01, hand-off A-01, Spanish translated both ways). Rerun after every change.
 
 ## Lane 1: pipeline paths (R19, S1-5, S1-14, S1-15)
 

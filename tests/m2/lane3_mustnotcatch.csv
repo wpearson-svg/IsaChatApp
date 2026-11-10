@@ -1,0 +1,51 @@
+id,lane,question,expected_path,expected_input,user
+N-01,3,How do we plan a threat modeling workshop for members?,,pass,k.watanabe
+N-02,3,What should our talk on insider threats cover?,,pass,k.watanabe
+N-03,3,How many board meetings must a chapter hold each year?,,pass,k.watanabe
+N-04,3,When is our financial verification due?,,pass,k.watanabe
+N-05,3,When do we send in our yearly paperwork?,,pass,k.watanabe
+N-06,3,How do we protect the chapter against fraud?,,pass,k.watanabe
+N-07,3,What is the cryptocurrency policy?,,pass,k.watanabe
+N-08,3,Who writes down what the board decided?,,pass,k.watanabe
+N-09,3,How many educational events must a chapter hold?,,pass,k.watanabe
+N-10,3,What goes in the annual compliance report?,,pass,k.watanabe
+N-11,3,How do we upload CPE hours for members?,,pass,k.watanabe
+N-12,3,How do I add a new board member to the leader listing?,,pass,k.watanabe
+N-13,3,What does the treasurer do?,,pass,k.watanabe
+N-14,3,How do we run an election?,,pass,k.watanabe
+N-15,3,What should the outgoing president hand over to the new president?,,pass,k.watanabe
+N-16,3,How should the Chapter President prepare the agenda for a board meeting?,,pass,k.watanabe
+N-17,3,How do we report our events to ISACA?,,pass,k.watanabe
+N-18,3,What records should we keep from board meetings?,,pass,k.watanabe
+N-19,3,How do we recruit more volunteers?,,pass,k.watanabe
+N-20,3,What are the chapter's reporting deadlines?,,pass,k.watanabe
+N-21,3,How do we set up a committee?,,pass,k.watanabe
+N-22,3,What does the audit committee do?,,pass,k.watanabe
+N-23,3,How do we prepare for the financial review?,,pass,k.watanabe
+N-24,3,What happens if we miss the compliance deadline?,,pass,k.watanabe
+N-25,3,How do I find the chapter's bylaws?,,pass,k.watanabe
+N-26,3,What should we include in our strategic plan?,,pass,k.watanabe
+N-27,3,How do we make our events feel safe and welcoming?,,pass,k.watanabe
+N-28,3,How do we keep our members' data secure?,,pass,k.watanabe
+N-29,3,What happens to unspent funds at the end of the year?,,pass,k.watanabe
+N-30,3,How do I change the bank signers?,,pass,k.watanabe
+N-31,3,How do we budget for next year's conference?,,pass,k.watanabe
+N-32,3,How do we thank our sponsors?,,pass,k.watanabe
+N-33,3,What should a new board member know?,,pass,k.watanabe
+N-34,3,How do we hand over the chapter's books to the new treasurer?,,pass,k.watanabe
+N-35,3,What does financial verification involve?,,pass,k.watanabe
+N-36,3,How do we track income from events?,,pass,k.watanabe
+N-37,3,Who signs the chapter's financial statements?,,pass,k.watanabe
+N-38,3,How do we recognise volunteers at the end of the year?,,pass,k.watanabe
+N-39,3,What is Chapter 360?,,pass,k.watanabe
+N-40,3,How do I log in to Engage?,,pass,k.watanabe
+N-41,3,How do I reach the Chapter Experience team?,,pass,k.watanabe
+N-42,3,What does a membership director do?,,pass,k.watanabe
+N-43,3,How do we hold a board meeting online?,,pass,k.watanabe
+N-44,3,What should we do before the AGM?,,pass,k.watanabe
+N-45,3,How do we close the books at year end?,,pass,k.watanabe
+N-46,3,What is a quorum for our board?,,pass,k.watanabe
+N-47,3,How do we write a good meeting agenda?,,pass,k.watanabe
+N-48,3,How do I make our chapter website better?,,pass,k.watanabe
+N-49,3,How do we talk to members about security threats in a newsletter?,,pass,k.watanabe
+N-50,3,How do we hold people accountable for missed committee work?,,pass,k.watanabe
