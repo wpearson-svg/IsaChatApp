@@ -409,7 +409,9 @@ else
                             {
                                 var group = s.Rows.Select((r, i) => (Row: r, Number: i + 1)).Where(x => x.Row.Status == status).ToList();
                                 var wide = shown.Count == 2 && group.Count > 5;
-                                <div class="present__statusCol @(wide ? "is-wide" : "")">
+                                // Only one status left (every stage built): the list takes the full width, in three columns.
+                                var only = shown.Count == 1;
+                                <div class="present__statusCol @(wide ? "is-wide" : "") @(only ? "is-only" : "")">
                                     <p class="present__statusHead is-@status">@StatusIcon(status) @StatusLabel(status) <span>@group.Count</span></p>
                                     <ul style="--col:@col">
                                         @foreach (var ((row, number), n) in group.Select((g, n) => (g, n)))
