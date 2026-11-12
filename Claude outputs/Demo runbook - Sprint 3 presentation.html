@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo runbook · Isa, Sprint 3 presentation</title>
+<style>
+  :root {
+    --dark-blue: #1d2d5c;   /* ISACA Dark Blue */
+    --medium-blue: #07649d; /* ISACA Medium Blue */
+    --light-blue: #e7f0f5;  /* ISACA Light Blue */
+    --teal: #36ac91;        /* ISACA Teal */
+    --grey-1: #f6f7f8;
+    --grey-3: #cbd2d9;
+    --grey-9: #323e48;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 16px 48px;
+    background: #ffffff; color: var(--grey-9);
+    font-family: Arial, Helvetica, sans-serif; line-height: 1.45;
+  }
+  .page { max-width: 1100px; margin: 0 auto; }
+
+  /* ---------- The runbook graphic (the part that goes on the slide) ---------- */
+  .runbook { position: relative; padding-top: 34px; }
+  .runbook-title {
+    position: relative; z-index: 1; width: max-content; max-width: 90%;
+    margin: 0 auto -30px; padding: 16px 34px;
+    background: var(--dark-blue); color: #fff;
+    border: 3px solid var(--grey-3); border-radius: 16px;
+    font-size: 28px; font-weight: 700; text-align: center;
+  }
+  .runbook-title small { display: block; font-size: 15px; font-weight: 400; color: var(--light-blue); margin-top: 2px; }
+  .runbook-body {
+    background: var(--medium-blue); border: 3px solid var(--grey-3); border-radius: 22px;
+    padding: 50px 20px 20px;
+    display: grid; grid-template-columns: 210px 1fr; gap: 12px 16px;
+  }
+  .label, .text {
+    background: var(--dark-blue); color: #fff;
+    border: 2px solid var(--grey-3); border-radius: 14px;
+    display: flex; align-items: center;
+  }
+  .label { justify-content: center; text-align: center; padding: 14px 12px; font-size: 23px; font-weight: 700; }
+  .text { padding: 14px 22px; font-size: 20px; }
+  .text b { color: #fff; }
+  .text .soft { color: var(--light-blue); }
+
+  /* ---------- The details under it ---------- */
+  .intro { margin: 0 0 26px; }
+  .intro h1 { font-size: 26px; color: var(--dark-blue); margin: 0 0 6px; }
+  .intro p { margin: 0; color: var(--grey-9); }
+  h2 { font-size: 20px; color: var(--dark-blue); margin: 36px 0 10px; }
+  ol, ul { margin: 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code { background: var(--grey-1); border: 1px solid var(--grey-3); border-radius: 4px; padding: 1px 5px; font-size: 0.93em; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--grey-3); }
+  th { background: var(--dark-blue); color: #fff; font-size: 15px; }
+  tr:nth-child(even) td { background: var(--grey-1); }
+  .todo { background: var(--light-blue); border-left: 5px solid var(--teal); border-radius: 6px; padding: 12px 16px; }
+  .foot { margin-top: 32px; font-size: 13px; color: #52606d; }
+
+  /* Slide-only view: open the file with ?slide at the end to show just the graphic */
+  .slide-only .intro, .slide-only .details { display: none; }
+  .slide-only body, body.slide-only { padding: 24px; }
+
+  @media (max-width: 640px) {
+    .runbook-body { grid-template-columns: 1fr; padding-top: 46px; }
+    .label { font-size: 19px; padding: 8px; }
+    .text { font-size: 17px; margin-bottom: 8px; }
+    .runbook-title { font-size: 22px; }
+  }
+  @media print { body { padding: 0; } h2 { break-after: avoid; } tr { break-inside: avoid; } .new-page { break-before: page; } .screen-only { display: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="intro">
+    <h1>Demo runbook: Isa, Sprint 3 presentation</h1>
+    <p>Second Star Collective · Willis Pearson, Eliyas Eshta, Matthew Brady · 15 minutes over Microsoft Teams. Team only until the presentation.</p>
+  </div>
+
+  <!-- The graphic -->
+  <div class="runbook">
+    <div class="runbook-title">Runbook Pattern<small>Isa live demo · Sprint 3</small></div>
+    <div class="runbook-body">
+      <div class="label">Setup</div>
+      <div class="text"><span>Run the demo setup script, start Isa on the demo laptop, set the demo date to <b>July 3, 2026</b>, and sign in once as chapter president <b>Watanabe Kenji</b> (day 3 of his term).</span></div>
+
+      <div class="label">Happy Path</div>
+      <div class="text"><span>Ask Isa three rehearsed questions and open <b>Show the work</b>; walk through Kenji's first 90 days (Today note, who to call, calendar, succession notebook, save an answer); then open the team's dashboard.</span></div>
+
+      <div class="label">Edge Case</div>
+      <div class="text"><span>Isa stops responding during the demo (the sign-in service or the AI model on the laptop stalls), or the Teams screen share drops.</span></div>
+
+      <div class="label">Recovery Script</div>
+      <div class="text"><span>Pivot to the backup video and screenshots, and tell the same story aloud while a teammate restarts the service. Rejoin the live demo only if it is back within a minute.</span></div>
+    </div>
+  </div>
+
+  <div class="details">
+
+    <h2>Setup, step by step (30 minutes before)</h2>
+    <ol>
+      <li>Plug in the demo laptop, close other apps, and turn off notifications.</li>
+      <li>With Isa stopped, run <code>python onboarding\prepare_demo.py</code>. It clears earlier rehearsals and puts back what Sato Yumiko left in the notebook, so every run starts the same way. Wait for "Ready."</li>
+      <li>Start Docker Desktop and the sign-in service (<code>start-keycloak.bat</code>), then Isa (<code>start-isa.bat</code>).</li>
+      <li>On the Config page, check the demo date is <b>July 3, 2026</b>.</li>
+      <li>Sign in as Watanabe Kenji. His account also opens the Dev Dashboard, so nobody signs out during the demo.</li>
+      <li>Warm up: ask each rehearsed question once, open the Today window, the notebook and the dashboard once, then run the setup script again only if the warm-up saved anything.</li>
+      <li>Open the backup video and the screenshots folder in a second window, ready to share.</li>
+      <li>Join Teams, share the browser window, and have a teammate confirm the text is readable.</li>
+    </ol>
+
+    <h2>Happy path, in order</h2>
+    <div class="table-wrap">
+    <table>
+      <tr><th>Part</th><th>What we do</th><th>What it shows</th></tr>
+      <tr><td><b>Meet Isa</b><br>about 3 min</td>
+          <td>"How many board meetings must a chapter hold each year?" then open Show the work.<br>"What insurance must we have?"<br>"What is the cryptocurrency policy?"</td>
+          <td>An answer in ISACA's own words with the page; an answer that also points to a person; a question the approved content doesn't cover, passed to a person with a reference number.</td></tr>
+      <tr><td><b>A new president's first 90 days</b><br>about 3 min</td>
+          <td>Today note with the "Last year" row → the contact step and "Meet your board" → the calendar with November's compliance window → the succession notebook with Sato's saved decision → ask a question and save the answer ("Deadline · worth saving?").</td>
+          <td>Who to call, hidden deadlines, and knowledge that survives the yearly handover.</td></tr>
+      <tr><td><b>Behind the scenes</b><br>about 2.5 min</td>
+          <td>Same sign-in: the rule tester, the tuning sliders and health alerts, then Content Health.</td>
+          <td>ISACA owns the rules, tunes Isa, and learns what its leaders ask.</td></tr>
+    </table>
+    </div>
+
+    <h2 class="new-page">Edge cases and recovery</h2>
+    <div class="table-wrap">
+    <table>
+      <tr><th>If this happens</th><th>Say</th><th>Do</th></tr>
+      <tr><td>Isa shows "The sign-in service isn't reachable", or asks us to sign in again</td>
+          <td>"While that reconnects, here is the same moment from our rehearsal."</td>
+          <td>Presenter switches to the backup video or screenshots. A teammate checks Docker Desktop is running and runs <code>start-keycloak.bat</code>. If Isa restarted, check the demo date before going back.</td></tr>
+      <tr><td>An answer takes longer than about 15 seconds</td>
+          <td>"Isa searches first and only asks the AI model when search alone isn't enough, and that step runs on this laptop."</td>
+          <td>Keep talking through Show the work. If nothing comes, show the screenshot of that answer and go to the next part.</td></tr>
+      <tr><td>An answer differs from the rehearsed one</td>
+          <td>"Let's look at how she got there."</td>
+          <td>Open Show the work, read the steps as they are, and move on. Don't ask again and don't type an unrehearsed question.</td></tr>
+      <tr><td>A screen shows leftovers from a rehearsal (a step already done, a second saved answer)</td>
+          <td>Nothing: carry on with the story.</td>
+          <td>Prevent it: run the setup script before every run. It can't be run while Isa is running.</td></tr>
+      <tr><td>The Teams screen share or the internet drops</td>
+          <td>"Isa runs entirely on this laptop, so she is still working; it's our call that dropped."</td>
+          <td>A teammate takes over sharing with the backup video while the presenter rejoins (phone hotspot as a spare connection).</td></tr>
+      <tr><td>The demo laptop itself fails</td>
+          <td>"We'll show you the recording of this exact walkthrough."</td>
+          <td>A teammate plays the backup video from their own computer and the presenter narrates over it.</td></tr>
+    </table>
+    </div>
+
+    <h2>Recovery rules</h2>
+    <ul>
+      <li>One try, then pivot. Never debug on screen.</li>
+      <li>The story doesn't change: narrate the same moments over the video or screenshots.</li>
+      <li>Decide beforehand who shares the backup and who restarts the service.</li>
+      <li>Go back to live only if Isa is ready within about a minute; otherwise finish that section on the backup.</li>
+      <li>Spanish and Amharic stay out of the live demo; no audio is played over Teams.</li>
+    </ul>
+
+    <h2>Still to do before the day</h2>
+    <div class="todo">
+      <ul>
+        <li>Record the backup video of the full walkthrough (planned for week 11).</li>
+        <li>Take a screenshot of every demo moment, in order, in one folder.</li>
+        <li>Choose the demo laptop and rehearse on it three times in a row from the setup script.</li>
+        <li>Agree who presents each part, who shares the backup, and who restarts services.</li>
+      </ul>
+    </div>
+
+    <p class="foot">Sources: docs/Sprint3_Presentation_Outline.md and onboarding/prepare_demo.py. All people named are invented sample people. <span class="screen-only">To show only the graphic, open this file with <code>?slide</code> at the end of the address.</span></p>
+  </div>
+</div>
+<script>
+  if (location.search.indexOf('slide') !== -1) document.documentElement.classList.add('slide-only');
+</script>
+</body>
+</html>

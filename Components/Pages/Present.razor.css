@@ -1508,6 +1508,10 @@
 .present__statusCol.is-wide { grid-column: span 2; }
 .present__statusCol.is-wide ul { columns: 2; column-gap: 2cqw; }
 .present__statusCol.is-wide li { break-inside: avoid; }
+/* Every stage built: the single column spans the slide, its stages in three columns. */
+.present__statusCol.is-only { grid-column: 1 / -1; }
+.present__statusCol.is-only ul { columns: 3; column-gap: 2.6cqw; }
+.present__statusCol.is-only li { break-inside: avoid; }
 
 /* ---- September's diagram ("diagram" slides, November 9, 2026) ----
    Sprint 1, slides 27 to 31, redrawn: a light panel with the leader, Isa and the

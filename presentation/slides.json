@@ -116,7 +116,7 @@
       "warmup": true,
       "section": "Meet Isa",
       "presenter": "Willis Pearson",
-      "title": "One question, ten stages",
+      "title": "One question, nine stages",
       "lead": "Search first. The AI model writes only when search alone can't, and only from the passages found.",
       "stages": [
         { "name": "Front end" },
@@ -124,16 +124,15 @@
         { "name": "Translation" },
         { "name": "Input compliance" },
         { "name": "Database search" },
-        { "name": "Knowledge graph", "path": "ai" },
         { "name": "RAG", "path": "ai" },
         { "name": "Complex AI", "path": "ai" },
         { "name": "Output compliance" },
         { "name": "Ticketing", "path": "handoff" }
       ],
       "paths": [
-        { "title": "Search first", "text": "A direct match answers in ISACA's own words. No AI.", "color": "blue", "stages": [1, 2, 3, 4, 5, 9] },
-        { "title": "AI when needed", "text": "Writes only from the passages found, then is checked.", "color": "darkblue", "stages": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
-        { "title": "To a person", "text": "A reference number and a case for your team.", "color": "green", "stages": [10] }
+        { "title": "Search first", "text": "A direct match answers in ISACA's own words. No AI.", "color": "blue", "stages": [1, 2, 3, 4, 5, 8] },
+        { "title": "AI when needed", "text": "Writes only from the passages found, then is checked.", "color": "darkblue", "stages": [1, 2, 3, 4, 5, 6, 7, 8] },
+        { "title": "To a person", "text": "A reference number and a case for your team.", "color": "green", "stages": [9] }
       ]
     },
     {
@@ -174,14 +173,13 @@
       "section": "How she runs",
       "presenter": "Eliyas Eshtea",
       "title": "Every stage, honestly",
-      "lead": "In Sprint 2, five stages were placeholders. Now one is.",
+      "lead": "In Sprint 2, some stages were placeholders. Now every one is built.",
       "rows": [
         { "name": "Front end", "status": "built", "text": "Chat, sign-in, Today, notebook and Library" },
         { "name": "Access control", "status": "built", "text": "Sign-in and roles" },
         { "name": "Translation", "status": "built", "text": "NLLB-200, self-hosted: Amharic and Spanish connected" },
         { "name": "Input compliance", "status": "built", "text": "Rules files your team owns, with approval records" },
         { "name": "Database search", "status": "built", "text": "Direct answers in ISACA's own words" },
-        { "name": "Knowledge graph", "status": "stub", "text": "Related topics; not needed for the pilot" },
         { "name": "RAG", "status": "built", "text": "Search by meaning, in Isa's own database" },
         { "name": "Complex AI", "status": "built", "text": "One small local model, writing only from what was found" },
         { "name": "Output compliance", "status": "built", "text": "Every sentence checked against its source" },
