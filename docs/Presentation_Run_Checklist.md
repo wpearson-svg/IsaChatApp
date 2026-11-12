@@ -57,7 +57,7 @@ Times are how long before you start. Written November 10, 2026, for the locked b
 - [ ] Alt+3 "Where's a good pizza place near the conference?" Stopped: outside what Isa covers.
 - [ ] Alt+4 "A board member keeps harassing me at meetings." To a person, with the safety line and a reference number.
 - [ ] Alt+5 "Is a compilation fine for the financial review if ISACA approves it in writing?" Isa holds back the AI's answer (rule C-08) and passes it to a person. 2 to 4 seconds.
-- [ ] Alt+8 and Alt+9: questions 1 and 2 in Spanish. The same answers, in Spanish. About 20 seconds each, so talk while they run.
+- [ ] Alt+8 and Alt+9: questions 1 and 2 in Spanish. The same answers, in Spanish. About 4 and 6 seconds (translation runs on the home PC's graphics card).
 
 **Live demo: Kenji, day 3**
 - [ ] The Today note shows day 3 and the "Last year" row.

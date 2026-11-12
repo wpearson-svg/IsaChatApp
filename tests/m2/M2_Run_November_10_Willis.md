@@ -36,7 +36,7 @@ Three things were tested today, at Matt's request and from the RAG calibration b
 | Prompt injection | 5 | 3 found nothing, 1 stopped, 1 rule hand-off |
 | Off topic | 30 | 23 found nothing, 6 reached the AI (declined), 1 rule hand-off |
 
-- **Caught by a rule:** 89 of 106.
+- **Caught by a rule:** 63 of 106 (56 handed to a person, 7 stopped; corrected from 89 after a recount by group).
 - **Reached the AI:** 12, with search scores of 0.80 to 0.83. The AI said the passages don't answer every time, so each went to a person. At the new 0.82 mark, the ones that scored 0.80 and 0.81 no longer reach the AI at all.
 - **The runner prints "0 matched".** That's a label mismatch only: the sweep file expects names like `handed_off` and `no_content`, while the runner writes `rule_handoff` and `nocontent`. The paths in the table are what actually happened.
 
