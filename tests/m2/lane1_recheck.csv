@@ -1,0 +1,16 @@
+id,lane,language,question,expected_path
+trim1-1,1,en,What should a president know about financial controls?,trimmed
+trim1-2,1,en,What should a president know about financial controls?,trimmed
+trim1-3,1,en,What should a president know about financial controls?,trimmed
+trim2-1,1,en,What does a good chapter president focus on?,trimmed
+trim2-2,1,en,What does a good chapter president focus on?,trimmed
+trim2-3,1,en,What does a good chapter president focus on?,trimmed
+src2-1,1,en,What do the documents say about member engagement?,source
+src2-2,1,en,What do the documents say about member engagement?,source
+src2-3,1,en,What do the documents say about member engagement?,source
+rule3-1,1,en,"If our policy covers Directors and Officers appropriate to our operations and local law, does our policy meet the requirement?",rule_recheck
+rule3-2,1,en,"If our policy covers Directors and Officers appropriate to our operations and local law, does our policy meet the requirement?",rule_recheck
+rule3-3,1,en,"If our policy covers Directors and Officers appropriate to our operations and local law, does our policy meet the requirement?",rule_recheck
+shape1-1,1,en,When should the chapter upload CPE information?,shape
+shape1-2,1,en,When should the chapter upload CPE information?,shape
+shape1-3,1,en,When should the chapter upload CPE information?,shape

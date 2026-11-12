@@ -1,0 +1,112 @@
+questions embedded: 143
+
+1. Top-1 score by kind (isaca_only)
+kind            n    min    p10    p25    med    p75    p90    max
+in_scope       80  0.784  0.814  0.826  0.846  0.867  0.883  0.911
+out_of_scope   40  0.711  0.729  0.752  0.781  0.800  0.813  0.825
+near           23  0.771  0.804  0.821  0.843  0.857  0.864  0.867
+
+2. In scope (80): top-1 correct 48, expected in top 3 59 (isaca_only); as built, expected in top 3: 50
+   High score on the wrong passage (top-1 wrong, score >= 0.80):
+     0.8867  How do I get CPE credit recorded for people who attended our -> 38: ISACA Chapter Systems Overview | Chapter Reporting Tools (expected 17)
+     0.8816  What is the chapter president mainly responsible for?        -> 60: Chapter Leader Guidebook - President (August 2026) | Gui (expected 20)
+     0.8756  What is my role in the chapter's strategic plan?             -> 50: Chapter Leader Guidebook - President (August 2026) | Gen (expected 47)
+     0.8753  Our chapter is struggling to meet ISACA's standards. What sh -> 46: Chapter Leader Guidebook - President (August 2026) | Gui (expected 44)
+     0.8731  What can Chapter 360 show me about my chapter?               -> 31: ISACA Chapter Systems Overview | C360 > Purpose (expected 32)
+     0.8729  What can I do on Engage as a chapter leader?                 -> 33: ISACA Chapter Systems Overview | Engage > Purpose (expected 34)
+     0.8728  What is my role in running board and membership meetings?    -> 64: Chapter Leader Guidebook - President (August 2026) | The (expected 60)
+     0.8601  What do we have to send ISACA after our fiscal year ends?    -> 5: Annual Chapter Compliance Framework | Compliance Cycle >  (expected 58)
+     0.8595  What do I use the leader portal for?                         -> 29: ISACA Chapter Systems Overview | Chapter Leader Portal > (expected 30)
+     0.8585  What should we cover when we orient incoming chapter leaders -> 68: Chapter Leader Guidebook - President (August 2026) | Gui (expected 80)
+     0.8575  What is the treasurer responsible for?                       -> 53: Chapter Leader Guidebook - President (August 2026) | Fin (expected 26)
+     0.8561  Our audit for this year won't be finished by the compliance  -> 15: Common Tasks and Navigation Guide | Task: Access Complia (expected 5)
+     0.8507  How do I get my compliance documents together and submitted? -> 36: ISACA Chapter Systems Overview | Chapter Reporting Tools (expected 14)
+     0.8441  What else should the outgoing president take care of during  -> 75: Chapter Leader Guidebook - President (August 2026) | The (expected 69)
+     0.8416  Why should financial reports be produced on time?            -> 27: Core Chapter Leader Roles and Responsibilities | Chapter (expected 56)
+     0.8400  How do I set up registration for a multi-day conference?     -> 17: Common Tasks and Navigation Guide | Task: Upload CPE Inf (expected 10)
+     0.8382  What is the vice president responsible for?                  -> 60: Chapter Leader Guidebook - President (August 2026) | Gui (expected 22)
+     0.8368  Can we add a President-Elect role?                           -> 22: Core Chapter Leader Roles and Responsibilities | Chapter (expected 75)
+     0.8310  What happens in the annual compliance review at the end of t -> 15: Common Tasks and Navigation Guide | Task: Access Complia (expected 3)
+     0.8292  How should I keep our members informed?                      -> 66: Chapter Leader Guidebook - President (August 2026) | Gui (expected 59)
+     0.8281  What is our secretary responsible for?                       -> 63: Chapter Leader Guidebook - President (August 2026) | The (expected 24)
+     0.8262  Can we put content on our website that only members can see? -> 72: Chapter Leader Guidebook - President (August 2026) | Cha (expected 12)
+     0.8262  What should the outgoing president hand over to the new pres -> 68: Chapter Leader Guidebook - President (August 2026) | Gui (expected 69+76+79)
+     0.8255  What does the treasurer do during the year?                  -> 53: Chapter Leader Guidebook - President (August 2026) | Fin (expected 27)
+     0.8222  What should the incoming president receive from the outgoing -> 68: Chapter Leader Guidebook - President (August 2026) | Gui (expected 79)
+     0.8212  What does a vice president normally get involved in?         -> 60: Chapter Leader Guidebook - President (August 2026) | Gui (expected 23)
+     0.8202  What do we have to keep doing all year to stay compliant?    -> 36: ISACA Chapter Systems Overview | Chapter Reporting Tools (expected 2)
+     0.8143  What's the compliance framework for?                         -> 36: ISACA Chapter Systems Overview | Chapter Reporting Tools (expected 1)
+     0.8139  What does the president usually do from week to week?        -> 60: Chapter Leader Guidebook - President (August 2026) | Gui (expected 21)
+     0.8138  Who is responsible for running our elections properly?       -> 63: Chapter Leader Guidebook - President (August 2026) | The (expected 48)
+     0.8123  What should I do if I spot an odd transaction in the bank st -> 27: Core Chapter Leader Roles and Responsibilities | Chapter (expected 55)
+   Low score (top-1 < 0.80):
+     0.7838  Who takes the minutes?                                       correct=yes
+     0.7872  Who should review the bylaws?                                correct=yes
+     0.7934  Which system do I use for what?                              correct=no
+     0.7977  What has to be handed over to the new officers?              correct=yes
+
+3. Pass mark table (isaca_only | as built)
+ mark  in acc%  in+exp%  out acc%  near acc% ||  in acc%  in+exp%   out%  near%
+ 0.70    100.0     73.8     100.0      100.0 ||     90.0     62.5   82.5   95.7
+ 0.71    100.0     73.8     100.0      100.0 ||     90.0     62.5   82.5   95.7
+ 0.72    100.0     73.8      92.5      100.0 ||     90.0     62.5   77.5   95.7
+ 0.73    100.0     73.8      87.5      100.0 ||     90.0     62.5   72.5   95.7
+ 0.74    100.0     73.8      82.5      100.0 ||     90.0     62.5   67.5   95.7
+ 0.75    100.0     73.8      77.5      100.0 ||     90.0     62.5   65.0   95.7
+ 0.76    100.0     73.8      70.0      100.0 ||     90.0     62.5   62.5   95.7
+ 0.77    100.0     73.8      62.5      100.0 ||     90.0     62.5   55.0   95.7
+ 0.78    100.0     73.8      50.0       95.7 ||     90.0     62.5   42.5   91.3
+ 0.79     97.5     71.2      35.0       95.7 ||     90.0     62.5   27.5   91.3
+ 0.80     95.0     70.0      25.0       91.3 ||     87.5     61.2   22.5   87.0
+ 0.81     91.2     66.2      15.0       87.0 ||     85.0     58.8   12.5   82.6
+ 0.82     83.8     62.5       7.5       73.9 ||     77.5     56.2    5.0   69.6
+ 0.83     70.0     56.2       0.0       65.2 ||     67.5     52.5    0.0   60.9
+ 0.84     58.8     47.5       0.0       56.5 ||     56.2     43.8    0.0   52.2
+ 0.85     46.2     36.2       0.0       30.4 ||     45.0     35.0    0.0   30.4
+ 0.86     32.5     26.2       0.0       13.0 ||     32.5     26.2    0.0   13.0
+ 0.87     23.8     18.8       0.0        0.0 ||     23.8     18.8    0.0    0.0
+ 0.88     12.5     11.2       0.0        0.0 ||     12.5     11.2    0.0    0.0
+ 0.89      8.8      8.8       0.0        0.0 ||      8.8      8.8    0.0    0.0
+ 0.90      3.8      3.8       0.0        0.0 ||      3.8      3.8    0.0    0.0
+
+4. Overlap: out_of_scope / near scoring above the lowest correct in_scope (0.7838)
+     0.8666  near         Where do I get help with Engage?                             -> 33: ISACA Chapter Systems Overview | Engage > Purp
+     0.8660  near         What quorum does ISACA require for our board?                -> 3: Annual Chapter Compliance Framework | Complianc
+     0.8650  near         What happens to a chapter that holds fewer than four board m -> 62: Chapter Leader Guidebook - President (August 2
+     0.8587  near         How do I reach the Chapter Experience team?                  -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.8581  near         How do I get help with Engage?                               -> 33: ISACA Chapter Systems Overview | Engage > Purp
+     0.8574  near         What is ISACA's policy on chapter mergers?                   -> 33: ISACA Chapter Systems Overview | Engage > Purp
+     0.8557  near         What penalty does ISACA apply if a chapter does not hold its -> 3: Annual Chapter Compliance Framework | Complianc
+     0.8486  near         How do I become an ISACA certified trainer?                  -> 3: Annual Chapter Compliance Framework | Complianc
+     0.8478  near         How long should each board meeting last and who has to atten -> 62: Chapter Leader Guidebook - President (August 2
+     0.8444  near         What is ISACA's annual membership fee?                       -> 33: ISACA Chapter Systems Overview | Engage > Purp
+     0.8438  near         What is the ISACA Foundation?                                -> 33: ISACA Chapter Systems Overview | Engage > Purp
+     0.8428  near         What is the CPE audit process for certification holders?     -> 38: ISACA Chapter Systems Overview | Chapter Repor
+     0.8427  near         How do I apply for an ISACA scholarship?                     -> 80: Chapter Leader Guidebook - President (August 2
+     0.8390  near         How much rebate does ISACA give each chapter?                -> 11: Common Tasks and Navigation Guide | Common Tas
+     0.8347  near         What is the maximum term a chapter president can serve?      -> 60: Chapter Leader Guidebook - President (August 2
+     0.8254  near         What is ISACA's global data retention policy?                -> 6: Annual Chapter Compliance Framework | Complianc
+     0.8245  out_of_scope I'm stressed about my job, any advice?                       -> 27: Core Chapter Leader Roles and Responsibilities
+     0.8234  near         How many CPE hours do I need to keep my CISA?                -> 16: Common Tasks and Navigation Guide | Task: Acce
+     0.8233  out_of_scope Recommend a good book on leadership.                         -> 23: Core Chapter Leader Roles and Responsibilities
+     0.8222  out_of_scope How do I lose weight before the conference?                  -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.8189  near         What is ISACA's code of professional ethics?                 -> 3: Annual Chapter Compliance Framework | Complianc
+     0.8187  near         How many members must attend each educational event?         -> 16: Common Tasks and Navigation Guide | Task: Acce
+     0.8173  near         How much are chapter dues?                                   -> 2: Annual Chapter Compliance Framework | Complianc
+     0.8135  out_of_scope How do I set up a Zoom webinar?                              -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.8129  out_of_scope How do I train for a marathon?                               -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.8110  out_of_scope How do I ask my manager for a raise?                         -> 21: Core Chapter Leader Roles and Responsibilities
+     0.8094  out_of_scope How do I make a pivot table in Excel?                        -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.8070  out_of_scope How do I fix a Python import error?                          -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.8070  out_of_scope Can you write a LinkedIn post about our event?               -> 37: ISACA Chapter Systems Overview | Chapter Repor
+     0.8016  out_of_scope How do I renew my passport?                                  -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.8011  near         What is the penalty for a late compliance submission?        -> 16: Common Tasks and Navigation Guide | Task: Acce
+     0.7996  out_of_scope My Outlook keeps crashing, what do I do?                     -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.7966  out_of_scope What's the best project management software?                 -> 27: Core Chapter Leader Roles and Responsibilities
+     0.7940  out_of_scope How does the Rotary Club elect its president?                -> 42: Chapter Leader Guidebook - President (August 2
+     0.7934  near         How much does the CISA exam cost?                            -> 3: Annual Chapter Compliance Framework | Complianc
+     0.7907  out_of_scope Who is the president of the Mumbai chapter?                  -> 60: Chapter Leader Guidebook - President (August 2
+     0.7869  out_of_scope How do I reset my Windows password?                          -> 17: Common Tasks and Navigation Guide | Task: Uplo
+     0.7863  out_of_scope Should I buy or rent a house?                                -> 27: Core Chapter Leader Roles and Responsibilities
+     0.7852  out_of_scope What events is the Sydney chapter running next month?        -> 50: Chapter Leader Guidebook - President (August 2
+     0.7849  out_of_scope Can you recommend a good hotel near the conference venue?    -> 77: Chapter Leader Guidebook - President (August 2

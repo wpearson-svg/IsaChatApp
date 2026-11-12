@@ -1,0 +1,132 @@
+id,passage,document,guide,rank,score,top1,top1_score,found_by_vector,guide_slots_in_top3
+L4-001,1,Annual Chapter Compliance Framework,no,20,0.813,36,0.881,no,0
+L4-002,2,Annual Chapter Compliance Framework,no,13,0.791,36,0.830,no,0
+L4-003,3,Annual Chapter Compliance Framework,no,39,0.780,13,0.815,no,0
+L4-004,4,Annual Chapter Compliance Framework,no,1,0.844,4,0.844,yes,0
+L4-005,5,Annual Chapter Compliance Framework,no,2,0.857,15,0.867,yes,0
+L4-006,6,Annual Chapter Compliance Framework,no,1,0.833,6,0.833,yes,0
+L4-007,7,Common Tasks and Navigation Guide,no,2,0.798,19,0.801,no,0
+L4-008,8,Common Tasks and Navigation Guide,no,1,0.900,8,0.900,yes,0
+L4-009,9,Common Tasks and Navigation Guide,no,2,0.915,33,0.929,yes,0
+L4-010,10,Common Tasks and Navigation Guide,no,1,0.888,10,0.888,yes,0
+L4-011,11,Common Tasks and Navigation Guide,no,1,0.912,11,0.912,yes,0
+L4-012,12,Common Tasks and Navigation Guide,no,3,0.850,9,0.859,yes,0
+L4-013,13,Common Tasks and Navigation Guide,no,5,0.845,62,0.866,no,0
+L4-014,14,Common Tasks and Navigation Guide,no,2,0.853,36,0.855,yes,0
+L4-015,15,Common Tasks and Navigation Guide,no,1,0.830,15,0.830,yes,0
+L4-016,16,Common Tasks and Navigation Guide,no,2,0.848,37,0.854,yes,0
+L4-017,17,Common Tasks and Navigation Guide,no,2,0.851,38,0.868,yes,0
+L4-018,18,Core Chapter Leader Roles and Responsibilities,no,2,0.891,19,0.894,yes,0
+L4-019,19,Core Chapter Leader Roles and Responsibilities,no,1,0.848,19,0.848,yes,0
+L4-020,20,Core Chapter Leader Roles and Responsibilities,no,14,0.845,60,0.887,no,0
+L4-021,21,Core Chapter Leader Roles and Responsibilities,no,13,0.840,67,0.870,no,0
+L4-022,22,Core Chapter Leader Roles and Responsibilities,no,3,0.807,91,0.857,yes,1
+L4-023,23,Core Chapter Leader Roles and Responsibilities,no,13,0.776,91,0.831,no,1
+L4-024,24,Core Chapter Leader Roles and Responsibilities,no,54,0.807,60,0.864,no,0
+L4-025,25,Core Chapter Leader Roles and Responsibilities,no,7,0.781,92,0.847,no,3
+L4-026,26,Core Chapter Leader Roles and Responsibilities,no,11,0.804,93,0.892,no,1
+L4-027,27,Core Chapter Leader Roles and Responsibilities,no,13,0.794,93,0.867,no,1
+L4-028,28,ISACA Chapter Systems Overview,no,1,0.896,28,0.896,yes,0
+L4-029,29,ISACA Chapter Systems Overview,no,1,0.895,29,0.895,yes,0
+L4-030,30,ISACA Chapter Systems Overview,no,12,0.830,29,0.898,no,0
+L4-031,31,ISACA Chapter Systems Overview,no,1,0.900,31,0.900,yes,0
+L4-032,32,ISACA Chapter Systems Overview,no,5,0.792,31,0.882,no,0
+L4-033,33,ISACA Chapter Systems Overview,no,1,0.878,33,0.878,yes,0
+L4-034,34,ISACA Chapter Systems Overview,no,4,0.850,33,0.878,no,0
+L4-035,35,ISACA Chapter Systems Overview,no,4,0.849,30,0.858,no,0
+L4-036,36,ISACA Chapter Systems Overview,no,1,0.893,36,0.893,yes,0
+L4-037,37,ISACA Chapter Systems Overview,no,1,0.881,37,0.881,yes,0
+L4-038,38,ISACA Chapter Systems Overview,no,1,0.867,38,0.867,yes,0
+L4-039,39,ISACA Chapter Systems Overview,no,4,0.835,71,0.845,no,1
+L4-040,40,ISACA Chapter Systems Overview,no,25,0.799,30,0.827,no,0
+L4-041,41,ISACA Chapter Systems Overview,no,1,0.872,41,0.872,yes,0
+L4-042,42,Chapter Leader Guidebook - President (August 2026),no,1,0.879,42,0.879,yes,0
+L4-043,43,Chapter Leader Guidebook - President (August 2026),no,2,0.860,90,0.860,yes,1
+L4-044,44,Chapter Leader Guidebook - President (August 2026),no,3,0.855,60,0.859,yes,0
+L4-045,45,Chapter Leader Guidebook - President (August 2026),no,1,0.834,45,0.834,yes,0
+L4-046,46,Chapter Leader Guidebook - President (August 2026),no,1,0.865,46,0.865,yes,0
+L4-047,47,Chapter Leader Guidebook - President (August 2026),no,9,0.794,43,0.824,no,0
+L4-048,48,Chapter Leader Guidebook - President (August 2026),no,1,0.818,48,0.818,yes,0
+L4-049,49,Chapter Leader Guidebook - President (August 2026),no,2,0.861,90,0.862,yes,1
+L4-050,50,Chapter Leader Guidebook - President (August 2026),no,4,0.824,117,0.831,no,1
+L4-051,51,Chapter Leader Guidebook - President (August 2026),no,1,0.855,51,0.855,yes,1
+L4-052,52,Chapter Leader Guidebook - President (August 2026),no,5,0.816,90,0.837,no,1
+L4-053,53,Chapter Leader Guidebook - President (August 2026),no,1,0.905,53,0.905,yes,1
+L4-054,54,Chapter Leader Guidebook - President (August 2026),no,1,0.900,54,0.900,yes,0
+L4-055,55,Chapter Leader Guidebook - President (August 2026),no,8,0.785,106,0.795,no,0
+L4-056,56,Chapter Leader Guidebook - President (August 2026),no,2,0.842,27,0.845,yes,0
+L4-057,57,Chapter Leader Guidebook - President (August 2026),no,1,0.900,57,0.900,yes,0
+L4-058,58,Chapter Leader Guidebook - President (August 2026),no,2,0.858,5,0.874,yes,0
+L4-059,59,Chapter Leader Guidebook - President (August 2026),no,18,0.837,65,0.876,no,0
+L4-060,60,Chapter Leader Guidebook - President (August 2026),no,2,0.872,67,0.883,yes,1
+L4-061,61,Chapter Leader Guidebook - President (August 2026),no,7,0.832,93,0.862,no,1
+L4-062,62,Chapter Leader Guidebook - President (August 2026),no,17,0.824,83,0.858,no,3
+L4-063,63,Chapter Leader Guidebook - President (August 2026),no,2,0.870,90,0.871,yes,1
+L4-064,64,Chapter Leader Guidebook - President (August 2026),no,1,0.849,64,0.849,yes,2
+L4-065,65,Chapter Leader Guidebook - President (August 2026),no,1,0.891,65,0.891,yes,0
+L4-066,66,Chapter Leader Guidebook - President (August 2026),no,3,0.853,65,0.861,yes,1
+L4-067,67,Chapter Leader Guidebook - President (August 2026),no,3,0.852,82,0.861,yes,2
+L4-068,68,Chapter Leader Guidebook - President (August 2026),no,1,0.861,68,0.861,yes,1
+L4-069,69,Chapter Leader Guidebook - President (August 2026),no,50,0.777,106,0.853,no,2
+L4-070,70,Chapter Leader Guidebook - President (August 2026),no,1,0.889,70,0.889,yes,0
+L4-071,71,Chapter Leader Guidebook - President (August 2026),no,1,0.873,71,0.873,yes,0
+L4-072,72,Chapter Leader Guidebook - President (August 2026),no,4,0.863,71,0.877,no,0
+L4-073,73,Chapter Leader Guidebook - President (August 2026),no,1,0.859,73,0.859,yes,1
+L4-074,74,Chapter Leader Guidebook - President (August 2026),no,2,0.871,104,0.881,yes,2
+L4-075,75,Chapter Leader Guidebook - President (August 2026),no,7,0.809,74,0.835,no,1
+L4-076,76,Chapter Leader Guidebook - President (August 2026),no,1,0.845,76,0.845,yes,0
+L4-077,77,Chapter Leader Guidebook - President (August 2026),no,1,0.834,77,0.834,yes,1
+L4-078,78,Chapter Leader Guidebook - President (August 2026),no,1,0.865,78,0.865,yes,0
+L4-079,79,Chapter Leader Guidebook - President (August 2026),no,2,0.852,106,0.856,yes,2
+L4-080,80,Chapter Leader Guidebook - President (August 2026),no,36,0.829,112,0.869,no,2
+L4-081,81,Chapter Leader Guidebook - President (August 2026),no,7,0.819,115,0.843,no,3
+L4-082,82,Best Practice Guide: Board Meeting Minutes,yes,1,0.909,82,0.909,no,2
+L4-083,83,Best Practice Guide: Board Meeting Minutes,yes,1,0.916,83,0.916,no,2
+L4-084,84,Best Practice Guide: Board Meeting Minutes,yes,1,0.848,84,0.848,no,3
+L4-085,85,Best Practice Guide: Board Meeting Minutes,yes,1,0.883,85,0.883,no,3
+L4-086,86,Best Practice Guide: Board Meeting Minutes,yes,1,0.895,86,0.895,no,3
+L4-087,87,Best Practice Guide: Board Meeting Minutes,yes,2,0.848,131,0.851,no,3
+L4-088,88,Best Practice Guide: Board and Officer Roles,yes,3,0.835,90,0.851,no,3
+L4-089,89,Best Practice Guide: Board and Officer Roles,yes,2,0.879,116,0.880,no,3
+L4-090,90,Best Practice Guide: Board and Officer Roles,yes,2,0.863,89,0.867,no,3
+L4-091,91,Best Practice Guide: Board and Officer Roles,yes,1,0.841,91,0.841,no,1
+L4-092,92,Best Practice Guide: Board and Officer Roles,yes,1,0.906,92,0.906,no,2
+L4-093,93,Best Practice Guide: Board and Officer Roles,yes,1,0.905,93,0.905,no,1
+L4-094,94,Best Practice Guide: Board and Officer Roles,yes,1,0.907,94,0.907,no,3
+L4-095,95,Best Practice Guide: Committees and Task Forces,yes,1,0.914,95,0.914,no,2
+L4-096,96,Best Practice Guide: Committees and Task Forces,yes,1,0.847,96,0.847,no,2
+L4-097,97,Best Practice Guide: Committees and Task Forces,yes,1,0.883,97,0.883,no,3
+L4-098,98,Best Practice Guide: Committees and Task Forces,yes,1,0.885,98,0.885,no,3
+L4-099,99,Best Practice Guide: Committees and Task Forces,yes,1,0.879,99,0.879,no,3
+L4-100,100,Best Practice Guide: Conflicts of Interest,yes,1,0.882,100,0.882,no,3
+L4-101,101,Best Practice Guide: Conflicts of Interest,yes,1,0.894,101,0.894,no,3
+L4-102,102,Best Practice Guide: Conflicts of Interest,yes,1,0.887,102,0.887,no,3
+L4-103,103,Best Practice Guide: Conflicts of Interest,yes,2,0.854,101,0.866,no,3
+L4-104,104,Best Practice Guide: Leadership Succession and Handover,yes,1,0.888,104,0.888,no,1
+L4-105,105,Best Practice Guide: Leadership Succession and Handover,yes,1,0.850,105,0.850,no,3
+L4-106,106,Best Practice Guide: Leadership Succession and Handover,yes,1,0.873,106,0.873,no,2
+L4-107,107,Best Practice Guide: Leadership Succession and Handover,yes,1,0.848,107,0.848,no,3
+L4-108,108,Best Practice Guide: Leadership Succession and Handover,yes,1,0.885,108,0.885,no,3
+L4-109,109,Best Practice Guide: Orienting New Board Members,yes,1,0.918,109,0.918,no,3
+L4-110,110,Best Practice Guide: Orienting New Board Members,yes,1,0.917,110,0.917,no,3
+L4-111,111,Best Practice Guide: Orienting New Board Members,yes,1,0.883,111,0.883,no,3
+L4-112,112,Best Practice Guide: Orienting New Board Members,yes,4,0.855,110,0.881,no,3
+L4-113,113,Best Practice Guide: Orienting New Board Members,yes,1,0.874,113,0.874,no,3
+L4-114,114,Best Practice Guide: Orienting New Board Members,yes,1,0.823,114,0.823,no,3
+L4-115,115,Best Practice Guide: Recruiting and Engaging Volunteers,yes,3,0.861,97,0.887,no,3
+L4-116,116,Best Practice Guide: Recruiting and Engaging Volunteers,yes,1,0.894,116,0.894,no,3
+L4-117,117,Best Practice Guide: Recruiting and Engaging Volunteers,yes,1,0.868,117,0.868,no,2
+L4-118,118,Best Practice Guide: Recruiting and Engaging Volunteers,yes,1,0.892,118,0.892,no,3
+L4-119,119,Best Practice Guide: Recruiting and Engaging Volunteers,yes,2,0.855,122,0.864,no,3
+L4-120,120,Best Practice Guide: Recruiting and Engaging Volunteers,yes,1,0.856,120,0.856,no,3
+L4-121,121,Best Practice Guide: Reviewing Your Chapter Governance,yes,1,0.849,121,0.849,no,3
+L4-122,122,Best Practice Guide: Reviewing Your Chapter Governance,yes,1,0.838,122,0.838,no,3
+L4-123,123,Best Practice Guide: Reviewing Your Chapter Governance,yes,1,0.835,123,0.835,no,2
+L4-124,124,Best Practice Guide: Reviewing Your Chapter Governance,yes,17,0.793,121,0.814,no,3
+L4-125,125,Best Practice Guide: Reviewing Your Chapter Governance,yes,1,0.844,125,0.844,no,2
+L4-126,126,Best Practice Guide: Running Effective Board Meetings,yes,1,0.891,126,0.891,no,2
+L4-127,127,Best Practice Guide: Running Effective Board Meetings,yes,1,0.874,127,0.874,no,3
+L4-128,128,Best Practice Guide: Running Effective Board Meetings,yes,1,0.893,128,0.893,no,1
+L4-129,129,Best Practice Guide: Running Effective Board Meetings,yes,4,0.861,89,0.869,no,2
+L4-130,130,Best Practice Guide: Running Effective Board Meetings,yes,14,0.839,89,0.870,no,2
+L4-131,131,Best Practice Guide: Running Effective Board Meetings,yes,1,0.897,131,0.897,no,3
