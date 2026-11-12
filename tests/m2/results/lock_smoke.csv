@@ -1,0 +1,5 @@
+id,lane,user,expected_path,expected_input,input,path,match,rule,status,ticket,step_down,elapsed_s,trace_id,willis_lane,error
+S-1,smoke,k.watanabe,stopped,,stop,stopped,yes,O-01,stopped,,,0.89,07d71c94-7dba-4980-967f-bb5a112f61d9,,
+S-2,smoke,k.watanabe,handed_off,,hand_off,handed_off,yes,A-01,escalated,TKT-4907,,0.03,7dad3c5b-841c-4464-a90e-dfeed4292161,,
+S-3,smoke,k.watanabe,no_content,,pass,no_content,yes,,escalated,TKT-4908,,1.09,dd405183-c9d7-49bf-a32f-8a6ff0a3a880,yes: vector search,
+S-4,smoke,k.watanabe,direct,,pass,direct,yes,,answered,,,0.09,063ce3c1-e38c-4599-b76e-24167b1b842f,,

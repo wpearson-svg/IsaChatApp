@@ -138,7 +138,7 @@
     },
     {
       // Real questions, checked through the real pipeline (same ending on every run, November 4 to 10). Signed in as Kenji.
-      // Alt+1 to Alt+5 type them; Alt+8 and Alt+9 type questions 1 and 2 in Spanish (warm translation first; about 20 seconds each).
+      // Alt+1 to Alt+5 type them; Alt+8 and Alt+9 type questions 1 and 2 in Spanish (warm translation first; about 4 and 6 seconds).
       "kind": "demo",
       "section": "Meet Isa",
       "presenter": "Willis Pearson",

@@ -1,0 +1,13 @@
+id,lane,user,expected_path,expected_input,input,path,match,rule,status,ticket,step_down,elapsed_s,trace_id,willis_lane,error
+L-01 C-001 Japan,3,k.watanabe,,hand_off,hand_off,handed_off,yes,JP-01,escalated,TKT-4937,,0.39,e03fe4d1-ca3b-4799-90d7-06b35266b996,,
+L-02 C-001 Japan,3,y.sato,,hand_off,hand_off,handed_off,yes,JP-01,escalated,TKT-4938,,0.45,6a35ad1b-2285-485c-bc27-4fd2d65d3d34,,
+L-03 C-002 Indonesia,3,sutrisno,,answer_then_point,answer_then_point,no_content,yes,E-02,escalated,TKT-4939,,0.62,c33cb633-3008-4b82-9a20-538d9053a781,,
+L-04 C-003 Mexico,3,m.fernandez,,answer_then_point,answer_then_point,no_content,yes,E-02,escalated,TKT-4940,,0.71,1f7c83f5-b0f8-4cb7-af2a-3ed13e0fd823,,
+L-05 C-004 Iceland,3,g.jonsdottir,,hand_off,hand_off,handed_off,yes,EU-01,escalated,TKT-4941,,0.43,16a654e6-9269-409f-9243-186ea3867288,,
+L-06 C-005 Germany,3,a.mueller,,hand_off,hand_off,handed_off,yes,EU-01,escalated,TKT-4942,,0.35,c5498392-7665-4101-b484-94ec392a8c9e,,
+L-07 C-006 Saudi Arabia,3,f.alharbi,,answer_then_point,answer_then_point,no_content,yes,E-02,escalated,TKT-4943,,0.51,25cd02e9-9721-476c-8480-966e64fa5c83,,
+L-08 C-007 India,3,p.raghunathan,,answer_then_point,answer_then_point,no_content,yes,E-02,escalated,TKT-4944,,0.66,fb0eeb10-cce6-4119-a9ec-0b3a83d098d1,,
+L-09 C-008 Switzerland,3,s.favre,,hand_off,hand_off,handed_off,yes,EU-01,escalated,TKT-4945,,0.45,613d5235-defb-4851-9362-0677c7846dd9,,
+L-10 C-009 United States,3,m.johnson,,answer_then_point,answer_then_point,no_content,yes,E-02,escalated,TKT-4946,,0.6,5df37f5a-8190-4472-a80b-ea2b274a4866,,
+L-11 C-009 United States (Member),3,d.whitfield,,answer_then_point,answer_then_point,no_content,yes,E-02,escalated,TKT-4947,,0.48,4c94bd60-75b5-4813-a542-6ed1734d7cfb,,
+L-12 C-010 Brazil,3,a.souza,,answer_then_point,answer_then_point,no_content,yes,E-02,escalated,TKT-4948,,0.59,37d4c087-8bc6-4d57-8a6f-d5103e4895e9,,

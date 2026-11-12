@@ -119,7 +119,10 @@ def main():
     ap.add_argument("outfile")
     ap.add_argument("--user", default="k.watanabe")
     ap.add_argument("--repeat", type=int, default=1)
+    # Where Keycloak is when the services are Remote (for example http://100.89.6.69:8080); default this computer.
+    ap.add_argument("--keycloak", default=KEYCLOAK)
     a = ap.parse_args()
+    globals()["KEYCLOAK"] = a.keycloak.rstrip("/")
 
     rows = list(csv.DictReader(open(a.infile, encoding="utf-8-sig")))
     os.makedirs(os.path.dirname(os.path.abspath(a.outfile)), exist_ok=True)
