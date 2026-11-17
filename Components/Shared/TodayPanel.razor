@@ -179,7 +179,7 @@
                         var info = DayInfo(day);
                         <button type="button"
                                 class="isa-cal__day @(day == _ctx.Today ? "is-today" : "") @(day == _calSelected ? "is-selected" : "") @(info.InKeyDate ? "is-keydate" : "") @(info.InJourney ? "is-journey" : "")"
-                                @onclick="() => _calSelected = day"
+                                @onclick="() => SelectCalDay(day)"
                                 aria-pressed="@(day == _calSelected ? "true" : "false")"
                                 aria-label="@CellLabel(day, info)">
                             <span class="isa-cal__num">@d</span>
@@ -193,15 +193,11 @@
                     }
                 </div>
 
-                <ul class="isa-cal__legend" aria-label="What the marks mean">
-                    <li><span class="isa-cal__dot is-step"></span> A journey step starts</li>
-                    <li><span class="isa-cal__dot is-key"></span> ISACA key date</li>
-                    <li><span class="isa-cal__dot is-call"></span> Your welcome call or session</li>
-                    <li><span class="isa-cal__dot is-past"></span> Last year in the notebook</li>
-                </ul>
-
+                @* The chosen day's details sit directly under the grid, above the key
+                   to the marks, and slide into view when a day is clicked, so the
+                   leader doesn't scroll to find them (Matthew, November 17, 2026). *@
                 var sel = DayInfo(_calSelected);
-                <section class="isa-cal__detail" aria-live="polite">
+                <section class="isa-cal__detail" aria-live="polite" @ref="_calDetail">
                     <h3 class="isa-cal__detailHead">
                         @_calSelected.ToString("dddd, MMMM d", CultureInfo.InvariantCulture)
                         @if (sel.DayOfTerm is int dot)
@@ -265,6 +261,13 @@
                         <button type="button" class="isa-today__linkBtn" @onclick="OnOpenNotebook">Open the notebook</button>
                     }
                 </section>
+
+                <ul class="isa-cal__legend" aria-label="What the marks mean">
+                    <li><span class="isa-cal__dot is-step"></span> A journey step starts</li>
+                    <li><span class="isa-cal__dot is-key"></span> ISACA key date</li>
+                    <li><span class="isa-cal__dot is-call"></span> Your welcome call or session</li>
+                    <li><span class="isa-cal__dot is-past"></span> Last year in the notebook</li>
+                </ul>
 
                 <p class="isa-cal__note">
                     Dates come from your journey, ISACA's key dates and your chapter's notebook, never from the AI model.
@@ -581,7 +584,6 @@
                     if (tour.Count > 0)
                     {
                         var at = Math.Clamp(_tourIndex, 0, tour.Count - 1);
-                        var card = tour[at];
                         <div class="isa-today__tour" aria-live="polite">
                             <div class="isa-today__tourDots" aria-label="@($"Card {at + 1} of {tour.Count}")">
                                 @for (var d = 0; d < tour.Count; d++)
@@ -589,13 +591,26 @@
                                     <span class="@(d <= at ? "is-on" : "")"></span>
                                 }
                             </div>
-                            <p class="isa-today__tourTitle">@card.Title</p>
-                            <p class="isa-today__tourText"><HelpText Text="@card.Text" /></p>
-                            <div class="isa-today__tourBtns">
-                                @if (at > 0)
+                            @* Next stays exactly where it is from card to card, so the leader can
+                               click through without moving the mouse (Matthew, November 17, 2026).
+                               Two things used to move it: Back appearing to its left after the
+                               first card, and cards of different lengths pushing the buttons up
+                               or down. So every card is laid in the same space, which is as tall
+                               as the longest one (only the current card shows), and Back keeps
+                               its place on the first card, where it is hidden and can't be used. *@
+                            <div class="isa-today__tourCards">
+                                @for (var c = 0; c < tour.Count; c++)
                                 {
-                                    <button type="button" class="isa-today__tourBtn is-ghost" @onclick="() => _tourIndex = at - 1">Back</button>
+                                    var showing = c == at;
+                                    <div class="isa-today__tourCard @(showing ? "" : "is-off")" aria-hidden="@(showing ? "false" : "true")">
+                                        <p class="isa-today__tourTitle">@tour[c].Title</p>
+                                        <p class="isa-today__tourText"><HelpText Text="@tour[c].Text" /></p>
+                                    </div>
                                 }
+                            </div>
+                            <div class="isa-today__tourBtns">
+                                <button type="button" class="isa-today__tourBtn is-ghost @(at == 0 ? "is-off" : "")" disabled="@(at == 0)"
+                                        aria-hidden="@(at == 0 ? "true" : "false")" @onclick="() => _tourIndex = at - 1">Back</button>
                                 @if (at < tour.Count - 1)
                                 {
                                     <button type="button" class="isa-today__tourBtn" @onclick="() => _tourIndex = at + 1">Next</button>
@@ -981,7 +996,7 @@
     private string? _notice;         // e.g. "That time was just taken"
 
     // e.g. "Friday 3 July 2026" (the demo date unless it is switched off).
-    private string DateLabel => _ctx is null ? "" : _ctx.Today.ToString("dddd d MMMM yyyy", CultureInfo.InvariantCulture);
+    private string DateLabel => _ctx is null ? "" : _ctx.Today.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -1206,7 +1221,13 @@
 
     // Which screen is showing, so a new screen glides in when it changes,
     // and which way: back (from the left) or forward (from the right).
-    private string ViewKey => _selected?.StepId ?? (_showProgress ? "progress" : _showMonth ? "month" : "today");
+    // A board member's page counts as its own screen (Matthew, November 17, 2026):
+    // it used to reuse the board list's screen, so after scrolling down the list
+    // to a name, that person's page opened part-way down instead of at its top.
+    private string ViewKey =>
+        _selected is { } step
+            ? (step.StepId == BoardStepId && _boardPerson is not null ? $"{step.StepId}:{_boardPerson}" : step.StepId)
+            : (_showProgress ? "progress" : _showMonth ? "month" : "today");
     private bool _goingBack;
     private bool _hasMoved;   // false until the first move inside the window
     private string ViewClass => !_hasMoved ? "" : _goingBack ? "isa-today__view isa-today__view--back" : "isa-today__view";
@@ -1266,7 +1287,7 @@
     private int DoneCount => _ctx is null ? 0 : _ctx.AllSteps.Count(s => _done.ContainsKey(s.StepId));
 
     // e.g. "Fri 3 July"
-    public static string FormatDate(DateOnly date) => date.ToString("ddd d MMMM", CultureInfo.InvariantCulture);
+    public static string FormatDate(DateOnly date) => date.ToString("ddd, MMMM d", CultureInfo.InvariantCulture);
 
     private static string DoneLabel(StepDone done) =>
         done.DoneOn is { } day ? $"Done on {FormatDate(day)}" : "Done";
@@ -1328,7 +1349,7 @@
         _draft =
             $"Hello {_contact.FirstName},\n\n" +
             $"I'm {t.Name}, the new {t.Role.ToLowerInvariant()} of the {t.ChapterName}. " +
-            $"My term started on {t.TermStart.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}. " +
+            $"My term started on {t.TermStart.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)}. " +
             "I'm looking forward to working with you.\n\n" +
             $"Best regards,\n{t.Name}";
         _writing = true;
@@ -1341,14 +1362,27 @@
     private bool _revealIntro;
     private IJSObjectReference? _js;
 
+    // The same for the calendar: clicking a day brings that day's details
+    // into view (Matthew, November 17, 2026).
+    private ElementReference _calDetail;
+    private bool _revealCalDetail;
+
+    private void SelectCalDay(DateOnly day)
+    {
+        _calSelected = day;
+        _revealCalDetail = true;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!_revealIntro) return;
+        if (!_revealIntro && !_revealCalDetail) return;
+        var target = _revealIntro ? _introOption : _calDetail;
         _revealIntro = false;
+        _revealCalDetail = false;
         try
         {
             _js ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Shared/TodayPanel.razor.js");
-            await _js.InvokeVoidAsync("revealElement", _introOption);
+            await _js.InvokeVoidAsync("revealElement", target);
         }
         catch (JSDisconnectedException)
         {

@@ -117,7 +117,7 @@ else if (_ctx is not null)
                                 <div class="isa-handoff__actions">
                                     @if (isDone)
                                     {
-                                        <span class="isa-handoff__doneOn">Done on @d!.DoneOn?.ToString("ddd d MMMM", CultureInfo.InvariantCulture)</span>
+                                        <span class="isa-handoff__doneOn">Done on @d!.DoneOn?.ToString("ddd, MMMM d", CultureInfo.InvariantCulture)</span>
                                         <button type="button" class="isa-handoff__link" @onclick="() => MarkNotDone(step)">Mark as not done</button>
                                     }
                                     else
@@ -178,7 +178,7 @@ else if (_ctx is not null)
     // The first item, in the guidebook's order, that isn't done yet.
     private HandoffStep? NextStep => _ctx?.Steps.FirstOrDefault(s => !_done.ContainsKey(s.StepId));
 
-    private static string Day(DateOnly x) => x.ToString("d MMMM", CultureInfo.InvariantCulture);
+    private static string Day(DateOnly x) => x.ToString("MMMM d", CultureInfo.InvariantCulture);
     private string TimeLeftShort => _ctx is null ? "" : (_ctx.DaysLeft == 1 ? "1 day left" : $"{_ctx.DaysLeft} days left");
 
     // The summary card's time line: until when the outgoing president can

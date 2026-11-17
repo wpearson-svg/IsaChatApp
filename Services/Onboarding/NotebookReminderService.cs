@@ -114,6 +114,14 @@ public class NotebookReminderService
     public bool CanChoose(string personId, DateOnly onDate) =>
         _terms.GetCurrentTerms(personId, onDate).Any(t => t.Role == "President");
 
+    /// <summary>
+    /// The day of this president's first check-in, while it is still ahead (week 1
+    /// of the term); otherwise null. So the setting can say when check-ins begin.
+    /// </summary>
+    public DateOnly? FirstCheckIn(string personId, DateOnly onDate) =>
+        _terms.GetCurrentTerms(personId, onDate).FirstOrDefault(t => t.Role == "President") is { } t && t.DayOfTerm < FirstDay
+            ? t.TermStart.AddDays(FirstDay - 1) : null;
+
     /// <summary>True when the term ends within three months, so check-ins are weekly whatever the setting.</summary>
     public bool WeeklyNearEnd(string personId, DateOnly onDate) =>
         _terms.GetCurrentTerms(personId, onDate).FirstOrDefault(t => t.Role == "President") is { } t

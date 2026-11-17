@@ -275,7 +275,7 @@
 
 <p class="mt-3">
     Days of term are counted from
-    <strong>@(Settings.Today.ToString("d MMMM yyyy", CultureInfo.InvariantCulture))</strong>.
+    <strong>@(Settings.Today.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture))</strong>.
 </p>
 
 @if (!Terms.DirectoryExists)
@@ -323,7 +323,7 @@ else
                         <td>@t.Name</td>
                         <td>@t.Role</td>
                         <td>@t.ChapterId &middot; @t.ChapterName</td>
-                        <td>@(t.TermStart.ToString("d MMMM yyyy", CultureInfo.InvariantCulture))</td>
+                        <td>@(t.TermStart.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture))</td>
                         <td>@t.DayOfTerm</td>
                         <td>
                             @{ var steps = Journey.GetStepsForDay(t.Role, t.DayOfTerm); }

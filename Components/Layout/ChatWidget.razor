@@ -541,7 +541,7 @@
             <NotebookPanel OnClose="CloseNotebook" Style="@SidePanelStyle(SidePanel.Notebook)" Version="@_notebookVersion" OnChecklistChanged="NotebookChanged"
                            Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" ChecklistRequest="@_checklistRequest"
                            OnAskTeam="OpenPersonCardFromFooter" OnQuestionsChanged="RefreshWaitingQuestions"
-                           OnRemindersChanged="RefreshCheckIn" />
+                           OnRemindersChanged="RefreshCheckIn" OnOpenHelp="OpenHelpAtSaving" />
         }
 
         @* The Library (Feature 5; Components/Shared/LibraryPanel.razor). It
@@ -558,7 +558,7 @@
         if (IsHelpOpen)
         {
             <HelpPanel OnClose="CloseHelp" Style="@SidePanelStyle(SidePanel.Notebook)"
-                       Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" OnAsk="AskFromHelp" />
+                       Enlarged="@NotebookLarge" OnToggleEnlarge="ToggleNotebookSize" OnAsk="AskFromHelp" OpenAt="@_helpAt" />
         }
     }
 
@@ -924,11 +924,16 @@
     private bool IsHelpOpen { get; set; } = false;
     private void ToggleHelp()
     {
-        if (!IsHelpOpen) { _notebookSmall = false; IsNotebookOpen = false; IsLibraryOpen = false; _checklistRequest = 0; }
+        if (!IsHelpOpen) { _notebookSmall = false; IsNotebookOpen = false; IsLibraryOpen = false; _checklistRequest = 0; _helpAt = null; }
         IsHelpOpen = !IsHelpOpen;
         if (!IsHelpOpen) Unenlarge(SidePanel.Notebook);
     }
     private void OpenHelp() { if (!IsHelpOpen) ToggleHelp(); }
+
+    // "How the notebook works" in the notebook's "⋯" menu (November 17, 2026): the
+    // guide takes the notebook's place, opened at "Saving decisions and notes".
+    private string? _helpAt;
+    private void OpenHelpAtSaving() { if (!IsHelpOpen) ToggleHelp(); _helpAt = "save"; }
     private void CloseHelp() { IsHelpOpen = false; Unenlarge(SidePanel.Notebook); }
 
     // "Ask Isa" on an example question: it goes in the question box, ready

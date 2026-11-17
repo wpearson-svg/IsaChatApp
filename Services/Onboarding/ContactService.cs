@@ -103,7 +103,7 @@ public class ContactService
     public static string FormatInZone(DateTime utc, string timeZone)
     {
         var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), FindZone(timeZone));
-        return local.ToString("ddd d MMM, HH:mm", CultureInfo.InvariantCulture);
+        return local.ToString("ddd, MMM d, HH:mm", CultureInfo.InvariantCulture);
     }
 
     /// <summary>UTC as stored in the progress database, e.g. "2026-07-06T02:00Z".</summary>

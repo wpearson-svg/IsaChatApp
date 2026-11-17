@@ -103,8 +103,20 @@
     /// <summary>"Ask Isa" on an example question: the chat widget puts it in the question box.</summary>
     [Parameter] public EventCallback<string> OnAsk { get; set; }
 
+    /// <summary>
+    /// A part of the guide to open at (its id in onboarding/help.json, for example
+    /// "save"), or null for the top. Used by "How the notebook works" in the
+    /// succession notebook's menu (November 17, 2026).
+    /// </summary>
+    [Parameter] public string? OpenAt { get; set; }
+
     private HelpGuide _guide = new();
     private readonly Dictionary<string, ElementReference> _headings = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && OpenAt is not null) await Jump(OpenAt);
+    }
 
     protected override void OnInitialized() => _guide = Guide.Load();
 

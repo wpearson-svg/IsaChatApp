@@ -266,15 +266,17 @@ else
                         <div class="present__cover">
                             <span class="present__mark"><Throbber Spinning="false" WordColor="#ffffff" /></span>
                             <h1 class="present__coverTitle">@s.Title</h1>
-                            @* The pipeline: ten fittings (the stages, alternating blue and green) joined by nine
-                               pipes. They light up one after another, left to right, like a question passing
+                            @* The pipeline: one fitting per stage (alternating blue and green), joined by pipes.
+                               They light up one after another, left to right, like a question passing
                                through each stage, and the water runs through each pipe as it goes
-                               (Present.razor.css, present-fit and present-fill). *@
+                               (Present.razor.css, present-fit and present-fill). The number of fittings is the
+                               number of stages on this deck's pipeline slide: nine in Sprint 3, ten in Sprint 2. *@
+                            @{ var fittings = _slides.FirstOrDefault(x => x.Kind == "pipeline")?.Stages.Count ?? 10; }
                             <ol class="present__track" aria-hidden="true">
-                                @for (var i = 0; i < 10; i++)
+                                @for (var i = 0; i < fittings; i++)
                                 {
                                     <li class="present__fit @(i % 2 == 0 ? "is-blue" : "is-green")" style="--i:@i"></li>
-                                    @if (i < 9)
+                                    @if (i < fittings - 1)
                                     {
                                         <li class="present__tube @(i % 2 == 0 ? "is-b2g" : "is-g2b")"><span class="present__water"><i style="--i:@(i + 0.5)"></i></span></li>
                                     }

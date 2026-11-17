@@ -223,6 +223,21 @@ public class NotebookService
             add.Parameters.AddWithValue("$topic", h.Topic);
             add.Parameters.AddWithValue("$id", h.Id);
             add.ExecuteNonQuery();
+
+            // A sample entry copied earlier keeps up with the sample file: when its
+            // wording, kind or topic is rewritten there (November 17, 2026: the notes
+            // were rewritten to be more useful to a new president), the copy follows.
+            // Only invented sample entries are touched (sample_id), never a leader's own.
+            using var refresh = conn.CreateCommand();
+            refresh.CommandText = """
+                UPDATE notebook_entries SET note = $note, category = $cat, topic = $topic
+                WHERE sample_id = $id AND (note <> $note OR category <> $cat OR topic <> $topic);
+                """;
+            refresh.Parameters.AddWithValue("$note", h.Note);
+            refresh.Parameters.AddWithValue("$cat", h.Kind);
+            refresh.Parameters.AddWithValue("$topic", h.Topic);
+            refresh.Parameters.AddWithValue("$id", h.Id);
+            refresh.ExecuteNonQuery();
         }
     }
 
@@ -328,6 +343,45 @@ public class NotebookService
     }
 
     /// <summary>
+    /// The record of what was removed from this person's chapter notebook, newest
+    /// removal first (November 17, 2026). Nothing in the notebook is erased: "Remove"
+    /// hides an entry and keeps the row with the date. This is where that shows.
+    /// Presidents only (and the outgoing president in the handoff window); other
+    /// board members get an empty list. The text of a removed entry is given only
+    /// to its own writer: for anyone else it stays out of sight, as the writer
+    /// chose, and only the record's facts are shown (when, who, kind, topic, number).
+    /// </summary>
+    public IReadOnlyList<RemovedEntry> GetRemoved(string personId, DateOnly onDate)
+    {
+        var access = GetAccess(personId, onDate);
+        var list = new List<RemovedEntry>();
+        if (access.ChapterId is null || !access.SeesAll) return list;
+
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT e.entry_id, e.chapter_id, e.author_id, e.author_name, e.author_role, e.kind, e.category,
+                   e.question, e.answer, e.sources_json, e.note, e.shared, e.on_date,
+                   e.topic, e.shared_on, e.parent_id, e.recorded_at,
+                   e.asked_of, e.asked_of_name, e.about_id, e.about_text, e.answered_on, e.removed_on
+            FROM notebook_entries e
+            WHERE e.chapter_id = $c AND e.removed_on IS NOT NULL
+            ORDER BY e.removed_on DESC, e.entry_id DESC;
+            """;
+        cmd.Parameters.AddWithValue("$c", access.ChapterId);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+        {
+            var entry = ReadEntry(r);
+            var mine = entry.AuthorId == personId;
+            if (!mine) entry = entry with { Note = null, Question = null, Answer = null, Sources = Array.Empty<SourceRef>() };
+            list.Add(new RemovedEntry(entry,
+                DateOnly.ParseExact(r.GetString(22), "yyyy-MM-dd", CultureInfo.InvariantCulture), mine));
+        }
+        return list;
+    }
+
+    /// <summary>
     /// "Last year around now" (November 6, 2026): the notes and decisions in this
     /// person's chapter notebook dated from <paramref name="daysBefore"/> days before
     /// to <paramref name="daysAfter"/> days after the same date one year earlier,
@@ -418,7 +472,7 @@ public class NotebookService
     {
         var zone = FindZone(timeZone);
         var local = TimeZoneInfo.ConvertTimeFromUtc(e.RecordedAtUtc, zone);
-        return $"{e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}, {local:HH:mm} ({(zone == TimeZoneInfo.Utc ? "UTC" : timeZone)})";
+        return $"{e.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)}, {local:HH:mm} ({(zone == TimeZoneInfo.Utc ? "UTC" : timeZone)})";
     }
 
     private static TimeZoneInfo FindZone(string? timeZone)
@@ -778,6 +832,12 @@ public class NotebookService
 }
 
 /// <summary>The result of adding a note: saved (with its ID), or not saved and why, in words for the leader.</summary>
+/// <summary>
+/// One line in "Removed entries": the entry, the day its writer removed it, and
+/// whether the person looking is that writer (only they are given its text).
+/// </summary>
+public record RemovedEntry(NotebookEntry Entry, DateOnly RemovedOn, bool Mine);
+
 public record NoteResult(long? EntryId, string? Problem)
 {
     public static NoteResult Saved(long id) => new(id, null);
