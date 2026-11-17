@@ -938,6 +938,15 @@
 
 .isa-today__tourBtns { display: flex; gap: 0.5rem; }
 
+/* Every tour card shares one space, as tall as the longest card, so the
+   buttons below never move up or down (Matthew, November 17, 2026). */
+.isa-today__tourCards { display: grid; }
+.isa-today__tourCard { grid-area: 1 / 1; }
+.isa-today__tourCard.is-off { visibility: hidden; }
+
+/* Back keeps its place on the first card, hidden, so Next doesn't shift. */
+.isa-today__tourBtn.is-off { visibility: hidden; }
+
 .isa-today__tourBtn {
     min-height: 44px;
     padding: 0 1rem;

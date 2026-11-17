@@ -9,14 +9,17 @@
 //
 // The glide (Matthew, 23 October 2026: "smooth, gentle, elegant, easy"): the
 // browser's own smooth scrolling is quick and can't be slowed, and looked
-// jerky. This glide takes 0.9 seconds and starts and ends softly, like the
+// jerky. This glide takes 0.7 seconds for the message box (0.9 until
+// November 17, 2026, when Matthew asked for that one a bit faster) and 0.9
+// for the calendar's day details, and starts and ends softly, like the
 // panels opening. If the leader scrolls themselves meanwhile, it stops and
 // leaves the scrolling to them.
 //
 // Only the Today window's own scrolling area moves, never the page behind
 // Isa (the browser's scrollIntoView would scroll that too).
 
-const GLIDE_MS = 900;
+const GLIDE_MS = 900;        // the calendar's day details
+const GLIDE_MS_MESSAGE = 700; // the "Write message" box on the contact step
 
 export function revealElement(el) {
     if (!el) return;
@@ -39,12 +42,12 @@ export function revealElement(el) {
         box.scrollTop += move;
         return;
     }
-    glide(box, move);
+    glide(box, move, el.classList.contains('isa-cal__detail') ? GLIDE_MS : GLIDE_MS_MESSAGE);
 }
 
-// Moves the box's scroll position by "move" pixels over GLIDE_MS,
+// Moves the box's scroll position by "move" pixels over "ms" milliseconds,
 // slow at the start, quicker in the middle, slow again at the end.
-function glide(box, move) {
+function glide(box, move, ms) {
     const from = box.scrollTop;
     const to = Math.max(0, Math.min(from + move, box.scrollHeight - box.clientHeight));
     if (to === from) return;
@@ -65,7 +68,7 @@ function glide(box, move) {
     const start = performance.now();
     const step = (now) => {
         if (stopped || done) return;
-        const t = Math.min(1, (now - start) / GLIDE_MS);
+        const t = Math.min(1, (now - start) / ms);
         box.scrollTop = from + (to - from) * easeInOut(t);
         if (t < 1) requestAnimationFrame(step);
         else finish();
@@ -78,7 +81,7 @@ function glide(box, move) {
         if (stopped || done) return;
         box.scrollTop = to;
         finish();
-    }, GLIDE_MS + 300);
+    }, ms + 300);
 }
 
 // A soft ease in and out (smootherstep), gentler at both ends than a plain curve.

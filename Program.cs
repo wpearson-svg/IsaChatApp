@@ -411,7 +411,7 @@ app.MapGet("/api/app/today", async (HttpContext http, IAccessControlAdapter acce
         doneOn = done.TryGetValue(st.StepId, out var d) ? d.DoneOn?.ToString("yyyy-MM-dd") : null,
         needsContactChoice = st.StepId == JourneyContextService.ContactStepId,
     };
-    string Day(DateOnly x) => x.ToString("d MMMM", System.Globalization.CultureInfo.InvariantCulture);
+    string Day(DateOnly x) => x.ToString("MMMM d", System.Globalization.CultureInfo.InvariantCulture);
     string KeyLine(KeyDateOnDay k) => k.IsOpen
         ? (k.DaysLeft == 0 ? $"{k.Title} closes today ({Day(k.Ends)})."
             : $"{k.Title} is open until {Day(k.Ends)} ({k.DaysLeft} {(k.DaysLeft == 1 ? "day" : "days")} left).")
@@ -421,7 +421,7 @@ app.MapGet("/api/app/today", async (HttpContext http, IAccessControlAdapter acce
     return Results.Ok(new
     {
         hasJourney = true,
-        date = ctx.Today.ToString("dddd d MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture),
+        date = ctx.Today.ToString("dddd, MMMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture),
         dayOfTerm = day, week = ctx.Week, percentThrough = ctx.PercentThrough, badge = ctx.BadgeText,
         todaySteps = ctx.TodaySteps.Select(Step),
         comingUp = ctx.AllSteps.Where(x => x.DayFrom > day && x.DayFrom <= day + 7 && !done.ContainsKey(x.StepId)).Select(Step),
@@ -474,7 +474,7 @@ app.MapGet("/api/app/notebook", async (HttpContext http, IAccessControlAdapter a
     {
         canRead = true, canWrite = who.CanWrite, seesAll = who.SeesAll,
         chapter = who.ChapterName, role = who.RoleLabel,
-        handoffEnds = who.HandoffEnds?.ToString("d MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture),
+        handoffEnds = who.HandoffEnds?.ToString("MMMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture),
         categories = NotebookService.Categories,
         entries = all.Select(e => new
         {

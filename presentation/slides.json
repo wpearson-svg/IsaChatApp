@@ -105,7 +105,7 @@
         { "name": "check2", "title": "Check 2", "text": "Reads the answer" },
         { "name": "ticket", "title": "Your team", "text": "Gets a ticket" },
         { "name": "search", "title": "1 · Search", "text": "First, in ISACA's own words" },
-        { "name": "ai", "title": "2 · AI, if search isn't enough", "text": "Role filter · RAG · knowledge graph · logs" },
+        { "name": "ai", "title": "2 · AI, if search isn't enough", "text": "Role filter · RAG · logs" },
         { "name": "contact", "title": "Contact the team", "text": "Always on screen · one click from any answer · the question and history go with it" }
       ]
     },
@@ -188,18 +188,20 @@
     },
     {
       // Recount every number on the demo machine the day before. The waits come from the Dev Dashboard's Front end tab.
+      // Corrected November 16, 2026 after a check against the code and the test files: 114 checks (rules/check_rules.py),
+      // 595 of 603 (tests/m2/results/lock_*.csv, November 12), waits from data/usage.db on Matthew's laptop with the models on the home PC.
       "kind": "list",
       "section": "How she runs",
       "presenter": "Eliyas Eshtea",
       "title": "How she runs, in numbers",
       "lead": "Measured, not promised.",
       "items": [
-        { "title": "131 passages", "text": "ISACA's documents first, then nine governance best-practice guides, searched by meaning" },
-        { "title": "61 of 61", "text": "rule checks passing, every time Isa starts" },
-        { "title": "78 test questions", "text": "each tied to a known route through Isa, the same result 5 times out of 5" },
-        { "title": "[measure] seconds", "text": "typical wait for an answer found in ISACA's text; [measure] when the AI model writes it" },
+        { "title": "131 passages", "text": "81 from ISACA's documents, searched first and by meaning; 50 from nine governance guides our team wrote, searched last" },
+        { "title": "114 of 114", "text": "rule checks passing, every time Isa starts" },
+        { "title": "595 of 603", "text": "test questions we wrote followed the route we expected through Isa" },
+        { "title": "Instant, or about 3 seconds", "text": "from ISACA's own text, or when the AI model writes the answer" },
         { "title": "About 200 languages", "text": "the translation model can handle; Spanish and Amharic connected today" },
-        { "title": "$0 per question", "text": "Isa runs on your own computers; nothing goes to a paid service" }
+        { "title": "$0 per question", "text": "Isa runs on our own computers; nothing goes to a paid service" }
       ]
     },
 
@@ -244,6 +246,7 @@
         "He opens Isa: today's steps, and what the president before him wrote this time last year",
         "Who to call: his Chapter Experience contact, then his board",
         "Hidden deadlines: the calendar, and what day 60 will bring",
+        "Resources in one place: ISACA's documents in the Library, read aloud word for word",
         "What the last president knew: the decision she saved, waiting in the notebook",
         "The loop closes: Kenji saves something for whoever comes next"
       ]
@@ -293,7 +296,7 @@
         { "name": "check2", "title": "Check 2", "status": "built", "built": "Every AI sentence checked; then ISACA's words; then a person" },
         { "name": "ticket", "title": "Your team", "status": "built", "built": "A reference number and a Salesforce case" },
         { "name": "search", "title": "1 · Search", "status": "built", "built": "Direct answers in ISACA's own words, then search by meaning" },
-        { "name": "ai", "title": "2 · AI, if search isn't enough", "status": "partial", "built": "RAG and logs built. Knowledge graph: a placeholder. Rules can already target a role; the content filter is designed, and isn't needed until ISACA adds restricted content" },
+        { "name": "ai", "title": "2 · AI, if search isn't enough", "status": "partial", "built": "RAG and logs built. Rules can already target a role; the content filter is designed, and isn't needed until ISACA adds restricted content" },
         { "name": "contact", "title": "Contact the team", "status": "built", "built": "\"Talk to a person\" on every screen, and one click from any answer, showing what will be sent" }
       ]
     },

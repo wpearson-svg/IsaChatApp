@@ -162,6 +162,7 @@ Matthew's idea: a detailed, attractive "pitch" document that supplements the pre
 
 How it is delivered
 - Shared at the START of the Teams presentation, dropped into the meeting chat, so ISACA can follow along.
+- Decided November 16, 2026 (Matthew and Willis, after a test with Antonio): Willis shares it through the Teams chat. Not everyone attending is known in advance, and the chat reaches whoever joins. Whether it goes in at the start or at the end is still to confirm.
 - Sent as a PDF so it looks the same on every computer. A Word version can be offered if ISACA wants to comment.
 - Check with i.c.stars program staff whether final deliverables go directly to ISACA or through i.c.stars first.
 

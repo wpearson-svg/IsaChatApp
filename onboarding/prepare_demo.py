@@ -7,7 +7,9 @@ and the presentation itself, start from exactly the same place:
   data/progress.db  (each leader's journey progress; local, git-ignored)
     - everything cleared: no steps done, no bookings, no check-ins, the Today note unseen
     - Kenji's board introduction saved (J-19 done), so his board can reply
-    - Sato Yumiko's optional profile reply to it, so her board page has answers
+    - Sato Yumiko's and Takahashi Mei's optional profile replies to it, so their board
+      pages have answers (Mei's added November 17, 2026, to show a filled-in profile on
+      a page that also has ISACA's description of the role)
 
   data/notebook.db  (the succession notebook; local, git-ignored)
     - every entry written while testing is removed; the invented history from
@@ -15,6 +17,8 @@ and the presentation itself, start from exactly the same place:
       was hidden during testing is shown again
     - what Sato left Kenji before her term ended: a saved answer with the decision she
       recorded, a decision note, and an unfinished item
+    - one entry Sato wrote and then removed (a draft she replaced), so "Removed
+      entries" in the notebook's menu has a record to show: nothing is erased
 
 Nothing here changes Isa's content, rules, the event log or the usage counts, and nothing
 is sent anywhere. All names are invented sample people.
@@ -40,6 +44,7 @@ NOTEBOOK = os.path.join(DATA, "notebook.db")
 CHAPTER = "C-001"                      # Sakura Bay Chapter
 KENJI = ("P-0001", "Watanabe Kenji")   # incoming president, term from July 1, 2026
 SATO = ("P-0012", "Sato Yumiko")       # outgoing president, term to June 30, 2026
+MEI = ("P-0014", "Takahashi Mei")      # Vice President, term from July 1, 2026
 
 NOW = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -47,7 +52,7 @@ NOW = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"
 INTRODUCTION = (
     "Dear board,\n\n"
     "I'm Watanabe Kenji, the new president of the Sakura Bay Chapter. My term started on "
-    "1 July 2026, and I'm looking forward to working with each of you this year.\n\n"
+    "July 1, 2026, and I'm looking forward to working with each of you this year.\n\n"
     "To help us share the work, I'd like to know a little about what you enjoy and how "
     "you'd like to help. If you'd like, please answer four short questions in Isa. "
     "It's optional and takes a few minutes.\n\n"
@@ -60,6 +65,14 @@ SATO_PROFILE = {
     "enjoy": "Mentoring new board members and planning the strategic session.",
     "time_per_month": "2 to 5 hours",
     "contact_by": "A message on Engage",
+}
+
+# Mei's reply to the same form (invented, like every person here; only Kenji sees it).
+MEI_PROFILE = {
+    "good_at": "Organizing events and keeping projects on schedule. I ran last autumn's CPE evenings.",
+    "enjoy": "Planning this year's events calendar and welcoming new members.",
+    "time_per_month": "5 to 10 hours",
+    "contact_by": "Email",
 }
 
 GUIDEBOOK = "Chapter Leader Guidebook - President (August 2026)"
@@ -75,20 +88,29 @@ SATO_ENTRIES = [
             {"Document": GUIDEBOOK, "Section": "The Chapter President should:", "Page": "7"},
             {"Document": GUIDEBOOK, "Section": "Guidebook page 8", "Page": "8"},
         ],
-        "note": "We'll hold six board meetings this year, every second month.",
+        "note": "We'll hold six board meetings this year, every second month. ISACA's minimum is four, and with four we were deciding too much by email. The first is on Tuesday, July 14.",
         "shared": 1,
     },
     {
         "kind": "note", "category": "decision", "topic": "Elections", "on_date": "2026-06-24",
-        "note": "The board voted to hold this year's election online, so members abroad can vote.",
+        "note": "The board voted to keep elections online next year too, as our bylaws allow. This May's online ballot drew 78 votes against 41 the year before, and members abroad could vote. Open the ballot two weeks before the AGM.",
         "shared": 0,
     },
     {
         "kind": "note", "category": "unfinished", "topic": "Finances", "on_date": "2026-06-29",
-        "note": "Sponsor renewal with the local university is still open. Their contact expects our proposal by the end of July.",
+        "note": "The university sponsorship renewal is still open. They expect our proposal by July 31, and last year's proposal is in the chapter documents. If it slips, the autumn CPE evenings lose their room discount.",
         "shared": 0,
     },
 ]
+
+# An entry Sato wrote and then removed herself (November 17, 2026). It is not in the
+# notebook any more, but its record stays: "Removed entries" in the notebook's "..."
+# menu lists it with the date. Kenji sees the record's facts, never what it said.
+SATO_REMOVED = {
+    "kind": "note", "category": "decision", "topic": "Meetings", "on_date": "2026-06-20",
+    "note": "Draft: four board meetings next year, one a quarter.",
+    "removed_on": "2026-06-26",
+}
 
 
 def isa_is_running() -> bool:
@@ -133,11 +155,12 @@ def main() -> int:
                      VALUES (?, 'J-19', 'introduction', ?)""", (KENJI[0], NOW))
         p.execute("""INSERT INTO step_history(person_id, step_id, action, how, on_date, recorded_at)
                      VALUES (?, 'J-19', 'done', 'introduction', '2026-07-02', ?)""", (KENJI[0], NOW))
-        p.execute("""INSERT INTO board_profiles(person_id, chapter_id, president_id, status, good_at, enjoy,
-                                                time_per_month, contact_by, on_date, updated_at)
-                     VALUES (?, ?, ?, 'answered', ?, ?, ?, ?, '2026-07-03', ?)""",
-                  (SATO[0], CHAPTER, KENJI[0], SATO_PROFILE["good_at"], SATO_PROFILE["enjoy"],
-                   SATO_PROFILE["time_per_month"], SATO_PROFILE["contact_by"], NOW))
+        for who, profile in ((SATO, SATO_PROFILE), (MEI, MEI_PROFILE)):
+            p.execute("""INSERT INTO board_profiles(person_id, chapter_id, president_id, status, good_at, enjoy,
+                                                    time_per_month, contact_by, on_date, updated_at)
+                         VALUES (?, ?, ?, 'answered', ?, ?, ?, ?, '2026-07-03', ?)""",
+                      (who[0], CHAPTER, KENJI[0], profile["good_at"], profile["enjoy"],
+                       profile["time_per_month"], profile["contact_by"], NOW))
 
     # ---- notebook.db: keep the sample history, then what Sato left ----
     with sqlite3.connect(NOTEBOOK) as n:
@@ -160,9 +183,16 @@ def main() -> int:
                        json.dumps(e["sources"]) if "sources" in e else None, e["note"], e["shared"],
                        e["on_date"], NOW, e["topic"], e["on_date"] if e["shared"] else None))
 
-    print(f"progress.db: cleared; Kenji's board introduction (J-19) and Sato's profile reply added.")
+        r = SATO_REMOVED
+        n.execute("""INSERT INTO notebook_entries(chapter_id, author_id, author_name, author_role, kind, category,
+                                                  note, shared, on_date, recorded_at, topic, removed_on)
+                     VALUES (?, ?, ?, 'President', ?, ?, ?, 0, ?, ?, ?, ?)""",
+                  (CHAPTER, SATO[0], SATO[1], r["kind"], r["category"], r["note"], r["on_date"], NOW, r["topic"],
+                   r["removed_on"]))
+
+    print(f"progress.db: cleared; Kenji's board introduction (J-19) and Sato's and Mei's profile replies added.")
     print(f"notebook.db: {removed} test entries removed; {samples} sample history entries kept; "
-          f"{len(SATO_ENTRIES)} entries from Sato added (June 2026).")
+          f"{len(SATO_ENTRIES)} entries from Sato added (June 2026), and 1 she removed.")
     if samples == 0:
         print("Note: no sample history yet. Isa copies it in when it starts, so Kenji's 'Last year' row will appear then.")
     print("Ready. Start Isa, check the demo date is July 3, 2026 (Config page), and sign in as Kenji.")

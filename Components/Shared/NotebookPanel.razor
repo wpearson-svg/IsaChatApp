@@ -15,8 +15,10 @@
    notebook stays easy to read however many entries it holds:
      - the INDEX: one line under the title, the outgoing president's
        handoff checklist as one summary card, one main button ("Add a
-       note"), and one entry per line, newest first. Rarer actions (print
-       all decisions, filters, who can see the notebook) are in "⋯".
+       note"), and one entry per line, newest first. Rarer actions are in
+       "⋯" (filled out November 17, 2026): print or save the notebook, sort
+       oldest or newest first, removed entries, how often Isa checks in,
+       how the notebook works, and who can see the notebook.
        Search and the filter chips appear once there are more than six
        entries. One quiet privacy line sits at the bottom.
      - the HANDOFF CHECKLIST on its own page, opened from its card.
@@ -244,12 +246,52 @@
                     </div>
                     <p class="isa-nb__askHint">
                         Isa asks, inside Isa only, whether anything from that time should go in the notebook. Never by email.
+                        @if (Reminders.FirstCheckIn(_personId, Settings.Today) is DateOnly firstCheckIn)
+                        {
+                            <span> Check-ins start in week 2 of your term: your first is on @firstCheckIn.ToString("MMMM d", CultureInfo.InvariantCulture).</span>
+                        }
                         @if (Reminders.WeeklyNearEnd(_personId, Settings.Today))
                         {
                             <span> In the last three months of your term, she asks every week.</span>
                         }
                     </p>
                     <button type="button" class="isa-nb__linkBtn" @onclick="() => _choosingReminders = false">Done</button>
+                </div>
+            }
+            @if (_showRemoved && _personId is not null)
+            {
+                @* Removed entries (November 17, 2026). Nothing in the notebook is erased:
+                   "Remove" hides an entry and keeps the record. This list is that record.
+                   Only the writer is given what a removed entry said (NotebookService.GetRemoved). *@
+                var removed = Notebook.GetRemoved(_personId, Settings.Today);
+                <div class="isa-nb__inline is-details" role="region" aria-label="Removed entries">
+                    <p class="isa-nb__sectionHead">Removed entries</p>
+                    <p class="isa-nb__askHint">
+                        Nothing in the notebook is erased. When a writer removes an entry it leaves the notebook,
+                        and its record stays here with the date. Only its writer can read what it said.
+                    </p>
+                    @if (removed.Count == 0)
+                    {
+                        <p class="isa-nb__removedNone">Nothing has been removed from this notebook.</p>
+                    }
+                    else
+                    {
+                        <ul class="isa-nb__removed">
+                            @foreach (var x in removed)
+                            {
+                                <li>
+                                    <b>Removed on @x.RemovedOn.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)</b>
+                                    by its writer, @x.Entry.AuthorName, @x.Entry.AuthorRole.
+                                    <span>@(x.Entry.ParentId is null ? x.Entry.KindLabel : "Follow-up") · @x.Entry.Topic · written on @x.Entry.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) · Record @NotebookService.RecordNumber(x.Entry)</span>
+                                    @if (x.Mine && !string.IsNullOrEmpty(x.Entry.Title))
+                                    {
+                                        <q>@x.Entry.Title</q>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    <button type="button" class="isa-nb__linkBtn" @onclick="() => _showRemoved = false">Done</button>
                 </div>
             }
             @if (_justAsked && _askTarget is not null)
@@ -290,6 +332,14 @@
                 </p>
             }
 
+            @if (_oldestFirst)
+            {
+                <p class="isa-nb__filtered" role="status">
+                    Oldest first.
+                    <button type="button" class="isa-nb__linkBtn" @onclick="() => _oldestFirst = false">Newest first</button>
+                </p>
+            }
+
             var shown = Shown;
             @if (shown.Count == 0)
             {
@@ -316,7 +366,7 @@
                                             <span class="isa-nb__shared"><span class="isa-nb__dot" aria-hidden="true"></span>Shared with the board</span>
                                         }
                                     </span>
-                                    <span class="isa-nb__sr">@e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)</span>
+                                    <span class="isa-nb__sr">@e.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)</span>
                                 </span>
                                 <span class="isa-nb__chev" aria-hidden="true">›</span>
                             </button>
@@ -357,7 +407,7 @@
         <article class="isa-nb__page" aria-labelledby="isa-nb-entry-title">
             <p class="isa-nb__kindLine">@(e.Kind == "question" ? $"Question for {e.AskedOfName}" : e.KindLabel)</p>
             <h2 class="isa-nb__headline" id="isa-nb-entry-title">@e.Title</h2>
-            <p class="isa-nb__byline">@e.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) · @e.AuthorName · @e.Topic</p>
+            <p class="isa-nb__byline">@e.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) · @e.AuthorName · @e.Topic</p>
             @if (e.AboutText is not null)
             {
                 var about = e.AboutId is long aid ? _entries.FirstOrDefault(x => x.EntryId == aid) : null;
@@ -391,7 +441,7 @@
                         <dt>Recorded</dt><dd>@NotebookService.RecordedLabel(e, _access.TimeZone)</dd>
                         <dt>By</dt><dd>@e.AuthorName, @e.AuthorRole</dd>
                         <dt>Shared</dt>
-                        <dd>@(e.Shared ? (e.SharedOn is DateOnly day ? $"With the board, on {day.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}" : "With the board") : "No, only presidents see it")</dd>
+                        <dd>@(e.Shared ? (e.SharedOn is DateOnly day ? $"With the board, on {day.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)}" : "With the board") : "No, only presidents see it")</dd>
                         <dt>Record</dt><dd>@NotebookService.RecordNumber(e)</dd>
                     </dl>
                     <button type="button" class="isa-nb__linkBtn" @onclick="() => _showDetails = false">Hide details</button>
@@ -430,7 +480,7 @@
                     @if (e.Answer is not null)
                     {
                         <p class="isa-nb__a">@e.Answer</p>
-                        <p class="isa-nb__meta">@(e.AnsweredOn?.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)) · @e.AskedOfName</p>
+                        <p class="isa-nb__meta">@(e.AnsweredOn?.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)) · @e.AskedOfName</p>
                     }
                     else if (e.AskedOf == _personId)
                     {
@@ -464,7 +514,7 @@
                             <li>
                                 <p class="isa-nb__note">@f.Note</p>
                                 <p class="isa-nb__meta">
-                                    @f.OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) · @f.AuthorName
+                                    @f.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) · @f.AuthorName
                                     @if (!f.Shared && _access.SeesAll && e.Shared)
                                     {
                                         <span> · not shared</span>
@@ -493,11 +543,10 @@
             else
             {
                 <p class="isa-nb__status">
-                    @(e.Kind == "question" && e.AskedOf == _personId
-                        ? (e.Shared ? $"{e.AuthorName} shared this with the board." : $"Between you and {e.AuthorName}. Only {e.AuthorName} can share it with the board.")
-                      : !_access.SeesAll ? "Your president shared this with the board."
-                      : e.Shared ? "Shared with the board by the person who wrote it."
-                      : "Private: only presidents see it.")
+                    @(e.Kind == "question" && e.AskedOf == _personId && !e.Shared
+                        ? $"Between you and {e.AuthorName}. Only {e.AuthorName} can share it with the board."
+                      : e.Shared ? SharedLine(e)
+                      : $"Private: only presidents see it. Written by {e.AuthorName}, {e.AuthorRole}. Record {NotebookService.RecordNumber(e)}.")
                 </p>
             }
 
@@ -586,7 +635,8 @@
     private List<MenuItem> IndexMenu()
     {
         var items = new List<MenuItem>();
-        if (HasDecisions) items.Add(new("Print all decisions", () => OpenSheet(PrintAll, null)));
+        if (HasPrintable) items.Add(new("Print or save the notebook", () => OpenSheet(PrintAll, null)));
+        if (TopLevel.Count > 1) items.Add(new(_oldestFirst ? "Sort: newest first" : "Sort: oldest first", () => _oldestFirst = !_oldestFirst));
         if (!ShowTools)
         {
             // With six entries or fewer there are no filter chips on screen, so the filters live here.
@@ -594,8 +644,11 @@
             if (_access.SeesAll && _filter != "shared" && TopLevel.Any(e => e.Shared)) items.Add(new("Show shared entries only", () => _filter = "shared"));
             if (_filter != "all") items.Add(new("Show all entries", () => _filter = "all"));
         }
+        // Presidents only: the record of what was removed (nothing is ever erased).
+        if (_access.SeesAll) items.Add(new("Removed entries", () => { _showRemoved = true; _choosingReminders = false; }));
         if (_personId is not null && Reminders.CanChoose(_personId, Settings.Today))
-            items.Add(new("How often Isa checks in", () => _choosingReminders = true));
+            items.Add(new("How often Isa checks in", () => { _choosingReminders = true; _showRemoved = false; }));
+        items.Add(new("How the notebook works", () => _ = OnOpenHelp.InvokeAsync()));
         items.Add(new("Who can see this notebook", () => _showPrivacy = true));
         return items;
     }
@@ -653,17 +706,31 @@
     private RenderFragment PrintSheet() => __builder =>
     {
         var one = _sheet == PrintOne && Open is not null;
-        var boardPossible = one ? Open!.Shared : TopLevel.Any(e => e.KindLabel == "Decision" && e.Shared);
-        <h2 class="isa-nb__sheetTitle" id="isa-nb-sheet-title">@(one ? "Print this record" : "Print all decisions")</h2>
+        var everything = _printScope == "all";
+        var boardPossible = one ? Open!.Shared : PrintableShared(_printScope);
+        <h2 class="isa-nb__sheetTitle" id="isa-nb-sheet-title">@(one ? "Print this record" : "Print or save the notebook")</h2>
+        @if (!one && HasDecisions)
+        {
+            @* The whole notebook, or only its decisions (November 17, 2026; it used to be decisions only). *@
+            <div class="isa-nb__kinds" role="radiogroup" aria-label="What to print">
+                <button type="button" role="radio" aria-checked="@(everything ? "true" : "false")"
+                        class="isa-nb__kind @(everything ? "is-on" : "")" @onclick='() => _printScope = "all"'>Everything</button>
+                <button type="button" role="radio" aria-checked="@(everything ? "false" : "true")"
+                        class="isa-nb__kind @(everything ? "" : "is-on")" @onclick='() => _printScope = "decisions"'>Decisions only</button>
+            </div>
+        }
         <p class="isa-nb__sheetText">
             @(one ? "Opens a clean page in a new tab. Print it, or choose \"Save as PDF\" in the print window."
-                  : "Every decision in the notebook: a summary table, then one record per page. Opens in a new tab, to print or save as a PDF.")
+              : everything ? "Every entry in the notebook: a summary table, then one record per page. Opens in a new tab, to print or save as a PDF. Questions to the president before you aren't printed."
+              : "Every decision in the notebook: a summary table, then one record per page. Opens in a new tab, to print or save as a PDF.")
         </p>
         @CopyChoice(boardPossible,
             one ? "The decision, dates, Isa's cited answer and shared follow-ups. Your own question is left out."
-                : "Only decisions shared with the board, without the questions asked.",
+              : everything ? "Only entries shared with the board, without the questions asked of Isa."
+              : "Only decisions shared with the board, without the questions asked.",
             one ? "Everything, including the question asked and private follow-ups. For your own records."
-                : "Every decision, including private ones and the questions asked.")
+              : everything ? "Every entry, including private ones and the questions asked of Isa."
+              : "Every decision, including private ones and the questions asked.")
         <div class="isa-nb__sheetBtns">
             @if (_copy == "board" && !boardPossible)
             {
@@ -672,7 +739,7 @@
             else
             {
                 <a class="isa-nb__saveBtn" target="_blank" rel="noopener" @onclick="CloseSheet"
-                   href="@(one ? $"notebook/record/{Open!.EntryId}?copy={_copy}" : $"notebook/decisions?copy={_copy}")">Open print page</a>
+                   href="@(one ? $"notebook/record/{Open!.EntryId}?copy={_copy}" : $"notebook/{(everything ? "all" : "decisions")}?copy={_copy}")">Open print page</a>
             }
             <button type="button" class="isa-nb__linkBtn" @onclick="CloseSheet">Cancel</button>
         </div>
@@ -709,13 +776,21 @@
 
     private bool HasDecisions => TopLevel.Any(e => e.KindLabel == "Decision");
 
+    // What "Print or save the notebook" covers: everything, or decisions only.
+    // Questions to the president before you are never printed.
+    private string _printScope = "all";
+    private bool HasPrintable => TopLevel.Any(e => e.Kind != "question");
+    private bool PrintableShared(string scope) =>
+        TopLevel.Any(e => e.Kind != "question" && e.Shared && (scope == "all" || e.KindLabel == "Decision"));
+
     // Opens a sheet. Board copy is chosen first where it exists (a shared
     // entry, or any shared decision); otherwise My copy.
     private void OpenSheet(string sheet, NotebookEntry? e)
     {
         CancelNote();
         _sheet = sheet;
-        var boardPossible = e is not null ? e.Shared : TopLevel.Any(x => x.KindLabel == "Decision" && x.Shared);
+        if (e is null) _printScope = "all";
+        var boardPossible = e is not null ? e.Shared : PrintableShared(_printScope);
         _copy = boardPossible || !_access.SeesAll ? "board" : "mine";
         _emailTo = _myEmail ?? "";
         _emailMessage = "";
@@ -794,7 +869,12 @@
     /// <summary>Called when the president changes how often Isa checks in, so the chat's check-in can update.</summary>
     [Parameter] public EventCallback OnRemindersChanged { get; set; }
 
+    /// <summary>"How the notebook works" in "⋯": the chat widget opens the guide at "Saving decisions and notes".</summary>
+    [Parameter] public EventCallback OnOpenHelp { get; set; }
+
     private bool _choosingReminders;
+    private bool _showRemoved;    // "Removed entries" from "⋯"
+    private bool _oldestFirst;    // "Sort: oldest first" from "⋯"; newest first until chosen
 
     private async Task SetReminders(int days)
     {
@@ -892,7 +972,9 @@
         get
         {
             var words = _search.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return TopLevel.Where(e => Matches(e, _filter) && words.All(w => SearchText(e).Contains(w, StringComparison.OrdinalIgnoreCase))).ToList();
+            var found = TopLevel.Where(e => Matches(e, _filter) && words.All(w => SearchText(e).Contains(w, StringComparison.OrdinalIgnoreCase)));
+            // The notebook comes newest first; "Sort: oldest first" reads it in the order it happened.
+            return (_oldestFirst ? found.OrderBy(e => e.OnDate).ThenBy(e => e.EntryId) : found).ToList();
         }
     }
 
@@ -949,6 +1031,7 @@
         _emailSaved = null;
         _changingTopic = false;
         _showDetails = false;
+        _showRemoved = false;
         CancelNote();
     }
 
@@ -1013,12 +1096,21 @@
         : "Only presidents see this, unless you share an entry.";
 
     // Under "Share with the board" on an entry page.
+    // What someone other than the writer reads under a shared entry: who shared
+    // it, in which role, on which day, and its record number. It used to say
+    // "by the person who wrote it", which names nobody (Matthew, November 17, 2026:
+    // not enough for a room of auditors). All four facts are already on the entry.
+    private static string SharedLine(NotebookEntry e) =>
+        $"Shared with the board by {e.AuthorName}, {e.AuthorRole}"
+        + (e.SharedOn is DateOnly day ? $", on {day.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)}" : "")
+        + $". Record {NotebookService.RecordNumber(e)}.";
+
     private static string ShareHint(NotebookEntry e) =>
         e.Kind == "question"
-            ? (e.Shared && e.SharedOn is DateOnly asked ? $"Shared on {asked.ToString("d MMMM", CultureInfo.InvariantCulture)}. Board members see the question and the answer."
+            ? (e.Shared && e.SharedOn is DateOnly asked ? $"Shared on {asked.ToString("MMMM d", CultureInfo.InvariantCulture)}. Board members see the question and the answer."
                : "Board members would see the question and the answer.")
         : e.Shared && e.SharedOn is DateOnly day
-            ? $"Shared on {day.ToString("d MMMM", CultureInfo.InvariantCulture)}.{(e.Question is null ? "" : " Board members see it without your question.")}"
+            ? $"Shared on {day.ToString("MMMM d", CultureInfo.InvariantCulture)}.{(e.Question is null ? "" : " Board members see it without your question.")}"
         : e.Question is not null ? "Board members would see it without your question."
         : "Other board members would see this entry.";
 
@@ -1034,7 +1126,7 @@
 
     // "3 Jul", or "3 Jul 2025" for an entry from another year.
     private string ShortDate(DateOnly d) =>
-        d.ToString(d.Year == Settings.Today.Year ? "d MMM" : "d MMM yyyy", CultureInfo.InvariantCulture);
+        d.ToString(d.Year == Settings.Today.Year ? "MMM d" : "MMM d, yyyy", CultureInfo.InvariantCulture);
 
     // "Showing decisions only", "Showing shared entries only" (a filter chosen from "⋯").
     private static string FilterPhrase(string filter) =>
@@ -1186,5 +1278,5 @@
         _ => "Anything else the next president should know",
     };
 
-    private static string DayLabel(DateOnly d) => d.ToString("ddd d MMMM", CultureInfo.InvariantCulture);
+    private static string DayLabel(DateOnly d) => d.ToString("ddd, MMMM d", CultureInfo.InvariantCulture);
 }

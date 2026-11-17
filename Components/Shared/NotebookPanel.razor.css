@@ -241,7 +241,8 @@
 
 .isa-nb__saved { margin: 0; font-size: 0.8rem; color: #3f7d20; font-weight: 500; }
 
-.isa-nb__bar { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+/* position: relative so the "..." menu hangs from the bar's right edge (see .isa-nb__more). */
+.isa-nb__bar { position: relative; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
 /* A button with an outline: Print, Email. */
 .isa-nb__ghostBtn {
@@ -482,7 +483,7 @@ span.isa-nb__saveBtn { display: inline-flex; align-items: center; text-decoratio
 }
 
 /* "< Notebook" on the left, the menu button on the right. */
-.isa-nb__pageTop { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.isa-nb__pageTop { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 
 .isa-nb__page { display: flex; flex-direction: column; gap: 0.35rem; }
 
@@ -524,6 +525,13 @@ span.isa-nb__saveBtn { display: inline-flex; align-items: center; text-decoratio
 }
 
 .isa-nb__inline.is-details { flex-direction: column; align-items: flex-start; }
+
+/* "Removed entries": one line per record, with what it said under it for its writer. */
+.isa-nb__removed { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
+.isa-nb__removed li { line-height: 1.45; }
+.isa-nb__removed li span { display: block; font-size: 0.76rem; color: #5f6b7a; }
+.isa-nb__removed li q { display: block; margin-top: 0.15rem; color: #1d2d5c; }
+.isa-nb__removedNone { margin: 0; }
 
 .isa-nb__section { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
 
@@ -698,7 +706,11 @@ span.isa-nb__saveBtn { display: inline-flex; align-items: center; text-decoratio
 
 .isa-nb__grow { flex: 1 1 auto; }
 
-.isa-nb__more { position: relative; }
+/* The menu is placed against the bar it sits in, not against the "..." button
+   (November 17, 2026). On a phone the button wraps to a second row at the left,
+   and a menu hung from the button's right edge ran off the left of the screen,
+   under the rail. Hung from the bar's right edge it is always fully in view. */
+.isa-nb__more { position: static; }
 
 .isa-nb__moreBtn {
     display: grid;

@@ -108,6 +108,8 @@
 .nbr__sum { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.82rem; }
 .nbr__sum th, .nbr__sum td { padding: 0.4rem 0.5rem 0.4rem 0; border-bottom: 1px solid #dde3e9; text-align: left; vertical-align: top; }
 .nbr__sum th { color: #1d2d5c; font-weight: 700; }
+/* The date and the record number stay on one line each (November 17, 2026). */
+.nbr__sum td:first-child, .nbr__sum td:last-child { white-space: nowrap; }
 
 .nbr__foot {
     margin-top: 1.25rem;
