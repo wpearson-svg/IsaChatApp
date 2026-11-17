@@ -64,6 +64,17 @@
     color: var(--chd-navy);
 }
 
+/* The range picker and the Export to xlsx button sit together on the right (16 November 2026). */
+.chd__rangeSelect {
+    margin-left: auto;
+}
+
+.chd__export {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    min-height: 44px;
+}
+
 .chd__notice {
     background: #fff;
     border: 1px dashed #d7dae0;
@@ -363,3 +374,7 @@
         grid-template-columns: 90px 1fr 48px;
     }
 }
+
+/* API key card (16 November 2026). */
+.chd__newKeyRow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+.chd__keyValue { font-size: 0.85rem; background: #fff; border: 1px solid #d7dae0; border-radius: 6px; padding: 0.45rem 0.6rem; word-break: break-all; }

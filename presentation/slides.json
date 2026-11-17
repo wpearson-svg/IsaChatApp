@@ -71,7 +71,6 @@
         { "title": "Matthew Brady", "text": "Client liaison, governance, chapter leader onboarding, success metrics" }
       ]
     },
-
     // ---------- 1. The problem (Matthew, 1 minute) ----------
     {
       "kind": "problem",
@@ -86,7 +85,36 @@
         { "title": "Leadership changes every year, and knowledge is lost at each handover.", "status": "green" }
       ]
     },
-
+    // ---------- 5. A new president's first 90 days (Matthew, 4 minutes) ----------
+    {
+      // The figures for this slide are NOT in this file: the repository is public and ISACA's survey is
+      // confidential. Matthew types them in locally on presentation day and does not commit them
+      // (the survey is in private/, page 19, Priority 3).
+      "kind": "problem",
+      "section": "A new president's first 90 days",
+      "presenter": "Matthew Brady",
+      "title": "Where leaders need help",
+      "stat": "[figure]",
+      "statLabel": "positive for leader onboarding",
+      "lead": "Onboarding is one of your *lowest-rated* areas,\nand [figure] of leaders chose it as a priority to improve.",
+      "items": [
+        { "title": "Isa guides each new president through their first 90 days.", "status": "blue" },
+        { "title": "Isa connects them to people. She never replaces them.", "status": "green" }
+      ]
+    },
+    {
+      "kind": "rules",
+      "section": "A new president's first 90 days",
+      "presenter": "Matthew Brady",
+      "title": "What leaders struggle with",
+      "lead": "And what Isa does about each.",
+      "items": [
+        { "title": "Who to call, and when", "text": "Their Chapter Experience contact, three ways to reach them, and their board, one page per person." },
+        { "title": "Hidden deadlines", "text": "A Today note, ISACA's key dates, and a calendar they can add to their own." },
+        { "title": "Resources spread out", "text": "ISACA's documents in one Library, read aloud word for word, and ISACA's definitions on hover." },
+        { "title": "What the last president knew", "text": "A succession notebook that passes from president to president." }
+      ]
+    },
     // ---------- 2. What we promised (Willis, 45 seconds) ----------
     {
       // September's diagram (Sprint 1, slide 31), redrawn: what we promised. The same picture comes back
@@ -106,10 +134,9 @@
         { "name": "ticket", "title": "Your team", "text": "Gets a ticket" },
         { "name": "search", "title": "1 · Search", "text": "First, in ISACA's own words" },
         { "name": "ai", "title": "2 · AI, if search isn't enough", "text": "Role filter · RAG · knowledge graph · logs" },
-        { "name": "contact", "title": "Contact the team", "text": "Always on screen · one click from any answer · the question and history go with it" }
+        { "name": "contact", "title": "Talk to a person", "text": "Always on screen · one click from any answer · the question and history go with it" }
       ]
     },
-
     // ---------- 3. Meet Isa (Willis with Eliyas, 3 minutes) ----------
     {
       "kind": "pipeline",
@@ -135,37 +162,6 @@
         { "title": "To a person", "text": "A reference number and a case for your team.", "color": "green", "stages": [9] }
       ]
     },
-    {
-      // Real questions, checked through the real pipeline (same ending on every run, November 4 to 10). Signed in as Kenji.
-      // Alt+1 to Alt+5 type them; Alt+8 and Alt+9 type questions 1 and 2 in Spanish (warm translation first; about 4 and 6 seconds).
-      "kind": "demo",
-      "section": "Meet Isa",
-      "presenter": "Willis Pearson",
-      "title": "Live demo: ask Isa",
-      "lead": "Five questions, five different endings. Then 1 and 2 in Spanish: the same answers.",
-      "steps": [
-        "\"How many board meetings must a chapter hold each year?\" ISACA's own words",
-        "\"What should the outgoing president hand over to the new president?\" Written by the AI, checked",
-        "\"Where's a good pizza place near the conference?\" Outside what Isa covers",
-        "\"A board member keeps harassing me at meetings.\" Straight to a person",
-        "\"Is a compilation fine for the financial review if ISACA approves it in writing?\" Isa catches her own answer"
-      ]
-    },
-    {
-      "kind": "safetynet",
-      "section": "Meet Isa",
-      "presenter": "Willis Pearson",
-      "title": "Safe by design",
-      "lead": "What happens when something goes wrong.",
-      "items": [
-        { "title": "An unsupported sentence", "text": "is removed, or the answer falls back to ISACA's own words." },
-        { "title": "A failed model call", "text": "becomes a hand-off, never a wrong answer." },
-        { "title": "Sensitive topics", "text": "never get an automatic answer, and come with a safety line." },
-        { "title": "A crashed stage", "text": "shows a plain \"something went wrong\" message, not an error code." },
-        { "title": "Private by default", "text": "The event log never stores question text. Usage records hold only a one-way hash, with a key made fresh on every start and never saved." }
-      ]
-    },
-
     // ---------- 4. How she runs (Eliyas, 1 minute) ----------
     {
       // Status of each stage (Willis and Eliyas: please confirm before the presentation).
@@ -197,40 +193,54 @@
         { "title": "131 passages", "text": "ISACA's documents first, then nine governance best-practice guides, searched by meaning" },
         { "title": "61 of 61", "text": "rule checks passing, every time Isa starts" },
         { "title": "78 test questions", "text": "each tied to a known route through Isa, the same result 5 times out of 5" },
-        { "title": "[measure] seconds", "text": "typical wait for an answer found in ISACA's text; [measure] when the AI model writes it" },
+        { "title": "Under 1 second", "text": "typical wait for an answer found in ISACA's text; about 3 seconds when the AI model writes it" },
         { "title": "About 200 languages", "text": "the translation model can handle; Spanish and Amharic connected today" },
         { "title": "$0 per question", "text": "Isa runs on your own computers; nothing goes to a paid service" }
       ]
     },
-
-    // ---------- 5. A new president's first 90 days (Matthew, 4 minutes) ----------
     {
-      // The figures for this slide are NOT in this file: the repository is public and ISACA's survey is
-      // confidential. Matthew types them in locally on presentation day and does not commit them
-      // (the survey is in private/, page 19, Priority 3).
-      "kind": "problem",
-      "section": "A new president's first 90 days",
-      "presenter": "Matthew Brady",
-      "title": "Where leaders need help",
-      "stat": "[figure]",
-      "statLabel": "positive for leader onboarding",
-      "lead": "Onboarding is one of your *lowest-rated* areas,\nand [figure] of leaders chose it as a priority to improve.",
+      "kind": "safetynet",
+      "section": "Meet Isa",
+      "presenter": "Willis Pearson",
+      "title": "Safe by design",
+      "lead": "What happens when something goes wrong.",
       "items": [
-        { "title": "Isa guides each new president through their first 90 days.", "status": "blue" },
-        { "title": "Isa connects them to people. She never replaces them.", "status": "green" }
+        { "title": "An unsupported sentence", "text": "is removed, or the answer falls back to ISACA's own words." },
+        { "title": "A failed model call", "text": "becomes a hand-off, never a wrong answer." },
+        { "title": "Sensitive topics", "text": "never get an automatic answer, and come with a safety line." },
+        { "title": "A crashed stage", "text": "shows a plain \"something went wrong\" message, not an error code." },
+        { "title": "Private by default", "text": "The event log never stores question text. Usage records hold only a one-way hash, with a key made fresh on every start and never saved." }
       ]
     },
     {
-      "kind": "rules",
-      "section": "A new president's first 90 days",
-      "presenter": "Matthew Brady",
-      "title": "What leaders struggle with",
-      "lead": "And what Isa does about each.",
-      "items": [
-        { "title": "Who to call, and when", "text": "Their Chapter Experience contact, three ways to reach them, and their board, one page per person." },
-        { "title": "Hidden deadlines", "text": "A Today note, ISACA's key dates, and a calendar they can add to their own." },
-        { "title": "Resources spread out", "text": "ISACA's documents in one Library, read aloud word for word, and ISACA's definitions on hover." },
-        { "title": "What the last president knew", "text": "A succession notebook that passes from president to president." }
+      // Real questions, checked through the real pipeline (same ending on every run, November 4 to 10). Signed in as Kenji.
+      // Alt+1 to Alt+7 type them, in the order they are used; Alt+5 and Alt+7 are the Spanish ones (warm translation first; about 4 and 6 seconds). Alt+8 and Alt+9 open the dashboards.
+      "kind": "demo",
+      "section": "Meet Isa",
+      "presenter": "Willis Pearson",
+      "title": "Live demo: ask Isa",
+      "lead": "Five questions, five different endings. The last two come again in Spanish: the same answers.",
+      "steps": [
+        "\"Where's a good pizza place near the conference?\" Outside what Isa covers",
+        "\"A board member keeps bothering me at meetings.\" Straight to a person",
+        "\"Is a compilation fine for the financial review if ISACA approves it in writing?\" Isa catches her own answer",
+        "\"How many board meetings must a chapter hold each year?\" ISACA's own words",
+        "\"What should the outgoing president hand over to the new president?\" Written by the AI, checked"
+      ]
+    },
+    // ---------- 6. Behind the scenes (Willis, with Matthew on the rules; 2.5 minutes) ----------
+    {
+      // Behind the scenes, live: the Dev Dashboard, real parts only (check every tab on screen first).
+      // The three steps are the three points: you own the rules, your team tunes her, you learn what leaders need.
+      "kind": "demo",
+      "section": "Behind the scenes",
+      "presenter": "Willis Pearson",
+      "title": "Live: your team's view",
+      "lead": "Isa doesn't just answer leaders. She tells you what they're asking.",
+      "steps": [
+        "You own the rules: the rule tester shows which rule fires and why, and every change is logged",
+        "Your team tunes her: a live setting that applies to the next question, and health alerts for every service",
+        "You learn what leaders need: questions by topic, hand-offs by region, documents due for review. Never a named person"
       ]
     },
     {
@@ -261,23 +271,6 @@
         { "title": "No side door", "text": "Everything a leader sees still goes through Isa's checks." }
       ]
     },
-
-    // ---------- 6. Behind the scenes (Willis, with Matthew on the rules; 2.5 minutes) ----------
-    {
-      // Behind the scenes, live: the Dev Dashboard, real parts only (check every tab on screen first).
-      // The three steps are the three points: you own the rules, your team tunes her, you learn what leaders need.
-      "kind": "demo",
-      "section": "Behind the scenes",
-      "presenter": "Willis Pearson",
-      "title": "Live: your team's view",
-      "lead": "Isa doesn't just answer leaders. She tells you what they're asking.",
-      "steps": [
-        "You own the rules: the rule tester shows which rule fires and why, and every change is logged",
-        "Your team tunes her: a live setting that applies to the next question, and health alerts for every service",
-        "You learn what leaders need: questions by topic, hand-offs by region, documents due for review. Never a named person"
-      ]
-    },
-
     // ---------- 7. Promises kept, and the ask (Matthew, then Willis; 1.5 minutes) ----------
     {
       // September's diagram again, now with a status on each part (Willis and Eliyas: please confirm).
@@ -294,13 +287,13 @@
         { "name": "ticket", "title": "Your team", "status": "built", "built": "A reference number and a Salesforce case" },
         { "name": "search", "title": "1 · Search", "status": "built", "built": "Direct answers in ISACA's own words, then search by meaning" },
         { "name": "ai", "title": "2 · AI, if search isn't enough", "status": "partial", "built": "RAG and logs built. Knowledge graph: a placeholder. Rules can already target a role; the content filter is designed, and isn't needed until ISACA adds restricted content" },
-        { "name": "contact", "title": "Contact the team", "status": "built", "built": "\"Talk to a person\" on every screen, and one click from any answer, showing what will be sent" }
+        { "name": "contact", "title": "Talk to a person", "status": "built", "built": "\"Talk to a person\" on every screen, and one click from any answer, showing what will be sent" }
       ]
     },
     {
       "kind": "rules",
       "section": "The ask",
-      "presenter": "Willis Pearson",
+      "presenter": "Matthew Brady",
       "title": "A pilot you can judge",
       "lead": "Who we'd start with, what we'd measure, and who decides.",
       "items": [
@@ -312,7 +305,7 @@
     {
       "kind": "numbered",
       "section": "What comes next",
-      "presenter": "Willis Pearson",
+      "presenter": "Matthew Brady",
       "title": "After the pilot",
       "lead": "Planned, not built.",
       "items": [
@@ -326,10 +319,11 @@
     {
       // Sprint 1, slide 42: the same ask.
       "kind": "closing",
-      "presenter": "Willis Pearson",
+      "presenter": "Matthew Brady",
       "title": "The ask: a pilot. A small set of chapters, a defined window, your Chapter Experience team as the judges.",
       "subtitle": "Thank you",
       "note": "Second Star Collective"
     }
+
   ]
 }

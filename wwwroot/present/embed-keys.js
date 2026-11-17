@@ -1,4 +1,4 @@
-// A dashboard opened from the /present slides (Alt+6, Alt+7, or the Backstage menu) opens in a new tab with
+// A dashboard opened from the /present slides (Alt+8, Alt+9, or the Backstage menu) opens in a new tab with
 // ?from=present. Esc on that page closes the tab, which puts you back on the slide you were on.
 // Does nothing on any other page.
 (function () {

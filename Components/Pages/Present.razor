@@ -9,6 +9,8 @@
 @inject SalesforceTicketService Salesforce
 @inject DevAccessService DevAccess
 @inject PresentPanels Panels
+@inject UsageReportService Report
+@inject UsageLogService UsageLog
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -108,7 +110,7 @@ else
             else if (_cases is { } list)
             {
                 <table class="present__casesTable">
-                    <thead><tr><th>Case</th><th>Isa ref</th><th>Status</th><th>Priority</th><th>Requested by</th><th>Chapter</th><th>Reason</th><th>Created</th></tr></thead>
+                    <thead><tr><th>Case</th><th>Isa ref</th><th>Trace ID</th><th>Status</th><th>Priority</th><th>Requested by</th><th>Chapter</th><th>Reason</th><th>Created</th></tr></thead>
                     <tbody>
                         @foreach (var row in list.Rows)
                         {
@@ -116,6 +118,7 @@ else
                             <tr class="@(fresh ? "is-new" : "")">
                                 <td>@row.CaseNumber</td>
                                 <td>@row.IsaReference</td>
+                                <td class="present__caseTrace">@row.TraceId</td>
                                 <td>@row.Status</td>
                                 <td class="@(row.Priority == "High" ? "is-high" : "")">@row.Priority</td>
                                 <td>@row.RequestedBy</td>
@@ -129,7 +132,7 @@ else
             }
         </div>
     }
-    @* The dashboards, as panels over the slides (Alt+6 Developer, Alt+7 Content Health, or Isa's Backstage menu). Esc closes. *@
+    @* The dashboards, as panels over the slides (Alt+8 Developer, Alt+9 Content Health, or Isa's Backstage menu). Esc closes. *@
     @if (_panel != Panel.None)
     {
         <div class="present__cases present__cases--dash" role="dialog" aria-label="@(_panel == Panel.Dev ? "Developer Dashboard" : "Content Health")">
@@ -139,9 +142,8 @@ else
             </div>
             @if (_panel == Panel.Dev)
             {
-                <DevTesting />
-                <h3 class="present__subhead">Content import</h3>
-                <ContentImport />
+                @* The real Developer Dashboard (sidebar and all), so what is shown is the page the team uses. *@
+                <DeveloperDashboard />
             }
             else
             {
@@ -151,6 +153,8 @@ else
                     <option value="30d">Last 30 days</option>
                     <option value="all">All time</option>
                 </select>
+                @* Export to xlsx, the same workbook as the Content Health page's button (Services/ContentHealthExport.cs). *@
+                <button type="button" class="present__healthExport" @onclick="ExportHealthXlsx" disabled="@_exportingHealth">@(_exportingHealth ? "Exporting…" : "Export to xlsx")</button>
                 <ContentHealthSections CutoffUtc="HealthCutoff" RangeLabel="@HealthLabel" />
             }
         </div>
@@ -465,40 +469,13 @@ else
                         break;
 
                     case "diagram":
-                        @* September's diagram (Sprint 1, slides 27 to 31), redrawn in the deck's style
-                           (November 9, 2026, Matthew): the leader, Isa and ISACA-approved content across
-                           the top, then the parts we promised, in the same rows as in September. Each part
-                           is an item whose "name" places it. On the closing slide each item also has a
-                           "status" and a short "built" line, so the same picture shows what was kept. *@
-                        var hasStatus = s.Items.Any(x => !string.IsNullOrEmpty(x.Status));
+                        @* September's diagram, redrawn and animated (November 16, 2026): PromiseFlow.razor.
+                           Slide 7 (no statuses): a dot, the question, runs through the system. Slide 16 (each
+                           item has a status): the same diagram transforms into a status rail. The wording and
+                           statuses come from this slide's items in slides.json, matched by "name". *@
                         <h1 class="present__title present__title--compact">@s.Title</h1>
                         <p class="present__lead present__lead--compact">@s.Lead</p>
-                        <div class="present__diagram @(hasStatus ? "has-status" : "")">
-                            <div class="present__diaTop" aria-label="A chapter leader asks Isa, who answers from ISACA-approved content">
-                                <span class="present__diaNode">Chapter leader</span>
-                                <span class="present__diaArrow" aria-hidden="true">&#10132;</span>
-                                <span class="present__diaNode is-isa">Isa</span>
-                                <span class="present__diaArrow" aria-hidden="true">&#10132;</span>
-                                <span class="present__diaNode is-content">ISACA-approved content</span>
-                            </div>
-                            <div class="present__diaRow">
-                                @DiagramBox(s, "signin", "blue", 0)
-                                @DiagramBox(s, "translation", "blue", 1)
-                            </div>
-                            <div class="present__diaRow">
-                                @DiagramBox(s, "check1", "navy", 2)
-                                @DiagramBox(s, "check2", "navy", 3)
-                                @DiagramBox(s, "ticket", "green", 4)
-                            </div>
-                            <div class="present__diaRow">
-                                @DiagramBox(s, "search", "navy", 5)
-                                <span class="present__diaArrow" aria-hidden="true">&#10132;</span>
-                                @DiagramBox(s, "ai", "blue", 6)
-                            </div>
-                            <div class="present__diaRow">
-                                @DiagramBox(s, "contact", "contact", 7)
-                            </div>
-                        </div>
+                        <PromiseFlow Kept="@s.Items.Any(x => !string.IsNullOrEmpty(x.Status))" Items="s.Items" Dark="dark" />
                         @if (!string.IsNullOrEmpty(s.Note))
                         {
                             <p class="present__diaNote">@s.Note</p>
@@ -597,21 +574,22 @@ else
     private const int PresentationStepMs = 500;   // each stage stays on screen at least this long
     private bool _warmed;
 
-    // Alt+1 to Alt+5, Alt+8 and Alt+9 type these into Isa's question box. Real questions, each found and checked by sending
-    // it through the real pipeline (same path on every run, November 4 to 10, 2026; tests/m2 and test-questions-candidates.csv),
-    // one per kind of ending. Alt+6 and Alt+7 open the dashboards, so those two places are empty.
-    // Alt+8 and Alt+9 are questions 1 and 2 in Spanish: the same answers, translated (about 4 and 6 seconds with translation on the graphics card).
+    // Alt+1 to Alt+7 type these into Isa's question box, in the order they are used in the demo (November 17, 2026).
+    // Real questions, each found and checked by sending it through the real pipeline (same path on every run,
+    // November 4 to 10, 2026; tests/m2 and test-questions-candidates.csv), one per kind of ending.
+    // Alt+5 and Alt+7 are Alt+4 and Alt+6 in Spanish: the same answers, translated (about 4 and 6 seconds with translation on the graphics card).
+    // Alt+8 and Alt+9 open the dashboards, so those two places are empty.
     private static readonly string[] DemoQuestions =
     {
-        "How many board meetings must a chapter hold each year?",                               // 1 direct answer in ISACA's words
-        "What should the outgoing president hand over to the new president?",                  // 2 written by the AI, every check passed
-        "Where's a good pizza place near the conference?",                                      // 3 stopped (rule O-01)
-        "A board member keeps harassing me at meetings.",                                       // 4 to a person, safety wording (rule A-01)
-        "Is a compilation fine for the financial review if ISACA approves it in writing?",      // 5 the AI's answer held back (rule C-08)
-        "",                                                                                       // Alt+6: Dev Dashboard
-        "",                                                                                       // Alt+7: Content Health
-        "¿Cuántas reuniones de la junta debe celebrar un capítulo cada año?",                   // 8 question 1 in Spanish
-        "¿Qué debe entregar el presidente saliente al nuevo presidente?",                                // 9 question 2 in Spanish
+        "Where's a good pizza place near the conference?",                                      // 1 stopped (rule O-01)
+        "A board member keeps bothering me at meetings.",                                       // 2 to a person, safety wording (rule A-01)
+        "Is a compilation fine for the financial review if ISACA approves it in writing?",      // 3 the AI's answer held back (rule C-08)
+        "How many board meetings must a chapter hold each year?",                               // 4 direct answer in ISACA's words
+        "¿Cuántas reuniones de la junta debe celebrar un capítulo cada año?",                   // 5 Alt+4 in Spanish
+        "What should the outgoing president hand over to the new president?",                  // 6 written by the AI, every check passed
+        "¿Qué debe entregar el presidente saliente al nuevo presidente?",                       // 7 Alt+6 in Spanish
+        "",                                                                                       // Alt+8: Dev Dashboard
+        "",                                                                                       // Alt+9: Content Health
     };
 
     // The opening screen. Stays until the next-slide key is pressed, then fades and the intro plays.
@@ -630,6 +608,23 @@ else
         _ => DateTime.MinValue,
     };
     private string HealthLabel => _healthRange switch { "today" => "today", "week" => "this week", "30d" => "the last 30 days", _ => "all time" };
+
+    // Content Health panel: Export to xlsx (16 November 2026, Willis). Same workbook and download as the dashboard page.
+    private bool _exportingHealth;
+    private async Task ExportHealthXlsx()
+    {
+        _exportingHealth = true;
+        try
+        {
+            var now = DateTime.UtcNow;
+            var calls = UsageLog.Entries.Where(e => e.TimestampUtc >= HealthCutoff).ToList();
+            var bytes = ContentHealthExport.Build(Report.Get(HealthCutoff), calls, HealthLabel, now);
+            await using var module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/ContentHealthDashboard.razor.js");
+            using var stream = new DotNetStreamReference(new MemoryStream(bytes));
+            await module.InvokeVoidAsync("downloadFile", ContentHealthExport.FileName(_healthRange, now), stream);
+        }
+        finally { _exportingHealth = false; }
+    }
 
     private bool _casesOpen;
     private SalesforceTicketService.CaseList? _cases;
@@ -768,7 +763,7 @@ else
         return GoTo(_index + delta);
     }
 
-    // Alt+6 / Alt+7 (JS) toggle a panel; Isa's Backstage menu asks for one through PresentPanels.
+    // Alt+8 / Alt+9 (JS) toggle a panel; Isa's Backstage menu asks for one through PresentPanels.
     [JSInvokable]
     public async Task TogglePanel(string path)
     {

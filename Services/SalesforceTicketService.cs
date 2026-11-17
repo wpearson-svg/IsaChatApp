@@ -39,7 +39,7 @@ public class SalesforceTicketService
 
     /// <summary>One Isa Case, as the presentation's live Cases panel shows it.</summary>
     public sealed record CaseRow(string CaseNumber, string? IsaReference, string? Status, string? Priority,
-        DateTimeOffset? CreatedAt, string RequestedBy, string Chapter, string? EscalatedBy, string Reason = "");
+        DateTimeOffset? CreatedAt, string RequestedBy, string Chapter, string? EscalatedBy, string Reason = "", string? TraceId = null);
 
     /// <summary>The newest Isa Cases, or a short error word (never a secret).</summary>
     public sealed record CaseList(bool Ok, IReadOnlyList<CaseRow> Rows, string? Error);
@@ -57,7 +57,7 @@ public class SalesforceTicketService
             var (token, baseUrl, tokenError) = await GetTokenAsync(sf, timeout.Token);
             if (token is null) return new CaseList(false, [], tokenError ?? "token_failed");
 
-            var soql = "SELECT CaseNumber, Status, Priority, CreatedDate, Description, Isa_Ticket_Ref__c, Chapter_ID__c, Chapter_Role__c, Escalated_By__c " +
+            var soql = "SELECT CaseNumber, Status, Priority, CreatedDate, Description, Isa_Ticket_Ref__c, Chapter_ID__c, Chapter_Role__c, Escalated_By__c, Trace_ID__c " +
                        $"FROM Case WHERE Isa_Ticket_Ref__c != null ORDER BY CreatedDate DESC LIMIT {Math.Clamp(count, 1, 20)}";
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/services/data/{sf.ApiVersion}/query?q={Uri.EscapeDataString(soql)}");
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -82,7 +82,8 @@ public class SalesforceTicketService
                     Line("Requested by:"),
                     string.IsNullOrWhiteSpace(chapter) ? "" : string.IsNullOrWhiteSpace(role) ? chapter : $"{chapter} ({role})",
                     Str("Escalated_By__c"),
-                    Line("Reason:")));   // why Isa passed it to a person (never the question text)
+                    Line("Reason:"),   // why Isa passed it to a person (never the question text)
+                    Str("Trace_ID__c")));   // the trace ID, so the Dev Dashboard can look up the run
             }
             return new CaseList(true, rows, null);
         }

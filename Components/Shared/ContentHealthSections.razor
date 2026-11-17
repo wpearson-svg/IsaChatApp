@@ -244,9 +244,9 @@
             }
         </div>
         <div class="chs__card">
-            <div class="chs__cardHeader"><h3>Questions that keep coming back</h3><span class="chs__tag chs__tag--purple">TRAINING</span></div>
-            <p class="chs__hint">The same question asked again (exact wording, ignoring case and punctuation). Questions are never stored, only a scrambled fingerprint.</p>
-            <div class="chs__big">@S.RepeatedQuestions <span>asked more than once, @S.RepeatedAcrossPeople by 2+ different people</span></div>
+            <div class="chs__cardHeader"><h3>Topics that keep coming back</h3><span class="chs__tag chs__tag--purple">TRAINING</span></div>
+            <p class="chs__hint">Subjects asked about more than once, grouped by the approved passage that matched best, so different wordings of the same need count together. Question text is never stored.</p>
+            <div class="chs__big">@S.RepeatedTopics <span>topics asked about more than once, @S.RepeatedTopicsAcrossPeople by 2+ different people</span></div>
         </div>
         <div class="chs__card">
             <div class="chs__cardHeader"><h3>Question clusters</h3><span class="chs__tag chs__tag--purple">TRAINING</span></div>
@@ -285,12 +285,5 @@
     private static string Pct(int a, int b) => b == 0 ? "–" : $"{100.0 * a / b:0}%";
 
     private IReadOnlyList<UsageReportService.Count> RouteBars =>
-        S.Routes.Select(r => new UsageReportService.Count(r.Label switch
-        {
-            "direct" => "Found in approved text",
-            "ai" => "Built by the model",
-            "none" => "Nothing found",
-            "blocked" => "Stopped before search",
-            _ => r.Label
-        }, r.N)).ToList();
+        S.Routes.Select(r => new UsageReportService.Count(ContentHealthExport.RouteLabel(r.Label), r.N)).ToList();   // same words as the xlsx export
 }

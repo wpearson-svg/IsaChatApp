@@ -22,16 +22,16 @@ let handler = null;
 export function init(dotnet, questions) {
     handler = (e) => {
         if (e.altKey && !e.ctrlKey && !e.metaKey && e.code !== 'AltLeft' && e.code !== 'AltRight') console.info('[Isa present] key', 'Alt+' + e.code);
-        // Demo questions: Alt+1 to Alt+5 (or Ctrl+1 to Ctrl+5 where the browser lets the page have them)
+        // Demo questions: Alt+1 to Alt+7, in the order they are used (or Ctrl+1 to Ctrl+7 where the browser lets the page have them)
         // type that test question into Isa's question box. Chrome and Edge keep Ctrl+1..8 for switching
         // tabs, so Alt is the one that works everywhere.
         // Alt+C: the live Salesforce Cases panel on and off. Esc closes it.
         if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyC') { e.preventDefault(); dotnet.invokeMethodAsync('ToggleCases'); return; }
-        // Alt+6: the Developer panel (trace lookup), Alt+7: the Content Health panel. Esc closes the panel and you
+        // Alt+8: the Developer panel (trace lookup), Alt+9: the Content Health panel. Esc closes the panel and you
         // are on the same slide. (Also reachable from Isa's Backstage menu.)
-        if (e.altKey && !e.ctrlKey && !e.metaKey && (e.code === 'Digit6' || e.code === 'Digit7')) {
+        if (e.altKey && !e.ctrlKey && !e.metaKey && (e.code === 'Digit8' || e.code === 'Digit9')) {
             e.preventDefault();
-            dotnet.invokeMethodAsync('TogglePanel', e.code === 'Digit6' ? '/dev-dashboard' : '/content-health-dashboard');
+            dotnet.invokeMethodAsync('TogglePanel', e.code === 'Digit8' ? '/dev-dashboard' : '/content-health-dashboard');
             return;
         }
         if (e.key === 'Escape') {
@@ -95,7 +95,7 @@ export function init(dotnet, questions) {
         dotnet.invokeMethodAsync(action[0], action[1]);
     };
     document.addEventListener('keydown', handler, true);
-    console.info('[Isa present] keys ready: Alt+1..5 questions, Alt+C cases, Alt+6/7 panels');
+    console.info('[Isa present] keys ready: Alt+1..7 questions, Alt+C cases, Alt+8/9 panels');
 
     const n = parseInt((location.hash || '').replace('#', ''), 10);
     return Number.isFinite(n) && n > 0 ? n - 1 : 0;
