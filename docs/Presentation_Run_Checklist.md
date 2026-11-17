@@ -10,6 +10,8 @@ Times are how long before you start. Written November 10, 2026, for the locked b
 - [ ] Close the leftover test Cases in Salesforce, so Alt+C shows only today's.
 - [ ] Any numbers typed into the slides locally on the day (the survey figures, the typical wait times) are filled in.
 - [ ] Teams: you can share the screen from this machine, and the slides fill it at 16:9.
+- [ ] Listen in the Library is **heard** over Teams (decided November 16, after a sound test). Check the Teams share is set to "Include computer sound".
+- [ ] The companion document (PDF) is ready on Willis's computer: he shares it through the Teams chat.
 
 ## 60 minutes before
 
@@ -41,6 +43,7 @@ Times are how long before you start. Written November 10, 2026, for the locked b
 - [ ] Press **Ctrl+F5** once after signing in (clears the "Not signed in" glitch).
 - [ ] Warm the model: ask "How do I reach the Chapter Experience team?" It should answer in a few seconds, from ISACA's guidance.
 - [ ] Warm translation: press Alt+8 and Enter. The answer comes back **in Spanish**. If it comes back in English, ask it once more (the first translation after a quiet spell times out).
+- [ ] Warm the voice: open the Library, press **Listen** on the President Guidebook, hear a sentence, then pause it and close the Library.
 - [ ] Clear the chat (reload the page) so the warm-up questions aren't on screen.
 
 ## 5 minutes before
@@ -48,6 +51,7 @@ Times are how long before you start. Written November 10, 2026, for the locked b
 - [ ] Open the presentation (`/present`). The opening screen's check says **Ready**: Ollama running, the model loaded, signed in with the developer role, Salesforce ok (or off). If it says the model is loading, wait; don't press on until it says Ready.
 - [ ] Close every other tab and app; notifications off (Windows Focus, Teams, Outlook).
 - [ ] Browser zoom 100%, full screen (F11).
+- [ ] The Teams share has "Include computer sound" on, and the volume is set.
 
 ## During the run
 
@@ -61,8 +65,10 @@ Times are how long before you start. Written November 10, 2026, for the locked b
 
 **Live demo: Kenji, day 3**
 - [ ] The Today note shows day 3 and the "Last year" row.
-- [ ] The contact step, Meet your board, Sato's page.
+- [ ] The contact step.
+- [ ] Meet your board (one of Kenji's two steps for today, since November 17): the board list with time zones, Takahashi Mei's page (the Vice President's role in ISACA's words), then Sato's page (her profile answers).
 - [ ] The calendar (November shows the compliance window).
+- [ ] The Library: Listen reads one sentence of the President Guidebook aloud, word for word; then pause it.
 - [ ] The notebook: Sato's saved decision and "Ask Sato Yumiko about this".
 - [ ] Kenji asks a question and saves the answer to the notebook.
 
@@ -74,6 +80,7 @@ Times are how long before you start. Written November 10, 2026, for the locked b
 - An answer takes more than about 20 seconds, or a service drops: say what it would have shown and go to the next slide. The slides themselves need no services.
 - Show the work and Kenji's walkthrough don't need the AI model, so they still work if only the model is down.
 - A Spanish answer comes back in English: translation was cold; say so and move on.
+- Listen doesn't start, or can't be heard: say that Isa reads the document aloud word for word, and go on to the notebook. Don't press it a second time. (Listen needs the Voice service on the home PC; the rest of Kenji's walkthrough doesn't.)
 
 ## After each run
 

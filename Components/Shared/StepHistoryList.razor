@@ -28,7 +28,7 @@
                 <li class="isa-history__item @(entry.Action == "done" ? "is-done" : "is-undone")">
                     <span class="isa-history__dot" aria-hidden="true"></span>
                     <span class="isa-history__what">@Describe(entry)</span>
-                    <span class="isa-history__date">@entry.OnDate.ToString("ddd d MMMM", CultureInfo.InvariantCulture)</span>
+                    <span class="isa-history__date">@entry.OnDate.ToString("ddd, MMMM d", CultureInfo.InvariantCulture)</span>
                 </li>
             }
         </ol>

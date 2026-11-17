@@ -6,6 +6,12 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--launch-profile", "http"],
       "port": 5067
+    },
+    {
+      "name": "isa-test",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--launch-profile", "http", "--urls", "http://localhost:5068"],
+      "port": 5068
     }
   ]
 }

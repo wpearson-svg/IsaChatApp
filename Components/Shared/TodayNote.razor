@@ -62,7 +62,7 @@
             <p class="isa-tnote__title">
                 <span class="isa-tnote__sun" aria-hidden="true"></span>
                 Your handoff checklist
-                <span class="isa-tnote__date">@_handoff.Today.ToString("dddd d MMMM", CultureInfo.InvariantCulture)</span>
+                <span class="isa-tnote__date">@_handoff.Today.ToString("dddd, MMMM d", CultureInfo.InvariantCulture)</span>
             </p>
             <dl class="isa-tnote__rows">
                 <dt>Progress</dt>
@@ -102,7 +102,7 @@ else if (_ctx is not null)
             <p class="isa-tnote__title">
                 <span class="isa-tnote__sun" aria-hidden="true"></span>
                 Day @_ctx.Term.DayOfTerm of your first 90 days
-                <span class="isa-tnote__date">@_ctx.Today.ToString("dddd d MMMM", CultureInfo.InvariantCulture)</span>
+                <span class="isa-tnote__date">@_ctx.Today.ToString("dddd, MMMM d", CultureInfo.InvariantCulture)</span>
             </p>
 
             <dl class="isa-tnote__rows">
@@ -289,7 +289,7 @@ else if (_ctx is not null)
         get
         {
             if (_handoff is null) return "";
-            string Day(DateOnly x) => x.ToString("d MMMM", CultureInfo.InvariantCulture);
+            string Day(DateOnly x) => x.ToString("MMMM d", CultureInfo.InvariantCulture);
             string Days(int n) => n == 1 ? "1 day" : $"{n} days";
             return _handoff.TermHasEnded
                 ? $"Your term ended on {Day(_handoff.Term.TermEnd)}. You have until {Day(_handoff.WindowEnds)} ({Days(_handoff.DaysLeft)})."
@@ -302,7 +302,7 @@ else if (_ctx is not null)
 
     private static string KeyDateLine(KeyDateOnDay k)
     {
-        string Day(DateOnly d) => d.ToString("d MMMM", CultureInfo.InvariantCulture);
+        string Day(DateOnly d) => d.ToString("MMMM d", CultureInfo.InvariantCulture);
         if (k.IsOpen)
             return k.DaysLeft == 0
                 ? $"{k.Title} closes today ({Day(k.Ends)})."

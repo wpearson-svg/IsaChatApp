@@ -102,7 +102,7 @@ public class BoardIntroService
     public static string Draft(LeaderTerm president) =>
         "Dear board,\n\n" +
         $"I'm {president.Name}, the new president of the {president.ChapterName}. " +
-        $"My term started on {president.TermStart.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}, " +
+        $"My term started on {president.TermStart.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)}, " +
         "and I'm looking forward to working with each of you this year.\n\n" +
         "To help us share the work, I'd like to know a little about what you enjoy and how you'd like to help. " +
         "If you'd like, please answer four short questions in Isa. It's optional and takes a few minutes.\n\n" +

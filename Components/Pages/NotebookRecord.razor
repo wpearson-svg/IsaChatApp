@@ -1,11 +1,13 @@
 @page "/notebook/record/{EntryId:long}"
 @page "/notebook/decisions"
+@page "/notebook/all"
 @layout AuthLayout
 @using System.Globalization
 @using IsaChatApp.Services
 @using IsaChatApp.Services.Onboarding
 @inject NotebookService Notebook
 @inject WidgetSettings Settings
+@inject NavigationManager Nav
 
 @* ============================================================
    NotebookRecord.razor
@@ -20,6 +22,10 @@
      /notebook/decisions?copy=board|mine     every decision in the
                                              notebook: a summary table,
                                              then one record per page
+     /notebook/all?copy=board|mine           the same for every entry
+                                             (November 17, 2026), except
+                                             questions to the president
+                                             before, which aren't printed
 
    Two versions:
      - Board copy: only entries (and follow-ups) shared with the board,
@@ -32,7 +38,7 @@
    wouldn't.
    ============================================================ *@
 
-<PageTitle>@(EntryId is null ? "Decisions" : "Decision record") | Isa</PageTitle>
+<PageTitle>@(EntryId is not null ? "Decision record" : All ? "Succession notebook" : "Decisions") | Isa</PageTitle>
 
 <div class="nbr">
     <div class="nbr__toolbar">
@@ -51,27 +57,45 @@
     else if (EntryId is null)
     {
         <div class="nbr__paper">
-            @Top($"Decisions, {RangeLabel}")
+            @Top($"{(All ? "Succession notebook" : "Decisions")}, {RangeLabel}")
             <p class="nbr__muted">
-                @(_decisions.Count == 1 ? "1 decision" : $"{_decisions.Count} decisions")
+                @(_decisions.Count == 1 ? $"1 {One}" : $"{_decisions.Count} {Many}")
                 @(Board ? $"shared with the board." : "recorded in the notebook.")
                 @if (Board && _privateLeftOut > 0)
                 {
-                    <span> @(_privateLeftOut == 1 ? "1 private decision is" : $"{_privateLeftOut} private decisions are") left out of this copy.</span>
+                    @* The space is inside the text: a space before "@(" at the start of a span is dropped. *@
+                    <span>@(_privateLeftOut == 1 ? $" 1 private {One} is" : $" {_privateLeftOut} private {Many} are") left out of this copy.</span>
+                }
+                @if (All)
+                {
+                    <span> Questions to the president before aren't printed.</span>
                 }
             </p>
             @if (_decisions.Count > 0)
             {
                 <table class="nbr__sum">
-                    <thead><tr><th>Date</th><th>Topic</th><th>Decision</th><th>Shared</th><th>Record</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            @if (All)
+                            {
+                                <th>Kind</th>
+                            }
+                            <th>Topic</th><th>@(All ? "Entry" : "Decision")</th><th>Shared</th><th>Record</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         @foreach (var d in _decisions)
                         {
                             <tr>
-                                <td>@d.OnDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                <td>@d.OnDate.ToString("MMM d, yyyy", CultureInfo.InvariantCulture)</td>
+                                @if (All)
+                                {
+                                    <td>@d.KindLabel</td>
+                                }
                                 <td>@d.Topic</td>
-                                <td>@d.Note</td>
-                                <td>@(d.Shared ? (d.SharedOn?.ToString("d MMM", CultureInfo.InvariantCulture) ?? "Yes") : "No")</td>
+                                <td>@d.Title</td>
+                                <td>@(d.Shared ? (d.SharedOn?.ToString("MMM d", CultureInfo.InvariantCulture) ?? "Yes") : "No")</td>
                                 <td>@NotebookService.RecordNumber(d)</td>
                             </tr>
                         }
@@ -88,7 +112,12 @@
 </div>
 
 @code {
-    /// <summary>One record, or null for the decisions pack.</summary>
+    // The whole notebook (/notebook/all) rather than its decisions only.
+    private bool All => new Uri(Nav.Uri).AbsolutePath.TrimEnd('/').EndsWith("/notebook/all", StringComparison.OrdinalIgnoreCase);
+    private string One => All ? "entry" : "decision";
+    private string Many => All ? "entries" : "decisions";
+
+    /// <summary>One record, or null for the decisions pack or the whole notebook.</summary>
     [Parameter] public long? EntryId { get; set; }
 
     /// <summary>"board" (the default) or "mine".</summary>
@@ -126,7 +155,7 @@
         }
         else
         {
-            var all = _entries.Where(e => e.ParentId is null && e.KindLabel == "Decision")
+            var all = _entries.Where(e => e.ParentId is null && e.Kind != "question" && (All || e.KindLabel == "Decision"))
                 .OrderBy(e => e.OnDate).ThenBy(e => e.RecordedAtUtc).ToList();
             _decisions = Board ? all.Where(e => e.Shared).ToList() : all;
             _privateLeftOut = all.Count - _decisions.Count;
@@ -134,7 +163,7 @@
     }
 
     private string RangeLabel => _decisions.Count == 0 ? "none yet"
-        : $"{_decisions.First().OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)} to {_decisions.Last().OnDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)}";
+        : $"{_decisions.First().OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)} to {_decisions.Last().OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)}";
 
     private List<NotebookEntry> FollowUpsOf(NotebookEntry e) =>
         _entries.Where(f => f.ParentId == e.EntryId && (!Board || f.Shared)).OrderBy(f => f.RecordedAtUtc).ToList();
@@ -153,7 +182,7 @@
     private RenderFragment Foot() => __builder =>
     {
         <div class="nbr__foot">
-            Printed from Isa on @Settings.Today.ToString("d MMMM yyyy", CultureInfo.InvariantCulture).
+            Printed from Isa on @Settings.Today.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture).
             This record shows what the chapter's leaders recorded; it is not an official ISACA document.
             Isa's answers quote approved documents; check the cited source for the full text.
             Answers marked "not ISACA policy" come from general governance best practice.
@@ -169,7 +198,7 @@
                 <tr><th>Topic</th><td>@e.Topic</td></tr>
                 <tr><th>Recorded</th><td>@NotebookService.RecordedLabel(e, _access.TimeZone)</td></tr>
                 <tr><th>Recorded by</th><td>@e.AuthorName, @e.AuthorRole</td></tr>
-                <tr><th>Shared with board</th><td>@(e.Shared ? $"Yes{(e.SharedOn is DateOnly day ? ", on " + day.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) : "")}" : "No (private)")</td></tr>
+                <tr><th>Shared with board</th><td>@(e.Shared ? $"Yes{(e.SharedOn is DateOnly day ? ", on " + day.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) : "")}" : "No (private)")</td></tr>
                 <tr><th>Record number</th><td>@NotebookService.RecordNumber(e)</td></tr>
             </table>
 
