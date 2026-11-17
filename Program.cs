@@ -146,6 +146,7 @@ builder.Services.AddHostedService<IsaChatApp.Services.Orchestrator.OllamaLifetim
 builder.Services.AddSingleton<EventLogService>();
 builder.Services.AddSingleton<UsageSummaryService>();
 builder.Services.AddSingleton<UsageReportService>();
+builder.Services.AddSingleton<ApiKeyService>();   // the key for GET /api/content-health, shown on the Content Health Dashboard
 builder.Services.AddSingleton<DevHealthService>();
 builder.Services.AddHostedService<TicketCloseSyncService>();   // copies Salesforce Case close dates into usage.db (Time to resolution)
 builder.Services.AddSingleton<ContentImportService>();
@@ -320,6 +321,7 @@ app.MapPost("/api/ask/stream", async (AskRequest req, HttpRequest http, HttpResp
         t = "done",
         status = result.Status,
         message = result.Message,
+        englishMessage = result.EnglishMessage,
         sources = result.Sources,
         ticketReference = result.TicketReference,
         summary = new { state = outcome.State.ToString(), text = outcome.Text, meta = outcome.Meta },
@@ -583,6 +585,43 @@ app.MapPost("/api/tts/stream", async (SpeakRequest req, HttpContext http, IAcces
         await http.Response.Body.FlushAsync(http.RequestAborted);   // send each piece at once, not when the buffer fills
     }
     return Results.Empty;
+});
+
+// GET /api/content-health?range=week[&format=xlsx] -- the Content Health Dashboard's numbers for a program to read
+// (16 November 2026, Willis). Needs the key shown on the dashboard, sent as the X-Isa-Key header; only someone who can
+// open the dashboard can see it. range: today, week (default), 30d or all. JSON by default; format=xlsx returns the same
+// workbook as the dashboard's Export to xlsx button. Totals and rates only, like the page. Each call is logged in the
+// event log (range and format, never the key).
+app.MapGet("/api/content-health", async (HttpContext http, ApiKeyService keys, UsageReportService report,
+    UsageLogService usageLog, EventLogService eventLog, string? range, string? format) =>
+{
+    if (!keys.IsValid(http.Request.Headers[ApiKeyService.HeaderName].FirstOrDefault())) return Results.Unauthorized();
+    var r = ContentHealthExport.RangeKey(range);
+    if (r is null) return Results.BadRequest(new { error = "range must be today, week, 30d or all" });
+    var xlsx = string.Equals(format, "xlsx", StringComparison.OrdinalIgnoreCase);
+    if (!xlsx && !string.IsNullOrEmpty(format) && !string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "format must be json or xlsx" });
+
+    var now = DateTime.UtcNow;
+    var cutoff = ContentHealthExport.Cutoff(r, now);
+    var snapshot = report.Get(cutoff);
+    await eventLog.WriteAsync(Guid.NewGuid().ToString("N"), "content_health_api",
+        $"range={r}; format={(xlsx ? "xlsx" : "json")}");
+
+    if (xlsx)
+    {
+        var calls = usageLog.Entries.Where(e => e.TimestampUtc >= cutoff).ToList();
+        return Results.File(ContentHealthExport.Build(snapshot, calls, ContentHealthExport.Label(r), now),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ContentHealthExport.FileName(r, now));
+    }
+    return Results.Ok(new
+    {
+        range = r,
+        rangeLabel = ContentHealthExport.Label(r),
+        generatedUtc = now,
+        note = "Totals and rates only: no question text, people counted anonymously.",
+        contentHealth = snapshot
+    });
 });
 
 // Read the event log for one trace ID (used by the acceptance tests).

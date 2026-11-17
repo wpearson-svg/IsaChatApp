@@ -1,0 +1,57 @@
+/* ============================================================
+   PromiseFlow.razor.css -- the animated diagram on the "diagram" slides (Nov 16, 2026).
+   ISACA colors only (BRAND_GUIDELINES.md): Dark Blue #1d2d5c, Medium Blue #07649d,
+   Blue #00a4e4, Green #6cb33f, Light Blue #e7f0f5; 30% tints for the box fills.
+   Sizes are in cqw of the stage. The script builds some of the SVG, so the rules go
+   through ::deep.
+   ============================================================ */
+
+.present__flow {
+    width: 90cqw;
+    margin: 0 -2cqw;
+}
+
+.present__flow ::deep svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+}
+
+.present__flow ::deep text { font-family: Roboto, Arial, sans-serif; }
+
+/* the parts come in one after another, as the deck's other diagram does */
+.present__flow ::deep .node {
+    animation: promiseflow-rise 0.4s ease-out backwards;   /* backwards, not both: the script fades parts out later */
+    animation-delay: calc(var(--n, 0) * 110ms + 150ms);
+    transform-box: fill-box;
+}
+@keyframes promiseflow-rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* the glow on whichever part the dot is in */
+.present__flow ::deep .halo { fill: none; stroke: #00a4e4; stroke-width: 4; opacity: 0; transition: opacity 0.25s; }
+.present__flow ::deep .halo-c { fill: #00a4e4; opacity: 0; transition: opacity 0.25s; }
+.present__flow ::deep .node.on .halo { opacity: 0.85; }
+.present__flow ::deep .node.on .halo-c { opacity: 0.16; }
+
+.present__flow ::deep #dot-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: promiseflow-ring 1.4s ease-in-out infinite;
+}
+@keyframes promiseflow-ring {
+    0%, 100% { transform: scale(0.9); opacity: 0.3; }
+    50% { transform: scale(1.35); opacity: 0.12; }
+}
+
+.present__flow ::deep #cap { transition: opacity 0.35s; }
+.present__flow ::deep #pips circle { fill: #d9dee3; transition: fill 0.3s; }
+.present__flow ::deep #pips circle.on { fill: #07649d; }
+
+@media (prefers-reduced-motion: reduce) {
+    .present__flow ::deep .node { animation: none; }
+    .present__flow ::deep #dot-ring { animation: none; }
+}

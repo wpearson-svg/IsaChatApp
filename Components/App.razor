@@ -21,6 +21,18 @@
 <body>
     <Routes />
     <ReconnectModal />
+    @* A page shown inside Isa's dashboard frame (Backstage: Config, Developer Dashboard, Content Health) opens
+       its links in the whole window, never inside the frame. Otherwise /present clicked on the Config page loaded
+       a second presentation, with its own Isa, inside the frame, under the real page's Isa bubble (Willis,
+       16 November 2026). Setting target="_top" before Blazor sees the click also stops Blazor from navigating
+       the frame itself. Links that already name a target, in-page # links and the error bar's Reload are left alone. *@
+    <script>
+        if (window.self !== window.top) document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[href]');
+            if (!a || a.hasAttribute('target') || a.closest('#blazor-error-ui') || (a.getAttribute('href') || '').charAt(0) === '#') return;
+            a.setAttribute('target', '_top');
+        }, true);
+    </script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 

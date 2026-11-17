@@ -61,7 +61,7 @@ public class UsageReportService
         IReadOnlyList<RouteSplit> SearchVsGeneration,
         int Resolved, int NotQuite, IReadOnlyList<FeedbackDay> FeedbackByDay,
         IReadOnlyList<Group> Tenure,
-        int RepeatedQuestions, int RepeatedAcrossPeople,
+        int RepeatedTopics, int RepeatedTopicsAcrossPeople,
         long PromptTokens, long CompletionTokens, int QuestionsWithTokens,
         int TicketsOpened, int TicketsClosed, double? AvgHoursToClose,
         int OpenConflicts,
@@ -230,8 +230,13 @@ public class UsageReportService
                 fbByGroup.Where(f => f.G == x.G && f.K == "resolved").Sum(f => f.N),
                 fbByGroup.Where(f => f.G == x.G && f.K == "not_quite").Sum(f => f.N))).OrderBy(g => g.Name).ToList();
 
-            // ---- repeated questions (hash only) ----
-            var rep = Rows(c, "SELECT COUNT(*), COUNT(DISTINCT user_hash) FROM request_summary WHERE timestamp_utc >= $c AND question_hash IS NOT NULL GROUP BY question_hash HAVING COUNT(*) >= 2",
+            // ---- topics that keep coming back: the passage that matched best, asked about 2+ times (no question text) ----
+            var rep = Rows(c, """
+                SELECT COUNT(*), COUNT(DISTINCT s.user_hash)
+                FROM retrieval r JOIN request_summary s ON s.trace_id = r.trace_id
+                WHERE r.rank = 1 AND s.timestamp_utc >= $c
+                GROUP BY r.document, r.section, r.page HAVING COUNT(*) >= 2
+                """,
                 r => (Times: r.GetInt32(0), People: r.GetInt32(1)), cut);
 
             // ---- hooks: tokens, tickets, conflicts ----

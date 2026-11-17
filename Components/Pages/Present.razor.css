@@ -1317,6 +1317,7 @@
 .present__casesTable th { text-align: left; font-weight: 500; font-size: 1.1vw; text-transform: uppercase; letter-spacing: .06em; color: #5b6b8c; padding: .5vw .7vw; border-bottom: 2px solid #00a4e4; }
 .present__casesTable td { padding: .65vw .7vw; border-bottom: 1px solid #e3e8f0; vertical-align: top; }
 .present__casesTable tr.is-new td { background: #eef7e7; }
+.present__casesTable td.present__caseTrace { font-family: ui-monospace, Consolas, monospace; font-size: .95vw; word-break: break-all; }
 .present__casesTable td.is-high { color: #b3261e; font-weight: 700; }
 
 /* ---- A dashboard over the slides (Alt+6, Alt+7) ---- */
@@ -1333,6 +1334,9 @@
 /* The Developer / Content Health panels reuse the Cases panel's frame (.present__cases). */
 .present__cases--dash { font-size: 1.1rem; left: 2vw; top: 3vh; width: 96vw; max-height: 94vh; }
 .present__healthRange { margin: 0 0 1rem; padding: .35rem .6rem; font-size: 1rem; border: 1px solid #c8d1e0; border-radius: .4rem; color: #1d2d5c; }
+.present__healthExport { margin: 0 0 1rem .6rem; min-height: 44px; padding: .35rem .9rem; font-size: 1rem; font-weight: 500; border: 1px solid #c8d1e0; border-radius: .4rem; background: #fff; color: #1d2d5c; cursor: pointer; }
+.present__healthExport:hover { background: #f3f5f9; }
+.present__healthExport:disabled { opacity: .5; cursor: default; }
 .present__subhead { margin: 1.6rem 0 .6rem; padding-top: 1rem; border-top: 1px solid #e3e8f0; font-size: 1.2rem; font-weight: 500; color: #1d2d5c; }
 
 /* ---- Even slides: Dark Blue ground (odd slides stay white), 27 October 2026 ----

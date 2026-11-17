@@ -1,0 +1,130 @@
+@using IsaChatApp.Services.Presentation
+@* ============================================================
+   PromiseFlow.razor -- September's diagram, redrawn and animated (November 16, 2026).
+
+   Used by the "diagram" slides in Present.razor:
+   - Slide 7 (Kept = false): "What we promised in September". A blue dot, the question,
+     goes through the system in four runs: search first, when search isn't enough, another
+     language (Translation is a side path), and talk to a person.
+   - Slide 16 (Kept = true): the same diagram, then it transforms into a status rail. The
+     status and "built" wording come from the slide's items in presentation/slides.json,
+     matched by each item's "name"; nothing about status is typed here.
+   The part names, notes and the four captions on slide 7 are in this file (the SVG) and
+   in PromiseFlow.razor.js. Replay: R, or click the diagram. Motion respects
+   "reduce motion". Sizes are in cqw of the stage, so it scales with the slide.
+   ============================================================ *@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="present__flow @(Kept ? "is-kept" : "")" @ref="_root">
+    <svg id="flow" viewBox="0 140 1280 472" role="img" aria-label="September's diagram: a chapter leader's question passes access control and input compliance, then database search and output compliance, with AI when search isn't enough, translation as a side path for other languages, and a path to a person on your team">
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1d2d5c"/></marker>
+<filter id="ds" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#1d2d5c" flood-opacity=".35"/></filter>
+<marker id="aw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#fff"/></marker></defs>
+<rect id="panel" x="6" y="145" width="1268" height="466" rx="14" fill="#f6f7f8" opacity="0"/>
+<g id="sleek-back" opacity="0"><path id="rail" d="M48 236H1190" fill="none" stroke="#fff" stroke-width="2.5" marker-end="url(#aw)" stroke-dasharray="1200" stroke-dashoffset="1200"/><path id="br-trans" d="M56 236V380" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="144" stroke-dashoffset="144"/><path id="br-ai" d="M524 236V380" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="144" stroke-dashoffset="144"/></g>
+<path d="M244 300H272" fill="none" stroke="#1d2d5c" stroke-width="2" marker-start="url(#a)"/>
+<path d="M272 238V362" fill="none" stroke="#1d2d5c" stroke-width="2"/>
+<path d="M272 238H300" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M272 362H300" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M454 238V362" fill="none" stroke="#1d2d5c" stroke-width="2"/>
+<path d="M426 238H454" fill="none" stroke="#1d2d5c" stroke-width="2"/>
+<path d="M426 362H454" fill="none" stroke="#1d2d5c" stroke-width="2"/>
+<path d="M454 300H482" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M118 300H82" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M608 300H646" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M772 300H810" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M936 300H974" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M1100 300H1136" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M545 268V196H363V210" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M873 268V196H545" fill="none" stroke="#1d2d5c" stroke-width="2"/>
+<path d="M363 196H210V268" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M576.5 268V248H1005.5V268" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)"/>
+<path d="M148 268V172H1049.6V268" fill="none" stroke="#1d2d5c" stroke-width="2" stroke-dasharray="9 6" marker-end="url(#a)"/>
+<path d="M873 332V424" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M873 488V520" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M709 332V500" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M810 552H772" fill="none" stroke="#1d2d5c" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+<rect x="790" y="410" width="166" height="190" rx="8" fill="none" stroke="#1d2d5c" stroke-width="2" stroke-dasharray="9 6"/>
+<g class="node" id="n-cyl"><rect class="halo" x="636" y="498" width="146" height="116" rx="14"/>
+<path d="M646 512V594A63 12 0 0 0 772 594V512A63 12 0 0 0 646 512Z" fill="#d3e8c5" stroke="#1d2d5c" stroke-width="2"/>
+<path d="M646 512A63 12 0 0 0 772 512" fill="none" stroke="#1d2d5c" stroke-width="2"/>
+<text x="709" y="549" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2d5c">ISACA's</text>
+<text x="709" y="567" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2d5c">approved</text>
+<text x="709" y="585" text-anchor="middle" font-size="16" font-weight="700" fill="#1d2d5c">content</text></g>
+<g class="node" id="n-front"><rect class="halo" x="113" y="263" width="136" height="74" rx="10"/><rect x="118" y="268" width="126" height="64" rx="6" fill="#1d2d5c" stroke="#1d2d5c" stroke-width="2"/><text x="181.0" y="306.0" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">Front end</text><circle cx="118" cy="268" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="118" y="273.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">8</text></g>
+<g class="node" id="n-trans"><rect class="halo" x="295" y="205" width="136" height="66" rx="10"/><rect x="300" y="210" width="126" height="56" rx="6" fill="#b3e4f8" stroke="#1d2d5c" stroke-width="2"/><text x="363.0" y="244.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">Translation</text><circle cx="300" cy="210" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="300" y="215.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">2</text></g>
+<g class="node" id="n-access"><rect class="halo" x="295" y="329" width="136" height="66" rx="10"/><rect x="300" y="334" width="126" height="56" rx="6" fill="#b3e4f8" stroke="#1d2d5c" stroke-width="2"/><text x="363.0" y="357.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">Access</text><text x="363.0" y="379.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">control</text><circle cx="300" cy="334" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="300" y="339.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">1</text></g>
+<g class="node" id="n-input"><rect class="halo" x="477" y="263" width="136" height="74" rx="10"/><rect x="482" y="268" width="126" height="64" rx="6" fill="#1d2d5c" stroke="#1d2d5c" stroke-width="2"/><text x="545.0" y="295.0" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">Input</text><text x="545.0" y="317.0" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">compliance</text><circle cx="482" cy="268" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="482" y="273.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">3</text></g>
+<g class="node" id="n-search"><rect class="halo" x="641" y="263" width="136" height="74" rx="10"/><rect x="646" y="268" width="126" height="64" rx="6" fill="#d3e8c5" stroke="#1d2d5c" stroke-width="2"/><text x="709.0" y="295.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">Database</text><text x="709.0" y="317.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">search</text><circle cx="646" cy="268" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="646" y="273.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">6</text></g>
+<g class="node" id="n-out"><rect class="halo" x="805" y="263" width="136" height="74" rx="10"/><rect x="810" y="268" width="126" height="64" rx="6" fill="#1d2d5c" stroke="#1d2d5c" stroke-width="2"/><text x="873.0" y="295.0" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">Output</text><text x="873.0" y="317.0" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">compliance</text><circle cx="810" cy="268" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="810" y="273.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">4</text></g>
+<g class="node" id="n-ticket"><rect class="halo" x="969" y="263" width="136" height="74" rx="10"/><rect x="974" y="268" width="126" height="64" rx="6" fill="#d3e8c5" stroke="#1d2d5c" stroke-width="2"/><text x="1037.0" y="306.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">Ticketing</text><circle cx="974" cy="268" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="974" y="273.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">5</text></g>
+<g class="node" id="n-ai"><rect class="halo" x="805" y="419" width="136" height="74" rx="10"/><rect x="810" y="424" width="126" height="64" rx="6" fill="#b3e4f8" stroke="#1d2d5c" stroke-width="2"/><text x="873.0" y="462.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">Complex AI</text></g>
+<g class="node" id="n-rag"><rect class="halo" x="805" y="515" width="136" height="74" rx="10"/><rect x="810" y="520" width="126" height="64" rx="6" fill="#b3e4f8" stroke="#1d2d5c" stroke-width="2"/><text x="873.0" y="558.0" text-anchor="middle" font-size="19" font-weight="700" fill="#1d2d5c">RAG</text></g>
+<circle cx="790" cy="410" r="14" fill="#1d2d5c" stroke="#fff" stroke-width="2"/><text x="790" y="415.5" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">7</text>
+<g class="node" id="n-leader"><circle class="halo-c" cx="48" cy="300" r="40"/><text x="48" y="296" text-anchor="middle" font-size="18" font-weight="500" fill="#1d2d5c">Chapter</text><text x="48" y="316" text-anchor="middle" font-size="18" font-weight="500" fill="#1d2d5c">leader</text></g>
+<g class="node" id="n-team"><circle class="halo-c" cx="1198" cy="300" r="40"/><text x="1198" y="296" text-anchor="middle" font-size="18" font-weight="500" fill="#1d2d5c">ISACA</text><text x="1198" y="316" text-anchor="middle" font-size="18" font-weight="500" fill="#1d2d5c">team</text></g>
+<text text-anchor="middle" x="181" y="355" font-size="16" font-weight="300" fill="#1d2d5c">Always on screen, one</text>
+<text text-anchor="middle" x="181" y="375" font-size="16" font-weight="300" fill="#1d2d5c">click from any answer</text>
+<text text-anchor="middle" x="363" y="413" font-size="16" font-weight="300" fill="#1d2d5c">Sign in: your ISACA</text>
+<text text-anchor="middle" x="363" y="433" font-size="16" font-weight="300" fill="#1d2d5c">account, by role</text>
+<text text-anchor="middle" x="545" y="355" font-size="16" font-weight="300" fill="#1d2d5c">Check 1:</text>
+<text text-anchor="middle" x="545" y="375" font-size="16" font-weight="300" fill="#1d2d5c">reads the question</text>
+<text text-anchor="middle" x="1043" y="355" font-size="16" font-weight="300" fill="#1d2d5c">Your team</text>
+<text text-anchor="middle" x="1043" y="375" font-size="16" font-weight="300" fill="#1d2d5c">gets a ticket</text>
+<text x="719" y="355" font-size="16" font-weight="300" fill="#1d2d5c">Search first,</text><text x="719" y="375" font-size="16" font-weight="300" fill="#1d2d5c">ISACA's words</text>
+<text x="883" y="355" font-size="16" font-weight="300" fill="#1d2d5c">Check 2:</text><text x="883" y="375" font-size="16" font-weight="300" fill="#1d2d5c">reads answers</text>
+<text x="972" y="490" font-size="16" font-weight="300" fill="#1d2d5c">AI, if search isn't enough:</text>
+<text x="972" y="510" font-size="16" font-weight="300" fill="#1d2d5c">role filter · RAG ·</text>
+<text x="972" y="530" font-size="16" font-weight="300" fill="#1d2d5c">knowledge graph · logs</text>
+<text x="560" y="162" font-size="17" font-weight="300" font-style="italic" fill="#1d2d5c">Talk to a person: always on screen, the question and history go with it</text>
+<g transform="translate(48,500)" font-size="16" font-weight="300" fill="#1d2d5c"><rect y="0" width="18" height="18" rx="3" fill="#1d2d5c" stroke="#1d2d5c" stroke-width="2"/><text x="28" y="14">Our software</text><rect y="28" width="18" height="18" rx="3" fill="#b3e4f8" stroke="#1d2d5c" stroke-width="2"/><text x="28" y="42">Interchangeable part</text><rect y="56" width="18" height="18" rx="3" fill="#d3e8c5" stroke="#1d2d5c" stroke-width="2"/><text x="28" y="70">ISACA's content and systems</text></g>
+<g id="cap" transform="translate(300,478)" opacity="0">
+<text id="cap-k" x="0" y="0" font-size="14" font-weight="700" letter-spacing="1.4" fill="#07649d"></text>
+<text id="cap-1" x="0" y="26" font-size="18" font-weight="400" fill="#1d2d5c"></text>
+<text id="cap-2" x="0" y="50" font-size="18" font-weight="400" fill="#1d2d5c"></text>
+<text id="cap-3" x="0" y="74" font-size="18" font-weight="400" fill="#1d2d5c"></text></g>
+<g id="pips" transform="translate(300,584)"><circle cx="5" cy="0" r="5"/><circle cx="27" cy="0" r="5"/><circle cx="49" cy="0" r="5"/><circle cx="71" cy="0" r="5"/></g>
+<g id="dot" opacity="0" filter="url(#ds)"><circle id="dot-ring" r="15" fill="#00a4e4" opacity=".28"/><circle id="dot-c" r="11" fill="#00a4e4" stroke="#fff" stroke-width="2.5"/><text id="dot-t" y="5" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">?</text></g>
+<g id="dot2" opacity="0" filter="url(#ds)"><circle r="11" fill="#00a4e4" stroke="#fff" stroke-width="2.5"/><text y="5" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">?</text></g>
+<g id="sleek-front"></g>
+    </svg>
+</div>
+
+@code {
+    /// <summary>False: the opening diagram with the moving dot. True: the closing slide, where it transforms into the status rail.</summary>
+    [Parameter] public bool Kept { get; set; }
+    /// <summary>The slide's items (name, title, status, built), used for the status rail.</summary>
+    [Parameter] public List<SlideItem> Items { get; set; } = [];
+    /// <summary>True on a Dark Blue slide.</summary>
+    [Parameter] public bool Dark { get; set; }
+
+    private ElementReference _root;
+    private IJSObjectReference? _js;
+    private bool _rendered;
+
+    // The picture is drawn once; the script moves it. A later render of the page must not touch it.
+    protected override bool ShouldRender() => !_rendered;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _rendered = true;
+        _js = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/PromiseFlow.razor.js?v=" + DateTime.UtcNow.Ticks);
+        var items = Items.Select(i => new { name = i.Name, title = i.Title, text = i.Text, status = i.Status, built = i.Built }).ToList();
+        await _js.InvokeVoidAsync("mount", _root, Kept, Dark, items);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_js is null) return;
+        try
+        {
+            await _js.InvokeVoidAsync("unmount");
+            await _js.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+        catch (JSException) { }
+    }
+}

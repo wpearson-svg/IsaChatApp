@@ -32,6 +32,10 @@
 @using IsaChatApp.Services
 @inject WidgetSettings Settings
 @inject UsageLogService UsageLog
+@inject UsageReportService Report
+@inject IJSRuntime JS
+@inject ApiKeyService Keys
+@inject NavigationManager Nav
 @rendermode InteractiveServer
 
 <PageTitle>Content Health Dashboard</PageTitle>
@@ -60,6 +64,11 @@ else
                 <option value="30d">Last 30 days</option>
                 <option value="all">All time</option>
             </select>
+            @* Export to xlsx (16 November 2026, Willis): the cards below, for the range picked here, one sheet each
+               (Services/ContentHealthExport.cs). Totals and rates only, the same as the page. *@
+            <button type="button" class="chd__btn chd__btn--ghost chd__export" @onclick="ExportXlsx" disabled="@_exporting">
+                @(_exporting ? "Exporting…" : "Export to xlsx")
+            </button>
         </div>
 
         <div class="chd__notice">
@@ -253,6 +262,43 @@ else
                 }
             </div>
         </div>
+
+        @* API access (16 November 2026, Willis): the one key for GET /api/content-health. Shown only here, so only
+           someone who can open this dashboard can copy it (ApiKeyService). Per-person keys are for a real deployment. *@
+        <div class="chd__sectionLabel">API ACCESS</div>
+        <div class="chd__grid">
+            <div class="chd__card chd__card--wide">
+                <div class="chd__cardHeader">
+                    <h3>API key</h3>
+                    <span class="chd__tag chd__tag--purple">API</span>
+                </div>
+                <p class="chd__cardHint">
+                    A program can read this dashboard's numbers with a key:
+                    <code>GET /api/content-health?range=week</code> for JSON, or add <code>&amp;format=xlsx</code> for the workbook,
+                    with the key in the <code>@ApiKeyService.HeaderName</code> header. Range: today, week, 30d or all.
+                    Read-only, totals and rates only. Every call is logged.
+                </p>
+                @{ var key = Keys.Get(); }
+                <div class="chd__newKeyRow">
+                    <code class="chd__keyValue">@key.Key</code>
+                    <button type="button" class="chd__btn chd__btn--ghost chd__export" @onclick="() => CopyKey(key.Key)">@(_copied ? "Copied" : "Copy")</button>
+                    @if (_confirmReplace)
+                    {
+                        <button type="button" class="chd__btn chd__btn--danger chd__export" @onclick="ReplaceKey">Confirm: replace key</button>
+                        <button type="button" class="chd__btn chd__btn--ghost chd__export" @onclick="() => _confirmReplace = false">Cancel</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="chd__btn chd__btn--ghost chd__export" @onclick="() => _confirmReplace = true">Replace key</button>
+                    }
+                </div>
+                <p class="chd__cardHint">
+                    Made @key.CreatedUtc.ToString("MMM d, HH:mm") UTC &middot; last used @(key.LastUsedUtc is { } used ? used.ToString("MMM d, HH:mm") + " UTC" : "never").
+                    Replacing it stops the old key working at once; programs using it need the new one.
+                </p>
+                <p class="chd__cardHint">Example: <code>curl -H "@(ApiKeyService.HeaderName): @key.Key" "@(BaseUrl)/api/content-health?range=week"</code></p>
+            </div>
+        </div>
     </div>
 }
 
@@ -334,6 +380,41 @@ else
 
     private static string FormatElapsed(double ms) =>
         ms < 1000 ? $"{ms:0}ms" : $"{ms / 1000:0.0}s";
+
+    private bool _exporting;
+
+    // Builds the workbook on the server and hands it to the browser as a download (ContentHealthDashboard.razor.js).
+    private async Task ExportXlsx()
+    {
+        _exporting = true;
+        try
+        {
+            var now = DateTime.UtcNow;
+            var bytes = ContentHealthExport.Build(Report.Get(RangeCutoffUtc), FilteredEntries, RangeLabel, now);
+            await using var module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/ContentHealthDashboard.razor.js");
+            using var stream = new DotNetStreamReference(new MemoryStream(bytes));
+            await module.InvokeVoidAsync("downloadFile", ContentHealthExport.FileName(RangeKey, now), stream);
+        }
+        finally { _exporting = false; }
+    }
+
+    // ---- API keys (ApiKeyService) ----
+    private bool _copied;
+    private bool _confirmReplace;
+    private string BaseUrl => Nav.BaseUri.TrimEnd('/');
+
+    private async Task CopyKey(string key)
+    {
+        await using var module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/ContentHealthDashboard.razor.js");
+        _copied = await module.InvokeAsync<bool>("copyText", key);
+    }
+
+    private void ReplaceKey()
+    {
+        Keys.Replace();
+        _confirmReplace = false;
+        _copied = false;
+    }
 
     private bool _confirmingClear;
     private void ClearLogPrompt() => _confirmingClear = true;

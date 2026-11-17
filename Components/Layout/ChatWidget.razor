@@ -317,6 +317,17 @@
                         }
                         @* Isa's replies mark glossary terms (hover for ISACA's definition); the leader's own words stay plain. *@
                         <div class="isa-widget__text">@if (msg.Role == "ai"){<GlossaryText Text="@msg.Text" />}else{<text>@msg.Text</text>}</div>
+                        @if (!string.IsNullOrWhiteSpace(msg.EnglishText))
+                        {
+                            @* A translated reply: the English it was translated from, folded away
+                               until clicked (Willis, 17 November 2026). A plain <details>, so it opens
+                               with the keyboard and screen readers announce it. lang="en" so a screen
+                               reader switches voice. *@
+                            <details class="isa-widget__english">
+                                <summary><span class="isa-widget__englishShow">Show the English</span><span class="isa-widget__englishHide">Hide the English</span></summary>
+                                <div class="isa-widget__englishText" lang="en"><GlossaryText Text="@msg.EnglishText" /></div>
+                            </details>
+                        }
                         @if (msg.Sources is { Count: > 0 })
                         {
                             @* Each source as a card: the document's name, then
@@ -1624,14 +1635,14 @@
         switch (result.Status)
         {
             case "answered":
-                Messages.Add(new ChatEntry("ai", name, result.Message, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, Question: text, OfferHandoff: result.OfferHandoff));
+                Messages.Add(new ChatEntry("ai", name, result.Message, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, Question: text, OfferHandoff: result.OfferHandoff, EnglishText: result.EnglishMessage));
                 break;
             case "escalated":
                 // The ticketing stage's message already names the ticket, so
                 // only add it here when the message doesn't (no doubled line).
                 var ticket = string.IsNullOrEmpty(result.TicketReference) || result.Message.Contains(result.TicketReference)
                     ? "" : $" Your reference number is {result.TicketReference}.";
-                Messages.Add(new ChatEntry("ai", $"{name} \u00b7 Passed to a person", result.Message + ticket, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, ShowReference: true));
+                Messages.Add(new ChatEntry("ai", $"{name} \u00b7 Passed to a person", result.Message + ticket, "pipeline", elapsedMs, sources, result.TraceId, steps, elapsedMs, ShowReference: true, EnglishText: result.EnglishMessage));
                 break;
             default: // stopped
                 Messages.Add(new ChatEntry("error", name, result.Message, TraceId: result.TraceId, Steps: steps, WorkMs: elapsedMs));
@@ -1678,7 +1689,8 @@
         List<IsaChatApp.Services.Orchestrator.WorkStep>? Steps = null, double? WorkMs = null,
         string? Question = null,    // set only on answered pipeline replies: the question asked, for "Save to notebook"
         bool ShowReference = false, // true only on a hand-off: show the "Reference #" line (wording table, section 5)
-        bool OfferHandoff = false)  // a rule said "answer, then point": show the pass-to-a-person button
+        bool OfferHandoff = false,  // a rule said "answer, then point": show the pass-to-a-person button
+        string? EnglishText = null) // a translated reply: the English it came from, for "Show the English"
     {
         // A unique id for the message's element on the page, so the chat
         // can scroll to it (and two messages with the same text never

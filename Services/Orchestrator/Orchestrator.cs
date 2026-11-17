@@ -125,6 +125,10 @@ public class Orchestrator
             message = ctx.AnswerText ?? "No answer produced.";
         }
 
+        // The English reply, kept when the reply shown is a translation, so the chat can offer "Show the English"
+        // under it (Willis, 17 November 2026). Null when nothing was translated.
+        string? englishMessage = null;
+
         // Translate the reply back into the language the question was written in (Amharic today; the translation
         // service knows English and Amharic only). Runs after every check, on the finished message only. The sources
         // and the ticket reference are not touched. If any piece cannot be translated the message stays in English
@@ -145,14 +149,14 @@ public class Orchestrator
                 backNote = back.Text is not null ? "ok" : back.Note;
                 backMs = back.Ms;
             }
-            if (shown) message = ctx.DemoReply;
+            if (shown) { englishMessage = message; message = ctx.DemoReply; }
             await _eventLog.WriteAsync(ctx.TraceId, "translation",
                 $"result=pass; reason=none; direction=out; to=am; predetermined=yes; back_translation={backNote}; model_ms={backMs}; shown={(shown ? "predetermined_latin" : "no")}");
         }
         else if (IsaChatApp.Services.Translation.TranslationClient.ServiceCode(ctx.Language) is { } backCode && _translator.Enabled && !string.IsNullOrWhiteSpace(message))
         {
             var back = await _translator.TranslateMessageAsync(message, "eng", backCode);
-            if (back.Text is not null) message = back.Text;
+            if (back.Text is not null) { englishMessage = message; message = back.Text; }
             await _eventLog.WriteAsync(ctx.TraceId, "translation",
                 $"result=pass; reason=none; direction=out; to={ctx.Language}; translated={(back.Text is not null ? "yes" : "no")}; note={back.Note}; model_ms={back.Ms}");
         }
@@ -166,7 +170,8 @@ public class Orchestrator
             Sources: ctx.Sources,
             TicketReference: ctx.TicketReference,
             TraceId: ctx.TraceId,
-            OfferHandoff: finalStatus == "answered" && ctx.OfferHandoff
+            OfferHandoff: finalStatus == "answered" && ctx.OfferHandoff,
+            EnglishMessage: englishMessage
         );
     }
 
@@ -216,5 +221,6 @@ public record AskResponse(
     IReadOnlyList<SourceRef> Sources,
     string? TicketReference,
     string TraceId,
-    bool OfferHandoff = false   // a rule said "answer, then point": show the pass-to-a-person button
+    bool OfferHandoff = false,  // a rule said "answer, then point": show the pass-to-a-person button
+    string? EnglishMessage = null // the English reply when Message is a translation of it; otherwise null
 );
