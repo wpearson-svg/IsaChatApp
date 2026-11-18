@@ -1,0 +1,49 @@
+/* StepList.razor.css -- the "buildlist" slide's cards (Willis, November 17, 2026).
+   Same look as slide 8's cards: white, Medium Blue border, centred text. Sizes in cqw of the slide. */
+
+.steplist {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.steplist__card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 38cqw;
+    box-sizing: border-box;
+    padding: 2.2cqw 2.6cqw 2.4cqw;
+    text-align: center;
+    background: #fff;
+    border: 0.16cqw solid #07649d;
+    border-radius: 1.4cqw;
+    box-shadow: 0 1.6cqw 4cqw rgba(29, 45, 92, .28);
+    opacity: 0;
+    transform-origin: 0 0;
+    will-change: transform, opacity;
+}
+
+.steplist__k {
+    font-size: 1.05cqw;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #07649d;
+}
+
+.steplist__title {
+    margin: 0.5cqw 0 0.9cqw;
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 400;
+    font-size: 3.4cqw;
+    line-height: 1.15;
+    color: #1d2d5c;
+}
+
+.steplist__text {
+    font-size: 1.8cqw;
+    line-height: 1.35;
+    color: #24345e;
+}

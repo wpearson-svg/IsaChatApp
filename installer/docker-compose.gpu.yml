@@ -1,0 +1,21 @@
+# Added by the scripts only when this computer has an NVIDIA card (nvidia-smi answers).
+# Without a card, Docker refuses to start a container that asks for one, so this is kept separate.
+services:
+  translation:
+    environment:
+      DEVICE: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
