@@ -4,6 +4,10 @@ The demo runs from one sign-in, Watanabe Kenji (P-0001), on day 3 of his term (d
 July 3, 2026). See ONBOARDING-FEATURE.md, "The demo". This script makes every rehearsal,
 and the presentation itself, start from exactly the same place:
 
+  data/directory.db  (the invented people and their board roles; local, git-ignored)
+    - rebuilt from the CSV files in directory/, so "Meet your board" shows Kenji's
+      whole board on whichever computer runs the demo
+
   data/progress.db  (each leader's journey progress; local, git-ignored)
     - everything cleared: no steps done, no bookings, no check-ins, the Today note unseen
     - Kenji's board introduction saved (J-19 done), so his board can reply
@@ -34,12 +38,14 @@ import json
 import os
 import socket
 import sqlite3
+import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 PROGRESS = os.path.join(DATA, "progress.db")
 NOTEBOOK = os.path.join(DATA, "notebook.db")
+DIRECTORY = os.path.join(DATA, "directory.db")
 
 CHAPTER = "C-001"                      # Sakura Bay Chapter
 KENJI = ("P-0001", "Watanabe Kenji")   # incoming president, term from July 1, 2026
@@ -105,7 +111,7 @@ SATO_ENTRIES = [
 
 # An entry Sato wrote and then removed herself (November 17, 2026). It is not in the
 # notebook any more, but its record stays: "Removed entries" in the notebook's "..."
-# menu lists it with the date. Kenji sees the record's facts, never what it said.
+# menu lists it with the date and what it said (presidents see the whole record).
 SATO_REMOVED = {
     "kind": "note", "category": "decision", "topic": "Meetings", "on_date": "2026-06-20",
     "note": "Draft: four board meetings next year, one a quarter.",
@@ -136,6 +142,26 @@ def main() -> int:
             print(f"{os.path.relpath(path, ROOT)} is missing. Start Isa once (it creates it), "
                   "stop it, then run this again.")
             return 1
+
+    # ---- directory.db: rebuild it from the CSV files in directory/ ----
+    # It holds the invented people and their board roles, and it is not in Git: each
+    # computer builds its own copy. A copy built before the board members were added
+    # leaves "Meet your board" empty, so the demo setup always rebuilds it (November 17, 2026).
+    build = subprocess.run([sys.executable, os.path.join(ROOT, "directory", "build_directory_db.py")],
+                           capture_output=True, text=True)
+    if build.returncode != 0:
+        print("directory.db could not be rebuilt, so nothing else was changed:")
+        print((build.stdout + build.stderr).strip())
+        return 1
+    with sqlite3.connect(DIRECTORY) as d:
+        board = d.execute("""SELECT COUNT(*) FROM role_assignments
+                             WHERE chapter_id = ? AND permission = 'Leadership'
+                               AND term_start <= '2026-07-03' AND term_end >= '2026-07-03'""",
+                          (CHAPTER,)).fetchone()[0]
+    if board < 6:
+        print(f"directory.db was rebuilt, but Kenji's chapter has only {board} board members on July 3, 2026 "
+              "(6 expected). Check directory/role_assignments.csv. Nothing else was changed.")
+        return 1
 
     # ---- progress.db: start clean, then the board introduction and Sato's reply ----
     with sqlite3.connect(PROGRESS) as p:
@@ -190,6 +216,7 @@ def main() -> int:
                   (CHAPTER, SATO[0], SATO[1], r["kind"], r["category"], r["note"], r["on_date"], NOW, r["topic"],
                    r["removed_on"]))
 
+    print(f"directory.db: rebuilt from directory/; Kenji's chapter has {board} board members on July 3, 2026.")
     print(f"progress.db: cleared; Kenji's board introduction (J-19) and Sato's and Mei's profile replies added.")
     print(f"notebook.db: {removed} test entries removed; {samples} sample history entries kept; "
           f"{len(SATO_ENTRIES)} entries from Sato added (June 2026), and 1 she removed.")

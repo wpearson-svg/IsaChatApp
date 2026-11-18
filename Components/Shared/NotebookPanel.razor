@@ -262,13 +262,14 @@
             {
                 @* Removed entries (November 17, 2026). Nothing in the notebook is erased:
                    "Remove" hides an entry and keeps the record. This list is that record.
-                   Only the writer is given what a removed entry said (NotebookService.GetRemoved). *@
+                   Presidents see the whole record, including what the entry said
+                   (NotebookService.GetRemoved). *@
                 var removed = Notebook.GetRemoved(_personId, Settings.Today);
                 <div class="isa-nb__inline is-details" role="region" aria-label="Removed entries">
                     <p class="isa-nb__sectionHead">Removed entries</p>
                     <p class="isa-nb__askHint">
-                        Nothing in the notebook is erased. When a writer removes an entry it leaves the notebook,
-                        and its record stays here with the date. Only its writer can read what it said.
+                        Nothing in the notebook is erased. When a writer removes an entry it comes off the working list
+                        and stays on the record here: what it said, who removed it, and when.
                     </p>
                     @if (removed.Count == 0)
                     {
@@ -283,7 +284,7 @@
                                     <b>Removed on @x.RemovedOn.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)</b>
                                     by its writer, @x.Entry.AuthorName, @x.Entry.AuthorRole.
                                     <span>@(x.Entry.ParentId is null ? x.Entry.KindLabel : "Follow-up") · @x.Entry.Topic · written on @x.Entry.OnDate.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture) · Record @NotebookService.RecordNumber(x.Entry)</span>
-                                    @if (x.Mine && !string.IsNullOrEmpty(x.Entry.Title))
+                                    @if (!string.IsNullOrEmpty(x.Entry.Title))
                                     {
                                         <q>@x.Entry.Title</q>
                                     }

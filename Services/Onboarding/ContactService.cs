@@ -131,7 +131,7 @@ public record ChapterContact(string ContactId, string Name, string Team, string 
     /// <summary>First name, for the greeting in the introduction message.</summary>
     public string FirstName => Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? Name;
 
-    /// <summary>Initials for the round badge, e.g. "Mei Ling Tan" becomes "MT".</summary>
+    /// <summary>Initials for the round badge, e.g. "Grace Lim" becomes "GL".</summary>
     public string Initials
     {
         get
