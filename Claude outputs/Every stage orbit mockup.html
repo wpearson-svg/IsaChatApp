@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every stage orbit</title>
+<!-- Mockup for slide 8, "Every stage, honestly" (Willis, November 17, 2026). Not part of the app.
+     Nine stages sit still on a tilted ring around a central point; each advance turns the ring like a
+     carousel to bring the next one to the front and centre, where it opens into a card with that stage's text from presentation/slides.json.
+     Keys: Right arrow, Space or click = next; Left arrow = back; R = start over. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dark: #1d2d5c;      /* ISACA Dark Blue */
+    --medium: #07649d;    /* Medium Blue */
+    --blue: #00a4e4;      /* Blue */
+    --green: #6cb33f;     /* Green */
+    --green-ink: #3f7a1f; /* darker green for text */
+    --light: #e7f0f5;     /* Light Blue */
+  }
+  html, body { margin: 0; height: 100%; background: #111827; overflow: hidden; }
+  body { display: grid; place-items: center; font-family: Roboto, Arial, sans-serif; }
+
+  /* A 1280 by 720 slide, scaled to fit the window */
+  .stage {
+    position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px;
+    background: #fff; color: var(--dark); overflow: hidden;
+    transform-origin: center; user-select: none; cursor: pointer;
+  }
+  .head { position: absolute; left: 72px; top: 52px; right: 72px; z-index: 3000; pointer-events: none; }
+  .kicker { font-size: 15px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--medium); }
+  h1 { margin: 8px 0 10px; font-family: "Roboto Slab", Georgia, serif; font-weight: 300; font-size: 50px; }
+  .lead { font-size: 22px; color: #3b4a6b; margin: 0; }
+  .lead .then { color: var(--green-ink); font-weight: 500; opacity: 0; transition: opacity .8s ease; }
+  .stage.is-finale .lead .then { opacity: 1; }
+
+  /* The ring and the centre */
+  .ring { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .core {
+    position: absolute; width: 112px; height: 112px; border-radius: 50%;
+    display: grid; place-items: center; text-align: center;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, var(--light) 45%, #cfe3ee 100%);
+    box-shadow: 0 0 0 10px rgba(0,164,228,.08), 0 0 60px rgba(0,164,228,.35);
+    font-family: "Roboto Slab", Georgia, serif; font-size: 26px; color: var(--dark);
+    transition: box-shadow .8s ease, opacity .5s ease;
+  }
+  .core small { display: block; font-family: Roboto, sans-serif; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--medium); }
+  .stage.is-finale .core { box-shadow: 0 0 0 10px rgba(108,179,63,.12), 0 0 70px rgba(108,179,63,.5); }
+  .stage.is-focus .core { opacity: .35; }
+
+  /* One node: a dot on the ring that opens into a card */
+  .node {
+    position: absolute; left: 0; top: 0; box-sizing: border-box; overflow: hidden;
+    background: var(--dark); border: 2px solid var(--dark); color: #fff;
+    box-shadow: 0 4px 14px rgba(29,45,92,.25);
+    transition: background-color .45s ease, border-color .45s ease, box-shadow .45s ease;
+    will-change: transform, width, height;
+  }
+  .node.is-done { background: var(--green); border-color: var(--green); }
+  .node.is-open { background: #fff; border-color: var(--medium); color: var(--dark); box-shadow: 0 24px 60px rgba(29,45,92,.28); }
+  .num {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-family: "Roboto Slab", Georgia, serif; font-size: 22px; pointer-events: none;
+  }
+  .card {
+    position: absolute; left: 50%; top: 50%; width: 380px; height: 380px; transform: translate(-50%,-50%);
+    box-sizing: border-box; padding: 36px; opacity: 0; pointer-events: none; text-align: center;
+  }
+  .card .k { font-size: 14px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--medium); }
+  .card h2 { margin: 6px 0 14px; font-family: "Roboto Slab", Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.15; color: var(--dark); white-space: nowrap; width: max-content; margin-left: auto; margin-right: auto; }
+  .card p { margin: 18px 0 0; font-size: 24px; line-height: 1.35; color: #24345e; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 99px;
+    background: rgba(108,179,63,.14); color: var(--green-ink); font-size: 15px; font-weight: 700;
+  }
+  .lbl {
+    position: absolute; left: 0; top: 0; transform: translateX(-50%); white-space: nowrap;
+    font-size: 14px; font-weight: 500; color: var(--dark); pointer-events: none;
+  }
+
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 26px; display: flex; justify-content: space-between; font-size: 13px; color: #6b7690; z-index: 3000; pointer-events: none; }
+  .count b { color: var(--dark); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .node, .core, .lead .then { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage" aria-live="polite">
+  <div class="head">
+    <div class="kicker">How she runs · Eliyas Eshtea</div>
+    <h1>Every stage, honestly</h1>
+    <p class="lead">In Sprint 2, some stages were placeholders. <span class="then">Now every one is built.</span></p>
+  </div>
+  <svg class="ring" id="ring" viewBox="0 0 1280 720" aria-hidden="true"></svg>
+  <div class="core" id="core"><div>Isa<small>9 stages</small></div></div>
+  <div class="foot"><span>Mockup · Right arrow, Space or click: next · Left arrow: back · R: start over</span><span class="count" id="count"></span></div>
+</div>
+
+<script>
+// The nine stages, word for word from presentation/slides.json ("Every stage, honestly").
+const STAGES = [
+  ["Front end", "Chat, sign-in, Today, notebook and Library"],
+  ["Access control", "Sign-in and roles"],
+  ["Translation", "NLLB-200, self-hosted: Amharic and Spanish connected"],
+  ["Input compliance", "Rules files your team owns, with approval records"],
+  ["Database search", "Direct answers in ISACA's own words"],
+  ["RAG", "Search by meaning, in Isa's own database"],
+  ["Complex AI", "One small local model, writing only from what was found"],
+  ["Output compliance", "Every sentence checked against its source"],
+  ["Ticketing", "Reference number and a Salesforce case"],
+];
+
+const W = 1280, H = 720;
+const CX = 640, CY = 452;          // the central point
+const RX = 430, RY = 92;           // the ring: wide and flat, so it reads as tilted in 3D
+const DOT = 58;                    // dot size at the front of the ring
+const CARD = { x: 640, y: 478, w: 380, h: 380 };
+const OPEN_MS = 800;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const stage = document.getElementById("stage");
+const core = document.getElementById("core");
+const count = document.getElementById("count");
+
+// The ring itself: back half drawn faint, front half a little stronger
+document.getElementById("ring").innerHTML = `
+  <path d="M ${CX-RX} ${CY} A ${RX} ${RY} 0 0 1 ${CX+RX} ${CY}" fill="none" stroke="#cfe3ee" stroke-width="2" stroke-dasharray="4 7"/>
+  <path d="M ${CX-RX} ${CY} A ${RX} ${RY} 0 0 0 ${CX+RX} ${CY}" fill="none" stroke="#9cc6dc" stroke-width="2"/>`;
+core.style.transform = `translate(${CX-56}px, ${CY-56}px)`;
+core.style.zIndex = 500;
+
+const nodes = STAGES.map(([name, text], i) => {
+  const el = document.createElement("div");
+  el.className = "node";
+  el.innerHTML = `<div class="num">${i+1}</div>
+    <div class="card"><div class="k">Stage ${i+1} of 9</div><h2>${name}</h2>
+    <span class="pill">✓ Built</span><p>${text}</p></div>`;
+  const lbl = document.createElement("div");
+  lbl.className = "lbl"; lbl.textContent = name;
+  stage.append(el, lbl);
+  return { el, lbl, num: el.querySelector(".num"), card: el.querySelector(".card"),
+           f: 0, from: 0, to: 0, t0: 0, ms: OPEN_MS, w: CARD.w, h: CARD.h };
+});
+
+// Each card fits its own text: as wide as the stage name (at least MIN_W), as tall as the text.
+const MIN_W = 300, PAD = 36;
+function sizeCards() {
+  nodes.forEach(n => {
+    const c = n.card, h2 = c.querySelector("h2"), p = c.querySelector("p");
+    c.style.height = "auto";
+    c.style.width = "2000px";                                  // measure the name on one line
+    const nameW = h2.scrollWidth;
+    const w = Math.ceil(Math.max(MIN_W, nameW + PAD * 2));
+    c.style.width = w + "px";
+    const h = Math.ceil(p.offsetTop + p.offsetHeight + PAD);
+    c.style.height = h + "px";
+    n.w = w; n.h = h;
+  });
+}
+sizeCards();
+document.fonts && document.fonts.ready.then(sizeCards);
+
+// The ring stands still and turns like a carousel: each stage turns to the front before it opens.
+const SLOT = Math.PI * 2 / 9;
+const ROT_MS = 900, CLOSE_MS = 500;
+let rot = 0, rotFrom = 0, rotTo = 0, rotT0 = 0;
+
+// step 0: all orbiting · steps 1 to 9: that stage open at the front · step 10: all built
+let step = 0;
+function setStep(s) {
+  step = Math.max(0, Math.min(10, s));
+  const now = performance.now();
+  // 1. close the open card, 2. turn the ring so the next stage is at the front, 3. open it
+  const closing = nodes.some(n => n.to === 1);
+  const turnAt = now + (closing ? CLOSE_MS * .8 : 0);
+  const front = (step >= 1 && step <= 9) ? step - 1 : 0;
+  let delta = (front * SLOT) - rot;
+  delta = Math.atan2(Math.sin(delta), Math.cos(delta));   // the short way round
+  const turning = Math.abs(delta) > .001;
+  rotFrom = rot; rotTo = rot + delta; rotT0 = turnAt;
+  const openAt = turnAt + (turning ? ROT_MS * .9 : 0);
+  nodes.forEach((n, i) => {
+    const target = (step === i + 1) ? 1 : 0;
+    if (target !== n.to) {
+      n.from = n.f; n.to = target;
+      n.t0 = target ? openAt : now; n.ms = target ? OPEN_MS : CLOSE_MS;
+    }
+    n.el.classList.toggle("is-open", target === 1);
+    n.el.classList.toggle("is-done", step === 10 || i < step - 1);
+  });
+  stage.classList.toggle("is-focus", step >= 1 && step <= 9);
+  stage.classList.toggle("is-finale", step === 10);
+  count.innerHTML = step === 0 ? "" : step === 10 ? "<b>9 of 9</b> built" : `<b>${step}</b> of 9`;
+}
+
+const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = v => Math.max(0, Math.min(1, v));
+
+function frame(now) {
+  const open = step >= 1 && step <= 9;
+  rot = lerp(rotFrom, rotTo, reduce ? 1 : ease(clamp((now - rotT0) / ROT_MS)));
+
+  nodes.forEach((n, i) => {
+    // blend between the ring and the card
+    const p = reduce ? 1 : clamp((now - n.t0) / n.ms);
+    n.f = lerp(n.from, n.to, ease(p));
+    const f = n.f;
+
+    // place on the ring; depth runs from -1 (back) to 1 (front)
+    const a = rot - i * (Math.PI * 2 / 9) + Math.PI / 2;   // stage 2 sits to the right of stage 1
+    const depth = Math.sin(a);
+    const ox = CX + RX * Math.cos(a), oy = CY + RY * depth;
+    const d = DOT * (0.62 + 0.38 * (depth + 1) / 2);
+    let op = 0.5 + 0.5 * (depth + 1) / 2;
+    if (open && f < .01) op *= .45;   // the others step back while a card is open
+
+    const x = lerp(ox, CARD.x, f), y = lerp(oy, CARD.y, f);
+    const w = lerp(d, n.w, f), h = lerp(d, n.h, f);
+    n.el.style.width = w + "px"; n.el.style.height = h + "px";
+    n.el.style.borderRadius = lerp(d / 2, 22, f) + "px";
+    n.el.style.transform = `translate(${x - w/2}px, ${y - h/2}px)`;
+    n.el.style.zIndex = f > .001 ? 2000 : Math.round(500 + depth * 400);
+    n.el.style.opacity = lerp(op, 1, f);
+    n.num.style.opacity = clamp(1 - f * 3);
+    n.num.style.fontSize = (d * .38) + "px";
+    n.card.style.opacity = clamp((f - .82) / .18);
+
+    // name under the dot, only on the front half of the ring
+    n.lbl.style.transform = `translate(${ox}px, ${oy + d/2 + 6}px) translateX(-50%)`;
+    n.lbl.style.opacity = clamp((depth + .1) * 1.4) * clamp(1 - f * 4) * (open ? .45 : 1);
+    n.lbl.style.zIndex = Math.round(500 + depth * 400);
+  });
+  requestAnimationFrame(frame);
+}
+
+function fit() {
+  const s = Math.min(innerWidth / W, innerHeight / H);
+  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener("resize", fit); fit();
+addEventListener("keydown", e => {
+  if (["ArrowRight", " ", "PageDown", "Enter"].includes(e.key)) { e.preventDefault(); setStep(step + 1); }
+  else if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); setStep(step - 1); }
+  else if (e.key.toLowerCase() === "r") setStep(0);
+});
+stage.addEventListener("click", () => setStep(step + 1));
+setStep(0);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

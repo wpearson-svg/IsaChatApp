@@ -26,6 +26,12 @@ export function mount(el, isKept, isDark, slideItems) {
     if (kept) {
         ['cap', 'pips', 'dot', 'dot2'].forEach((id) => { const e = $(id); if (e) e.remove(); });
         if (dark) $('panel').setAttribute('opacity', 1);          // the diagram sits on a light panel on a Dark Blue slide
+        else {
+            // On a white slide the status rail and its two branches are Dark Blue, not white (Willis, November 17, 2026:
+            // after the pilot slides were cut this slide became white and the white lines vanished).
+            ['rail', 'br-trans', 'br-ai'].forEach((id) => { const p = $(id); if (p) p.setAttribute('stroke', NAVY); });
+            const r = $('rail'); if (r) r.setAttribute('marker-end', 'url(#a)');
+        }
     } else if (dark) {
         $('panel').setAttribute('opacity', 1);
     }

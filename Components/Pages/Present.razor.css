@@ -1605,3 +1605,13 @@
 .present__diagram:not(.has-status) .present__diaBox { font-size: 1.3cqw; padding: 0.75cqw 1.2cqw 0.8cqw; }
 .present__diagram:not(.has-status) .present__diaHead strong { font-size: 1.4cqw; }
 .present__diagram:not(.has-status) .present__diaNode { font-size: 1.5cqw; }
+
+/* The "orbit" slide (StageOrbit.razor, Willis, November 17, 2026): the lead waits until the last
+   stage is open, and the ring takes the rest of the slide. */
+.present__stage--orbit .present__body { padding-top: 2.2cqw; }
+.present__leadThen { opacity: 0; transition: opacity .8s ease; font-weight: 500; }
+.present__leadThen.is-shown { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .present__leadThen { transition: none; } }
+
+/* The "buildlist" slide (StepList.razor): the rows start hidden and are shown one by one by its script. */
+.present__rows--build li { opacity: 0; }

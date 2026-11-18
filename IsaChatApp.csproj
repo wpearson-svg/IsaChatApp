@@ -17,6 +17,12 @@
     <None Remove="publish/**" />
     <Compile Remove="publish/**" />
     <Watch Remove="publish/**" />
+    <!-- The demo package (installer/build-package.ps1, November 17, 2026) publishes into installer/out:
+         excluded for the same reason, so the package is never picked up as source. -->
+    <Content Remove="installer/**" />
+    <None Remove="installer/**" />
+    <Compile Remove="installer/**" />
+    <Watch Remove="installer/**" />
   </ItemGroup>
 
   <ItemGroup>
