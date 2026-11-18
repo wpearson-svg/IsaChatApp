@@ -391,6 +391,29 @@ else
                         </div>
                         break;
 
+                    case "orbit":
+                        @* The stages on a ring around Isa; each Next turns the next one to the front and
+                           opens it (StageOrbit.razor, Willis, November 17, 2026). The lead appears once
+                           the last stage is open. *@
+                        <h1 class="present__title present__title--compact">@s.Title</h1>
+                        <p class="present__lead present__lead--compact"><span class="present__leadThen">@s.Lead</span></p>
+                        <StageOrbit @ref="_orbit" Rows="s.Rows" StartAtEnd="_arrivedBack" Dark="dark" />
+                        break;
+
+                    case "buildlist":
+                        @* A list built one item at a time: each item arrives as a card and shrinks into
+                           its row on Next (StepList.razor, Willis, November 17, 2026). *@
+                        <h1 class="present__title">@s.Title</h1>
+                        <p class="present__lead">@s.Lead</p>
+                        <ul class="present__rows present__rows--build">
+                            @foreach (var item in s.Items)
+                            {
+                                <li><strong>@item.Title</strong> <span>@item.Text</span></li>
+                            }
+                        </ul>
+                        <StepList @ref="_stepList" Items="s.Items" StartAtEnd="_arrivedBack" />
+                        break;
+
                     case "status":
                         @* The ten stages from slide 5, each coloured by its status, then
                            the same stages grouped into Built, Partly built and Stub. *@
@@ -656,6 +679,9 @@ else
     private IReadOnlyList<Slide> _slides = [];
     private string? _error;
     private int _index;
+    private bool _arrivedBack;
+    private StageOrbit? _orbit;
+    private StepList? _stepList;
     private bool _introPending = true;   // until JS has decided whether the intro plays
     private IJSObjectReference? _js;
     private DotNetObjectReference<Present>? _self;
@@ -738,31 +764,39 @@ else
     }
 
     [JSInvokable]
-    public Task Go(int delta)
+    public async Task Go(int delta)
     {
         if (_gate != Gate.Off)
         {
             if (delta > 0) _ = LeaveGateAsync();   // forward leaves the opening screen; back does nothing
-            return Task.CompletedTask;
+            return;
         }
         if (_outro)
         {
-            if (delta < 0) return EndOutroAsync();   // Back leaves the closing; forward does nothing
-            return Task.CompletedTask;
+            if (delta < 0) await EndOutroAsync();   // Back leaves the closing; forward does nothing
+            return;
         }
         // Back on the first slide returns to the opening screen (Ready), so the intro can play again.
         if (delta < 0 && _index == 0)
         {
             ResetToStart();
-            return Task.CompletedTask;
+            return;
         }
+        // An "orbit" or "buildlist" slide steps through its own steps first; past its last (or first)
+        // step the slide changes.
+        var kind = _slides[_index].Kind;
+        if (kind == "orbit" && _orbit is not null && await _orbit.StepAsync(delta))
+            return;
+        if (kind == "buildlist" && _stepList is not null && await _stepList.StepAsync(delta))
+            return;
         // Forward on the last slide plays the closing.
         if (delta > 0 && _index == _slides.Count - 1 && _js is not null)
         {
             _outro = true;
-            return _js.InvokeVoidAsync("playOutro").AsTask();
+            await _js.InvokeVoidAsync("playOutro");
+            return;
         }
-        return GoTo(_index + delta);
+        await GoTo(_index + delta);
     }
 
     // Alt+8 / Alt+9 (JS) toggle a panel; Isa's Backstage menu asks for one through PresentPanels.
@@ -861,6 +895,7 @@ else
         if (_outro) await EndOutroAsync();
         var next = Math.Clamp(index, 0, _slides.Count - 1);
         if (next == _index && _js is not null) return;
+        _arrivedBack = next < _index;   // an "orbit" slide reached with Back opens on its last stage
         _index = next;
         if (_slides[_index].Warmup && !_warmed)
         {

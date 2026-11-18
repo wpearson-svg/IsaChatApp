@@ -1,0 +1,68 @@
+# Isa, installed copy: every service Isa needs, on this computer (installer/README.md).
+# Not the team's development setup: that stays in ../docker-compose.yml and ../ai-services/docker-compose.yml.
+#
+# Started and stopped by the scripts next to this file (Start Isa / Stop Isa in the Start menu).
+# With an NVIDIA card, the scripts add docker-compose.gpu.yml so translation and the AI model use it.
+# DEMONSTRATION ONLY, not a release (Willis, November 17, 2026): Keycloak runs in dev mode with admin/admin,
+# and the test accounts keep the passwords in the team's realm file.
+# Image versions: pinned where the team has a known-good version; OLLAMA_TAG and KOKORO_TAG can be set in .env.
+
+name: isa-installed
+
+services:
+  # Sign-in. The team's realm (accounts, roles, clients) is imported on the first start from ./keycloak-import.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8080
+    ports: ["127.0.0.1:8080:8080"]
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak-import:/opt/keycloak/data/import:ro
+    restart: unless-stopped
+
+  # The AI model (phi4-mini), which writes answers only from the passages Isa found.
+  # The model itself is pulled once by first-run.ps1 into the ollama_models volume.
+  ollama:
+    image: ollama/ollama:${OLLAMA_TAG:-latest}
+    ports: ["127.0.0.1:11434:11434"]
+    volumes: [ollama_models:/root/.ollama]
+    restart: unless-stopped
+
+  # Isa's voice for Listen (Kokoro-82M, CPU). If it isn't running, Listen uses the device's own voice.
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:${KOKORO_TAG:-latest}
+    ports: ["127.0.0.1:8880:8880"]
+    restart: unless-stopped
+
+  # Translation (NLLB-200). Built here from the team's source; the model downloads on the first start.
+  translation:
+    build: ./ai-services/translation
+    image: isa-translation:local
+    environment:
+      MODEL_ID: facebook/nllb-200-distilled-600M
+      HF_HOME: /models
+      DEVICE: cpu
+    ports: ["127.0.0.1:8091:8000"]
+    volumes: [nllb_models:/models]
+    restart: unless-stopped
+
+  # Search by meaning (multilingual-e5-base). Built here from the team's source; the model downloads on the first start.
+  embeddings:
+    build: ./ai-services/embeddings
+    image: isa-embeddings:local
+    environment:
+      MODEL_ID: intfloat/multilingual-e5-base
+      HF_HOME: /models
+    ports: ["127.0.0.1:8092:8000"]
+    volumes: [embedding_models:/models]
+    restart: unless-stopped
+
+volumes:
+  keycloak_data:
+  ollama_models:
+  nllb_models:
+  embedding_models:

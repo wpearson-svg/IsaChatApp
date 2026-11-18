@@ -92,6 +92,9 @@ export function init(dotnet, questions) {
         }
         if (!action) return;
         e.preventDefault();
+        // While the intro is on screen the slides stay where they are: Next goes to the intro (it holds on the
+        // team's names until then), and every other slide key is ignored.
+        if (intro) { if (action[0] === 'Go' && action[1] === 1) intro.querySelector('iframe')?.contentWindow?.postMessage({ type: 'isa-intro-next' }, '*'); return; }
         dotnet.invokeMethodAsync(action[0], action[1]);
     };
     document.addEventListener('keydown', handler, true);
@@ -133,7 +136,9 @@ export function playIntro() {
     intro = document.createElement('div');
     intro.style.cssText = 'position:fixed;inset:0;z-index:2147483600;background:#1d2d5c;';
     const frame = document.createElement('iframe');
-    frame.src = 'present/intro.html?embed=1';
+    // The Sprint 3 deck (/present, no ?deck=) holds on the team's names until Next (Willis, November 18, 2026).
+    const team = !new URLSearchParams(location.search).get('deck');
+    frame.src = 'present/intro.html?embed=1' + (team ? '&team=1' : '');
     frame.title = 'Isa intro';
     frame.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;';
     frame.addEventListener('load', () => { if (intro) intro.style.background = 'transparent'; });
@@ -147,9 +152,16 @@ export function playIntro() {
         intro = null;
         document.body.focus();
     };
-    const onMessage = (e) => { if (e.source === frame.contentWindow && e.data?.type === 'isa-intro-done') finish(); };
+    // Never leave the slides covered: 12 seconds, except while the intro holds on the names (it waits for Next).
+    let fallback = setTimeout(finish, 12000);
+    const onMessage = (e) => {
+        if (e.source !== frame.contentWindow) return;
+        const type = e.data?.type;
+        if (type === 'isa-intro-done') finish();
+        else if (type === 'isa-intro-hold') clearTimeout(fallback);
+        else if (type === 'isa-intro-resume') { clearTimeout(fallback); fallback = setTimeout(finish, 6000); }
+    };
     window.addEventListener('message', onMessage);
-    const fallback = setTimeout(finish, 12000); // never leave the slides covered
 }
 
 function toggleFullScreen() {

@@ -1,0 +1,68 @@
+@using IsaChatApp.Services.Presentation
+@* ============================================================
+   StepList.razor -- the "buildlist" slide layout (Willis, November 17, 2026).
+
+   Used by slide 9, "How she runs, in numbers". The list itself is drawn by Present.razor
+   (the same rows as a "list" slide), starting empty. Each item arrives from the right as a
+   card like slide 8's; the next press of Next shrinks the card into its row in the list and
+   brings in the next item. The press after the last item is placed moves on to the next
+   slide. Back reverses each step: the card leaves to the right and the item before comes
+   back out of its row. A slide reached with Back opens with the whole list in place.
+   Present.razor asks StepAsync first on every Next and Back. Motion: StepList.razor.js.
+   ============================================================ *@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="steplist" @ref="_root" aria-hidden="true">
+    @for (var i = 0; i < Items.Count; i++)
+    {
+        var item = Items[i];
+        <div class="steplist__card">
+            <div class="steplist__k">@(i + 1) of @Items.Count</div>
+            <div class="steplist__title">@item.Title</div>
+            <div class="steplist__text">@item.Text</div>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>The slide's items (title, text): one card per item.</summary>
+    [Parameter] public List<SlideItem> Items { get; set; } = [];
+    /// <summary>True when the slide was reached with Back: the list opens complete.</summary>
+    [Parameter] public bool StartAtEnd { get; set; }
+
+    private ElementReference _root;
+    private IJSObjectReference? _js;
+    private bool _rendered;
+
+    protected override bool ShouldRender() => !_rendered;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _rendered = true;
+        _js = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/StepList.razor.js?v=" + DateTime.UtcNow.Ticks);
+        await _js.InvokeVoidAsync("mount", _root, StartAtEnd);
+    }
+
+    /// <summary>One step forward or back. False when there is no step left that way.</summary>
+    public async Task<bool> StepAsync(int delta)
+    {
+        if (_js is null) return false;
+        try { return await _js.InvokeAsync<bool>("step", delta); }
+        catch (JSDisconnectedException) { return false; }
+        catch (JSException) { return false; }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_js is null) return;
+        try
+        {
+            await _js.InvokeVoidAsync("unmount");
+            await _js.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+        catch (JSException) { }
+    }
+}

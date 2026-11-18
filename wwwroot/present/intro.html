@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Isa C Intro</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300&family=Roboto:wght@300;500&display=swap">
 <style>
   /* Copy of Isa_C_Intro.html for the /present slides (Components/Pages/Present.razor.js plays it
      as an overlay with ?embed=1). Changed 23 October 2026 (Matthew): the finished ring is half
@@ -31,6 +31,21 @@
   html.embed, html.embed body { background:transparent; }
   html.embed #page, html.embed #mock { display:none; }
   #replay:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+  /* ?team=1 (the Sprint 3 deck; Willis, November 18, 2026): the intro holds after the logo's spin and the team's
+     names fade in around it, from what was slide 3. The next-slide key fades them and the Cs roll out. */
+  #team { position:fixed; inset:0; pointer-events:none; color:#fff; font-family:Roboto,system-ui,sans-serif; z-index:3; display:none; }
+  html.team #team { display:block; }
+  #team .top, #team .bottom { position:absolute; left:0; right:0; text-align:center; opacity:0; transition:opacity .6s ease, transform .6s ease; }
+  #team .top { bottom:81vh; transform:translateY(-1.2vh); }
+  #team .bottom { top:82.5vh; transform:translateY(1.2vh); display:flex; justify-content:center; gap:5vw; padding:0 4vw; }
+  #team.is-shown .top, #team.is-shown .bottom { opacity:1; transform:none; }
+  #team.is-shown .bottom { transition-delay:.25s; }
+  #team h1 { margin:0; font:300 5.2vh/1.1 "Roboto Slab",Georgia,serif; }
+  #team .lead { margin:.6vh 0 0; font-weight:300; font-size:2.4vh; color:#b3e4f8; }
+  #team .person { flex:1 1 0; max-width:30vw; }
+  #team .name { font-weight:500; font-size:3vh; line-height:1.15; }
+  #team .role { margin-top:.5vh; font-weight:300; font-size:1.9vh; line-height:1.3; color:rgba(255,255,255,.78); }
+  @media (prefers-reduced-motion: reduce) { #team .top, #team .bottom { transition:none; transform:none; } }
 </style>
 </head>
 <body>
@@ -57,6 +72,9 @@
   <rect id="curtainL" fill="#1d2d5c"/>
   <rect id="curtainR" fill="#1d2d5c"/>
 
+  <!-- outro only: confetti that falls behind the logo (Willis, November 17, 2026) -->
+  <g id="confettiBack" aria-hidden="true"></g>
+
   <!-- the two Cs -->
   <use id="cB" href="#cShape" fill="#6cb33f"/>
   <use id="cA" href="#cShape" fill="#00a4e4"/>
@@ -76,9 +94,22 @@
     </g>
   </g></g>
 
+  <!-- outro only: confetti that falls in front of the logo -->
+  <g id="confettiFront" aria-hidden="true"></g>
+
   <!-- outro only: "Thank you" under the logo circle, appears once the spin ends -->
   <text id="thanks" text-anchor="middle" opacity="0" fill="#ffffff" font-family="'Roboto Slab', Georgia, serif" font-weight="300" font-size="46">Thank you</text>
 </svg>
+
+<!-- ?team=1: the team, word for word from what was slide 3 of the Sprint 3 deck -->
+<div id="team" aria-live="polite">
+  <div class="top"><h1>Second Star Collective</h1><p class="lead">The team behind Isa.</p></div>
+  <div class="bottom">
+    <div class="person"><div class="name">Willis Pearson</div><div class="role">Project lead, solution architecture, quality and risk</div></div>
+    <div class="person"><div class="name">Eliyas Eshtea</div><div class="role">Solutions analyst, technical stack</div></div>
+    <div class="person"><div class="name">Matthew Brady</div><div class="role">Client liaison, governance, chapter leader onboarding, success metrics</div></div>
+  </div>
+</div>
 
 <button id="replay" type="button">Replay intro</button>
 
@@ -207,6 +238,120 @@
     letters.setAttribute("fill", cycle(0.8 - sp));             // navy round to navy, the other way
   }
 
+  // ---------- confetti (outro only; Willis, November 17, 2026) ----------
+  // When "Thank you" appears, two bursts fire up from below the screen, one on each side of the logo,
+  // then the pieces flutter slowly down. Half are drawn behind the logo, half in front of it.
+  // ISACA colours plus white. Not shown with "reduce motion".
+  const CONFETTI_COLOURS = ["#6cb33f", "#00a4e4", "#07649d", "#36ac91", "#ffffff", "#b3e4f8"];
+  const SVGNS = "http://www.w3.org/2000/svg";
+  let confettiRaf = 0, confettiFired = false;
+
+  // Sounds (Willis, November 17, 2026): the popper as the confetti fires, then the party horn straight after.
+  // For the full final presentation, swap HORN to "sounds/party-horn-not-sad.mp3".
+  const POPPER = "sounds/party-popper.mp3";
+  const HORN = "sounds/party-horn-sad.mp3";
+  const popperSound = outro ? new Audio(POPPER) : null;
+  const hornSound = outro ? new Audio(HORN) : null;
+  if (popperSound) { popperSound.preload = "auto"; hornSound.preload = "auto"; }
+  function playSounds() {
+    if (!popperSound) return;
+    let hornStarted = false;
+    const horn = () => { if (hornStarted) return; hornStarted = true; hornSound.play().catch(() => {}); };
+    popperSound.addEventListener("ended", horn, { once: true });
+    popperSound.play().catch(horn);   // if the popper can't play, the horn still tries
+  }
+
+  function fireConfetti() {
+    if (confettiFired) return;
+    confettiFired = true;
+    playSounds();
+    if (reduced) return;
+    const back = $("confettiBack"), front = $("confettiFront");
+    const bottom = CY + view.hh + 15, PER_SIDE = 70, G = 900;
+    const pieces = [];
+    [-1, 1].forEach(function (side) {
+      const x0 = CX + side * (R + 45);                       // beside the logo circle
+      for (let i = 0; i < PER_SIDE; i++) {
+        const el = document.createElementNS(SVGNS, "rect");
+        const w = 5 + Math.random() * 5, h = 9 + Math.random() * 7;
+        el.setAttribute("x", -w / 2); el.setAttribute("y", -h / 2);
+        el.setAttribute("width", w); el.setAttribute("height", h); el.setAttribute("rx", 1.2);
+        el.setAttribute("fill", CONFETTI_COLOURS[i % CONFETTI_COLOURS.length]);
+        (Math.random() < 0.5 ? back : front).appendChild(el);
+        const up = 700 + Math.random() * 380;                  // how hard it is fired up
+        const lean = (Math.random() - 0.5) * 0.7 + side * 0.12; // a little spread, leaning outwards
+        pieces.push({
+          el, x: x0 + (Math.random() - 0.5) * 60, y: bottom + Math.random() * 30,
+          vx: Math.sin(lean) * up, vy: -Math.cos(lean) * up,
+          delay: Math.random() * 0.35,
+          fall: 55 + Math.random() * 45,                       // the slow speed it floats down at
+          sway: 18 + Math.random() * 30, swayF: 1.2 + Math.random() * 1.6, phase: Math.random() * 6.3,
+          spin: (Math.random() - 0.5) * 720, rot: Math.random() * 360, flipF: 3 + Math.random() * 5
+        });
+      }
+    });
+    let last = performance.now(), age = 0;
+    // Real time even when frames are dropped (a slow screen share): the time since the last frame is
+    // worked through in small steps.
+    function step(now) {
+      let left = Math.min(0.5, (now - last) / 1000); last = now;
+      let alive = 0;
+      while (left > 0) { const dt = Math.min(1 / 60, left); left -= dt; alive = advance(dt); }
+      if (alive) confettiRaf = requestAnimationFrame(step);
+    }
+    function advance(dt) {
+      age += dt;
+      let alive = 0;
+      pieces.forEach(function (p) {
+        if (!p.el) return;
+        if (age < p.delay) { p.el.setAttribute("transform", "translate(-9999 -9999)"); alive++; return; }
+        const t = age - p.delay;
+        p.vy += G * dt;
+        if (p.vy > p.fall) p.vy = p.fall;                      // air holds it: it floats down slowly
+        p.vx *= Math.pow(0.35, dt);                            // and slows its sideways throw
+        p.x += (p.vx + (p.vy > 0 ? Math.sin(t * p.swayF + p.phase) * p.sway : 0)) * dt;
+        p.y += p.vy * dt;
+        p.rot += p.spin * dt;
+        const flip = Math.cos(t * p.flipF + p.phase);          // turning over as it flutters
+        p.el.setAttribute("transform", "translate(" + p.x + " " + p.y + ") rotate(" + p.rot + ") scale(1 " + flip.toFixed(3) + ")");
+        if (p.y > bottom + 30 && p.vy > 0) { p.el.remove(); p.el = null; return; }
+        alive++;
+      });
+      return alive;
+    }
+    confettiRaf = requestAnimationFrame(step);
+  }
+
+  // ---------- ?team=1: the hold for the team's names (Willis, November 18, 2026) ----------
+  // The clock stops once the logo has finished its spin and the names fade in. Next (a key here, a click, or
+  // "isa-intro-next" from the slides page, which keeps the keys) fades them out and the clock goes on from just
+  // before the roll-out. The slides page is told when the hold starts, so it doesn't time the intro out.
+  const withTeam = !outro && params.get("team") === "1";
+  if (withTeam) document.documentElement.classList.add("team");
+  const HOLD_AT = T_IN + T_SPIN + 0.15;
+  const RESUME_AT = T_IN + T_HOLD - 0.2;
+  const team = $("team");
+  let holding = false, released = false, releasing = false;
+  const tellParent = (type) => { try { parent !== window && parent.postMessage({ type }, "*"); } catch (e) {} };
+  function showTeam() { holding = true; team.classList.add("is-shown"); tellParent("isa-intro-hold"); }
+  function next() {
+    if (!holding || releasing) return;
+    releasing = true; team.classList.remove("is-shown");
+    setTimeout(function () {                                    // once the names have faded
+      holding = false; releasing = false; released = true;
+      tellParent("isa-intro-resume");
+      t0 = performance.now() - RESUME_AT * 1000;
+      raf = requestAnimationFrame(tick);
+    }, reduced ? 0 : 650);
+  }
+  if (withTeam) {
+    addEventListener("keydown", function (e) {
+      if (["ArrowRight", "ArrowDown", " ", "PageDown", "Enter"].includes(e.key)) { e.preventDefault(); next(); }
+    });
+    addEventListener("click", function (e) { if (e.target !== replayBtn) next(); });
+    addEventListener("message", function (e) { if (e.source === parent && e.data && e.data.type === "isa-intro-next") next(); });
+  }
+
   // ---------- run ----------
   let raf = 0, t0 = 0, finished = false;
   function done() {
@@ -222,15 +367,19 @@
   }
   function tick(now) {
     const t = (now - t0) / 1000;
+    if (withTeam && !released && t >= HOLD_AT) { render(HOLD_AT); if (!holding) showTeam(); return; }   // wait for Next
     render(Math.min(t, TOTAL));
+    if (outro && t >= T_OUT + T_SPIN) fireConfetti();          // as "Thank you" starts to appear
     if (t >= TOTAL) { done(); return; }
     raf = requestAnimationFrame(tick);
   }
   function start() {
     cancelAnimationFrame(raf); finished = false;
+    holding = false; released = false; releasing = false; team.classList.remove("is-shown");
     replayBtn.style.display = "none"; scene.style.display = "block";
     fit();
-    if (reduced) { render(TOTAL); done(); return; }
+    if (reduced && withTeam && !outro) { render(HOLD_AT); showTeam(); return; }   // reduce motion: straight to the names; Next plays the rest
+    if (reduced) { render(TOTAL); if (outro) fireConfetti(); done(); return; }   // the sounds still play, without confetti
     t0 = performance.now(); raf = requestAnimationFrame(tick);
   }
   replayBtn.addEventListener("click", start);

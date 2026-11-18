@@ -1,0 +1,94 @@
+@using IsaChatApp.Services.Presentation
+@* ============================================================
+   StageOrbit.razor -- the "orbit" slide layout (Willis, November 17, 2026).
+
+   Used by slide 8, "Every stage, honestly". The stages sit on a tilted ring around Isa.
+   Each press of Next turns the ring like a carousel to bring the next stage to the front,
+   where it opens into a card with that stage's text (the slide's "rows" in
+   presentation/slides.json: name, status, text). After the last stage, Next goes on to
+   the next slide; Back steps back through the stages, then to the slide before.
+   Present.razor asks StepAsync first on every Next and Back; it returns false when the
+   slide has no more steps in that direction.
+   The motion is in StageOrbit.razor.js. Everything is drawn in a 1000-wide box scaled to
+   the slide, so it fits any screen. Motion respects "reduce motion".
+   From the mockup Claude outputs/Every stage orbit mockup.html.
+   ============================================================ *@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="orbit @(Dark ? "is-dark" : "")" @ref="_root">
+    <div class="orbit__box">
+        <svg class="orbit__ring" aria-hidden="true" focusable="false"></svg>
+        <div class="orbit__core" aria-hidden="true"><div>Isa<small>@Rows.Count stages</small></div></div>
+        @for (var i = 0; i < Rows.Count; i++)
+        {
+            var row = Rows[i];
+            <div class="orbit__node" data-status="@row.Status" aria-hidden="true">
+                <div class="orbit__num">@(i + 1)</div>
+                <div class="orbit__card">
+                    <div class="orbit__k">Stage @(i + 1) of @Rows.Count</div>
+                    <h2 class="orbit__name">@row.Name</h2>
+                    <span class="orbit__pill is-@row.Status">@PillText(row.Status)</span>
+                    <p class="orbit__text">@row.Text</p>
+                </div>
+            </div>
+            <div class="orbit__lbl" aria-hidden="true">@row.Name</div>
+        }
+    </div>
+    @* For screen readers: the stage that is open, in words. *@
+    <div class="orbit__live" aria-live="polite"></div>
+</div>
+
+@code {
+    /// <summary>The slide's rows: one per stage (name, status, text).</summary>
+    [Parameter] public List<SlideItem> Rows { get; set; } = [];
+    /// <summary>True when the slide was reached with Back: it opens on the last stage.</summary>
+    [Parameter] public bool StartAtEnd { get; set; }
+    /// <summary>True on a Dark Blue slide.</summary>
+    [Parameter] public bool Dark { get; set; }
+
+    private ElementReference _root;
+    private IJSObjectReference? _js;
+    private bool _rendered;
+
+    private static string PillText(string? status) => status switch
+    {
+        "built" => "✓ Built",
+        "partial" => "◐ Partly built",
+        "stub" => "○ Stub",
+        _ => status ?? ""
+    };
+
+    // Drawn once; the script moves it. A later render of the page must not touch it.
+    protected override bool ShouldRender() => !_rendered;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _rendered = true;
+        _js = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/StageOrbit.razor.js?v=" + DateTime.UtcNow.Ticks);
+        await _js.InvokeVoidAsync("mount", _root, StartAtEnd);
+    }
+
+    /// <summary>One step forward (delta &gt; 0) or back. False when there is no step left that way,
+    /// so the page moves to the next or previous slide.</summary>
+    public async Task<bool> StepAsync(int delta)
+    {
+        if (_js is null) return false;
+        try { return await _js.InvokeAsync<bool>("step", delta); }
+        catch (JSDisconnectedException) { return false; }
+        catch (JSException) { return false; }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_js is null) return;
+        try
+        {
+            await _js.InvokeVoidAsync("unmount");
+            await _js.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+        catch (JSException) { }
+    }
+}

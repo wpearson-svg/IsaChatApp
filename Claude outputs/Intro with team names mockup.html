@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intro with team names</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300&family=Roboto:wght@300;400;500&display=swap">
+<!-- MOCKUP (Willis, November 18, 2026): slide 3 "Second Star Collective" is folded into the intro.
+     The Cs roll in and the logo spins as now, then everything holds while the team's names fade in
+     around the logo. The next-slide press fades the names and the Cs roll out as before, opening
+     the curtain on "Meet Isa" (a stand-in drawing of the landing slide here).
+     Next: Right arrow, Space, Page Down, Enter or a click. R replays. -->
+<style>
+  /* the team, shown while the intro holds (from slide 3, word for word) */
+  #team { position:fixed; inset:0; pointer-events:none; color:#fff; font-family:Roboto,system-ui,sans-serif; z-index:3; }
+  #team .top, #team .bottom { position:absolute; left:0; right:0; text-align:center; opacity:0; transition:opacity .6s ease, transform .6s ease; }
+  #team .top { bottom:81vh; transform:translateY(-1.2vh); }
+  #team .bottom { top:82.5vh; transform:translateY(1.2vh); display:flex; justify-content:center; gap:5vw; padding:0 4vw; }
+  #team.is-shown .top, #team.is-shown .bottom { opacity:1; transform:none; }
+  #team.is-shown .bottom { transition-delay:.25s; }
+  #team h1 { margin:0; font:300 5.2vh/1.1 "Roboto Slab",Georgia,serif; }
+  #team .lead { margin:.6vh 0 0; font-weight:300; font-size:2.4vh; color:#b3e4f8; }
+  #team .person { flex:1 1 0; max-width:30vw; }
+  #team .name { font-weight:500; font-size:3vh; line-height:1.15; }
+  #team .role { margin-top:.5vh; font-weight:300; font-size:1.9vh; line-height:1.3; color:rgba(255,255,255,.78); }
+  #hint { position:fixed; right:18px; bottom:16px; z-index:6; font:13px Roboto,system-ui,sans-serif; color:rgba(255,255,255,.7);
+          opacity:0; transition:opacity .4s; }
+  #hint.is-shown { opacity:1; }
+  /* the stand-in "Meet Isa" landing slide (Present.razor.css, .present__landing) */
+  #mock.landing { display:block; background:#fff; }
+  #mock.landing .wrap { position:absolute; inset:0; display:grid; grid-template-columns:1fr 40vw; align-items:center; gap:3vw; padding:0 7vw; }
+  #mock.landing h1 { margin:0 0 1.6vw; font:300 8.4vw/1.02 "Roboto Slab",Georgia,serif; color:#1d2d5c; }
+  #mock.landing h1 span { color:#3f7d20; }
+  #mock.landing p { margin:0 0 3.2vw; font:300 3vw/1.25 Roboto,system-ui,sans-serif; color:#07649d; max-width:none; }
+  #mock.landing .strip { display:flex; gap:1.2vw; }
+  #mock.landing .strip i { width:2.6vw; height:2.6vw; border-radius:50%; background:#00a4e4; display:block; }
+  #mock.landing .strip i:nth-child(even) { background:#6cb33f; }
+  #mock.landing .ring { width:100%; aspect-ratio:1; border-radius:50%; background:conic-gradient(#6cb33f 0 50%, #00a4e4 50% 100%);
+          -webkit-mask:radial-gradient(circle, transparent 0 56.5%, #000 57%); mask:radial-gradient(circle, transparent 0 56.5%, #000 57%); }
+  #mock.landing .tag { position:absolute; left:16px; bottom:14px; font:12px Roboto,sans-serif; color:#6b7781; }
+</style>
+<style>
+  /* Copy of Isa_C_Intro.html for the /present slides (Components/Pages/Present.razor.js plays it
+     as an overlay with ?embed=1). Changed 23 October 2026 (Matthew): the finished ring is half
+     blue (left) and half green (right), so the green C isn't hidden under the blue one.
+     Isa intro: two Cs roll in, the window where they overlap reveals the spinning Isa logo,
+     then the Cs roll out and pull the curtain open on the Isa page underneath.
+     Colours are the ISACA palette from BRAND_GUIDELINES.md. */
+  :root { --navy:#1d2d5c; --blue:#00a4e4; --green:#6cb33f; --paper:#ffffff; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--navy); overflow:hidden; }
+  #page { position:fixed; inset:0; width:100%; height:100%; border:0; background:#fff; display:block; }
+  #mock { position:fixed; inset:0; display:none; font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--navy);
+          background:linear-gradient(135deg,#e7f0f5,#fff 60%); }
+  #mock header { display:flex; justify-content:space-between; align-items:center; padding:20px 6vw; }
+  #mock .brand { font-weight:700; letter-spacing:.04em; }
+  #mock .hero { padding:8vh 6vw; max-width:760px; }
+  #mock h1 { font-size:clamp(28px,5vw,56px); line-height:1.1; margin:0 0 16px; }
+  #mock p { color:#445; max-width:46ch; }
+  #mock .btn { display:inline-block; margin-top:18px; padding:12px 22px; border-radius:999px; background:var(--green); color:#fff; font-weight:600; }
+  #scene { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  #replay { position:fixed; right:16px; bottom:16px; z-index:5; display:none; font:14px system-ui,sans-serif; padding:8px 14px;
+            border-radius:999px; border:1px solid rgba(29,45,92,.35); background:rgba(255,255,255,.92); color:var(--navy); cursor:pointer; }
+  /* ?embed=1: no page of its own; the /present slide underneath shows when the curtain opens */
+  html.embed, html.embed body { background:transparent; }
+  html.embed #page, html.embed #mock { display:none; }
+  #replay:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<iframe id="page" title="Isa" aria-hidden="true"></iframe>
+<div id="mock" class="landing" aria-hidden="true">
+  <div class="wrap">
+    <div><h1>Meet <span>Isa</span></h1><p>Your chapter support assistant</p>
+      <div class="strip"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div class="ring"></div>
+  </div>
+  <span class="tag">Stand-in drawing of slide 1, "Meet Isa" &middot; press R to replay</span>
+</div>
+
+<div id="team" aria-live="polite">
+  <div class="top"><h1>Second Star Collective</h1><p class="lead">The team behind Isa.</p></div>
+  <div class="bottom">
+    <div class="person"><div class="name">Willis Pearson</div><div class="role">Project lead, solution architecture, quality and risk</div></div>
+    <div class="person"><div class="name">Eliyas Eshtea</div><div class="role">Solutions analyst, technical stack</div></div>
+    <div class="person"><div class="name">Matthew Brady</div><div class="role">Client liaison, governance, chapter leader onboarding, success metrics</div></div>
+  </div>
+</div>
+<div id="hint">Next &rsaquo;</div>
+
+<svg id="scene" aria-label="Isa is loading" role="img" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- the C, open to the right, with the rounded gap corners of the Isa logo (outer radius 100.89, centred on 0,0), scaled by K below -->
+    <g id="cShape"><path transform="translate(-100 -100)" d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z" /></g>
+    <!-- the window is where the two Cs' centre holes overlap; when the Cs sit exactly on each other it is the whole hole -->
+    <clipPath id="clipA"><circle id="clipAPath" r="79.3"/></clipPath>
+    <clipPath id="clipB"><circle id="clipBPath" r="79.3"/></clipPath>
+    <!-- the right half of the screen, measured from the green C's centre: where the green C is drawn on top of the blue one -->
+    <clipPath id="halfB"><rect id="halfBRect" width="100000" height="100000"/></clipPath>
+  </defs>
+
+  <!-- curtains: two halves of the navy cover, they slide apart at the end -->
+  <rect id="curtainL" fill="#1d2d5c"/>
+  <rect id="curtainR" fill="#1d2d5c"/>
+
+  <!-- outro only: confetti that falls behind the logo (Willis, November 17, 2026) -->
+  <g id="confettiBack" aria-hidden="true"></g>
+
+  <!-- the two Cs -->
+  <use id="cB" href="#cShape" fill="#6cb33f"/>
+  <use id="cA" href="#cShape" fill="#00a4e4"/>
+  <!-- the green C's right half again, on top of the blue C, so the finished ring is half blue (left) and half green (right) -->
+  <g clip-path="url(#halfB)"><use id="cBTop" href="#cShape" fill="#6cb33f"/></g>
+
+  <!-- the window (where the two Cs overlap) is drawn on top and shows the logo -->
+  <g clip-path="url(#clipA)"><g clip-path="url(#clipB)">
+    <rect id="plate" fill="#ffffff"/>
+    <g id="logo" opacity="0">
+      <g id="ring"><path id="ringPath" d="M153.26 74.88L193.32 74.88A3.33 3.33 0 0 0 196.5 70.58A100.89 100.89 0 1 0 196.5 129.42A3.33 3.33 0 0 0 193.32 125.12L153.26 125.12A3.33 3.33 0 0 0 150.32 126.88A57.05 57.05 0 1 1 150.32 73.12A3.33 3.33 0 0 0 153.26 74.88Z"/></g>
+      <g id="word" transform="translate(100 100) scale(1.336) translate(-29.795 -14.91)"><g id="letters">
+        <path d="M4.06 27.66V1.79H9.48V27.66Z"/>
+        <path d="M32.1 21.86Q32.1 24.74 29.74 26.39Q27.38 28.03 23.21 28.03Q19.12 28.03 16.94 26.74Q14.76 25.44 14.05 22.71L18.58 22.03Q18.97 23.44 19.92 24.03Q20.86 24.62 23.21 24.62Q25.38 24.62 26.37 24.06Q27.36 23.51 27.36 22.34Q27.36 21.38 26.56 20.82Q25.76 20.26 23.85 19.88Q19.48 19.01 17.96 18.27Q16.44 17.53 15.64 16.34Q14.84 15.16 14.84 13.43Q14.84 10.59 17.03 9Q19.23 7.41 23.25 7.41Q26.79 7.41 28.95 8.79Q31.11 10.16 31.64 12.77L27.07 13.25Q26.85 12.04 25.98 11.44Q25.12 10.84 23.25 10.84Q21.41 10.84 20.49 11.31Q19.58 11.78 19.58 12.88Q19.58 13.74 20.28 14.25Q20.99 14.75 22.66 15.08Q24.99 15.56 26.8 16.07Q28.61 16.57 29.7 17.27Q30.8 17.97 31.45 19.06Q32.1 20.15 32.1 21.86Z"/>
+        <path d="M41.59 28.03Q38.71 28.03 37.09 26.46Q35.48 24.89 35.48 22.04Q35.48 18.96 37.49 17.34Q39.5 15.73 43.32 15.69L47.6 15.62V14.61Q47.6 12.66 46.92 11.71Q46.24 10.77 44.7 10.77Q43.26 10.77 42.59 11.42Q41.92 12.07 41.76 13.58L36.38 13.32Q36.87 10.42 39.03 8.92Q41.19 7.43 44.92 7.43Q48.68 7.43 50.72 9.28Q52.76 11.14 52.76 14.55V21.79Q52.76 23.46 53.14 24.09Q53.51 24.73 54.39 24.73Q54.98 24.73 55.53 24.62V27.41Q55.07 27.52 54.71 27.61Q54.34 27.7 53.97 27.76Q53.6 27.81 53.19 27.85Q52.78 27.88 52.23 27.88Q50.28 27.88 49.35 26.93Q48.42 25.97 48.24 24.12H48.13Q45.96 28.03 41.59 28.03ZM47.6 18.46 44.95 18.5Q43.15 18.57 42.4 18.89Q41.65 19.22 41.25 19.88Q40.86 20.54 40.86 21.64Q40.86 23.05 41.51 23.74Q42.16 24.43 43.25 24.43Q44.46 24.43 45.46 23.77Q46.46 23.11 47.03 21.94Q47.6 20.78 47.6 19.47Z"/>
+      </g></g>
+    </g>
+  </g></g>
+
+  <!-- outro only: confetti that falls in front of the logo -->
+  <g id="confettiFront" aria-hidden="true"></g>
+
+  <!-- outro only: "Thank you" under the logo circle, appears once the spin ends -->
+  <text id="thanks" text-anchor="middle" opacity="0" fill="#ffffff" font-family="'Roboto Slab', Georgia, serif" font-weight="300" font-size="46">Thank you</text>
+</svg>
+
+<button id="replay" type="button">Replay intro</button>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- settings ----------
+  // The page revealed at the end. Use ?page=https://... to change it, ?mock=1 for a stand-in page.
+  const ISA_URL = "http://localhost:5067/";
+  const params = new URLSearchParams(location.search);
+  const T_IN = 1.6, T_SPIN = 1.1, T_PAUSE = 1.0, T_OUT = 1.5;   // seconds: roll in, one logo spin, a pause, roll out
+  const T_HOLD = T_SPIN + T_PAUSE;
+  // ?mode=outro (the closing of the talk): the Cs roll in from both sides pulling the curtain closed over the
+  // page, end exactly on top of each other, the Isa logo spins one turn and everything stays as it is.
+  const outro = params.get("mode") === "outro";
+  const T_THANKS = 0.8;           // outro: the fade-in of "Thank you" after the spin
+  const TOTAL = outro ? T_OUT + T_SPIN + T_THANKS : T_IN + T_HOLD + T_OUT;
+  const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- geometry (from the C window design, c-window1.svg) ----------
+  const K = 1.39;                 // scale of the C shape
+  const R = 100.89 * K;           // outer radius, used for the rolling
+  // The two Cs finish exactly on top of each other: the right-opening C and the mirrored left-opening C
+  // together make a complete ring.
+  const A_FINAL = { x: 315.14, y: 289.47, fx: 1 };    // opens right
+  const B_FINAL = { x: 315.14, y: 289.47, fx: -1 };   // mirrored, opens left
+  const CX = (A_FINAL.x + B_FINAL.x) / 2, CY = (A_FINAL.y + B_FINAL.y) / 2;
+
+  const $ = (id) => document.getElementById(id);
+  const scene = $("scene"), cA = $("cA"), cB = $("cB"), cBTop = $("cBTop"), halfB = $("halfBRect"), clipA = $("clipAPath"), clipB = $("clipBPath");
+  const curtainL = $("curtainL"), curtainR = $("curtainR"), plate = $("plate");
+  const logo = $("logo"), ring = $("ring"), ringPath = $("ringPath"), letters = $("letters"), word = $("word");
+  const replayBtn = $("replay");
+  const thanks = $("thanks");
+
+  // page underneath
+  const frame = $("page"), mock = $("mock");
+  const embed = params.get("embed") === "1";
+  if (embed) document.documentElement.classList.add("embed");
+  else { frame.style.display = "none"; }   // mockup: always the stand-in "Meet Isa" slide underneath
+
+  // the view: the C pair sits at the middle of the screen, about 60% of the screen height
+  let view = { hw: 600, hh: 340 };
+  function fit() {
+    const w = innerWidth || 1280, h = innerHeight || 720;
+    const hh = 321 / 0.6 / 2;
+    const hw = hh * (w / h);
+    view = { hw, hh };
+    scene.setAttribute("viewBox", (CX - hw) + " " + (CY - hh) + " " + (2 * hw) + " " + (2 * hh));
+    const L = CX - hw - 10, T = CY - hh - 10, W = 2 * hw + 20, H = 2 * hh + 20;
+    curtainL.setAttribute("y", T); curtainL.setAttribute("height", H);
+    curtainR.setAttribute("y", T); curtainR.setAttribute("height", H);
+    plate.setAttribute("x", L); plate.setAttribute("y", T); plate.setAttribute("width", W); plate.setAttribute("height", H);
+    curtainL.dataset.left = L; curtainR.dataset.right = L + W;
+  }
+  addEventListener("resize", function () { fit(); render(lastT); });
+
+  // ---------- helpers ----------
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const easeOutCubic = (p) => 1 - Math.pow(1 - p, 3);
+  const easeInOutCubic = (p) => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  const PAL = ["#6cb33f", "#36ac91", "#00a4e4", "#07649d", "#1d2d5c", "#6cb33f"];
+  function hex(h) { return [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16)); }
+  function cycle(p) {            // p in [0,1): the ISACA colour cycle used by the Isa spinner
+    p = ((p % 1) + 1) % 1;
+    const s = p * 5, i = Math.floor(s), f = s - i, a = hex(PAL[i]), b = hex(PAL[i + 1]);
+    return "rgb(" + a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(",") + ")";
+  }
+  const place = (el, clip, c) => {
+    const t = "translate(" + c.x + " " + c.y + ") rotate(" + c.rot + ") scale(" + c.fx + " 1) scale(" + K + ")";
+    el.setAttribute("transform", t); clip.setAttribute("cx", c.x); clip.setAttribute("cy", c.y);
+  };
+
+  // ---------- the animation, as a pure function of time (seconds) ----------
+  let lastT = 0;
+  function render(t) {
+    lastT = t;
+    const L = parseFloat(curtainL.dataset.left), RR = parseFloat(curtainR.dataset.right);
+    // how far each C starts from its resting place so it begins just off the screen
+    const inB = (B_FINAL.x + R) - (CX - view.hw) + 20;          // B starts this far to the left
+    const inA = (CX + view.hw) - (A_FINAL.x - R) + 20;          // A starts this far to the right
+    // how far each side travels at the end so the curtain clears the screen and the C leaves
+    const outTravel = Math.max(CX - L, (B_FINAL.x + R) - L) + 20;
+    const outTravelR = Math.max(RR - CX, RR - (A_FINAL.x - R)) + 20;
+
+    let dB = 0, dA = 0, pOut = 0;                // dB, dA: signed offsets from the resting place
+    if (outro) {
+      const q = 1 - easeInOutCubic(clamp(t / T_OUT, 0, 1));   // 1 = Cs off the screen, curtain open; 0 = closed
+      dB = -outTravel * q; dA = outTravelR * q;
+    } else if (t < T_IN) {
+      const e = easeOutCubic(clamp(t / T_IN, 0, 1));
+      dB = -inB * (1 - e); dA = inA * (1 - e);
+    } else if (t > T_IN + T_HOLD) {
+      pOut = easeInOutCubic(clamp((t - T_IN - T_HOLD) / T_OUT, 0, 1));
+      dB = -outTravel * pOut; dA = outTravelR * pOut;
+    }
+    // rolling without slipping: the turn follows the distance travelled
+    const rotDeg = (d) => (d / R) * 180 / Math.PI;
+    place(cB, clipB, { x: B_FINAL.x + dB, y: B_FINAL.y, rot: rotDeg(dB), fx: B_FINAL.fx });
+    place(cA, clipA, { x: A_FINAL.x + dA, y: A_FINAL.y, rot: rotDeg(dA), fx: A_FINAL.fx });
+    cBTop.setAttribute("transform", cB.getAttribute("transform"));
+    halfB.setAttribute("x", B_FINAL.x + dB); halfB.setAttribute("y", B_FINAL.y - 50000);
+
+    // the curtain halves ride along with the Cs (they stay joined at the middle until the end)
+    const slideL = (outro || t > T_IN) ? dB : 0, slideR = (outro || t > T_IN) ? dA : 0;
+    curtainL.setAttribute("x", L + slideL); curtainL.setAttribute("width", CX - L + 2);   // +2: the halves overlap, so no hairline seam shows the (white) slide behind
+    curtainR.setAttribute("x", CX + slideR - 2); curtainR.setAttribute("width", RR - CX + 2);
+
+    // the logo appears in the window as the Cs arrive, spins ONE full turn (cycling through the ISACA colours once),
+    // then rests in its normal colours for the pause before the Cs roll out
+    const tArrive = outro ? T_OUT : T_IN;                       // when the Cs reach the middle
+    const fadeIn = clamp((t - tArrive * 0.55) / (tArrive * 0.45), 0, 1);
+    logo.setAttribute("opacity", fadeIn);
+    const lx = CX, ly = CY, s = 0.69;                      // logo size inside the window
+    logo.setAttribute("transform", "translate(" + lx + " " + ly + ") scale(" + s + ") translate(-100 -100)");
+    const sp = clamp((t - tArrive) / T_SPIN, 0, 1);
+    const spinE = 0.5 - 0.5 * Math.cos(Math.PI * sp);          // eases in and out so it settles softly
+    ring.setAttribute("transform", "rotate(" + (spinE * 360) + " 100 100)");
+    // "Thank you" fades in (and rises a little) once the spin has ended
+    const th = outro ? clamp((t - T_OUT - T_SPIN) / T_THANKS, 0, 1) : 0;
+    thanks.setAttribute("x", CX); thanks.setAttribute("y", CY + R + 62 - 10 * (1 - easeOutCubic(th)));
+    thanks.setAttribute("opacity", easeOutCubic(th));
+    ringPath.setAttribute("fill", cycle(sp));                  // green round to green
+    letters.setAttribute("fill", cycle(0.8 - sp));             // navy round to navy, the other way
+  }
+
+  // ---------- confetti (outro only; Willis, November 17, 2026) ----------
+  // When "Thank you" appears, two bursts fire up from below the screen, one on each side of the logo,
+  // then the pieces flutter slowly down. Half are drawn behind the logo, half in front of it.
+  // ISACA colours plus white. Not shown with "reduce motion".
+  const CONFETTI_COLOURS = ["#6cb33f", "#00a4e4", "#07649d", "#36ac91", "#ffffff", "#b3e4f8"];
+  const SVGNS = "http://www.w3.org/2000/svg";
+  let confettiRaf = 0, confettiFired = false;
+
+  // Sounds (Willis, November 17, 2026): the popper as the confetti fires, then the party horn straight after.
+  // For the full final presentation, swap HORN to "sounds/party-horn-not-sad.mp3".
+  const POPPER = "sounds/party-popper.mp3";
+  const HORN = "sounds/party-horn-sad.mp3";
+  const popperSound = outro ? new Audio(POPPER) : null;
+  const hornSound = outro ? new Audio(HORN) : null;
+  if (popperSound) { popperSound.preload = "auto"; hornSound.preload = "auto"; }
+  function playSounds() {
+    if (!popperSound) return;
+    let hornStarted = false;
+    const horn = () => { if (hornStarted) return; hornStarted = true; hornSound.play().catch(() => {}); };
+    popperSound.addEventListener("ended", horn, { once: true });
+    popperSound.play().catch(horn);   // if the popper can't play, the horn still tries
+  }
+
+  function fireConfetti() {
+    if (confettiFired) return;
+    confettiFired = true;
+    playSounds();
+    if (reduced) return;
+    const back = $("confettiBack"), front = $("confettiFront");
+    const bottom = CY + view.hh + 15, PER_SIDE = 70, G = 900;
+    const pieces = [];
+    [-1, 1].forEach(function (side) {
+      const x0 = CX + side * (R + 45);                       // beside the logo circle
+      for (let i = 0; i < PER_SIDE; i++) {
+        const el = document.createElementNS(SVGNS, "rect");
+        const w = 5 + Math.random() * 5, h = 9 + Math.random() * 7;
+        el.setAttribute("x", -w / 2); el.setAttribute("y", -h / 2);
+        el.setAttribute("width", w); el.setAttribute("height", h); el.setAttribute("rx", 1.2);
+        el.setAttribute("fill", CONFETTI_COLOURS[i % CONFETTI_COLOURS.length]);
+        (Math.random() < 0.5 ? back : front).appendChild(el);
+        const up = 700 + Math.random() * 380;                  // how hard it is fired up
+        const lean = (Math.random() - 0.5) * 0.7 + side * 0.12; // a little spread, leaning outwards
+        pieces.push({
+          el, x: x0 + (Math.random() - 0.5) * 60, y: bottom + Math.random() * 30,
+          vx: Math.sin(lean) * up, vy: -Math.cos(lean) * up,
+          delay: Math.random() * 0.35,
+          fall: 55 + Math.random() * 45,                       // the slow speed it floats down at
+          sway: 18 + Math.random() * 30, swayF: 1.2 + Math.random() * 1.6, phase: Math.random() * 6.3,
+          spin: (Math.random() - 0.5) * 720, rot: Math.random() * 360, flipF: 3 + Math.random() * 5
+        });
+      }
+    });
+    let last = performance.now(), age = 0;
+    // Real time even when frames are dropped (a slow screen share): the time since the last frame is
+    // worked through in small steps.
+    function step(now) {
+      let left = Math.min(0.5, (now - last) / 1000); last = now;
+      let alive = 0;
+      while (left > 0) { const dt = Math.min(1 / 60, left); left -= dt; alive = advance(dt); }
+      if (alive) confettiRaf = requestAnimationFrame(step);
+    }
+    function advance(dt) {
+      age += dt;
+      let alive = 0;
+      pieces.forEach(function (p) {
+        if (!p.el) return;
+        if (age < p.delay) { p.el.setAttribute("transform", "translate(-9999 -9999)"); alive++; return; }
+        const t = age - p.delay;
+        p.vy += G * dt;
+        if (p.vy > p.fall) p.vy = p.fall;                      // air holds it: it floats down slowly
+        p.vx *= Math.pow(0.35, dt);                            // and slows its sideways throw
+        p.x += (p.vx + (p.vy > 0 ? Math.sin(t * p.swayF + p.phase) * p.sway : 0)) * dt;
+        p.y += p.vy * dt;
+        p.rot += p.spin * dt;
+        const flip = Math.cos(t * p.flipF + p.phase);          // turning over as it flutters
+        p.el.setAttribute("transform", "translate(" + p.x + " " + p.y + ") rotate(" + p.rot + ") scale(1 " + flip.toFixed(3) + ")");
+        if (p.y > bottom + 30 && p.vy > 0) { p.el.remove(); p.el = null; return; }
+        alive++;
+      });
+      return alive;
+    }
+    confettiRaf = requestAnimationFrame(step);
+  }
+
+  // ---------- the hold for the team's names (mockup) ----------
+  // The clock stops once the logo has finished its spin; the names fade in. Next fades them out and the
+  // clock goes on from just before the roll-out (most of the old pause is spent on the names instead).
+  const HOLD_AT = T_IN + T_SPIN + 0.15;
+  const RESUME_AT = T_IN + T_HOLD - 0.2;
+  const team = $("team"), hint = $("hint");
+  let holding = false, released = false, releasing = false;
+  function showTeam() { holding = true; team.classList.add("is-shown"); setTimeout(() => holding && hint.classList.add("is-shown"), 900); }
+  function next() {
+    if (!holding || releasing) return;
+    releasing = true; hint.classList.remove("is-shown"); team.classList.remove("is-shown");
+    setTimeout(function () {                                    // once the names have faded
+      holding = false; releasing = false; released = true;
+      t0 = performance.now() - RESUME_AT * 1000;
+      raf = requestAnimationFrame(tick);
+    }, 650);
+  }
+  addEventListener("keydown", function (e) {
+    if (["ArrowRight", " ", "PageDown", "Enter"].includes(e.key)) { e.preventDefault(); next(); }
+    else if (e.key === "r" || e.key === "R") start();
+  });
+  addEventListener("click", function (e) { if (e.target !== replayBtn) next(); });
+
+  // ---------- run ----------
+  let raf = 0, t0 = 0, finished = false;
+  function done() {
+    if (finished) return; finished = true;
+    if (outro) {   // the closing picture stays: Cs overlapping, logo at rest
+      try { parent !== window && parent.postMessage({ type: "isa-outro-done" }, "*"); } catch (e) {}
+      return;
+    }
+    scene.style.display = "none";
+    frame.removeAttribute("aria-hidden"); mock.removeAttribute("aria-hidden");
+    try { parent !== window && parent.postMessage({ type: "isa-intro-done" }, "*"); } catch (e) {}
+    replayBtn.style.display = embed || params.get("replay") === "0" ? "none" : "block";
+  }
+  function tick(now) {
+    const t = (now - t0) / 1000;
+    if (!outro && !released && t >= HOLD_AT) { render(HOLD_AT); if (!holding) showTeam(); return; }   // wait for Next
+    render(Math.min(t, TOTAL));
+    if (outro && t >= T_OUT + T_SPIN) fireConfetti();          // as "Thank you" starts to appear
+    if (t >= TOTAL) { done(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+  function start() {
+    cancelAnimationFrame(raf); finished = false;
+    holding = false; released = false; releasing = false; team.classList.remove("is-shown"); hint.classList.remove("is-shown");
+    replayBtn.style.display = "none"; scene.style.display = "block";
+    fit();
+    if (reduced) { render(HOLD_AT); showTeam(); return; }   // reduce motion: straight to the names; Next then plays the roll-out
+    t0 = performance.now(); raf = requestAnimationFrame(tick);
+  }
+  replayBtn.addEventListener("click", start);
+
+  // for checking single frames: Isa_C_Intro.html?freeze=2.1
+  window.__render = function (t) { fit(); scene.style.display = "block"; render(t); };
+  window.__total = TOTAL;
+  if (params.has("freeze")) { fit(); render(parseFloat(params.get("freeze")) || 0); }
+  else start();
+})();
+</script>
+</body>
+</html>
