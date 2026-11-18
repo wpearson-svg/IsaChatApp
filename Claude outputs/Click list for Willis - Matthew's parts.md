@@ -66,7 +66,7 @@ The one thing that is meant to change data is the Save at the very end.
 
 | When Matthew says | Do | The screen shows |
 |---|---|---|
-| "The first struggle: who do I call?" | Click **Today** on the rail (or "Open Today" at the bottom of the note). Then click **Meet your Chapter Experience contact** | The Today window on the right: Mei Ling Tan, Chapter Experience · Asia-Pacific chapters, and three options |
+| "The first struggle: who do I call?" | Click **Today** on the rail (or "Open Today" at the bottom of the note). Then click **Meet your Chapter Experience contact** | The Today window on the right: Grace Lim, Chapter Experience · Asia-Pacific chapters, and three options |
 | "He can book a welcome call..." | Mouse over the three time slots. Don't click | "Times shown in Asia/Tokyo" |
 | "He can send a short hello." | Mouse over "Write message". Don't click | |
 | "Or he can join a group welcome..." | Mouse over "See next session". Don't click | |
@@ -106,7 +106,7 @@ ISACA will hear the voice (decided November 16, after Matthew and Willis tested 
 
 | When Matthew says | Do | The screen shows |
 |---|---|---|
-| "And now, the one I asked you to hold on to." | Click **Notebook** on the rail. Then click the **Decisions** filter button | The succession notebook takes the Library's place, still two panels. The list drops from 13 entries to 5 |
+| "And now, the one I asked you to hold on to." | Click **Succession Notebook** on the rail. Then click the **Decisions** filter button | The succession notebook takes the Library's place, still two panels. The list drops from 13 entries to 5 |
 | "Last week, before her term ended, Sato saved this for him." | Click the first entry, which begins **"We'll hold six board meetings this year, every second month."** | Her decision, then "What was asked", Isa's answer and the two guidebook pages |
 | "...he can ask her, right here." | Mouse on **Ask Sato Yumiko about this**. Don't click | |
 

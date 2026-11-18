@@ -347,9 +347,12 @@ public class NotebookService
     /// removal first (November 17, 2026). Nothing in the notebook is erased: "Remove"
     /// hides an entry and keeps the row with the date. This is where that shows.
     /// Presidents only (and the outgoing president in the handoff window); other
-    /// board members get an empty list. The text of a removed entry is given only
-    /// to its own writer: for anyone else it stays out of sight, as the writer
-    /// chose, and only the record's facts are shown (when, who, kind, topic, number).
+    /// board members get an empty list. Presidents are given the whole record,
+    /// including what the entry said (Matthew, November 17, 2026): the notebook is
+    /// the chapter's record and the president is its custodian. A first version gave
+    /// the text only to its writer, which left a notice nobody else could read: no
+    /// use to the next president, and no answer to an auditor asking who can review
+    /// what was removed. "Removed" means taken off the working list, not unsaid.
     /// </summary>
     public IReadOnlyList<RemovedEntry> GetRemoved(string personId, DateOnly onDate)
     {
@@ -374,7 +377,6 @@ public class NotebookService
         {
             var entry = ReadEntry(r);
             var mine = entry.AuthorId == personId;
-            if (!mine) entry = entry with { Note = null, Question = null, Answer = null, Sources = Array.Empty<SourceRef>() };
             list.Add(new RemovedEntry(entry,
                 DateOnly.ParseExact(r.GetString(22), "yyyy-MM-dd", CultureInfo.InvariantCulture), mine));
         }
@@ -834,7 +836,7 @@ public class NotebookService
 /// <summary>The result of adding a note: saved (with its ID), or not saved and why, in words for the leader.</summary>
 /// <summary>
 /// One line in "Removed entries": the entry, the day its writer removed it, and
-/// whether the person looking is that writer (only they are given its text).
+/// whether the person looking is that writer.
 /// </summary>
 public record RemovedEntry(NotebookEntry Entry, DateOnly RemovedOn, bool Mine);
 

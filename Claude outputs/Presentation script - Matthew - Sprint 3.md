@@ -189,7 +189,7 @@ So Kenji can get to know his new role on the way to work.
 
 ### 6. What the last president knew (about 40 seconds)
 
-*Click "Notebook" on the rail; it takes the Library's place. Click the "Decisions" filter, so the list shows 5 entries, not 13. Open the first one, which begins "We'll hold six board meetings this year, every second month." (since November 17 it goes on: ISACA's minimum is four, and the first meeting is on Tuesday, July 14). Her question and Isa's answer are inside it, under "What was asked".*
+*Click "Succession Notebook" on the rail; it takes the Library's place. Click the "Decisions" filter, so the list shows 5 entries, not 13. Open the first one, which begins "We'll hold six board meetings this year, every second month." (since November 17 it goes on: ISACA's minimum is four, and the first meeting is on Tuesday, July 14). Her question and Isa's answer are inside it, under "What was asked".*
 
 And now, the one I asked you to hold on to.
 
