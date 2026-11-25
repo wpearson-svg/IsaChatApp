@@ -33,7 +33,7 @@
 //
 // Each slide has a "kind" that decides its layout:
 //   landing, cover, problem, statement, rules, safetynet, pipeline, status, showwork, list,
-//   demo, numbered, features, promises, closing, orbit, buildlist.
+//   demo, numbered, features, promises, closing, orbit, buildlist, answered.
 // "section" is the small label above the title.
 // On a "promises" slide each item has "title" (the promise), "text" (its
 // detail, optional), "built" and "status": built, partial, designed, plan or reword.
@@ -267,13 +267,22 @@
       ]
     },
     {
-      // The finale, just before the closing animation (Willis, November 17, 2026: the pilot slides cut,
-      // and this slide no longer asks for a pilot).
-      "kind": "closing",
+      // The finale, just before the closing animation (Willis, November 18, 2026, from Matthew's mockup
+      // "You asked. We answered.", without its "Thank you": the closing animation says it).
+      // Each item: "title" is what they said, "text" who said it, "built" our answer.
+      // "subtitle" is the closing quote (*asterisks* colour words), "note" who said it.
+      // CHECK the quotes word for word against the meeting transcripts before the talk.
+      "kind": "answered",
       "presenter": "Matthew Brady",
-      "title": "Answers in ISACA's words, so leaders can do strategy. A notebook that passes from president to president. A team free for the work that needs them.",
-      "subtitle": "Thank you",
-      "note": "Second Star Collective"
+      "section": "In your words",
+      "title": "You asked. *We answered.*",
+      "items": [
+        { "title": "I'm wasting my time just trying to find the thing I need.", "text": "Joshua Belz, on how chapter leaders feel today", "built": "Answers with their source, and every document in one Library." },
+        { "title": "Supplement the human capacity.", "text": "Camille Sanders, on what AI should do", "built": "A person is one click from every answer. Isa never replaces your team." },
+        { "title": "Stuck in operational details.", "text": "Michelle Phillips, on what boards should move past", "built": "A guided first 90 days, and a notebook that passes from president to president." }
+      ],
+      "subtitle": "A capable, mission-aligned partner that helps chapter leaders make strong decisions quickly *without telling them who to be.*",
+      "note": "Michelle Phillips, on who Isa should be"
     }
 
   ]
