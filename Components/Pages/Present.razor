@@ -296,6 +296,35 @@ else
                         </div>
                         break;
 
+                    case "answered":
+                        <div class="present__answered">
+                            <h1 class="present__title present__answeredTitle">@Highlighted(s.Title)</h1>
+                            <ul class="present__asks">
+                                @foreach (var item in s.Items)
+                                {
+                                    <li class="present__ask">
+                                        <span class="present__askTick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 12.5l3.6 3.6 7.4-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
+                                        <div class="present__askQuote">
+                                            <p class="present__askWords">&ldquo;@item.Title&rdquo;</p>
+                                            <p class="present__askWho">@item.Text</p>
+                                        </div>
+                                        <div class="present__askAnswer">
+                                            <strong>Our answer</strong>
+                                            <span>@item.Built</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            @if (!string.IsNullOrWhiteSpace(s.Subtitle))
+                            {
+                                <div class="present__answeredClose">
+                                    <p class="present__answeredQuote">&ldquo;@Highlighted(s.Subtitle)&rdquo;</p>
+                                    <p class="present__askWho">@s.Note</p>
+                                </div>
+                            }
+                        </div>
+                        break;
+
                     case "rules":
                         <h1 class="present__title">@s.Title</h1>
                         <p class="present__lead">@s.Lead</p>
@@ -1011,6 +1040,24 @@ else
             if (i % 2 == 1)
             {
                 <em class="present__em">@parts[i]</em>
+            }
+            else
+            {
+                @parts[i]
+            }
+        }
+    };
+
+    // Like Emphasised, but the words between *asterisks* are coloured, not italic (present__hl).
+    // Used by the "answered" closing slide: "You asked. *We answered.*"
+    private RenderFragment Highlighted(string? text) => __builder =>
+    {
+        var parts = (text ?? "").Split('*');
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (i % 2 == 1)
+            {
+                <span class="present__hl">@parts[i]</span>
             }
             else
             {
